@@ -6,4 +6,12 @@ edition = "2021"
 [lib]
 crate-type = ["lib", "cdylib", "staticlib"]
 
+[features]
+dense-circuit = []
+doc-build = []
+# use it wrapped in not(); don't need to pass feature when compiling with nightly and it
+# works better with cargo.features = "all" configuration for rust-analyzer
+not-nightly = []
+
 [dependencies]
+
