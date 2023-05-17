@@ -69,9 +69,4 @@ impl DerefMut for Circuit {
 }
 
 // TODO finish implementation; maybe with some derive macros to reduce some boilerplate
-#[cfg(any(feature = "dense-circuit", doc))]
-#[cfg_attr(
-    all(feature = "doc-build", not(feature = "not-nightly")),
-    doc(cfg(feature = "dense-circuit"))
-)]
-pub mod dense;
+// pub mod dense;
