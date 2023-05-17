@@ -32,3 +32,38 @@ introduction to this library is in the
     doc(cfg(feature = "circuit"))
 )]
 pub mod circuit;
+pub mod pauli_frame;
+
+/// Figure out which target feature has been enabled regarding SIMD operations. For
+/// example, if "avx2" has been enabled, we probably have the most efficient
+/// implementation of [bitvec_simd::BitVec]. These features should be automatically
+/// enabled at compile time if they are available on the compiled architecture
+#[allow(unreachable_code)] // because rust-analyzer detects the target_feature(s)
+pub fn enabled_target_feature() -> &'static str {
+    #[cfg(target_feature = "avx2")]
+    {
+        return "avx2";
+    }
+    #[cfg(target_feature = "sse2")]
+    {
+        return "sse2";
+    }
+    "none"
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    /// Check whether the correct target feature is enabled (in the build script or
+    /// automatically)
+    fn target_feature() {
+        #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
+        if is_x86_feature_detected!("avx2") {
+            assert_eq!("avx2", enabled_target_feature());
+        } else if is_x86_feature_detected!("sse2") {
+            assert_eq!("sse2", enabled_target_feature());
+        }
+    }
+}

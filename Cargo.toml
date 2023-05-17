@@ -19,6 +19,7 @@ not-nightly = []
 doc-build-nightly = []
 
 [dependencies]
+bitvec_simd = "0.20.5"
 
 [package.metadata.docs.rs]
 features = ["doc-build-nightly"]
