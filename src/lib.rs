@@ -35,8 +35,8 @@ pub mod circuit;
 pub mod pauli_frame;
 
 /// Figure out which target feature has been enabled regarding SIMD operations. For
-/// example, if "avx2" has been enabled, we probably have the most efficient
-/// implementation of [bitvec_simd::BitVec]. These features should be automatically
+/// example, if avx2 has been enabled, we probably have the most efficient
+/// implementation of "simd-types". These features should be automatically
 /// enabled at compile time if they are available on the compiled architecture
 #[allow(unreachable_code)] // because rust-analyzer detects the target_feature(s)
 pub fn enabled_target_feature() -> &'static str {
