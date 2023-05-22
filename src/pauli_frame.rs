@@ -4,12 +4,20 @@ use bit_vec::BitVec;
 
 pub mod storage;
 
-#[derive(Clone, Copy, Debug, Default)]
+/// Pauli encoding into two bits.
+///
+/// It is basically an "u2". The inner storage holds the invariant that it's value is
+/// between 0 and 3 (inclusive).
+///
+/// Unsafe code might rely on that invariant (e.g., via accessing the storage with
+/// [Self::storage] and using it to index a pointer), therefore, functions that make it
+/// possible to circumvent the invariant are unsafe.
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Debug, Default)]
 pub struct Pauli {
     storage: u8,
 }
 
-// just to effectively have an impl bool to make things more convenient; the
+// just to effectively have an impl bool to make things more convenient here; the
 // disadvantage is that we cannot define the methods to be const but we don't need that
 trait ResolvePauli {
     fn left(self) -> u8;
@@ -39,18 +47,29 @@ impl Pauli {
         Self { storage: x.left() ^ z.right() }
     }
 
+    /// Create a [Pauli] from a [u8] without checking the types invariant.
+    ///
     /// # Safety
     ///
-    /// `storage` < 4 must be valid, otherwise using this Pauli might cause undefined
-    /// behavior.
+    /// `storage` < 4 must be valid.
     ///
     /// Use [TryFrom] as checked safe variant.
-    pub unsafe fn from_raw(storage: u8) -> Self {
+    pub unsafe fn from_unchecked(storage: u8) -> Self {
         Self { storage }
     }
 
+    /// Get access to the underlining storage.
     pub fn storage(&self) -> &u8 {
         &self.storage
+    }
+
+    /// Get mutable access to the underlining storage.
+    ///
+    /// # Safety
+    ///
+    /// Any changes must upheld `storage` < 4.
+    pub unsafe fn storage_mut(&mut self) -> &mut u8 {
+        &mut self.storage
     }
 
     pub fn set_x(&mut self, x: bool) {
@@ -80,16 +99,34 @@ impl Pauli {
     pub fn z(&self) -> bool {
         self.storage & 1 != 0
     }
+
+    // ...
 }
 
+/// Multiple encoded Paulis compressed into two [BitVec]s.
 // each Pauli can be described by two bits (neglecting phases)
-#[derive(Clone, Debug, Default)]
+#[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Default)]
 pub struct PauliVec {
     // the bit representing the left qubit on the left-hand side in the tableau
     // representation, i.e., X
     pub left: BitVec,
     // right-hand side, i.e., Z
     pub right: BitVec,
+}
+
+// that's actually not that handy; it's better to have more specialized froms
+impl<T, B> From<T> for PauliVec
+where
+    T: IntoIterator<Item = B>,
+    B: Into<(bool, bool)>,
+{
+    fn from(value: T) -> Self {
+        let mut ret = PauliVec::new();
+        for (l, r) in value.into_iter().map(|b| b.into()) {
+            ret.push(l, r);
+        }
+        ret
+    }
 }
 
 impl PauliVec {
@@ -125,30 +162,31 @@ impl PauliVec {
 
     // Pauli gates don't do anything; we just include them for completeness and since it
     // might be more convenient to have them on the caller side
-    /// Apply Pauli X, note that it is just the identity.
+    /// Apply Pauli X, note that it is just the identity
     #[inline(always)]
     pub fn x(&self) {}
-    /// Apply Pauli Z, note that it is just the identity.
+    /// Apply Pauli Z, note that it is just the identity
     #[inline(always)]
     pub fn z(&self) {}
-    /// Apply Pauli Y, note that it is just the identity.
+    /// Apply Pauli Y, note that it is just the identity
     #[inline(always)]
     pub fn y(&self) {}
 
-    // hadamard just swaps x with z
+    /// Apply Hadamard
     #[inline]
     pub fn h(&mut self) {
         mem::swap(
             // Safety:
-            // we don't do anything with the storage itself, so we are good
+            // we don't do anything with the storage itself, so we should be good
             unsafe { self.left.storage_mut() },
             unsafe { self.right.storage_mut() },
         );
     }
 
+    /// Apply Phase S
     #[inline]
     pub fn s(&mut self) {
-        todo!()
+        self.right.xor(&self.left);
     }
 }
 
@@ -163,14 +201,23 @@ fn zero_bitvec(len: usize) -> BitVec {
     ret
 }
 
+/// A vector describing an encoded Pauli string, for example, one frame of [Frames] (via
+/// [Frames::pop_frame]). The `usize` element is the qubit index of the `Pauli` However,
+/// importantly note, that it is not optimal to build arrays with PauliStrings on the
+/// minor access. The library is build to use implementors of [PauliStorage], which
+/// should have [PauliVec]s on the minor array axis, as workhorses. This vector should
+/// be mainly used to analyze single Pauli strings.
 pub type PauliString = Vec<(usize, Pauli)>;
 
-pub trait PauliStorageMap: IntoIterator<Item = (usize, PauliVec)> {
-    type IterMut<'a>: Iterator<Item = (&'a usize, &'a mut PauliVec)>
+/// This trait describes the functionality that a storage of [PauliVec]s must provide to
+/// be used as storage for [Frames].
+// pub trait PauliStorage: IntoIterator<Item = (usize, PauliVec)> {
+pub trait PauliStorage: IntoIterator<Item = (usize, PauliVec)> {
+    type IterMut<'a>: Iterator<Item = (usize, &'a mut PauliVec)>
     where
         Self: 'a;
 
-    type Iter<'a>: Iterator<Item = (&'a usize, &'a PauliVec)>
+    type Iter<'a>: Iterator<Item = (usize, &'a PauliVec)>
     where
         Self: 'a;
 
@@ -178,24 +225,51 @@ pub trait PauliStorageMap: IntoIterator<Item = (usize, PauliVec)> {
     fn remove_pauli(&mut self, qubit: usize) -> Option<PauliVec>;
     fn get(&self, qubit: usize) -> Option<&PauliVec>;
     fn get_mut(&mut self, qubit: usize) -> Option<&mut PauliVec>;
-    fn iter_mut(&mut self) -> Self::IterMut<'_>;
     fn iter(&self) -> Self::Iter<'_>;
+    fn iter_mut(&mut self) -> Self::IterMut<'_>;
     fn init(num_qubits: usize) -> Self;
 }
 
+/// A container of multiple Pauli frames, using a generic `Storage` type (that
+/// implements [PauliStorage] if it shall be useful) as internal storage. The type
+/// implements the core functionality to track the Pauli frames through a Clifford
+/// circuit. As example view the documentation of [Circuit](crate::circuit::Circuit).
+/// The explicit storage type should have the [PauliVec]s on it's minor axis (this is
+/// more or less enforced by [PauliStorage]). The module [storage] provides some
+/// compatible storage types.
 #[derive(Clone, Debug, Default)]
 pub struct Frames<Storage /* : PauliStorageMap */> {
-    pub storage: Storage,
-    pub frames_num: usize,
+    storage: Storage,
+    frames_num: usize,
 }
 
-impl<T> Frames<T> {
-    pub fn new(storage: T, frames_num: usize) -> Self {
-        Self { storage, frames_num }
+impl<Storage> Frames<Storage> {
+    pub fn storage(&self) -> &Storage {
+        &self.storage
     }
+
+    pub fn frames_num(&self) -> usize {
+        self.frames_num
+    }
+
+    pub fn into_storage(self) -> Storage {
+        self.storage
+    }
+
+    // Pauli gates don't do anything; we just include them for completeness and since it
+    // might be more convenient to have them on the caller side
+    /// Apply Pauli X, note that it is just the identity.
+    #[inline(always)]
+    pub fn x(&self, _: usize) {}
+    /// Apply Pauli Z, note that it is just the identity.
+    #[inline(always)]
+    pub fn z(&self, _: usize) {}
+    /// Apply Pauli Y, note that it is just the identity.
+    #[inline(always)]
+    pub fn y(&self, _: usize) {}
 }
 
-impl<Storage: PauliStorageMap> Frames<Storage> {
+impl<Storage: PauliStorage> Frames<Storage> {
     pub fn init(num_qubits: usize) -> Self {
         Self {
             storage: Storage::init(num_qubits),
@@ -203,7 +277,6 @@ impl<Storage: PauliStorageMap> Frames<Storage> {
         }
     }
 
-    // pub fn new_qubit(&mut self, qubit: usize) -> Option<usize> {
     pub fn new_qubit(&mut self, qubit: usize) -> Option<usize> {
         self.storage
             .insert_pauli(qubit, PauliVec::zeros(self.frames_num))
@@ -212,7 +285,7 @@ impl<Storage: PauliStorageMap> Frames<Storage> {
 
     pub fn track_pauli(&mut self, qubit: usize, pauli: Pauli) {
         for (i, p) in self.storage.iter_mut() {
-            if *i == qubit {
+            if i == qubit {
                 p.push(pauli.x(), pauli.z());
             } else {
                 p.push(false, false);
@@ -233,7 +306,7 @@ impl<Storage: PauliStorageMap> Frames<Storage> {
             }
             self.storage
                 .get_mut(i)
-                .expect("bug, checked already above")
+                .expect("bug; already checked above")
                 .right
                 .set(self.frames_num - 1, p.z());
         }
@@ -241,7 +314,7 @@ impl<Storage: PauliStorageMap> Frames<Storage> {
 
     pub fn pop_frame(&mut self) -> Option<PauliString> {
         let mut ret = Vec::new();
-        for (&i, p) in self.storage.iter_mut() {
+        for (i, p) in self.storage.iter_mut() {
             ret.push((i, p.pop()?));
         }
         self.frames_num -= 1;
@@ -249,13 +322,28 @@ impl<Storage: PauliStorageMap> Frames<Storage> {
     }
 
     /// Safety:
-    /// [first] and [second] must not be the same as this might cause undefined behavior
+    /// The referred PauliVecs behind `first` and `second` have to be different,
+    /// otherwise we would return two mutable references to the same object which would
+    /// be unsound and can cause might cause *[undefined behavior] (noalias violation)*.
+    ///
+    /// [undefined behavior]:
+    /// https://doc.rust-lang.org/reference/behavior-considered-undefined.html
     #[inline]
     unsafe fn get_two_mut_unchecked(
         &mut self,
         first: usize,
         second: usize,
     ) -> (&mut PauliVec, &mut PauliVec) {
+        // this causes miri to error when run with stacked-borrows; however, note that
+        // the stacked-borrow rules are experimental (at the time of writing this
+        // comment here); we can set MIRIFLAGS="-Zmiri-tree-borrows" to use the
+        // tree-borrow instead of the stacked-borrow rules, however they are even more
+        // experimental, but with them, we don't get an error; I didn't look into these
+        // borrow rules very deeply, however, I think that what we are doing here is
+        // okay (also note that we cannot circumvent the stack-borrow error by using
+        // pointers all the way down when we call something like xor in cx; we'd just
+        // get the same error directly in cx when creating the references from the
+        // pointers, so that we can use them in xor)
         (
             unsafe { &mut *(self.storage.get_mut(first).unwrap() as *mut PauliVec) },
             unsafe { &mut *(self.storage.get_mut(second).unwrap() as *mut PauliVec) },
@@ -267,22 +355,11 @@ impl<Storage: PauliStorageMap> Frames<Storage> {
         first: usize,
         second: usize,
     ) -> (&mut PauliVec, &mut PauliVec) {
-        assert_ne!(first, second, "first and second have to be different");
-        // Safety: we checked that first neq second
-        unsafe { self.get_two_mut_unchecked(first, second) }
+        // Safety: checked below in the assert
+        let (f, s) = unsafe { self.get_two_mut_unchecked(first, second) };
+        assert_ne!(f as *mut PauliVec as usize, s as *mut PauliVec as usize);
+        (f, s)
     }
-
-    // Pauli gates don't do anything; we just include them for completeness and since it
-    // might be more convenient to have them on the caller side
-    /// Apply Pauli X, note that it is just the identity.
-    #[inline(always)]
-    pub fn x(&self, _: usize) {}
-    /// Apply Pauli Z, note that it is just the identity.
-    #[inline(always)]
-    pub fn z(&self, _: usize) {}
-    /// Apply Pauli Y, note that it is just the identity.
-    #[inline(always)]
-    pub fn y(&self, _: usize) {}
 
     /// Apply the Hadamard gate.
     pub fn h(&mut self, qubit: usize) {
@@ -300,10 +377,18 @@ impl<Storage: PauliStorageMap> Frames<Storage> {
             .s();
     }
 
-    pub fn cnot(&mut self, control: usize, target: usize) {
+    /// Apply the Control X (Control Not) gate.
+    pub fn cx(&mut self, control: usize, target: usize) {
         let (c, t) = self.get_two_mut(control, target);
         t.left.xor(&c.left);
         c.right.xor(&t.right);
+    }
+
+    /// Apply the Control Z gate.
+    pub fn cz(&mut self, qubit_a: usize, qubit_b: usize) {
+        let (a, b) = self.get_two_mut(qubit_a, qubit_b);
+        a.right.xor(&b.left);
+        b.right.xor(&a.left);
     }
 
     /// Perform an unspecified measurement. This removes the according qubit from being
@@ -315,15 +400,11 @@ impl<Storage: PauliStorageMap> Frames<Storage> {
         self.storage.remove_pauli(qubit)
     }
 
-    pub fn measure_and_store(
-        &mut self,
-        qubit: usize,
-        storage: &mut impl PauliStorageMap,
-    ) {
+    pub fn measure_and_store(&mut self, qubit: usize, storage: &mut impl PauliStorage) {
         storage.insert_pauli(qubit, self.measure(qubit).unwrap());
     }
 
-    pub fn measure_and_store_all(self, storage: &mut impl PauliStorageMap) {
+    pub fn measure_and_store_all(self, storage: &mut impl PauliStorage) {
         for (i, p) in self.storage.into_iter() {
             storage.insert_pauli(i, p);
         }
@@ -337,11 +418,17 @@ impl<Storage: PauliStorageMap> Frames<Storage> {
     }
 }
 
-pub fn sort(storage: &impl PauliStorageMap) -> Vec<(usize, &PauliVec)> {
+pub fn sort_pauli_storage(storage: &impl PauliStorage) -> Vec<(usize, &PauliVec)> {
+    let mut ret = storage.iter().collect::<Vec<(usize, &PauliVec)>>();
+    ret.sort_by_key(|(i, _)| *i);
+    ret
+}
+
+pub fn into_sorted_pauli_storage(storage: impl PauliStorage) -> Vec<(usize, PauliVec)> {
     let mut ret = storage
-        .iter()
-        .map(|(i, p)| (*i, p))
-        .collect::<Vec<(usize, &PauliVec)>>();
+        .into_iter()
+        .map(|(i, p)| (i, p))
+        .collect::<Vec<(usize, PauliVec)>>();
     ret.sort_by_key(|(i, _)| *i);
     ret
 }
@@ -353,97 +440,111 @@ mod tests {
         *,
     };
 
-    #[test]
-    fn gate_definition_check() {
-        // double-pauli p = abcd in binary; encoding: x_0 = a, z_0 = b, x_1 = c, z_2 = d
-        type Action = dyn Fn(&mut Frames<SmallPauliStorage>, usize, usize);
-        const GATES: [(
-            // action
-            &Action,
-            // name for debugging
-            &str,
-            // result: calculated by hand
-            // encoded order input: p in 15 14 13 12 11 10 9 8 7 6 5 4 3 2 1 0
-            [u8; 16],
-        ); 4] = [
-            (
-                &|f, b, _| Frames::x(f, b),
-                "X",
-                [15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0],
-            ),
-            (
-                &|f, b, _| Frames::z(f, b),
-                "Z",
-                [15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0],
-            ),
-            (
-                &|f, b, _| Frames::h(f, b),
-                "H",
-                [15, 14, 13, 12, 7, 6, 5, 4, 11, 10, 9, 8, 3, 2, 1, 0],
-            ),
-            (
-                &Frames::cnot, // left->control, right->target
-                "CNOT",
-                [9, 12, 11, 14, 13, 8, 15, 10, 3, 6, 1, 4, 7, 2, 5, 0],
-            ),
-        ];
+    // we only check the basic functionality here, more complicated circuits are tested
+    // in [super::circuit] to test the tracker and the circuit at once
 
-        // masks to decode p in 0..16 into two paulis and vice versa
-        const FIRST: u8 = 12;
-        const FIRST_SHIFT: u8 = 2;
-        const SECOND: u8 = 3;
+    mod gate_definition_check {
+        use super::*;
 
-        for action in GATES {
-            let mut frames = Frames::<SmallPauliStorage>::default();
-            frames.new_qubit(0);
-            frames.new_qubit(1);
-            for pauli in 0..16 {
-                frames.track_pauli_string(vec![
-                    (0, Pauli::try_from((pauli & FIRST) >> FIRST_SHIFT).unwrap()),
-                    (1, Pauli::try_from(pauli & SECOND).unwrap()),
-                ]);
-            }
-            (action.0)(&mut frames, 0, 1);
-            for (check, input) in (0..16).zip((0..16).rev()) {
-                let frame = frames.pop_frame().unwrap();
-                let mut result = 0_u8;
-                for (i, p) in frame {
-                    if i == 0 {
-                        result += p.storage() << FIRST_SHIFT
-                    } else if i == 1 {
-                        result += p.storage()
-                    }
+        // maybe todo: in the following functions there's a pattern behind how we encode
+        // one-qubit and two-qubit actions, it's like a "TwoBitVec"; one could probably
+        // maybe implement that in connection with [Pauli]
+
+        #[test]
+        fn one_qubit() {
+            // pauli p = ab in binary; encoding: x = a, z = b
+            type Action = dyn Fn(&mut Frames<FullMap>, usize);
+            const GATES: [(
+                // action
+                &Action,
+                // name for debugging
+                &str,
+                // result: calculated by hand
+                // encoded input: p = 3 2 1 0
+                [u8; 4],
+            ); 5] = [
+                (&|f, b| Frames::x(f, b), "X", [3, 2, 1, 0]),
+                (&|f, b| Frames::z(f, b), "Z", [3, 2, 1, 0]),
+                (&|f, b| Frames::y(f, b), "Y", [3, 2, 1, 0]),
+                (&Frames::h, "H", [3, 1, 2, 0]),
+                (&Frames::s, "S", [2, 3, 1, 0]),
+            ];
+
+            for action in GATES {
+                let mut frames = Frames::<FullMap>::default();
+                frames.new_qubit(0);
+                for pauli in 0..4 {
+                    frames
+                        .track_pauli_string(vec![(0, Pauli::try_from(pauli).unwrap())]);
                 }
-                assert_eq!(result, action.2[check], "{}, {}", action.1, input);
+                (action.0)(&mut frames, 0);
+                for (check, input) in (0..4).zip((0..4).rev()) {
+                    assert_eq!(
+                        *frames.pop_frame().unwrap().get(0).unwrap().1.storage(),
+                        action.2[check],
+                        "{}, {}",
+                        action.1,
+                        input
+                    );
+                }
+            }
+        }
+
+        #[test]
+        fn two_qubit() {
+            // double-pauli p = abcd in binary;
+            // encoding: x_0 = a, z_0 = b, x_1 = c, z_2 = d
+            type Action = dyn Fn(&mut Frames<FullMap>, usize, usize);
+            const GATES: [(
+                // action
+                &Action,
+                // name for debugging
+                &str,
+                // result: calculated by hand
+                // encoded input: p = 15 14 13 12 11 10 9 8 7 6 5 4 3 2 1 0
+                [u8; 16],
+            ); 2] = [
+                (
+                    &Frames::cx, // left->control, right->target
+                    "CX",
+                    [9, 12, 11, 14, 13, 8, 15, 10, 3, 6, 1, 4, 7, 2, 5, 0],
+                ),
+                (
+                    &Frames::cz,
+                    "CZ",
+                    [10, 11, 12, 13, 14, 15, 8, 9, 3, 2, 5, 4, 7, 6, 1, 0],
+                ),
+            ];
+
+            // masks to decode p in 0..16 into two paulis and vice versa
+            const FIRST: u8 = 12;
+            const FIRST_SHIFT: u8 = 2;
+            const SECOND: u8 = 3;
+
+            for action in GATES {
+                let mut frames = Frames::<FullMap>::default();
+                frames.new_qubit(0);
+                frames.new_qubit(1);
+                for pauli in 0..16 {
+                    frames.track_pauli_string(vec![
+                        (0, Pauli::try_from((pauli & FIRST) >> FIRST_SHIFT).unwrap()),
+                        (1, Pauli::try_from(pauli & SECOND).unwrap()),
+                    ]);
+                }
+                (action.0)(&mut frames, 0, 1);
+                for (check, input) in (0..16).zip((0..16).rev()) {
+                    let frame = frames.pop_frame().unwrap();
+                    let mut result = 0_u8;
+                    for (i, p) in frame {
+                        if i == 0 {
+                            result += p.storage() << FIRST_SHIFT
+                        } else if i == 1 {
+                            result += p.storage()
+                        }
+                    }
+                    assert_eq!(result, action.2[check], "{}, {}", action.1, input);
+                }
             }
         }
     }
-
-    // #[test]
-    fn identities() {
-        let mut frames = Frames::<SmallPauliStorage>::default();
-        let mut storage = SmallPauliStorage::default();
-        frames.new_qubit(0);
-        frames.track_pauli(0, Pauli::new(true, false));
-        frames.new_qubit(1);
-        frames.cnot(0, 1);
-        // frames.track_pauli(1, true, false);
-        // frames.new_qubit(2);
-        // frames.track_pauli(1, true, false);
-        // frames.measure_and_store(1, &mut storage);
-        // frames.new_qubit(4);
-        // frames.h(1);
-        frames.measure_and_store_all(&mut storage);
-        println!("{:#?}", sort(&storage));
-    }
-
-    // #[test]
-    // fn test() {
-    //     let mut a = BitVec::new();
-    //     a.push(true);
-    //     a.push(true);
-    //     println!("{:?}", a);
-    //     a.truncate(1);
-    //     println!("{:?}", a);
-    // }
 }

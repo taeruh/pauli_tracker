@@ -3,7 +3,7 @@
 //! [super::Circuit] is not memory optimal because [super::Gate] requires much padding
 //! memory (because of the alignment). This can be circumvent by separating the gate
 //! discriminator from the qubits the gate is acting on by keeping them in an separate
-//! array. This module provides [Circuit] which does exactly that, however, not that
+//! array. This module provides a [Circuit] which does exactly that, however, not that
 //! there are some API related drawbacks and there is a possible runtime cost.
 
 /// A circuit description which can only be used as iterator. This limitation allows to

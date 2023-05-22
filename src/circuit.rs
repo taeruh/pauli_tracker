@@ -9,10 +9,10 @@ use std::ops::{
 use crate::pauli_frame::{
     Frames,
     Pauli,
-    PauliStorageMap,
+    PauliStorage,
 };
 
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Debug)]
 /// A subset of the Clifford gates + (unspecified) measurements. Each operation stores
 /// the qubit position it acts on.
 pub enum Gate {
@@ -32,13 +32,15 @@ pub enum Gate {
     H(usize),
     /// Phase
     S(usize),
-    /// Control Not
-    Cnot(
+    /// Control X (Control Not)
+    CX(
         /// Control
         usize,
         /// Target
         usize,
     ),
+    /// Control Z
+    CZ(usize, usize),
     /// Unspecified measurement
     Measure(usize),
 }
@@ -46,20 +48,27 @@ pub enum Gate {
 impl Gate {
     pub fn apply_on_pauli_tracker(
         &self,
-        tracker: &mut Frames<impl PauliStorageMap>,
-        storage: &mut impl PauliStorageMap,
+        tracker: &mut Frames<impl PauliStorage>,
+        storage: &mut impl PauliStorage,
     ) {
         match *self {
-            Gate::X(b) => tracker.x(b),
-            Gate::Y(b) => tracker.y(b),
-            Gate::Z(b) => tracker.z(b),
+            Gate::X(_) => (),
+            Gate::Y(_) => (),
+            Gate::Z(_) => (),
             // Safety: storage < 4 is hardcoded
-            Gate::TrackedX(b) => tracker.track_pauli(b, unsafe { Pauli::from_raw(2) }),
-            Gate::TrackedY(b) => tracker.track_pauli(b, unsafe { Pauli::from_raw(3) }),
-            Gate::TrackedZ(b) => tracker.track_pauli(b, unsafe { Pauli::from_raw(1) }),
+            Gate::TrackedX(b) => {
+                tracker.track_pauli(b, unsafe { Pauli::from_unchecked(2) })
+            }
+            Gate::TrackedY(b) => {
+                tracker.track_pauli(b, unsafe { Pauli::from_unchecked(3) })
+            }
+            Gate::TrackedZ(b) => {
+                tracker.track_pauli(b, unsafe { Pauli::from_unchecked(1) })
+            }
             Gate::H(b) => tracker.h(b),
             Gate::S(b) => tracker.s(b),
-            Gate::Cnot(c, t) => tracker.cnot(c, t),
+            Gate::CX(c, t) => tracker.cx(c, t),
+            Gate::CZ(a, b) => tracker.cz(a, b),
             Gate::Measure(b) => tracker.measure_and_store(b, storage),
         }
     }
@@ -123,9 +132,14 @@ impl Circuit {
         self.gates.push(Gate::S(bit));
     }
 
-    /// Push [Gate::Cnot]\(`bit`\)
-    pub fn cnot(&mut self, control: usize, target: usize) {
-        self.gates.push(Gate::Cnot(control, target));
+    /// Push [Gate::CX]\(`control`, `target`\)
+    pub fn cx(&mut self, control: usize, target: usize) {
+        self.gates.push(Gate::CX(control, target));
+    }
+
+    /// Push [Gate::CX]\(`bit_a`, `bit_b`\)
+    pub fn cz(&mut self, bit_a: usize, bit_b: usize) {
+        self.gates.push(Gate::CX(bit_a, bit_b));
     }
 
     /// Push [Gate::Measure]\(`bit`\)
@@ -152,39 +166,96 @@ impl DerefMut for Circuit {
 
 #[cfg(test)]
 mod tests {
-    use std::collections::HashMap;
+    use std::iter;
 
     use super::*;
     use crate::pauli_frame::{
         self,
-        storage::{PauliStorage, SmallPauliStorage},
+        storage::{
+            FullMap,
+            MappedVector,
+        },
         Frames,
         PauliVec,
     };
 
     #[test]
-    fn test() {
-        let num_qubits = 3;
+    fn single_rotation_teleportation() {
         let mut circ = Circuit::new();
-        let mut tracker = Frames::<PauliStorage>::init(num_qubits);
-        let mut storage = SmallPauliStorage::new();
+        let mut tracker = Frames::<MappedVector>::init(2);
+        let mut storage = FullMap::new();
 
-        circ.h(0);
-        circ.cnot(2, 1);
+        circ.cz(0, 1);
+        circ.measure(0);
+        // this hadamard corrects the hadamard from the rotation, therefore, we put the
+        // tracked_z behind it (it is effectively commuted through the identity)
+        circ.h(1);
         circ.tracked_z(1);
-        circ.cnot(0, 1);
+
+        for gate in circ.iter() {
+            gate.apply_on_pauli_tracker(&mut tracker, &mut storage);
+        }
+
+        assert_eq!(
+            vec![(1, PauliVec::from([(false, true)]))],
+            pauli_frame::into_sorted_pauli_storage(tracker.into_storage())
+        );
+        assert_eq!(
+            vec![(0, PauliVec::new())],
+            pauli_frame::into_sorted_pauli_storage(storage)
+        );
+    }
+
+    #[test]
+    fn control_v_dagger() {
+        let mut circ = Circuit::new();
+        let mut tracker = Frames::<MappedVector>::init(5);
+        let mut storage = FullMap::new();
+
+        circ.cx(0, 2);
+        circ.measure(0);
+        circ.tracked_z(2);
+        circ.h(1);
+        circ.cx(1, 2);
+        circ.cx(2, 3);
+        circ.measure(2);
+        circ.tracked_z(3);
+        circ.cx(1, 4);
         circ.measure(1);
-        tracker.new_qubit(3);
-        circ.tracked_y(2);
-        circ.cnot(2, 3);
+        circ.tracked_z(4);
+        circ.cx(4, 3);
+        circ.h(4);
 
-        circ.iter().for_each(|gate| {
-            gate.apply_on_pauli_tracker(&mut tracker, &mut storage)
-        });
+        for gate in circ.iter() {
+            gate.apply_on_pauli_tracker(&mut tracker, &mut storage);
+        }
 
-        println!("{:?}", circ);
-        // println!("{:#?}", tracker);
-        println!("{:#?}", pauli_frame::sort(&tracker.storage));
-        println!("{:#?}", pauli_frame::sort(&storage));
+        assert_eq!(
+            vec![
+                (
+                    3,
+                    PauliVec::from(iter::zip(
+                        [false, false, false],
+                        [false, true, false]
+                    ))
+                ),
+                (
+                    4,
+                    PauliVec::from(iter::zip(
+                        [false, true, true],
+                        [false, false, false]
+                    ))
+                )
+            ],
+            pauli_frame::into_sorted_pauli_storage(tracker.into_storage())
+        );
+        assert_eq!(
+            vec![
+                (0, PauliVec::new()),
+                (1, PauliVec::from(iter::zip([false, false], [true, false]))),
+                (2, PauliVec::from(iter::zip([false], [true])))
+            ],
+            pauli_frame::into_sorted_pauli_storage(storage)
+        );
     }
 }
