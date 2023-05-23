@@ -114,18 +114,50 @@ pub struct PauliVec {
     pub right: BitVec,
 }
 
-// that's actually not that handy; it's better to have more specialized froms
-impl<T, B> From<T> for PauliVec
-where
-    T: IntoIterator<Item = B>,
-    B: Into<(bool, bool)>,
-{
-    fn from(value: T) -> Self {
-        let mut ret = PauliVec::new();
-        for (l, r) in value.into_iter().map(|b| b.into()) {
-            ret.push(l, r);
+// // that's actually not that handy (because blanket impls can easily cause conflicts);
+// // it's better to have more specialized froms
+// impl<T, B> From<T> for PauliVec
+// where
+//     T: IntoIterator<Item = B>,
+//     B: Into<(bool, bool)>,
+// {
+//     fn from(value: T) -> Self {
+//         let mut ret = PauliVec::new();
+//         for (l, r) in value.into_iter().map(|b| b.into()) {
+//             ret.push(l, r);
+//         }
+//         ret
+//     }
+// }
+
+impl TryFrom<(&str, &str)> for PauliVec {
+    type Error = String;
+
+    fn try_from(value: (&str, &str)) -> Result<Self, Self::Error> {
+        let (left, right) = value;
+        if left.len() != right.len() {
+            return Err(format!(
+                "left and right should have the same length, but they have {} and {},
+                respectively",
+                left.len(),
+                right.len()
+            ));
         }
-        ret
+
+        let mut ret = PauliVec::new();
+
+        fn to_bool(c: char) -> Result<bool, String> {
+            match c.to_digit(2) {
+                Some(d) => Ok(d == 1),
+                None => Err(format!("{} is not a valid binary", c)),
+            }
+        }
+
+        for (l, r) in left.chars().zip(right.chars()) {
+            ret.push(to_bool(l)?, to_bool(r)?);
+        }
+
+        Ok(ret)
     }
 }
 
@@ -324,7 +356,7 @@ impl<Storage: PauliStorage> Frames<Storage> {
     /// Safety:
     /// The referred PauliVecs behind `first` and `second` have to be different,
     /// otherwise we would return two mutable references to the same object which would
-    /// be unsound and can cause might cause *[undefined behavior] (noalias violation)*.
+    /// be unsound and can cause *[undefined behavior] (noalias violation)*.
     ///
     /// [undefined behavior]:
     /// https://doc.rust-lang.org/reference/behavior-considered-undefined.html

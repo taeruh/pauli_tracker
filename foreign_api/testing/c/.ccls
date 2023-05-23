@@ -1,0 +1,7 @@
+clang
+-Wall
+-Wextra
+-pedantic
+%c %h -std=c17
+-I./include/c
+-I./include/private

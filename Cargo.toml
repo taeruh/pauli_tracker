@@ -24,3 +24,18 @@ itertools = "0.10.5"
 
 [package.metadata.docs.rs]
 features = ["doc-build-nightly"]
+
+
+# I had problems with globs and the exclude array, so I just' don't use globs
+[workspace]
+members = [
+  "./",
+  "foreign_api/c",
+  "xtask",
+]
+default-members = [
+  "./",
+  "foreign_api/c",
+]
+# exclude = [
+# ]

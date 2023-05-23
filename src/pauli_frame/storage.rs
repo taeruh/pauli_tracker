@@ -165,6 +165,16 @@ impl PauliStorage for MappedVector {
     }
 }
 
+impl MappedVector {
+    pub fn frames(&self) -> &Vec<PauliVec> {
+        &self.frames
+    }
+
+    pub fn inverse_position(&self) -> &Vec<usize> {
+        &self.inverse_position
+    }
+}
+
 pub struct FixedVector {
     frames: Vec<PauliVec>,
 }
