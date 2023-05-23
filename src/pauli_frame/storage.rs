@@ -121,7 +121,9 @@ impl PauliStorage for MappedVector {
     fn remove_pauli(&mut self, qubit: usize) -> Option<PauliVec> {
         let current = self.position.remove(&qubit)?;
         self.inverse_position.swap_remove(current);
-        *self.position.get_mut(&self.inverse_position[current]).unwrap() = current;
+        if current != self.inverse_position.len() {
+            *self.position.get_mut(&self.inverse_position[current]).unwrap() = current;
+        }
         Some(self.frames.swap_remove(current))
     }
 
