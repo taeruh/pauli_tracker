@@ -53,6 +53,29 @@ impl PauliStorage for FullMap {
         self.get_mut(&qubit)
     }
 
+    fn get_two_mut(
+        &mut self,
+        qubit_a: usize,
+        qubit_b: usize,
+    ) -> Option<(&mut PauliVec, &mut PauliVec)> {
+        if qubit_a == qubit_b {
+            return None;
+        }
+        // Safety: we checked above that the keys are different, so it is impossible
+        // that we create two mutable references to the same object (except if there is
+        // a bug in hashing algorithm)
+        //
+        // I do not know why this doesn't trigger an stack-borrow error in miri, but
+        // doing basically the same with Vec/slice does trigger an error. In general it
+        // would be cleaner to go over pointers as I do it for the MappedVector but a
+        // HashMap is more complicated and the tools for that are not stable yet
+        let a = unsafe { &mut *(self.get_mut(&qubit_a)? as *mut PauliVec) };
+        let b = unsafe { &mut *(self.get_mut(&qubit_b)? as *mut PauliVec) };
+        // that would catch a bug in the hashing algorithm
+        // assert!(!std::ptr::eq(a, b));
+        Some((a, b))
+    }
+
     fn iter(&self) -> Self::Iter<'_> {
         self.iter().map(|(&i, p)| (i, p))
     }
@@ -67,6 +90,62 @@ impl PauliStorage for FullMap {
             ret.insert(i, PauliVec::new());
         }
         ret
+    }
+}
+
+/// Helper trait to basically use something like [slice::get_many_mut], which is
+/// currently unstable.
+trait GetTwoMutSlice {
+    type SliceType;
+
+    unsafe fn get_two_unchecked_mut(
+        &mut self,
+        one: usize,
+        two: usize,
+    ) -> Option<(&mut Self::SliceType, &mut Self::SliceType)>;
+
+    fn get_two_mut(
+        &mut self,
+        one: usize,
+        two: usize,
+    ) -> Option<(&mut Self::SliceType, &mut Self::SliceType)>;
+}
+
+// We are basically doing what std::slice does (cannot really use it because it is
+// unstable at the moment), stripping down the chain of (unstable) method calls
+impl<T> GetTwoMutSlice for [T] {
+    type SliceType = T;
+
+    /// # Safety
+    ///
+    /// The indices `one` and `two` have two different and in bounds.
+    unsafe fn get_two_unchecked_mut(
+        &mut self,
+        one: usize,
+        two: usize,
+    ) -> Option<(&mut Self::SliceType, &mut Self::SliceType)> {
+        // doing something like for the HashMap triggers miri stacked-borrow errors;
+        // doing it with the pointers directly is cleaner anyway
+        let ptr: *mut T = self.as_mut_ptr();
+        let a = unsafe { &mut *ptr.add(one) };
+        let b = unsafe { &mut *ptr.add(two) };
+        Some((a, b))
+    }
+
+    fn get_two_mut(
+        &mut self,
+        one: usize,
+        two: usize,
+    ) -> Option<(&mut Self::SliceType, &mut Self::SliceType)> {
+        // we could have done that using std::slice::spli_at_mut, not needing to write
+        // unsafe code our own here, but I feel like the unsafe code expresses better
+        // what we are actually doing and it's invariants are pretty straightforward
+        let len = self.len();
+        if one == two || one > len || two > len {
+            return None;
+        }
+        // Safety: the above conditational ensures that the requirements are fulfilled
+        unsafe { self.get_two_unchecked_mut(one, two) }
     }
 }
 
@@ -132,7 +211,16 @@ impl PauliStorage for MappedVector {
     }
 
     fn get_mut(&mut self, qubit: usize) -> Option<&mut PauliVec> {
-        Some(self.frames.index_mut(*self.position.get_mut(&qubit)?))
+        Some(self.frames.index_mut(*self.position.get(&qubit)?))
+    }
+
+    fn get_two_mut(
+        &mut self,
+        qubit_a: usize,
+        qubit_b: usize,
+    ) -> Option<(&mut PauliVec, &mut PauliVec)> {
+        self.frames
+            .get_two_mut(*self.position.get(&qubit_a)?, *self.position.get(&qubit_b)?)
     }
 
     fn iter(&self) -> Self::Iter<'_> {
@@ -175,6 +263,7 @@ impl MappedVector {
     }
 }
 
+#[derive(Debug, Default)]
 pub struct FixedVector {
     frames: Vec<PauliVec>,
 }
@@ -237,6 +326,14 @@ impl PauliStorage for FixedVector {
     #[inline(always)]
     fn get_mut(&mut self, qubit: usize) -> Option<&mut PauliVec> {
         self.frames.get_mut(qubit)
+    }
+
+    fn get_two_mut(
+        &mut self,
+        qubit_a: usize,
+        qubit_b: usize,
+    ) -> Option<(&mut PauliVec, &mut PauliVec)> {
+        self.frames.get_two_mut(qubit_a, qubit_b)
     }
 
     #[inline(always)]

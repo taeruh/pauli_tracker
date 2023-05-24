@@ -43,6 +43,18 @@ pub enum Gate {
     CZ(usize, usize),
     /// Unspecified measurement
     Measure(usize),
+    MoveZX(
+        /// Source
+        usize,
+        /// Destination
+        usize,
+    ),
+    MoveZZ(
+        /// Source
+        usize,
+        /// Destination
+        usize,
+    ),
 }
 
 impl Gate {
@@ -70,6 +82,8 @@ impl Gate {
             Gate::CX(c, t) => tracker.cx(c, t),
             Gate::CZ(a, b) => tracker.cz(a, b),
             Gate::Measure(b) => tracker.measure_and_store(b, storage),
+            Gate::MoveZX(s, d) => tracker.move_z_to_x(s, d),
+            Gate::MoveZZ(s, d) => tracker.move_z_to_z(s, d),
         }
     }
 }
@@ -146,6 +160,14 @@ impl Circuit {
     pub fn measure(&mut self, bit: usize) {
         self.gates.push(Gate::Measure(bit));
     }
+
+    pub fn move_z_to_x(&mut self, source: usize, destination: usize) {
+        self.gates.push(Gate::MoveZX(source, destination));
+    }
+
+    pub fn move_z_to_z(&mut self, source: usize, destination: usize) {
+        self.gates.push(Gate::MoveZZ(source, destination));
+    }
 }
 
 impl Deref for Circuit {
@@ -169,10 +191,7 @@ mod tests {
     use super::*;
     use crate::pauli_frame::{
         self,
-        storage::{
-            FullMap,
-            MappedVector,
-        },
+        storage::MappedVector,
         Frames,
         PauliVec,
     };
@@ -180,8 +199,9 @@ mod tests {
     #[test]
     fn single_rotation_teleportation() {
         let mut circ = Circuit::new();
+        // let mut tracker = Frames::<MappedVector>::init(2);
         let mut tracker = Frames::<MappedVector>::init(2);
-        let mut storage = FullMap::new();
+        let mut storage = MappedVector::default();
 
         circ.cz(0, 1);
         circ.measure(0);
@@ -207,8 +227,9 @@ mod tests {
     #[test]
     fn control_v_dagger() {
         let mut circ = Circuit::new();
+        // let mut tracker = Frames::<MappedVector>::init(5);
         let mut tracker = Frames::<MappedVector>::init(5);
-        let mut storage = FullMap::new();
+        let mut storage = MappedVector::default();
 
         circ.cx(0, 2);
         circ.measure(0);
@@ -246,12 +267,18 @@ mod tests {
     }
 
     #[test]
-    fn toffoli() {
+    fn toffoli_time_dependent() {
         let mut circ = Circuit::new();
+        // let mut tracker = Frames::<MappedVector>::init(10);
         let mut tracker = Frames::<MappedVector>::init(10);
-        let mut storage = FullMap::new();
+        let mut storage = MappedVector::default();
 
-        impl Circuit {
+        // wrapping this impl into a trait makes it local to that function (normal impl
+        // blocks have the same scope as the type)
+        trait TTele {
+            fn t_tele(&mut self, origin: usize, new: usize);
+        }
+        impl TTele for Circuit {
             fn t_tele(&mut self, origin: usize, new: usize) {
                 self.cx(origin, new);
                 self.measure(origin);
@@ -289,7 +316,6 @@ mod tests {
             ],
             pauli_frame::into_sorted_pauli_storage(tracker.into_storage())
         );
-
         assert_eq!(
             vec![
                 (0, PauliVec::try_from(("", "")).unwrap()),
@@ -299,6 +325,69 @@ mod tests {
                 (5, PauliVec::try_from(("0000", "0010")).unwrap()),
                 (7, PauliVec::try_from(("00000", "00001")).unwrap()),
                 (8, PauliVec::try_from(("000000", "000001")).unwrap())
+            ],
+            pauli_frame::into_sorted_pauli_storage(storage)
+        );
+    }
+
+    #[test]
+    fn toffoli_time_independent() {
+        let mut circ = Circuit::new();
+        // let mut tracker = Frames::<MappedVector>::init(10);
+        let mut tracker = Frames::<MappedVector>::init(10);
+        let mut storage = MappedVector::default();
+
+        trait TTele {
+            fn t_tele(&mut self, origin: usize, new: usize);
+        }
+        impl TTele for Circuit {
+            fn t_tele(&mut self, origin: usize, new: usize) {
+                self.cx(origin, new);
+                self.move_z_to_z(origin, new);
+                self.measure(origin);
+                self.tracked_z(new);
+            }
+        }
+
+        circ.t_tele(0, 3);
+        circ.t_tele(1, 4);
+        circ.h(2);
+        circ.cx(3, 4);
+        circ.t_tele(2, 5);
+        circ.cx(4, 5);
+        circ.t_tele(4, 6);
+        circ.t_tele(5, 7);
+        circ.cx(3, 6);
+        circ.cx(6, 7);
+        circ.cx(3, 6);
+        circ.t_tele(7, 8);
+        circ.cx(6, 8);
+        circ.cx(3, 6);
+        circ.t_tele(8, 9);
+        circ.cx(6, 9);
+        circ.h(9);
+
+        for gate in circ.iter() {
+            gate.apply_on_pauli_tracker(&mut tracker, &mut storage);
+        }
+
+        assert_eq!(
+            vec![
+                (3, PauliVec::try_from(("0000000", "1001110")).unwrap()),
+                (6, PauliVec::try_from(("0000000", "0101101")).unwrap()),
+                (9, PauliVec::try_from(("0010111", "0000000")).unwrap()),
+            ],
+            pauli_frame::into_sorted_pauli_storage(tracker.into_storage())
+        );
+        assert_eq!(
+            vec![
+                (0, PauliVec::try_from(("", "")).unwrap()),
+                (1, PauliVec::try_from(("0", "")).unwrap()),
+                (2, PauliVec::try_from(("00", "")).unwrap()),
+                (4, PauliVec::try_from(("000", "")).unwrap()),
+                (5, PauliVec::try_from(("0000", "")).unwrap()),
+                (7, PauliVec::try_from(("00000", "")).unwrap()),
+                (8, PauliVec::try_from(("000000", "")).unwrap())
             ],
             pauli_frame::into_sorted_pauli_storage(storage)
         );
