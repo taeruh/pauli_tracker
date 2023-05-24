@@ -84,6 +84,8 @@ Storage *tracker_storage(const Tracker *tracker);
 
 struct RawStorage raw_storage(Storage *storage);
 
+void put_some_stuff_into_storage(Storage *storage);
+
 void track_x(Tracker *tracker, uintptr_t qubit);
 
 void track_z(Tracker *tracker, uintptr_t qubit);

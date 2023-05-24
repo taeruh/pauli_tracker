@@ -27,21 +27,24 @@ apply_cx(tracker, UInt(2), UInt(0))
 # =
 # 10 12 12
 
-
-measure_and_store(tracker, UInt(0), storage)
-measure_and_store(tracker, UInt(1), storage)
-measure_and_store(tracker, UInt(2), storage)
+for i in range(0, 2)
+    measure_and_store(tracker, UInt(i), storage)
+end
 
 raw_sorted = sort_storage(storage)
 
 sorted = unsafe_wrap(Vector{Tuple}, raw_sorted.ptr, raw_sorted.len)
 
+function show(pauli)
+    println(unsafe_wrap(Vector{UInt32}, pauli.ptr, pauli.len))
+end
+
 for t in sorted
     println(t.qubit)
     pauli = raw_pauli_vec(t.pauli).left
-    println(unsafe_wrap(Vector{UInt32}, pauli.ptr, pauli.len))
+    show(pauli)
     pauli = raw_pauli_vec(t.pauli).right
-    println(unsafe_wrap(Vector{UInt32}, pauli.ptr, pauli.len))
+    show(pauli)
     println()
 end
 

@@ -81,6 +81,13 @@ pub extern "C" fn raw_storage(storage: &mut Storage) -> RawStorage {
 }
 
 #[no_mangle]
+pub extern "C" fn put_some_stuff_into_storage(storage: &mut Storage) {
+    let mut pauli = PauliVec::new();
+    pauli.push(true, false);
+    storage.insert_pauli(42, pauli);
+}
+
+#[no_mangle]
 pub extern "C" fn track_x(tracker: &mut Tracker, qubit: usize) {
     tracker.track_pauli(qubit, unsafe { Pauli::from_unchecked(2) });
 }
