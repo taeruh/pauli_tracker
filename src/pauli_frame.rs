@@ -241,10 +241,10 @@ pub trait PauliStorage: IntoIterator<Item = (usize, PauliVec)> {
 /// A container of multiple Pauli frames, using a generic `Storage` type (that
 /// implements [PauliStorage] if it shall be useful) as internal storage. The type
 /// implements the core functionality to track the Pauli frames through a Clifford
-/// circuit. As example view the documentation of [Circuit](crate::circuit::Circuit).
-/// The explicit storage type should have the [PauliVec]s on it's minor axis (this is
-/// more or less enforced by [PauliStorage]). The module [storage] provides some
-/// compatible storage types.
+/// circuit. As example view the documentation of [Circuit](crate::circuit). The
+/// explicit storage type should have the [PauliVec]s on it's minor axis (this is more
+/// or less enforced by [PauliStorage]). The module [storage] provides some compatible
+/// storage types.
 #[derive(Clone, Debug, Default)]
 pub struct Frames<Storage /* : PauliStorageMap */> {
     storage: Storage,

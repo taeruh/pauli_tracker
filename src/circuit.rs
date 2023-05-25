@@ -1,10 +1,7 @@
-//! An intuitive, canonical description of a circuit consisting only of certain Clifford
-//! gates and (unspecified) measurements.
-
-use std::ops::{
-    Deref,
-    DerefMut,
-};
+//! The main content of this module is a wrapper [TrackedCircuit], around a Clifford
+//! circuit simulator, that provides tools to track Pauli frames while building up the
+//! circuit. One can either use it directly by providing an appropriate circuit
+//! simulator or us as template/idea to write a custom wrapper.
 
 use crate::pauli_frame::{
     Frames,
@@ -12,174 +9,158 @@ use crate::pauli_frame::{
     PauliStorage,
 };
 
-#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Debug)]
-/// A subset of the Clifford gates + (unspecified) measurements. Each operation stores
-/// the qubit position it acts on.
-pub enum Gate {
-    /// Pauli X
-    X(usize),
-    /// Pauli Y
-    Y(usize),
-    /// Pauli Z
-    Z(usize),
-    /// Pauli X that shall be tracked
-    TrackedX(usize),
-    /// Pauli Y that shall be tracked
-    TrackedY(usize),
-    /// Pauli Z that shall be tracked
-    TrackedZ(usize),
-    /// Hadamard
-    H(usize),
-    /// Phase
-    S(usize),
-    /// Control X (Control Not)
-    CX(
-        /// Control
-        usize,
-        /// Target
-        usize,
-    ),
-    /// Control Z
-    CZ(usize, usize),
-    /// Unspecified measurement
-    Measure(usize),
-    MoveZX(
-        /// Source
-        usize,
-        /// Destination
-        usize,
-    ),
-    MoveZZ(
-        /// Source
-        usize,
-        /// Destination
-        usize,
-    ),
+/// The interface into a circuit that can handle Clifford gates and (unspecified)
+/// measurements. We don't care what the circuit is actually doing, we only use this
+/// interface to pass the actions through to the implementing circuit.
+pub trait CliffordCircuit {
+    /// Apply the **X** gate
+    fn x(&mut self, bit: usize);
+    /// Apply the **Y** gate
+    fn y(&mut self, bit: usize);
+    /// Apply the **Z** gate
+    fn z(&mut self, bit: usize);
+    /// Apply the **H** gate
+    fn h(&mut self, bit: usize);
+    /// Apply the **S** gate
+    fn s(&mut self, bit: usize);
+    /// Apply the **Control X (Control Not)** gate
+    fn cx(&mut self, control: usize, target: usize);
+    /// Apply the **Control Z** gate
+    fn cz(&mut self, bit_a: usize, bit_b: usize);
+    /// **Measure** (unspecified)
+    fn measure(&mut self, bit: usize);
 }
 
-impl Gate {
-    pub fn apply_on_pauli_tracker(
-        &self,
-        tracker: &mut Frames<impl PauliStorage>,
-        storage: &mut impl PauliStorage,
-    ) {
-        match *self {
-            Gate::X(_) => (),
-            Gate::Y(_) => (),
-            Gate::Z(_) => (),
-            // Safety: storage < 4 is hardcoded
-            Gate::TrackedX(b) => {
-                tracker.track_pauli(b, unsafe { Pauli::from_unchecked(2) })
-            }
-            Gate::TrackedY(b) => {
-                tracker.track_pauli(b, unsafe { Pauli::from_unchecked(3) })
-            }
-            Gate::TrackedZ(b) => {
-                tracker.track_pauli(b, unsafe { Pauli::from_unchecked(1) })
-            }
-            Gate::H(b) => tracker.h(b),
-            Gate::S(b) => tracker.s(b),
-            Gate::CX(c, t) => tracker.cx(c, t),
-            Gate::CZ(a, b) => tracker.cz(a, b),
-            Gate::Measure(b) => tracker.measure_and_store(b, storage),
-            Gate::MoveZX(s, d) => tracker.move_z_to_x(s, d),
-            Gate::MoveZZ(s, d) => tracker.move_z_to_z(s, d),
-        }
-    }
+/// A dummy Clifford circuit that does nothing.
+pub struct DummyCircuit {}
+impl CliffordCircuit for DummyCircuit {
+    #[inline(always)]
+    fn x(&mut self, _: usize) {}
+    #[inline(always)]
+    fn y(&mut self, _: usize) {}
+    #[inline(always)]
+    fn z(&mut self, _: usize) {}
+    #[inline(always)]
+    fn h(&mut self, _: usize) {}
+    #[inline(always)]
+    fn s(&mut self, _: usize) {}
+    #[inline(always)]
+    fn cx(&mut self, _: usize, _: usize) {}
+    #[inline(always)]
+    fn cz(&mut self, _: usize, _: usize) {}
+    #[inline(always)]
+    fn measure(&mut self, _: usize) {}
 }
 
-/// A circuit consisting of Clifford gates and measurements.
-// it is just a newtype wrapper around a Vec, so it makes sense to implement Deref and
-// DerefMut since Vec is a smart pointer
-#[derive(Debug, Default)]
-pub struct Circuit {
-    /// The circuit instructions
-    pub gates: Vec<Gate>,
+pub mod simple;
+
+/// A Combination of a Clifford circuit (simulator) with a Pauli tracker. The type can
+/// be used to build up the underlining circuit, while keeping track of the Pauli gates
+/// that shall be extracted from the (quantum) simulation, e.g., the Pauli corrections
+/// in [MBQC](https://doi.org/10.48550/arXiv.0910.1116).
+pub struct TrackedCircuit<Circuit, ActiveStorage, Storage> {
+    /// The underlining circuit (simulator). Should implement [CliffordCircuit]
+    pub circuit: Circuit,
+    /// The tracker of the Pauli frames. The `ActiveStorage` should implement
+    /// [PauliStorage].
+    pub tracker: Frames<ActiveStorage>,
+    /// An additional storage which the [PauliVec](crate::pauli_frame::PauliVec)s of
+    /// the measure qubits. Should implement [PauliStorage].
+    pub storage: Storage,
 }
 
-impl Circuit {
-    /// Create a new empty [Circuit]
-    pub fn new() -> Self {
-        Self { gates: Vec::new() }
+// split impl into multiple blocks with the minimum required bounds, so that it is
+// simpler to write generic functions later on
+
+impl<C, A, S> TrackedCircuit<C, A, S>
+where
+    A: PauliStorage,
+{
+    // Safety: storage < 4 is hardcoded
+    /// Append a tracked X gate to the tracker.
+    pub fn track_x(&mut self, bit: usize) {
+        self.tracker.track_pauli(bit, unsafe { Pauli::from_unchecked(2) });
+    }
+    /// Append a tracked Y gate to the tracker.
+    pub fn track_y(&mut self, bit: usize) {
+        self.tracker.track_pauli(bit, unsafe { Pauli::from_unchecked(3) });
+    }
+    /// Append a tracked Z gate to the tracker.
+    pub fn track_z(&mut self, bit: usize) {
+        self.tracker.track_pauli(bit, unsafe { Pauli::from_unchecked(1) });
     }
 
-    // convenience methods to build the circuit (could also be down directly since
-    // DerefMut is implemented to point to self.gates)
-
-    /// Push [Gate::X]\(`bit`\)
-    pub fn x(&mut self, bit: usize) {
-        self.gates.push(Gate::X(bit));
-    }
-
-    /// Push [Gate::Z]\(`bit`\)
-    pub fn z(&mut self, bit: usize) {
-        self.gates.push(Gate::Z(bit));
-    }
-
-    /// Push [Gate::Y]\(`bit`\)
-    pub fn y(&mut self, bit: usize) {
-        self.gates.push(Gate::Y(bit));
-    }
-
-    /// Push [Gate::TrackedX]\(`bit`\)
-    pub fn tracked_x(&mut self, bit: usize) {
-        self.gates.push(Gate::TrackedX(bit));
-    }
-
-    /// Push [Gate::TrackedZ]\(`bit`\)
-    pub fn tracked_z(&mut self, bit: usize) {
-        self.gates.push(Gate::TrackedZ(bit));
-    }
-
-    /// Push [Gate::TrackedY]\(`bit`\)
-    pub fn tracked_y(&mut self, bit: usize) {
-        self.gates.push(Gate::TrackedY(bit));
-    }
-
-    /// Push [Gate::H]\(`bit`\)
-    pub fn h(&mut self, bit: usize) {
-        self.gates.push(Gate::H(bit));
-    }
-
-    /// Push [Gate::S]\(`bit`\)
-    pub fn s(&mut self, bit: usize) {
-        self.gates.push(Gate::S(bit));
-    }
-
-    /// Push [Gate::CX]\(`control`, `target`\)
-    pub fn cx(&mut self, control: usize, target: usize) {
-        self.gates.push(Gate::CX(control, target));
-    }
-
-    /// Push [Gate::CX]\(`bit_a`, `bit_b`\)
-    pub fn cz(&mut self, bit_a: usize, bit_b: usize) {
-        self.gates.push(Gate::CX(bit_a, bit_b));
-    }
-
-    /// Push [Gate::Measure]\(`bit`\)
-    pub fn measure(&mut self, bit: usize) {
-        self.gates.push(Gate::Measure(bit));
-    }
-
+    /// In the Pauli tracker, move the **Z corrections** from the `source` qubit to the
+    /// `destination` qubit, transforming them to **X corrections**.
     pub fn move_z_to_x(&mut self, source: usize, destination: usize) {
-        self.gates.push(Gate::MoveZX(source, destination));
+        self.tracker.move_z_to_x(source, destination);
     }
 
+    /// In the Pauli tracker, move the **Z corrections** from the `source` qubit to the
+    /// `destination` qubit.
     pub fn move_z_to_z(&mut self, source: usize, destination: usize) {
-        self.gates.push(Gate::MoveZZ(source, destination));
+        self.tracker.move_z_to_z(source, destination);
     }
 }
 
-impl Deref for Circuit {
-    type Target = Vec<Gate>;
-    fn deref(&self) -> &Self::Target {
-        &self.gates
+impl<C, A, S> TrackedCircuit<C, A, S>
+where
+    C: CliffordCircuit,
+{
+    /// Apply the **X** gate on the circuit.
+    pub fn x(&mut self, bit: usize) {
+        self.circuit.x(bit);
+    }
+    /// Apply the **Y** gate on the circuit.
+    pub fn y(&mut self, bit: usize) {
+        self.circuit.x(bit);
+    }
+    /// Apply the **Z** gate on the circuit.
+    pub fn z(&mut self, bit: usize) {
+        self.circuit.x(bit);
     }
 }
 
-impl DerefMut for Circuit {
-    fn deref_mut(&mut self) -> &mut Self::Target {
-        &mut self.gates
+impl<C, A, S> TrackedCircuit<C, A, S>
+where
+    C: CliffordCircuit,
+    A: PauliStorage,
+{
+    /// Apply the **H** gate on the circuit and update the Pauli tracker.
+    pub fn h(&mut self, bit: usize) {
+        self.circuit.h(bit);
+        self.tracker.h(bit);
+    }
+    /// Apply the **S** gate on the circuit and update the Pauli tracker.
+    pub fn s(&mut self, bit: usize) {
+        self.circuit.s(bit);
+        self.tracker.s(bit);
+    }
+
+    /// Apply the **Control X (Control Not)** gate on the circuit and update the Pauli
+    /// tracker.
+    pub fn cx(&mut self, control: usize, target: usize) {
+        self.circuit.cx(control, target);
+        self.tracker.cx(control, target);
+    }
+    /// Apply the **Control Z** gate on the circuit and update the Pauli tracker.
+    pub fn cz(&mut self, control: usize, target: usize) {
+        self.circuit.cz(control, target);
+        self.tracker.cz(control, target);
+    }
+}
+
+impl<C, A, S> TrackedCircuit<C, A, S>
+where
+    C: CliffordCircuit,
+    A: PauliStorage,
+    S: PauliStorage,
+{
+    /// Perform a **Measurement** and move the according qubit from the tracker into the
+    /// additional storage.
+    pub fn measure(&mut self, bit: usize) {
+        self.circuit.measure(bit);
+        self.tracker.measure_and_store(bit, &mut self.storage);
     }
 }
 
@@ -188,7 +169,11 @@ impl DerefMut for Circuit {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
+
+    use super::{
+        simple::SimpleCircuit,
+        *,
+    };
     use crate::pauli_frame::{
         self,
         storage::MappedVector,
@@ -198,63 +183,57 @@ mod tests {
 
     #[test]
     fn single_rotation_teleportation() {
-        let mut circ = Circuit::new();
-        // let mut tracker = Frames::<MappedVector>::init(2);
-        let mut tracker = Frames::<MappedVector>::init(2);
-        let mut storage = MappedVector::default();
+        let mut circ = TrackedCircuit {
+            circuit: SimpleCircuit::new(),
+            tracker: Frames::<MappedVector>::init(2),
+            storage: MappedVector::default(),
+        };
 
         circ.cz(0, 1);
         circ.measure(0);
         // this hadamard corrects the hadamard from the rotation, therefore, we put the
         // tracked_z behind it (it is effectively commuted through the identity)
         circ.h(1);
-        circ.tracked_z(1);
-
-        for gate in circ.iter() {
-            gate.apply_on_pauli_tracker(&mut tracker, &mut storage);
-        }
+        circ.track_z(1);
 
         assert_eq!(
             vec![(1, PauliVec::try_from(("0", "1")).unwrap())],
-            pauli_frame::into_sorted_pauli_storage(tracker.into_storage())
+            pauli_frame::into_sorted_pauli_storage(circ.tracker.into_storage())
         );
         assert_eq!(
             vec![(0, PauliVec::new())],
-            pauli_frame::into_sorted_pauli_storage(storage)
+            pauli_frame::into_sorted_pauli_storage(circ.storage)
         );
     }
 
     #[test]
     fn control_v_dagger() {
-        let mut circ = Circuit::new();
-        // let mut tracker = Frames::<MappedVector>::init(5);
-        let mut tracker = Frames::<MappedVector>::init(5);
-        let mut storage = MappedVector::default();
+        let mut circ = TrackedCircuit {
+            circuit: DummyCircuit {},
+            tracker: Frames::<MappedVector>::init(5),
+            storage: MappedVector::default(),
+        };
 
         circ.cx(0, 2);
         circ.measure(0);
-        circ.tracked_z(2);
+        circ.track_z(2);
         circ.h(1);
         circ.cx(1, 2);
         circ.cx(2, 3);
         circ.measure(2);
-        circ.tracked_z(3);
+        circ.track_z(3);
         circ.cx(1, 4);
         circ.measure(1);
-        circ.tracked_z(4);
+        circ.track_z(4);
         circ.cx(4, 3);
         circ.h(4);
-
-        for gate in circ.iter() {
-            gate.apply_on_pauli_tracker(&mut tracker, &mut storage);
-        }
 
         assert_eq!(
             vec![
                 (3, PauliVec::try_from(("000", "010")).unwrap()),
                 (4, PauliVec::try_from(("011", "000")).unwrap())
             ],
-            pauli_frame::into_sorted_pauli_storage(tracker.into_storage())
+            pauli_frame::into_sorted_pauli_storage(circ.tracker.into_storage())
         );
         assert_eq!(
             vec![
@@ -262,27 +241,28 @@ mod tests {
                 (1, PauliVec::try_from(("00", "10")).unwrap()),
                 (2, PauliVec::try_from(("0", "1")).unwrap())
             ],
-            pauli_frame::into_sorted_pauli_storage(storage)
+            pauli_frame::into_sorted_pauli_storage(circ.storage)
         );
     }
 
     #[test]
     fn toffoli_time_dependent() {
-        let mut circ = Circuit::new();
-        // let mut tracker = Frames::<MappedVector>::init(10);
-        let mut tracker = Frames::<MappedVector>::init(10);
-        let mut storage = MappedVector::default();
+        let mut circ = TrackedCircuit {
+            circuit: SimpleCircuit::new(),
+            tracker: Frames::<MappedVector>::init(10),
+            storage: MappedVector::default(),
+        };
 
         // wrapping this impl into a trait makes it local to that function (normal impl
         // blocks have the same scope as the type)
         trait TTele {
             fn t_tele(&mut self, origin: usize, new: usize);
         }
-        impl TTele for Circuit {
+        impl TTele for TrackedCircuit<SimpleCircuit, MappedVector, MappedVector> {
             fn t_tele(&mut self, origin: usize, new: usize) {
                 self.cx(origin, new);
                 self.measure(origin);
-                self.tracked_z(new);
+                self.track_z(new);
             }
         }
 
@@ -304,17 +284,13 @@ mod tests {
         circ.cx(6, 9);
         circ.h(9);
 
-        for gate in circ.iter() {
-            gate.apply_on_pauli_tracker(&mut tracker, &mut storage);
-        }
-
         assert_eq!(
             vec![
                 (3, PauliVec::try_from(("0000000", "1101010")).unwrap()),
                 (6, PauliVec::try_from(("0000000", "0001111")).unwrap()),
                 (9, PauliVec::try_from(("0000001", "0000000")).unwrap()),
             ],
-            pauli_frame::into_sorted_pauli_storage(tracker.into_storage())
+            pauli_frame::into_sorted_pauli_storage(circ.tracker.into_storage())
         );
         assert_eq!(
             vec![
@@ -326,26 +302,27 @@ mod tests {
                 (7, PauliVec::try_from(("00000", "00001")).unwrap()),
                 (8, PauliVec::try_from(("000000", "000001")).unwrap())
             ],
-            pauli_frame::into_sorted_pauli_storage(storage)
+            pauli_frame::into_sorted_pauli_storage(circ.storage)
         );
     }
 
     #[test]
     fn toffoli_time_independent() {
-        let mut circ = Circuit::new();
-        // let mut tracker = Frames::<MappedVector>::init(10);
-        let mut tracker = Frames::<MappedVector>::init(10);
-        let mut storage = MappedVector::default();
+        let mut circ = TrackedCircuit {
+            circuit: DummyCircuit {},
+            tracker: Frames::<MappedVector>::init(10),
+            storage: MappedVector::default(),
+        };
 
         trait TTele {
             fn t_tele(&mut self, origin: usize, new: usize);
         }
-        impl TTele for Circuit {
+        impl TTele for TrackedCircuit<DummyCircuit, MappedVector, MappedVector> {
             fn t_tele(&mut self, origin: usize, new: usize) {
                 self.cx(origin, new);
                 self.move_z_to_z(origin, new);
                 self.measure(origin);
-                self.tracked_z(new);
+                self.track_z(new);
             }
         }
 
@@ -367,17 +344,13 @@ mod tests {
         circ.cx(6, 9);
         circ.h(9);
 
-        for gate in circ.iter() {
-            gate.apply_on_pauli_tracker(&mut tracker, &mut storage);
-        }
-
         assert_eq!(
             vec![
                 (3, PauliVec::try_from(("0000000", "1001110")).unwrap()),
                 (6, PauliVec::try_from(("0000000", "0101101")).unwrap()),
                 (9, PauliVec::try_from(("0010111", "0000000")).unwrap()),
             ],
-            pauli_frame::into_sorted_pauli_storage(tracker.into_storage())
+            pauli_frame::into_sorted_pauli_storage(circ.tracker.into_storage())
         );
         assert_eq!(
             vec![
@@ -389,7 +362,7 @@ mod tests {
                 (7, PauliVec::try_from(("00000", "")).unwrap()),
                 (8, PauliVec::try_from(("000000", "")).unwrap())
             ],
-            pauli_frame::into_sorted_pauli_storage(storage)
+            pauli_frame::into_sorted_pauli_storage(circ.storage)
         );
     }
 }

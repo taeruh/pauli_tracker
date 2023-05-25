@@ -5,8 +5,8 @@ introduction to this library is in the
 # Crate features
 ### Stable features
 * **circuit**
-  Includes the [circuit] module which contains structs and methods to describe certain
-  quantum circuits.
+  Includes the [circuit] module which contains tools to combine the Pauli tracking
+  mechanism with a circuit simulator/description.
 ### Nightly features
 * **not-nightly**
   This feature is exclusive with all other nightly features here. This enables one to
@@ -56,8 +56,8 @@ mod tests {
     use super::*;
 
     #[test]
-    /// Check whether the correct target feature is enabled (in the build script or
-    /// automatically)
+    // Check whether the correct target feature is enabled (in the build script or
+    // automatically)
     fn target_feature() {
         #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
         if is_x86_feature_detected!("avx2") {
