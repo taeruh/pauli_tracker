@@ -32,7 +32,8 @@ introduction to this library is in the
     doc(cfg(feature = "circuit"))
 )]
 pub mod circuit;
-pub mod pauli_frame;
+pub mod pauli;
+pub mod tracker;
 
 /// Figure out which target feature has been enabled regarding SIMD operations. For
 /// example, if avx2 has been enabled, we probably have the most efficient

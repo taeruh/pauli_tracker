@@ -3,10 +3,15 @@
 //! circuit. One can either use it directly by providing an appropriate circuit
 //! simulator or us as template/idea to write a custom wrapper.
 
-use crate::pauli_frame::{
-    Frames,
-    Pauli,
-    PauliStorage,
+use crate::{
+    pauli::Pauli,
+    tracker::{
+        frames::{
+            Frames,
+            StackStorage,
+        },
+        Tracker,
+    },
 };
 
 /// The interface into a circuit that can handle Clifford gates and (unspecified)
@@ -58,12 +63,12 @@ pub mod simple;
 /// be used to build up the underlining circuit, while keeping track of the Pauli gates
 /// that shall be extracted from the (quantum) simulation, e.g., the Pauli corrections
 /// in [MBQC](https://doi.org/10.48550/arXiv.0910.1116).
-pub struct TrackedCircuit<Circuit, ActiveStorage, Storage> {
+pub struct TrackedCircuit<Circuit, Tracker, Storage> {
     /// The underlining circuit (simulator). Should implement [CliffordCircuit]
     pub circuit: Circuit,
     /// The tracker of the Pauli frames. The `ActiveStorage` should implement
     /// [PauliStorage].
-    pub tracker: Frames<ActiveStorage>,
+    pub tracker: Tracker,
     /// An additional storage which the [PauliVec](crate::pauli_frame::PauliVec)s of
     /// the measure qubits. Should implement [PauliStorage].
     pub storage: Storage,
@@ -72,9 +77,9 @@ pub struct TrackedCircuit<Circuit, ActiveStorage, Storage> {
 // split impl into multiple blocks with the minimum required bounds, so that it is
 // simpler to write generic functions later on
 
-impl<C, A, S> TrackedCircuit<C, A, S>
+impl<C, T, S> TrackedCircuit<C, T, S>
 where
-    A: PauliStorage,
+    T: Tracker,
 {
     // Safety: storage < 4 is hardcoded
     /// Append a tracked X gate to the tracker.
@@ -103,7 +108,7 @@ where
     }
 }
 
-impl<C, A, S> TrackedCircuit<C, A, S>
+impl<C, T, S> TrackedCircuit<C, T, S>
 where
     C: CliffordCircuit,
 {
@@ -121,10 +126,10 @@ where
     }
 }
 
-impl<C, A, S> TrackedCircuit<C, A, S>
+impl<C, T, S> TrackedCircuit<C, T, S>
 where
     C: CliffordCircuit,
-    A: PauliStorage,
+    T: Tracker,
 {
     /// Apply the **H** gate on the circuit and update the Pauli tracker.
     pub fn h(&mut self, bit: usize) {
@@ -150,11 +155,11 @@ where
     }
 }
 
-impl<C, A, S> TrackedCircuit<C, A, S>
+impl<C, A, S> TrackedCircuit<C, Frames<A>, S>
 where
     C: CliffordCircuit,
-    A: PauliStorage,
-    S: PauliStorage,
+    A: StackStorage,
+    S: StackStorage,
 {
     /// Perform a **Measurement** and move the according qubit from the tracker into the
     /// additional storage.
@@ -174,7 +179,7 @@ mod tests {
         simple::SimpleCircuit,
         *,
     };
-    use crate::pauli_frame::{
+    use crate::tracker::frames::{
         self,
         storage::MappedVector,
         Frames,
@@ -198,11 +203,11 @@ mod tests {
 
         assert_eq!(
             vec![(1, PauliVec::try_from(("0", "1")).unwrap())],
-            pauli_frame::into_sorted_pauli_storage(circ.tracker.into_storage())
+            frames::into_sorted_pauli_storage(circ.tracker.into_storage())
         );
         assert_eq!(
             vec![(0, PauliVec::new())],
-            pauli_frame::into_sorted_pauli_storage(circ.storage)
+            frames::into_sorted_pauli_storage(circ.storage)
         );
     }
 
@@ -233,7 +238,7 @@ mod tests {
                 (3, PauliVec::try_from(("000", "010")).unwrap()),
                 (4, PauliVec::try_from(("011", "000")).unwrap())
             ],
-            pauli_frame::into_sorted_pauli_storage(circ.tracker.into_storage())
+            frames::into_sorted_pauli_storage(circ.tracker.into_storage())
         );
         assert_eq!(
             vec![
@@ -241,7 +246,7 @@ mod tests {
                 (1, PauliVec::try_from(("00", "10")).unwrap()),
                 (2, PauliVec::try_from(("0", "1")).unwrap())
             ],
-            pauli_frame::into_sorted_pauli_storage(circ.storage)
+            frames::into_sorted_pauli_storage(circ.storage)
         );
     }
 
@@ -258,7 +263,7 @@ mod tests {
         trait TTele {
             fn t_tele(&mut self, origin: usize, new: usize);
         }
-        impl TTele for TrackedCircuit<SimpleCircuit, MappedVector, MappedVector> {
+        impl TTele for TrackedCircuit<SimpleCircuit, Frames<MappedVector>, MappedVector> {
             fn t_tele(&mut self, origin: usize, new: usize) {
                 self.cx(origin, new);
                 self.measure(origin);
@@ -290,7 +295,7 @@ mod tests {
                 (6, PauliVec::try_from(("0000000", "0001111")).unwrap()),
                 (9, PauliVec::try_from(("0000001", "0000000")).unwrap()),
             ],
-            pauli_frame::into_sorted_pauli_storage(circ.tracker.into_storage())
+            frames::into_sorted_pauli_storage(circ.tracker.into_storage())
         );
         assert_eq!(
             vec![
@@ -302,7 +307,7 @@ mod tests {
                 (7, PauliVec::try_from(("00000", "00001")).unwrap()),
                 (8, PauliVec::try_from(("000000", "000001")).unwrap())
             ],
-            pauli_frame::into_sorted_pauli_storage(circ.storage)
+            frames::into_sorted_pauli_storage(circ.storage)
         );
     }
 
@@ -317,7 +322,7 @@ mod tests {
         trait TTele {
             fn t_tele(&mut self, origin: usize, new: usize);
         }
-        impl TTele for TrackedCircuit<DummyCircuit, MappedVector, MappedVector> {
+        impl TTele for TrackedCircuit<DummyCircuit, Frames<MappedVector>, MappedVector> {
             fn t_tele(&mut self, origin: usize, new: usize) {
                 self.cx(origin, new);
                 self.move_z_to_z(origin, new);
@@ -350,7 +355,7 @@ mod tests {
                 (6, PauliVec::try_from(("0000000", "0101101")).unwrap()),
                 (9, PauliVec::try_from(("0010111", "0000000")).unwrap()),
             ],
-            pauli_frame::into_sorted_pauli_storage(circ.tracker.into_storage())
+            frames::into_sorted_pauli_storage(circ.tracker.into_storage())
         );
         assert_eq!(
             vec![
@@ -362,7 +367,7 @@ mod tests {
                 (7, PauliVec::try_from(("00000", "")).unwrap()),
                 (8, PauliVec::try_from(("000000", "")).unwrap())
             ],
-            pauli_frame::into_sorted_pauli_storage(circ.storage)
+            frames::into_sorted_pauli_storage(circ.storage)
         );
     }
 }

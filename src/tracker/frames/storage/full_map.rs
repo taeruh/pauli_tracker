@@ -7,13 +7,13 @@ use std::{
 };
 
 use super::super::{
-    PauliStorage,
+    StackStorage,
     PauliVec,
 };
 
 pub type FullMap = HashMap<usize, PauliVec>;
 
-impl PauliStorage for FullMap {
+impl StackStorage for FullMap {
     type IterMut<'a> = Map<
         hash_map::IterMut<'a, usize, PauliVec>,
         fn((&usize, &'a mut PauliVec)) -> (usize, &'a mut PauliVec),
@@ -76,5 +76,10 @@ impl PauliStorage for FullMap {
             ret.insert(i, PauliVec::new());
         }
         ret
+    }
+
+    #[inline(always)]
+    fn is_empty(&self) -> bool {
+        self.is_empty()
     }
 }

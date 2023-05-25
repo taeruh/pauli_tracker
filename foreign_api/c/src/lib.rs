@@ -3,16 +3,21 @@
 
 use std::mem::ManuallyDrop;
 
-use pauli_tracker::pauli_frame::{
-    storage::MappedVector,
-    Frames,
-    Pauli,
-    PauliStorage,
-    PauliVec,
+use pauli_tracker::{
+    pauli::Pauli,
+    tracker::{
+        frames::{
+            storage::MappedVector,
+            Frames,
+            PauliVec,
+            StackStorage,
+        },
+        Tracker,
+    },
 };
 
 pub type Storage = MappedVector;
-pub type Tracker = Frames<MappedVector>;
+pub type PauliTracker = Frames<MappedVector>;
 
 #[repr(C)]
 pub struct RawStorage {
@@ -47,18 +52,18 @@ pub unsafe extern "C" fn free_storage(storage: *mut Storage) {
 }
 
 #[no_mangle]
-pub extern "C" fn new_tracker() -> *mut Tracker {
-    ManuallyDrop::new(Box::new(Tracker::init(0))).as_mut() as *mut Tracker
+pub extern "C" fn new_tracker() -> *mut PauliTracker {
+    ManuallyDrop::new(Box::new(PauliTracker::init(0))).as_mut() as *mut PauliTracker
 }
 
 /// # Safety
 #[no_mangle]
-pub unsafe extern "C" fn free_tracker(tracker: *mut Tracker) {
+pub unsafe extern "C" fn free_tracker(tracker: *mut PauliTracker) {
     unsafe { Box::from_raw(tracker) };
 }
 
 #[no_mangle]
-pub extern "C" fn tracker_storage(tracker: &Tracker) -> *mut Storage {
+pub extern "C" fn tracker_storage(tracker: &PauliTracker) -> *mut Storage {
     tracker.storage() as *const Storage as *mut Storage
 }
 
@@ -83,48 +88,48 @@ pub extern "C" fn raw_storage(storage: &mut Storage) -> RawStorage {
 #[no_mangle]
 pub extern "C" fn put_some_stuff_into_storage(storage: &mut Storage) {
     let mut pauli = PauliVec::new();
-    pauli.push(true, false);
+    pauli.push(Pauli::try_from(2).unwrap());
     storage.insert_pauli(42, pauli);
 }
 
 #[no_mangle]
-pub extern "C" fn track_x(tracker: &mut Tracker, qubit: usize) {
+pub extern "C" fn track_x(tracker: &mut PauliTracker, qubit: usize) {
     tracker.track_pauli(qubit, unsafe { Pauli::from_unchecked(2) });
 }
 
 #[no_mangle]
-pub extern "C" fn track_z(tracker: &mut Tracker, qubit: usize) {
+pub extern "C" fn track_z(tracker: &mut PauliTracker, qubit: usize) {
     tracker.track_pauli(qubit, unsafe { Pauli::from_unchecked(1) });
 }
 
 #[no_mangle]
-pub extern "C" fn track_y(tracker: &mut Tracker, qubit: usize) {
+pub extern "C" fn track_y(tracker: &mut PauliTracker, qubit: usize) {
     tracker.track_pauli(qubit, unsafe { Pauli::from_unchecked(3) });
 }
 
 #[no_mangle]
-pub extern "C" fn apply_h(tracker: &mut Tracker, qubit: usize) {
+pub extern "C" fn apply_h(tracker: &mut PauliTracker, qubit: usize) {
     tracker.h(qubit);
 }
 
 #[no_mangle]
-pub extern "C" fn apply_s(tracker: &mut Tracker, qubit: usize) {
+pub extern "C" fn apply_s(tracker: &mut PauliTracker, qubit: usize) {
     tracker.s(qubit);
 }
 
 #[no_mangle]
-pub extern "C" fn apply_cx(tracker: &mut Tracker, control: usize, target: usize) {
+pub extern "C" fn apply_cx(tracker: &mut PauliTracker, control: usize, target: usize) {
     tracker.cx(control, target);
 }
 
 #[no_mangle]
-pub extern "C" fn apply_cz(tracker: &mut Tracker, qubit_a: usize, qubit_b: usize) {
+pub extern "C" fn apply_cz(tracker: &mut PauliTracker, qubit_a: usize, qubit_b: usize) {
     tracker.cx(qubit_a, qubit_b);
 }
 
 #[no_mangle]
 pub extern "C" fn measure_and_store(
-    tracker: &mut Tracker,
+    tracker: &mut PauliTracker,
     qubit: usize,
     storage: &mut Storage,
 ) {
@@ -132,7 +137,7 @@ pub extern "C" fn measure_and_store(
 }
 
 #[no_mangle]
-pub extern "C" fn new_qubit(tracker: &mut Tracker, qubit: usize) {
+pub extern "C" fn new_qubit(tracker: &mut PauliTracker, qubit: usize) {
     tracker.new_qubit(qubit);
 }
 

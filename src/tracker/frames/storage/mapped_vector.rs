@@ -15,7 +15,7 @@ use itertools::Itertools;
 
 use super::{
     super::{
-        PauliStorage,
+        StackStorage,
         PauliVec,
     },
     GetTwoMutSlice,
@@ -50,7 +50,7 @@ impl IntoIterator for MappedVector {
     }
 }
 
-impl PauliStorage for MappedVector {
+impl StackStorage for MappedVector {
     type IterMut<'a> = Zip<
         Map< slice::Iter<'a, usize>, fn(&usize) -> usize>, slice::IterMut<'a, PauliVec>>
     where
@@ -122,6 +122,11 @@ impl PauliStorage for MappedVector {
             position,
             inverse_position,
         }
+    }
+
+    #[inline(always)]
+    fn is_empty(&self) -> bool {
+        self.frames.is_empty()
     }
 }
 

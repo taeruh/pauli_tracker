@@ -10,7 +10,7 @@ use std::{
 
 use super::{
     super::{
-        PauliStorage,
+        StackStorage,
         PauliVec,
     },
     GetTwoMutSlice,
@@ -44,7 +44,7 @@ impl IntoIterator for FixedVector {
     }
 }
 
-impl PauliStorage for FixedVector {
+impl StackStorage for FixedVector {
     type IterMut<'a> = Enumerate<slice::IterMut<'a, PauliVec>>
     where
         Self: 'a;
@@ -104,5 +104,10 @@ impl PauliStorage for FixedVector {
         Self {
             frames: vec![PauliVec::new(); num_qubits],
         }
+    }
+
+    #[inline(always)]
+    fn is_empty(&self) -> bool {
+        self.frames.is_empty()
     }
 }
