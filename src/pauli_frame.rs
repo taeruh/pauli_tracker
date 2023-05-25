@@ -150,10 +150,10 @@ impl PauliVec {
         self.right.push(z);
     }
 
-    pub fn pop(&mut self) -> Option<Pauli> {
-        let l = self.left.pop()?;
-        let r = self.right.pop()?;
-        Some(Pauli::new(l, r))
+    pub fn pop_or_false(&mut self) -> Pauli {
+        let l = self.left.pop().unwrap_or(false);
+        let r = self.right.pop().unwrap_or(false);
+        Pauli::new(l, r)
     }
 
     pub fn reset(&mut self) {
@@ -264,8 +264,8 @@ impl<Storage> Frames<Storage> {
         self.storage
     }
 
-    // Pauli gates don't do anything; we just include them for completeness and since it
-    // might be more convenient to have them on the caller side
+    // Pauli gates don't do anything; we just include them for completeness and because
+    // it might be more convenient to have them on the caller side
     /// Apply Pauli X, note that it is just the identity.
     #[inline(always)]
     pub fn x(&self, _: usize) {}
@@ -306,24 +306,25 @@ impl<Storage: PauliStorage> Frames<Storage> {
         for (_, p) in self.storage.iter_mut() {
             p.push(false, false);
         }
-        self.frames_num += 1;
         for (i, p) in string {
             match self.storage.get_mut(i) {
-                Some(v) => v.left.set(self.frames_num - 1, p.x()),
+                Some(pauli) => {
+                    pauli.left.set(self.frames_num, p.x());
+                    pauli.right.set(self.frames_num, p.z());
+                }
                 None => continue,
             }
-            self.storage
-                .get_mut(i)
-                .expect("bug; already checked above")
-                .right
-                .set(self.frames_num - 1, p.z());
         }
+        self.frames_num += 1;
     }
 
     pub fn pop_frame(&mut self) -> Option<PauliString> {
+        if self.frames_num == 0 {
+            return None;
+        }
         let mut ret = Vec::new();
         for (i, p) in self.storage.iter_mut() {
-            ret.push((i, p.pop()?));
+            ret.push((i, p.pop_or_false()));
         }
         self.frames_num -= 1;
         Some(ret)
@@ -378,6 +379,7 @@ impl<Storage: PauliStorage> Frames<Storage> {
         }
     }
 
+    // todo: test movements similar to the gates
     pub fn move_z_to_x(&mut self, source: usize, destination: usize) {
         let (s, d) = self.storage.get_two_mut(source, destination).unwrap();
         d.left.xor(&s.right);
@@ -405,10 +407,7 @@ pub fn sort_pauli_storage(storage: &impl PauliStorage) -> Vec<(usize, &PauliVec)
 }
 
 pub fn into_sorted_pauli_storage(storage: impl PauliStorage) -> Vec<(usize, PauliVec)> {
-    let mut ret = storage
-        .into_iter()
-        .map(|(i, p)| (i, p))
-        .collect::<Vec<(usize, PauliVec)>>();
+    let mut ret = storage.into_iter().collect::<Vec<(usize, PauliVec)>>();
     ret.sort_by_key(|(i, _)| *i);
     ret
 }
