@@ -33,6 +33,7 @@ introduction to this library is in the
 )]
 pub mod circuit;
 pub mod pauli;
+mod slice_extension;
 pub mod tracker;
 
 /// Figure out which target feature has been enabled regarding SIMD operations. For

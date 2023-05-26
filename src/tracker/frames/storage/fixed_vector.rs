@@ -8,13 +8,11 @@ use std::{
     slice,
 };
 
-use super::{
-    super::{
-        StackStorage,
-        PauliVec,
-    },
-    GetTwoMutSlice,
+use super::super::{
+    PauliVec,
+    StackStorage,
 };
+use crate::slice_extension::GetTwoMutSlice;
 
 #[derive(Debug, Default)]
 pub struct FixedVector {

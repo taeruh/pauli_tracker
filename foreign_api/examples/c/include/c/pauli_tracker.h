@@ -7,10 +7,10 @@
  * A container of multiple Pauli frames, using a generic `Storage` type (that
  * implements [PauliStorage] if it shall be useful) as internal storage. The type
  * implements the core functionality to track the Pauli frames through a Clifford
- * circuit. As example view the documentation of [Circuit](crate::circuit::Circuit).
- * The explicit storage type should have the [PauliVec]s on it's minor axis (this is
- * more or less enforced by [PauliStorage]). The module [storage] provides some
- * compatible storage types.
+ * circuit. As example view the documentation of [Circuit](crate::circuit). The
+ * explicit storage type should have the [PauliVec]s on it's minor axis (this is more
+ * or less enforced by [PauliStorage]). The module [storage] provides some compatible
+ * storage types.
  */
 typedef struct Frames_MappedVector Frames_MappedVector;
 
@@ -23,7 +23,7 @@ typedef struct PauliVec PauliVec;
 
 typedef struct MappedVector Storage;
 
-typedef struct Frames_MappedVector Tracker;
+typedef struct Frames_MappedVector PauliTracker;
 
 typedef struct RawVec_PauliVec {
   struct PauliVec *ptr;
@@ -73,36 +73,36 @@ Storage *new_storage(void);
  */
 void free_storage(Storage *storage);
 
-Tracker *new_tracker(void);
+PauliTracker *new_tracker(void);
 
 /**
  * # Safety
  */
-void free_tracker(Tracker *tracker);
+void free_tracker(PauliTracker *tracker);
 
-Storage *tracker_storage(const Tracker *tracker);
+Storage *tracker_storage(const PauliTracker *tracker);
 
 struct RawStorage raw_storage(Storage *storage);
 
 void put_some_stuff_into_storage(Storage *storage);
 
-void track_x(Tracker *tracker, uintptr_t qubit);
+void track_x(PauliTracker *tracker, uintptr_t qubit);
 
-void track_z(Tracker *tracker, uintptr_t qubit);
+void track_z(PauliTracker *tracker, uintptr_t qubit);
 
-void track_y(Tracker *tracker, uintptr_t qubit);
+void track_y(PauliTracker *tracker, uintptr_t qubit);
 
-void apply_h(Tracker *tracker, uintptr_t qubit);
+void apply_h(PauliTracker *tracker, uintptr_t qubit);
 
-void apply_s(Tracker *tracker, uintptr_t qubit);
+void apply_s(PauliTracker *tracker, uintptr_t qubit);
 
-void apply_cx(Tracker *tracker, uintptr_t control, uintptr_t target);
+void apply_cx(PauliTracker *tracker, uintptr_t control, uintptr_t target);
 
-void apply_cz(Tracker *tracker, uintptr_t qubit_a, uintptr_t qubit_b);
+void apply_cz(PauliTracker *tracker, uintptr_t qubit_a, uintptr_t qubit_b);
 
-void measure_and_store(Tracker *tracker, uintptr_t qubit, Storage *storage);
+void measure_and_store(PauliTracker *tracker, uintptr_t qubit, Storage *storage);
 
-void new_qubit(Tracker *tracker, uintptr_t qubit);
+void new_qubit(PauliTracker *tracker, uintptr_t qubit);
 
 struct RawVec_Tuple sort_storage(const Storage *storage);
 

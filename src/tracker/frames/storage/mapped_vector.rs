@@ -13,13 +13,11 @@ use std::{
 
 use itertools::Itertools;
 
-use super::{
-    super::{
-        StackStorage,
-        PauliVec,
-    },
-    GetTwoMutSlice,
+use super::super::{
+    PauliVec,
+    StackStorage,
 };
+use crate::slice_extension::GetTwoMutSlice;
 
 #[derive(Debug, Default)]
 // this is basically a HashMap<key=usize, value=PauliVec> splitted into

@@ -11,7 +11,7 @@ pub type PauliString = Vec<(usize, Pauli)>;
 
 pub trait Tracker {
     type Stack;
-    fn init(num_qubits: usize) -> Self;
+    fn init(num_bits: usize) -> Self;
     fn new_qubit(&mut self, bit: usize) -> Option<usize>;
     fn track_pauli(&mut self, bit: usize, pauli: Pauli);
     fn track_pauli_string(&mut self, string: PauliString);
