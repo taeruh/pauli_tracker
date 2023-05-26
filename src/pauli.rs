@@ -1,5 +1,10 @@
 //! Dense encoding for a single Pauli operator.
 
+use std::fmt::{
+    Debug,
+    Display,
+};
+
 // just to effectively have an impl bool to make things more convenient here; the
 // disadvantage is that we cannot define the methods to be const but we don't need that
 trait ResolvePauli {
@@ -28,7 +33,7 @@ impl ResolvePauli for bool {
 /// Unsafe code might rely on that invariant (e.g., via accessing the storage with
 /// [Self::storage] and using it to index a pointer), therefore, functions that make it
 /// possible to circumvent the invariant are unsafe.
-#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Debug, Default)]
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
 pub struct Pauli {
     storage: u8,
 }
@@ -138,6 +143,17 @@ impl Pauli {
     }
     pub fn xor_u8(&mut self, other: u8) {
         self.storage ^= other;
+    }
+}
+
+impl Display for Pauli {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.storage)
+    }
+}
+impl Debug for Pauli {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.storage)
     }
 }
 

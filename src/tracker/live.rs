@@ -1,9 +1,6 @@
 use std::{
+    self,
     cmp::Ordering,
-    ops::{
-        Deref,
-        DerefMut,
-    },
 };
 
 use super::{
@@ -15,22 +12,18 @@ use crate::{
     slice_extension::GetTwoMutSlice,
 };
 
-#[derive(Clone, Debug, Default)]
+#[derive(Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Default, Debug)]
 pub struct BitVector {
     // this will become a bitvector later ...
     inner: Vec<Pauli>,
 }
 
-impl Deref for BitVector {
-    type Target = Vec<Pauli>;
-    fn deref(&self) -> &Self::Target {
-        &self.inner
+impl BitVector {
+    pub fn get(&self, bit: usize) -> Option<&Pauli> {
+        self.inner.get(bit)
     }
-}
-
-impl DerefMut for BitVector {
-    fn deref_mut(&mut self) -> &mut Self::Target {
-        &mut self.inner
+    pub fn get_mut(&mut self, bit: usize) -> Option<&mut Pauli> {
+        self.inner.get_mut(bit)
     }
 }
 
@@ -44,66 +37,66 @@ impl Tracker for BitVector {
     }
 
     fn new_qubit(&mut self, bit: usize) -> Option<usize> {
-        let len = self.len();
+        let len = self.inner.len();
         match bit.cmp(&len) {
             Ordering::Less => Some(bit),
             Ordering::Equal => {
-                self.push(Pauli::new_i());
+                self.inner.push(Pauli::new_i());
                 None
             }
             Ordering::Greater => {
                 let diff = bit - len;
-                self.try_reserve(diff).unwrap();
-                self.extend(std::iter::repeat(Pauli::new_i()).take(diff));
+                self.inner.try_reserve(diff).unwrap();
+                self.inner.extend(std::iter::repeat(Pauli::new_i()).take(diff));
                 None
             }
         }
     }
 
     fn track_pauli(&mut self, bit: usize, pauli: Pauli) {
-        if let Some(p) = self.get_mut(bit) {
+        if let Some(p) = self.inner.get_mut(bit) {
             p.xor(pauli)
         }
     }
     fn track_pauli_string(&mut self, string: PauliString) {
         for (bit, pauli) in string {
-            if let Some(p) = self.get_mut(bit) {
+            if let Some(p) = self.inner.get_mut(bit) {
                 p.xor(pauli)
             }
         }
     }
 
     fn h(&mut self, bit: usize) {
-        self[bit].h();
+        self.inner[bit].h();
     }
     fn s(&mut self, bit: usize) {
-        self[bit].s();
+        self.inner[bit].s();
     }
 
     fn cx(&mut self, control: usize, target: usize) {
-        let (c, t) = self.get_two_mut(control, target).unwrap();
+        let (c, t) = self.inner.get_two_mut(control, target).unwrap();
         t.xor_u8(c.left_mask());
         c.xor_u8(t.right_mask());
     }
     fn cz(&mut self, bit_a: usize, bit_b: usize) {
-        let (a, b) = self.get_two_mut(bit_a, bit_b).unwrap();
+        let (a, b) = self.inner.get_two_mut(bit_a, bit_b).unwrap();
         a.xor_u8(b.left_mask() >> 1);
         b.xor_u8(a.left_mask() >> 1);
     }
 
     fn move_z_to_x(&mut self, source: usize, destination: usize) {
-        let (s, d) = self.get_two_mut(source, destination).unwrap();
+        let (s, d) = self.inner.get_two_mut(source, destination).unwrap();
         d.xor_u8(s.right_mask() << 1);
         s.set_z(false);
     }
     fn move_z_to_z(&mut self, source: usize, destination: usize) {
-        let (s, d) = self.get_two_mut(source, destination).unwrap();
+        let (s, d) = self.inner.get_two_mut(source, destination).unwrap();
         d.xor_u8(s.right_mask());
         s.set_z(false);
     }
 
     fn measure(&mut self, bit: usize) -> Option<Self::Stack> {
-        Some(self[bit])
+        Some(self.inner[bit])
     }
 }
 

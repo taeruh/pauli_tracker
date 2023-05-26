@@ -7,7 +7,7 @@ edition = "2021"
 crate-type = ["lib", "cdylib", "staticlib"]
 
 [features]
-circuit = []
+circuit = ["dep:rand"]
 # nightly-features (it's a little bit tricky because there's no #[cfg(nightly)]):
 # when enabling --all-features, we usually do not want to enable the nightly features,
 # therefore, we combine each nightly feature with a not(feature = "not-nightly); this
@@ -21,6 +21,7 @@ doc-build-nightly = []
 [dependencies]
 bit-vec = "0.6.3"
 itertools = "0.10.5"
+rand = { version = "0.8.5", optional = true }
 
 [package.metadata.docs.rs]
 features = ["doc-build-nightly"]

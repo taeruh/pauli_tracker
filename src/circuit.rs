@@ -1,3 +1,6 @@
+//! Currently, this module is more like an example usage of the trackers and a testing
+//! module; it will be more like a library when things are more stable
+//!
 //! The main content of this module is a wrapper [TrackedCircuit], around a Clifford
 //! circuit simulator, that provides tools to track Pauli frames while building up the
 //! circuit. One can either use it directly by providing an appropriate circuit
@@ -33,7 +36,7 @@ pub trait CliffordCircuit {
     /// Apply the **Control Z** gate
     fn cz(&mut self, bit_a: usize, bit_b: usize);
     /// **Measure** (unspecified)
-    fn measure(&mut self, bit: usize);
+    fn measure(&mut self, bit: usize) -> Option<bool>;
 }
 
 /// A dummy Clifford circuit that does nothing.
@@ -54,7 +57,34 @@ impl CliffordCircuit for DummyCircuit {
     #[inline(always)]
     fn cz(&mut self, _: usize, _: usize) {}
     #[inline(always)]
-    fn measure(&mut self, _: usize) {}
+    fn measure(&mut self, _: usize) -> Option<bool> {
+        None
+    }
+}
+
+/// A dummy Clifford circuit that does nothing.
+pub struct RandomMeasurementCircuit {}
+impl CliffordCircuit for RandomMeasurementCircuit {
+    #[inline(always)]
+    fn x(&mut self, _: usize) {}
+    #[inline(always)]
+    fn y(&mut self, _: usize) {}
+    #[inline(always)]
+    fn z(&mut self, _: usize) {}
+    #[inline(always)]
+    fn h(&mut self, _: usize) {}
+    #[inline(always)]
+    fn s(&mut self, _: usize) {}
+    #[inline(always)]
+    fn cx(&mut self, _: usize, _: usize) {}
+    #[inline(always)]
+    fn cz(&mut self, _: usize, _: usize) {}
+    #[inline(always)]
+    fn measure(&mut self, _: usize) -> Option<bool> {
+        // Some(false)
+        // Some(true)
+        Some(rand::random::<bool>())
+    }
 }
 
 pub mod simple;
@@ -67,10 +97,10 @@ pub struct TrackedCircuit<Circuit, Tracker, Storage> {
     /// The underlining circuit (simulator). Should implement [CliffordCircuit]
     pub circuit: Circuit,
     /// The tracker of the Pauli frames. The `ActiveStorage` should implement
-    /// [PauliStorage].
+    /// [StackStorage].
     pub tracker: Tracker,
-    /// An additional storage which the [PauliVec](crate::pauli_frame::PauliVec)s of
-    /// the measure qubits. Should implement [PauliStorage].
+    /// An additional storage which the [StackStorage]s of the measure qubits. Should
+    /// implement [StackStorage].
     pub storage: Storage,
 }
 
@@ -174,16 +204,18 @@ where
 
 #[cfg(test)]
 mod tests {
-
     use super::{
         simple::SimpleCircuit,
         *,
     };
-    use crate::tracker::frames::{
-        self,
-        storage::MappedVector,
-        Frames,
-        PauliVec,
+    use crate::tracker::{
+        frames::{
+            self,
+            storage::MappedVector,
+            Frames,
+            PauliVec,
+        },
+        live::BitVector,
     };
 
     #[test]
@@ -369,5 +401,70 @@ mod tests {
             ],
             frames::into_sorted_pauli_storage(circ.storage)
         );
+    }
+
+    #[test]
+    fn toffoli_live() {
+        let mut circ = TrackedCircuit {
+            circuit: RandomMeasurementCircuit {},
+            tracker: BitVector::init(10),
+            storage: (),
+        };
+
+        trait TTele {
+            fn t_tele(&mut self, origin: usize, new: usize) -> bool;
+        }
+        impl TTele for TrackedCircuit<RandomMeasurementCircuit, BitVector, ()> {
+            fn t_tele(&mut self, origin: usize, new: usize) -> bool {
+                self.cx(origin, new);
+                self.move_z_to_z(origin, new);
+                let result = self.circuit.measure(origin).unwrap();
+                if result {
+                    self.track_z(new);
+                };
+                result
+            }
+        }
+
+        let mut results = Vec::new();
+
+        results.push(circ.t_tele(0, 3) as u8);
+        results.push(circ.t_tele(1, 4) as u8);
+        circ.h(2);
+        circ.cx(3, 4);
+        results.push(circ.t_tele(2, 5) as u8);
+        circ.cx(4, 5);
+        results.push(circ.t_tele(4, 6) as u8);
+        results.push(circ.t_tele(5, 7) as u8);
+        circ.cx(3, 6);
+        circ.cx(6, 7);
+        circ.cx(3, 6);
+        results.push(circ.t_tele(7, 8) as u8);
+        circ.cx(6, 8);
+        circ.cx(3, 6);
+        results.push(circ.t_tele(8, 9) as u8);
+        circ.cx(6, 9);
+        circ.h(9);
+
+        let mut check = BitVector::init(10);
+        // compare toffoli tests with frame tracker
+        // (3, PauliVec::try_from(("0000000", "1001110")).unwrap()),
+        // (6, PauliVec::try_from(("0000000", "0101101")).unwrap()),
+        // (9, PauliVec::try_from(("0010111", "0000000")).unwrap()),
+        check
+            .get_mut(3)
+            .unwrap()
+            .set_storage((results[0] + results[3] + results[4] + results[5]) % 2);
+        check
+            .get_mut(6)
+            .unwrap()
+            .set_storage((results[1] + results[3] + results[4] + results[6]) % 2);
+        check
+            .get_mut(9)
+            .unwrap()
+            .set_storage(((results[2] + results[4] + results[5] + results[6]) % 2) * 2);
+
+        assert_eq!(circ.tracker, check);
+        // println!("{:?}", circ.tracker);
     }
 }

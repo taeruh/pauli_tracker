@@ -97,7 +97,8 @@ impl CliffordCircuit for SimpleCircuit {
         self.gates.push(Gate::CX(bit_a, bit_b));
     }
     #[inline]
-    fn measure(&mut self, bit: usize) {
+    fn measure(&mut self, bit: usize) -> Option<bool> {
         self.gates.push(Gate::Measure(bit));
+        None
     }
 }

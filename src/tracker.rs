@@ -4,9 +4,12 @@ use crate::pauli::Pauli;
 /// [Frames](frames::Frames) (via [Frames::pop_frame](frames::Frames::pop_frame)). The
 /// `usize` element is the qubit index of the `Pauli` However, importantly note, that it
 /// is not optimal to build arrays with PauliStrings on the minor access. The library is
-/// build to use implementors of [PauliStorage], which should have [PauliVec]s on the
+/// build to use implementors of [StackStorage], which should have [PauliVec]s on the
 /// minor array axis, as workhorses. This vector should be mainly used to analyze single
 /// Pauli strings.
+///
+/// [StackStorage]: frames::StackStorage
+/// [PauliVec]: frames::PauliVec
 pub type PauliString = Vec<(usize, Pauli)>;
 
 pub trait Tracker {
