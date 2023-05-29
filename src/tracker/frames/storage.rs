@@ -154,12 +154,15 @@ pub fn layered_graph(
     // dependencies
     for (bit, stack) in storage.iter() {
         let mut deps: Vec<usize> = Vec::new();
-        for (dep, flag) in stack.left.iter().enumerate() {
-            if flag {
-                deps.push(map[dep]);
-            }
-        }
-        for (dep, flag) in stack.right.iter().enumerate() {
+
+        let max = stack.left.len().max(stack.right.len());
+        let mut left = stack.left.clone();
+        left.grow(max - stack.left.len(), false);
+        let mut right = stack.right.clone();
+        right.grow(max - stack.right.len(), false);
+        left.or(&right);
+
+        for (dep, flag) in left.iter().enumerate() {
             if flag {
                 deps.push(map[dep]);
             }
@@ -173,6 +176,7 @@ pub fn layered_graph(
 
     let mut register: Vec<usize> = Vec::new();
     let mut layer_idx = 0;
+
 
     while !remaining.is_empty() {
         let layer = graph.get(layer_idx).unwrap();

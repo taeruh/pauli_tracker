@@ -89,7 +89,7 @@ impl Tracker for BitVector {
         d.xor_u8(s.right_mask() << 1);
         s.set_z(false);
     }
-    fn move_z_to_z(&mut self, source: usize, destination: usize) {
+    fn full_move_z_to_z(&mut self, source: usize, destination: usize) {
         let (s, d) = self.inner.get_two_mut(source, destination).unwrap();
         d.xor_u8(s.right_mask());
         s.set_z(false);
@@ -97,6 +97,10 @@ impl Tracker for BitVector {
 
     fn measure(&mut self, bit: usize) -> Option<Self::Stack> {
         Some(self.inner[bit])
+    }
+
+    fn move_z_to_z(&mut self, source: usize, destination: usize) {
+        todo!()
     }
 }
 
@@ -167,7 +171,7 @@ mod tests {
                 [0, 1, 2, 3, 2, 3, 0, 1, 8, 9, 10, 11, 10, 11, 8, 9],
             ),
             (
-                BitVector::move_z_to_z,
+                BitVector::full_move_z_to_z,
                 "zz",
                 [0, 1, 2, 3, 1, 0, 3, 2, 8, 9, 10, 11, 9, 8, 11, 10],
             ),

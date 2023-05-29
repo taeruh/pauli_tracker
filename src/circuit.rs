@@ -40,7 +40,13 @@ pub trait CliffordCircuit {
 }
 
 /// A dummy Clifford circuit that does nothing.
+#[derive(Default)]
 pub struct DummyCircuit {}
+impl DummyCircuit {
+    pub fn new() -> Self {
+        Self {}
+    }
+}
 impl CliffordCircuit for DummyCircuit {
     #[inline(always)]
     fn x(&mut self, _: usize) {}
@@ -133,6 +139,10 @@ where
 
     /// In the Pauli tracker, move the **Z corrections** from the `source` qubit to the
     /// `destination` qubit.
+    pub fn full_move_z_to_z(&mut self, source: usize, destination: usize) {
+        self.tracker.full_move_z_to_z(source, destination);
+    }
+
     pub fn move_z_to_z(&mut self, source: usize, destination: usize) {
         self.tracker.move_z_to_z(source, destination);
     }
@@ -199,6 +209,18 @@ where
     }
 }
 
+impl<C, A> TrackedCircuit<C, Frames<A>, ()>
+where
+    C: CliffordCircuit,
+    A: StackStorage,
+{
+    /// Perform a **Measurement** and move the according qubit from the tracker into the
+    /// additional storage.
+    pub fn measure(&mut self, bit: usize) {
+        self.circuit.measure(bit);
+    }
+}
+
 // TODO finish; maybe with some derive macros to reduce some boilerplate
 // pub mod dense;
 
@@ -210,8 +232,9 @@ mod tests {
     };
     use crate::tracker::{
         frames::{
-            storage,
             storage::{
+                self,
+                FixedVector,
                 MappedVector,
                 PauliVec,
             },
@@ -359,7 +382,7 @@ mod tests {
         impl TTele for TrackedCircuit<DummyCircuit, Frames<MappedVector>, MappedVector> {
             fn t_tele(&mut self, origin: usize, new: usize) {
                 self.cx(origin, new);
-                self.move_z_to_z(origin, new);
+                self.full_move_z_to_z(origin, new);
                 self.measure(origin);
                 self.track_z(new);
             }
@@ -419,7 +442,7 @@ mod tests {
         impl TTele for TrackedCircuit<RandomMeasurementCircuit, BitVector, ()> {
             fn t_tele(&mut self, origin: usize, new: usize) -> bool {
                 self.cx(origin, new);
-                self.move_z_to_z(origin, new);
+                self.full_move_z_to_z(origin, new);
                 let result = self.circuit.measure(origin).unwrap();
                 if result {
                     self.track_z(new);
@@ -517,5 +540,62 @@ mod tests {
             &[0, 1, 2, 4, 5, 7, 8],
         );
         println!("{:?}", graph);
+    }
+
+    #[test]
+    fn another_graph_test() {
+        let mut circ = TrackedCircuit {
+            circuit: DummyCircuit::new(),
+            tracker: Frames::<FixedVector>::init(10),
+            storage: (),
+        };
+
+        // wrapping this impl into a trait makes it local to that function (normal impl
+        // blocks have the same scope as the type)
+        trait TTele {
+            fn t_tele(&mut self, origin: usize, new: usize);
+        }
+        impl TTele for TrackedCircuit<DummyCircuit, Frames<FixedVector>, ()> {
+            fn t_tele(&mut self, origin: usize, new: usize) {
+                self.cx(origin, new);
+                self.measure(origin);
+                self.track_z(new);
+            }
+        }
+
+        circ.t_tele(0, 3);
+        circ.t_tele(1, 4);
+        circ.h(4);
+        circ.cz(4, 3);
+        circ.cx(3, 4);
+        circ.t_tele(2, 5);
+        circ.cx(4, 5);
+        circ.t_tele(4, 6);
+        circ.h(6);
+        circ.t_tele(5, 7);
+        circ.cx(3, 6);
+        circ.h(3);
+        circ.cx(3, 7);
+        circ.s(3);
+        circ.cz(3, 6);
+        circ.t_tele(7, 8);
+        circ.cx(6, 8);
+        circ.s(8);
+        circ.cx(3, 6);
+        circ.cx(8, 6);
+        circ.t_tele(8, 9);
+        circ.cx(6, 9);
+        circ.h(9);
+
+        let rest = circ.tracker.into_storage();
+
+        println!("{:#?}", rest);
+
+        let graph = crate::tracker::frames::storage::layered_graph(
+            &rest,
+            &[0, 1, 2, 4, 5, 7, 8],
+        );
+        println!("{:?}", graph);
+        println!("{:?}", graph.len());
     }
 }

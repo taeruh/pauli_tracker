@@ -23,6 +23,7 @@ pub trait Tracker {
     fn cx(&mut self, control: usize, target: usize);
     fn cz(&mut self, bit_a: usize, bit_b: usize);
     fn move_z_to_x(&mut self, source: usize, destination: usize);
+    fn full_move_z_to_z(&mut self, source: usize, destination: usize);
     fn move_z_to_z(&mut self, source: usize, destination: usize);
     fn measure(&mut self, bit: usize) -> Option<Self::Stack>;
 }

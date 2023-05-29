@@ -168,10 +168,16 @@ impl<Storage: StackStorage> Tracker for Frames<Storage> {
         s.right.truncate(0)
     }
 
-    fn move_z_to_z(&mut self, source: usize, destination: usize) {
+    fn full_move_z_to_z(&mut self, source: usize, destination: usize) {
         let (s, d) = self.storage.get_two_mut(source, destination).unwrap();
         d.right.xor(&s.right);
         s.right.truncate(0)
+    }
+
+    fn move_z_to_z(&mut self, source: usize, destination: usize) {
+        let (s, d) = self.storage.get_two_mut(source, destination).unwrap();
+        d.right.xor(&s.right);
+        s.right.clear()
     }
 
     // pub fn reset_all(&mut self) {
