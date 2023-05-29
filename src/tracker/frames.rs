@@ -1,7 +1,7 @@
-use std::mem;
-
-use bit_vec::BitVec;
-
+use self::storage::{
+    PauliVec,
+    StackStorage,
+};
 use super::{
     PauliString,
     Tracker,
@@ -9,133 +9,6 @@ use super::{
 use crate::pauli::Pauli;
 
 pub mod storage;
-
-/// Multiple encoded Paulis compressed into two [BitVec]s.
-// each Pauli can be described by two bits (neglecting phases)
-#[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Default)]
-pub struct PauliVec {
-    // the bit representing the left qubit on the left-hand side in the tableau
-    // representation, i.e., X
-    pub left: BitVec,
-    // right-hand side, i.e., Z
-    pub right: BitVec,
-}
-
-impl TryFrom<(&str, &str)> for PauliVec {
-    type Error = String;
-
-    fn try_from(value: (&str, &str)) -> Result<Self, Self::Error> {
-        fn to_bool(c: char) -> Result<bool, String> {
-            match c.to_digit(2) {
-                Some(d) => Ok(d == 1),
-                None => Err(format!("{} is not a valid binary", c)),
-            }
-        }
-
-        Ok(PauliVec {
-            left: value.0.chars().flat_map(to_bool).collect(),
-            right: value.1.chars().flat_map(to_bool).collect(),
-        })
-    }
-}
-
-impl PauliVec {
-    pub fn new() -> Self {
-        Self {
-            left: BitVec::new(),
-            right: BitVec::new(),
-        }
-    }
-
-    pub fn zeros(len: usize) -> Self {
-        let zero = zero_bitvec(len);
-        Self { left: zero.clone(), right: zero }
-    }
-
-    pub fn push(&mut self, pauli: Pauli) {
-        self.left.push(pauli.get_x());
-        self.right.push(pauli.get_z());
-    }
-
-    pub fn pop_or_false(&mut self) -> Pauli {
-        let l = self.left.pop().unwrap_or(false);
-        let r = self.right.pop().unwrap_or(false);
-        Pauli::new(l, r)
-    }
-
-    // pub fn reset(&mut self) {
-    //     self.left.clear();
-    //     self.right.clear();
-    // }
-
-    // we can define the action of local gates
-
-    // Pauli gates don't do anything; we just include them for completeness and since it
-    // might be more convenient to have them on the caller side
-    /// Apply Pauli X, note that it is just the identity
-    #[inline(always)]
-    pub fn x(&self) {}
-    /// Apply Pauli Z, note that it is just the identity
-    #[inline(always)]
-    pub fn z(&self) {}
-    /// Apply Pauli Y, note that it is just the identity
-    #[inline(always)]
-    pub fn y(&self) {}
-
-    /// Apply Hadamard
-    #[inline]
-    pub fn h(&mut self) {
-        mem::swap(
-            // Safety:
-            // we don't do anything with the storage itself, so we should be good
-            unsafe { self.left.storage_mut() },
-            unsafe { self.right.storage_mut() },
-        );
-    }
-
-    /// Apply Phase S
-    #[inline]
-    pub fn s(&mut self) {
-        self.right.xor(&self.left);
-    }
-}
-
-// not sure whether that is the fastest way
-fn zero_bitvec(len: usize) -> BitVec {
-    let rest = len % 8;
-    let bytes = (len - rest) / 8;
-    let mut ret = BitVec::from_bytes(&vec![0; bytes]);
-    for _ in 0..rest {
-        ret.push(false)
-    }
-    ret
-}
-
-/// This trait describes the functionality that a storage of [PauliVec]s must provide to
-/// be used as storage for [Frames].
-pub trait StackStorage: IntoIterator<Item = (usize, PauliVec)> {
-    type IterMut<'a>: Iterator<Item = (usize, &'a mut PauliVec)>
-    where
-        Self: 'a;
-
-    type Iter<'a>: Iterator<Item = (usize, &'a PauliVec)>
-    where
-        Self: 'a;
-
-    fn insert_pauli(&mut self, qubit: usize, pauli: PauliVec) -> Option<PauliVec>;
-    fn remove_pauli(&mut self, qubit: usize) -> Option<PauliVec>;
-    fn get(&self, qubit: usize) -> Option<&PauliVec>;
-    fn get_mut(&mut self, qubit: usize) -> Option<&mut PauliVec>;
-    fn get_two_mut(
-        &mut self,
-        qubit_a: usize,
-        qubit_b: usize,
-    ) -> Option<(&mut PauliVec, &mut PauliVec)>;
-    fn iter(&self) -> Self::Iter<'_>;
-    fn iter_mut(&mut self) -> Self::IterMut<'_>;
-    fn init(num_qubits: usize) -> Self;
-    fn is_empty(&self) -> bool;
-}
 
 /// A container of multiple Pauli frames, using a generic `Storage` type (that
 /// implements [StackStorage] if it shall be useful) as internal storage. The type
@@ -307,18 +180,6 @@ impl<Storage: StackStorage> Tracker for Frames<Storage> {
     //     }
     //     self.frames_num = 0;
     // }
-}
-
-pub fn sort_pauli_storage(storage: &impl StackStorage) -> Vec<(usize, &PauliVec)> {
-    let mut ret = storage.iter().collect::<Vec<(usize, &PauliVec)>>();
-    ret.sort_by_key(|(i, _)| *i);
-    ret
-}
-
-pub fn into_sorted_pauli_storage(storage: impl StackStorage) -> Vec<(usize, PauliVec)> {
-    let mut ret = storage.into_iter().collect::<Vec<(usize, PauliVec)>>();
-    ret.sort_by_key(|(i, _)| *i);
-    ret
 }
 
 #[cfg(test)]

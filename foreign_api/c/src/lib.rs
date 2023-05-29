@@ -7,10 +7,12 @@ use pauli_tracker::{
     pauli::Pauli,
     tracker::{
         frames::{
-            storage::MappedVector,
+            storage::{
+                MappedVector,
+                PauliVec,
+                StackStorage,
+            },
             Frames,
-            PauliVec,
-            StackStorage,
         },
         Tracker,
     },

@@ -10,8 +10,8 @@ use crate::{
     pauli::Pauli,
     tracker::{
         frames::{
+            storage::StackStorage,
             Frames,
-            StackStorage,
         },
         Tracker,
     },
@@ -210,10 +210,12 @@ mod tests {
     };
     use crate::tracker::{
         frames::{
-            self,
-            storage::MappedVector,
+            storage,
+            storage::{
+                MappedVector,
+                PauliVec,
+            },
             Frames,
-            PauliVec,
         },
         live::BitVector,
     };
@@ -235,11 +237,11 @@ mod tests {
 
         assert_eq!(
             vec![(1, PauliVec::try_from(("0", "1")).unwrap())],
-            frames::into_sorted_pauli_storage(circ.tracker.into_storage())
+            storage::into_sorted_pauli_storage(circ.tracker.into_storage())
         );
         assert_eq!(
             vec![(0, PauliVec::new())],
-            frames::into_sorted_pauli_storage(circ.storage)
+            storage::into_sorted_pauli_storage(circ.storage)
         );
     }
 
@@ -270,7 +272,7 @@ mod tests {
                 (3, PauliVec::try_from(("000", "010")).unwrap()),
                 (4, PauliVec::try_from(("011", "000")).unwrap())
             ],
-            frames::into_sorted_pauli_storage(circ.tracker.into_storage())
+            storage::into_sorted_pauli_storage(circ.tracker.into_storage())
         );
         assert_eq!(
             vec![
@@ -278,7 +280,7 @@ mod tests {
                 (1, PauliVec::try_from(("00", "10")).unwrap()),
                 (2, PauliVec::try_from(("0", "1")).unwrap())
             ],
-            frames::into_sorted_pauli_storage(circ.storage)
+            storage::into_sorted_pauli_storage(circ.storage)
         );
     }
 
@@ -327,7 +329,7 @@ mod tests {
                 (6, PauliVec::try_from(("0000000", "0001111")).unwrap()),
                 (9, PauliVec::try_from(("0000001", "0000000")).unwrap()),
             ],
-            frames::into_sorted_pauli_storage(circ.tracker.into_storage())
+            storage::into_sorted_pauli_storage(circ.tracker.into_storage())
         );
         assert_eq!(
             vec![
@@ -339,7 +341,7 @@ mod tests {
                 (7, PauliVec::try_from(("00000", "00001")).unwrap()),
                 (8, PauliVec::try_from(("000000", "000001")).unwrap())
             ],
-            frames::into_sorted_pauli_storage(circ.storage)
+            storage::into_sorted_pauli_storage(circ.storage)
         );
     }
 
@@ -387,7 +389,7 @@ mod tests {
                 (6, PauliVec::try_from(("0000000", "0101101")).unwrap()),
                 (9, PauliVec::try_from(("0010111", "0000000")).unwrap()),
             ],
-            frames::into_sorted_pauli_storage(circ.tracker.into_storage())
+            storage::into_sorted_pauli_storage(circ.tracker.into_storage())
         );
         assert_eq!(
             vec![
@@ -399,7 +401,7 @@ mod tests {
                 (7, PauliVec::try_from(("00000", "")).unwrap()),
                 (8, PauliVec::try_from(("000000", "")).unwrap())
             ],
-            frames::into_sorted_pauli_storage(circ.storage)
+            storage::into_sorted_pauli_storage(circ.storage)
         );
     }
 
@@ -466,5 +468,54 @@ mod tests {
 
         assert_eq!(circ.tracker, check);
         // println!("{:?}", circ.tracker);
+    }
+
+    #[test]
+    fn first_graph_test() {
+        let mut circ = TrackedCircuit {
+            circuit: SimpleCircuit::new(),
+            tracker: Frames::<MappedVector>::init(10),
+            storage: MappedVector::default(),
+        };
+
+        // wrapping this impl into a trait makes it local to that function (normal impl
+        // blocks have the same scope as the type)
+        trait TTele {
+            fn t_tele(&mut self, origin: usize, new: usize);
+        }
+        impl TTele for TrackedCircuit<SimpleCircuit, Frames<MappedVector>, MappedVector> {
+            fn t_tele(&mut self, origin: usize, new: usize) {
+                self.cx(origin, new);
+                self.measure(origin);
+                self.track_z(new);
+            }
+        }
+
+        circ.t_tele(0, 3);
+        circ.t_tele(1, 4);
+        circ.h(2);
+        circ.cx(3, 4);
+        circ.t_tele(2, 5);
+        circ.cx(4, 5);
+        circ.t_tele(4, 6);
+        circ.t_tele(5, 7);
+        circ.cx(3, 6);
+        circ.cx(6, 7);
+        circ.cx(3, 6);
+        circ.t_tele(7, 8);
+        circ.cx(6, 8);
+        circ.cx(3, 6);
+        circ.t_tele(8, 9);
+        circ.cx(6, 9);
+        circ.h(9);
+        circ.measure(9);
+        circ.measure(6);
+        circ.measure(3);
+
+        let graph = crate::tracker::frames::storage::layered_graph(
+            &circ.storage,
+            &[0, 1, 2, 4, 5, 7, 8],
+        );
+        println!("{:?}", graph);
     }
 }
