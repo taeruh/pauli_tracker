@@ -1,3 +1,11 @@
-- ci: ... e.g.,
+- set up ci/cd
+- set serde
+- more tests
+  - write helper for all the basic gate tests
+  - better circuit module for testing
+- define more clifford gates
+- implement a file streaming storage
+
+
+
 - derive macro that automatically derives the build methods of the Circuit based on Gate
-- write helper for all the basic gate tests

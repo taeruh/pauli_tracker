@@ -23,12 +23,12 @@ impl ResolvePauli for bool {
     }
 }
 
-/// Pauli encoding into two bits.
+/// Pauli encoding into two bits. It is basically an "u2", in terms of a single Pauli
+/// operator (without phases). The Pauli is specified as product of X and Z. Note that
+/// it is Y = XZ, up to a phase (and (anti)cyclical)
 ///
-/// It is basically an "u2", in terms of a single Pauli operator.
-
 /// The inner storage holds the invariant that it's value is between 0 and 3
-/// (inclusive).
+/// (inclusive). The encoding is as follows: 0 <-> identity, 1 <-> Z, 2 <-> X, 3 <-> Y.
 ///
 /// Unsafe code might rely on that invariant (e.g., via accessing the storage with
 /// [Self::storage] and using it to index a pointer), therefore, functions that make it
@@ -52,23 +52,26 @@ impl From<Pauli> for u8 {
     }
 }
 
-trait Sealed {}
-
 impl Pauli {
+    /// Create a the new Pauli (X if x)(Z if z).
     pub fn new(x: bool, z: bool) -> Self {
         Self { storage: x.left() ^ z.right() }
     }
 
     // Safety: hardcoded
+    // Create a new identity Pauli
     pub fn new_i() -> Self {
         unsafe { Self::from_unchecked(0) }
     }
+    // Create a new X Pauli
     pub fn new_x() -> Self {
         unsafe { Self::from_unchecked(2) }
     }
+    // Create a new Y Pauli
     pub fn new_y() -> Self {
         unsafe { Self::from_unchecked(3) }
     }
+    // Create a new Z Pauli
     pub fn new_z() -> Self {
         unsafe { Self::from_unchecked(1) }
     }
@@ -97,50 +100,79 @@ impl Pauli {
         &mut self.storage
     }
 
-    pub fn set_storage(&mut self, storage: u8) -> Option<u8> {
-        if storage > 3 {
-            Some(storage)
-        } else {
-            self.storage = storage;
-            None
-        }
+    /// Directly specify the underlining encoded storage of the Pauli.
+    ///
+    /// # Panics
+    ///
+    /// If the input is invalid, i.e., `storage` > 3.
+    pub fn set_storage(&mut self, storage: u8) {
+        assert!(storage <= 3);
+        self.storage = storage;
     }
 
+    /// Set whether the Pauli producs contains X.
     pub fn set_x(&mut self, x: bool) {
         self.storage &= x.left() | 1;
         self.storage |= x.left();
     }
+    /// Set whether the Pauli producs contains Z.
     pub fn set_z(&mut self, z: bool) {
         self.storage &= z.right() | 2;
         self.storage |= z.right();
     }
 
+    /// Get whether the Pauli producs contains X.
     pub fn get_x(&self) -> bool {
         self.storage & 2 != 0
     }
+    /// Get whether the Pauli producs contains Z.
     pub fn get_z(&self) -> bool {
         self.storage & 1 != 0
     }
 
+    /// Conjugate the Pauli with the Hadamard Gate.
     pub fn h(&mut self) {
         self.storage ^= (self.storage & 1) << 1;
         self.storage ^= (self.storage & 2) >> 1;
         self.storage ^= (self.storage & 1) << 1;
     }
+    /// Conjugate the Pauli with the S Gate.
     pub fn s(&mut self) {
         self.storage ^= (self.storage & 2) >> 1;
     }
 
-    pub fn left_mask(&self) -> u8 {
+    // is mask the correct word here?
+    // write examples
+    /// Get the X mask of the encoded storage.
+    ///
+    /// # Examples
+    /// ```
+    /// # use pauli_tracker::pauli::Pauli;
+    /// assert_eq!(2, Pauli::new_x().xmask());
+    /// assert_eq!(0, Pauli::new_z().xmask());
+    /// ```
+    pub fn xmask(&self) -> u8 {
         self.storage & 2
     }
-    pub fn right_mask(&self) -> u8 {
+    /// Get the Z mask of the encoded storage.
+    /// # Examples
+    /// ```
+    /// # use pauli_tracker::pauli::Pauli;
+    /// assert_eq!(0, Pauli::new_x().zmask());
+    /// assert_eq!(1, Pauli::new_z().zmask());
+    /// ```
+    pub fn zmask(&self) -> u8 {
         self.storage & 1
     }
 
+    /// Apply xor on the encoded storage of `self` and the storage `other`, updating the
+    /// storage of `self` inplace.
     pub fn xor(&mut self, other: Self) {
         self.storage ^= other.storage;
     }
+
+    /// Apply xor on the encoded storage of `self` and `other`, updating the storage of
+    /// `self` inplace.
     pub fn xor_u8(&mut self, other: u8) {
         self.storage ^= other;
     }
@@ -176,7 +208,7 @@ mod tests {
         let mut pauli = Pauli::new_i();
         for action in ACTIONS {
             for (input, check) in (0u8..).zip(action.2) {
-                assert!(pauli.set_storage(input).is_none());
+                pauli.set_storage(input);
                 (action.0)(&mut pauli);
                 assert_eq!(pauli.storage, check, "{}, {}", action.1, input);
             }
@@ -194,7 +226,7 @@ mod tests {
         for action in ACTIONS {
             for (flag, checks) in [false, true].into_iter().zip(action.2) {
                 for (input, check) in (0u8..).zip(checks) {
-                    assert!(pauli.set_storage(input).is_none());
+                    pauli.set_storage(input);
                     (action.0)(&mut pauli, flag);
                     assert_eq!(
                         pauli.storage, check,

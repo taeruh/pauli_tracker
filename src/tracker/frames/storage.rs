@@ -96,7 +96,7 @@ fn zero_bitvec(len: usize) -> BitVec {
 }
 
 /// This trait describes the functionality that a storage of [PauliVec]s must provide to
-/// be used as storage for [Frames].
+/// be used as storage for [Frames](super::Frames).
 // instead of requiring that &T and &mut T implement IntoIterator, we have the iter and
 // iter_mut methods, respectively; the reason is that having the additional bounds would
 // either need an annoying lifetime or HRTBs, which would limit the use cases of the

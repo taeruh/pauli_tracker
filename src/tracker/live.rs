@@ -12,7 +12,10 @@ use crate::{
     slice_extension::GetTwoMutSlice,
 };
 
+// todo: also do it with a hashmap
+
 #[derive(Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Default, Debug)]
+/// Currently actually not a bitvector ..., but it will be
 pub struct BitVector {
     // this will become a bitvector later ...
     inner: Vec<Pauli>,
@@ -25,6 +28,28 @@ impl BitVector {
     pub fn get_mut(&mut self, bit: usize) -> Option<&mut Pauli> {
         self.inner.get_mut(bit)
     }
+
+    #[inline]
+    fn unwrap_get_two_mut(
+        &mut self,
+        bit_a: usize,
+        bit_b: usize,
+    ) -> (&mut Pauli, &mut Pauli) {
+        self.inner
+            .get_two_mut(bit_a, bit_b)
+            .unwrap_or_else(|| panic!("qubit {bit_a} and/or {bit_b} do not exist"))
+    }
+}
+
+macro_rules! single {
+    ($($name:ident),*) => {$(
+        fn $name(&mut self, bit: usize) {
+            self.inner
+                .get_mut(bit)
+                .unwrap_or_else(|| panic!("qubit {bit} does not exist"))
+                .$name();
+        }
+    )*};
 }
 
 impl Tracker for BitVector {
@@ -45,8 +70,10 @@ impl Tracker for BitVector {
                 None
             }
             Ordering::Greater => {
-                let diff = bit - len;
-                self.inner.try_reserve(diff).unwrap();
+                let diff = bit - len - 1;
+                self.inner.try_reserve(diff).unwrap_or_else(|e| {
+                    panic!("error when trying to reserve enough memory: {e}")
+                });
                 self.inner.extend(std::iter::repeat(Pauli::new_i()).take(diff));
                 None
             }
@@ -66,41 +93,42 @@ impl Tracker for BitVector {
         }
     }
 
-    fn h(&mut self, bit: usize) {
-        self.inner[bit].h();
-    }
-    fn s(&mut self, bit: usize) {
-        self.inner[bit].s();
-    }
+    single!(h, s);
 
     fn cx(&mut self, control: usize, target: usize) {
-        let (c, t) = self.inner.get_two_mut(control, target).unwrap();
-        t.xor_u8(c.left_mask());
-        c.xor_u8(t.right_mask());
+        let (c, t) = self.unwrap_get_two_mut(control, target);
+        t.xor_u8(c.xmask());
+        c.xor_u8(t.zmask());
     }
     fn cz(&mut self, bit_a: usize, bit_b: usize) {
-        let (a, b) = self.inner.get_two_mut(bit_a, bit_b).unwrap();
-        a.xor_u8(b.left_mask() >> 1);
-        b.xor_u8(a.left_mask() >> 1);
+        let (a, b) = self.unwrap_get_two_mut(bit_a, bit_b);
+        a.xor_u8(b.xmask() >> 1);
+        b.xor_u8(a.xmask() >> 1);
     }
 
     fn move_z_to_x(&mut self, source: usize, destination: usize) {
-        let (s, d) = self.inner.get_two_mut(source, destination).unwrap();
-        d.xor_u8(s.right_mask() << 1);
+        let (s, d) = self.unwrap_get_two_mut(source, destination);
+        d.xor_u8(s.zmask() << 1);
         s.set_z(false);
     }
-    fn full_move_z_to_z(&mut self, source: usize, destination: usize) {
-        let (s, d) = self.inner.get_two_mut(source, destination).unwrap();
-        d.xor_u8(s.right_mask());
+    fn move_z_to_z(&mut self, source: usize, destination: usize) {
+        let (s, d) = self.unwrap_get_two_mut(source, destination);
+        d.xor_u8(s.zmask());
         s.set_z(false);
+    }
+    fn move_x_to_x(&mut self, source: usize, destination: usize) {
+        let (s, d) = self.unwrap_get_two_mut(source, destination);
+        d.xor_u8(s.xmask() << 1);
+        s.set_x(false);
+    }
+    fn move_x_to_z(&mut self, source: usize, destination: usize) {
+        let (s, d) = self.unwrap_get_two_mut(source, destination);
+        d.xor_u8(s.xmask());
+        s.set_x(false);
     }
 
     fn measure(&mut self, bit: usize) -> Option<Self::Stack> {
-        Some(self.inner[bit])
-    }
-
-    fn move_z_to_z(&mut self, source: usize, destination: usize) {
-        todo!()
+        Some(*self.get(bit)?)
     }
 }
 
@@ -164,18 +192,11 @@ mod tests {
     #[test]
     fn movement() {
         type Action = fn(&mut BitVector, usize, usize);
-        const MOVEMENT: [(Action, &str, [u8; 16]); 2] = [
-            (
-                BitVector::move_z_to_x,
-                "xz",
-                [0, 1, 2, 3, 2, 3, 0, 1, 8, 9, 10, 11, 10, 11, 8, 9],
-            ),
-            (
-                BitVector::full_move_z_to_z,
-                "zz",
-                [0, 1, 2, 3, 1, 0, 3, 2, 8, 9, 10, 11, 9, 8, 11, 10],
-            ),
-        ];
+        const MOVEMENT: [(Action, &str, [u8; 16]); 1] = [(
+            BitVector::move_z_to_x,
+            "xz",
+            [0, 1, 2, 3, 2, 3, 0, 1, 8, 9, 10, 11, 10, 11, 8, 9],
+        )];
 
         // masks to decode p in 0..16 into two paulis and vice versa
         const FIRST: u8 = 12;

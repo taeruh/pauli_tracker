@@ -137,12 +137,6 @@ where
         self.tracker.move_z_to_x(source, destination);
     }
 
-    /// In the Pauli tracker, move the **Z corrections** from the `source` qubit to the
-    /// `destination` qubit.
-    pub fn full_move_z_to_z(&mut self, source: usize, destination: usize) {
-        self.tracker.full_move_z_to_z(source, destination);
-    }
-
     pub fn move_z_to_z(&mut self, source: usize, destination: usize) {
         self.tracker.move_z_to_z(source, destination);
     }
@@ -205,7 +199,7 @@ where
     /// additional storage.
     pub fn measure(&mut self, bit: usize) {
         self.circuit.measure(bit);
-        self.tracker.measure_and_store(bit, &mut self.storage);
+        let _ = self.tracker.measure_and_store(bit, &mut self.storage);
     }
 }
 
@@ -382,7 +376,7 @@ mod tests {
         impl TTele for TrackedCircuit<DummyCircuit, Frames<MappedVector>, MappedVector> {
             fn t_tele(&mut self, origin: usize, new: usize) {
                 self.cx(origin, new);
-                self.full_move_z_to_z(origin, new);
+                self.move_z_to_z(origin, new);
                 self.measure(origin);
                 self.track_z(new);
             }
@@ -442,7 +436,7 @@ mod tests {
         impl TTele for TrackedCircuit<RandomMeasurementCircuit, BitVector, ()> {
             fn t_tele(&mut self, origin: usize, new: usize) -> bool {
                 self.cx(origin, new);
-                self.full_move_z_to_z(origin, new);
+                self.move_z_to_z(origin, new);
                 let result = self.circuit.measure(origin).unwrap();
                 if result {
                     self.track_z(new);
@@ -558,7 +552,7 @@ mod tests {
         impl TTele for TrackedCircuit<DummyCircuit, Frames<FixedVector>, ()> {
             fn t_tele(&mut self, origin: usize, new: usize) {
                 self.cx(origin, new);
-                self.full_move_z_to_z(origin, new);
+                self.move_z_to_z(origin, new);
                 self.measure(origin);
                 self.track_z(new);
             }

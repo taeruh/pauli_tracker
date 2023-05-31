@@ -1,3 +1,5 @@
+use std::mem;
+
 use self::storage::{
     PauliVec,
     StackStorage,
@@ -24,14 +26,17 @@ pub struct Frames<Storage /* : StackStorage */> {
 }
 
 impl<Storage> Frames<Storage> {
-    pub fn storage(&self) -> &Storage {
+    /// Get the underlining storage.
+    pub fn as_storage(&self) -> &Storage {
         &self.storage
     }
 
+    /// Get the number of tracked frames.
     pub fn frames_num(&self) -> usize {
         self.frames_num
     }
 
+    /// Convert the object into the underlining storage.
     pub fn into_storage(self) -> Storage {
         self.storage
     }
@@ -50,6 +55,7 @@ impl<Storage> Frames<Storage> {
 }
 
 impl<Storage: StackStorage> Frames<Storage> {
+    /// Pop the last tracked Pauli frame.
     pub fn pop_frame(&mut self) -> Option<PauliString> {
         if self.storage.is_empty() || self.frames_num == 0 {
             return None;
@@ -62,16 +68,56 @@ impl<Storage: StackStorage> Frames<Storage> {
         Some(ret)
     }
 
-    pub fn measure_and_store(&mut self, qubit: usize, storage: &mut impl StackStorage) {
-        storage.insert_pauli(qubit, self.measure(qubit).unwrap());
+    /// Measure a qu`bit` and store the according stack of tracked Paulis into
+    /// `storage`. Errors when the qu`bit` is not present in the tracker.
+    pub fn measure_and_store(
+        &mut self,
+        bit: usize,
+        storage: &mut impl StackStorage,
+    ) -> Result<(), String> {
+        storage.insert_pauli(
+            bit,
+            match self.measure(bit) {
+                Some(p) => p,
+                None => return Err(format!("{bit} is not present")),
+            },
+        );
+        Ok(())
     }
 
+    /// Measure all qubits and put the according stack of Paulis into `storage`, i.e.,
+    /// do [Frames::measure_and_store] for all qubits.
     pub fn measure_and_store_all(&mut self, storage: &mut impl StackStorage) {
-        let keys: Vec<usize> = self.storage.iter().map(|(i, _)| i).collect();
-        for key in keys {
-            self.measure_and_store(key, storage);
+        for (bit, pauli) in
+            mem::replace(&mut self.storage, Storage::init(0)).into_iter()
+        {
+            storage.insert_pauli(bit, pauli);
         }
     }
+}
+
+macro_rules! movements {
+    ($(($name:ident, $from_side:ident, $to_side:ident)),*) => {$(
+        fn $name(&mut self, source: usize, destination: usize) {
+            let (s, d) = self.storage
+            .get_two_mut(source, destination)
+            .unwrap_or_else(|| panic!(
+                    "qubit {source} and/or {destination} do not exist"));
+            d.$to_side.xor(&s.$from_side);
+            s.$from_side.truncate(0)
+        }
+    )*}
+}
+
+macro_rules! single {
+    ($($name:ident),*) => {$(
+        fn $name(&mut self, bit: usize) {
+            self.storage
+                .get_mut(bit)
+                .unwrap_or_else(|| panic!("qubit {bit} does not exist"))
+                .$name();
+        }
+    )*};
 }
 
 impl<Storage: StackStorage> Tracker for Frames<Storage> {
@@ -123,70 +169,37 @@ impl<Storage: StackStorage> Tracker for Frames<Storage> {
         self.frames_num += 1;
     }
 
-    /// Apply the Hadamard gate.
-    fn h(&mut self, qubit: usize) {
-        self.storage
-            .get_mut(qubit)
-            .unwrap_or_else(|| panic!("qubit {qubit} does not exist"))
-            .h();
-    }
+    single!(h, s);
 
-    /// Apply the Phase gate S.
-    fn s(&mut self, qubit: usize) {
-        self.storage
-            .get_mut(qubit)
-            .unwrap_or_else(|| panic!("qubit {qubit} does not exist"))
-            .s();
-    }
-
-    /// Apply the Control X (Control Not) gate.
     fn cx(&mut self, control: usize, target: usize) {
-        let (c, t) = self.storage.get_two_mut(control, target).unwrap();
+        let (c, t) = self
+            .storage
+            .get_two_mut(control, target)
+            .unwrap_or_else(|| panic!("qubit {control} and/or {target} do not exist"));
         t.left.xor(&c.left);
         c.right.xor(&t.right);
     }
 
-    /// Apply the Control Z gate.
-    fn cz(&mut self, qubit_a: usize, qubit_b: usize) {
-        let (a, b) = self.storage.get_two_mut(qubit_a, qubit_b).unwrap();
+    fn cz(&mut self, bit_a: usize, bit_b: usize) {
+        let (a, b) = self
+            .storage
+            .get_two_mut(bit_a, bit_b)
+            .unwrap_or_else(|| panic!("qubit {bit_a} and/or {bit_b} do not exist"));
         a.right.xor(&b.left);
         b.right.xor(&a.left);
     }
 
-    /// Perform an unspecified measurement. This removes the according qubit from being
-    /// tracked.
-    ///
-    /// Returns the according [PauliVec] if it is a valid measurement, i.e., the qubit
-    /// existed.
-    fn measure(&mut self, qubit: usize) -> Option<PauliVec> {
-        self.storage.remove_pauli(qubit)
-    }
-
     // todo: test movements similar to the gates
-    fn move_z_to_x(&mut self, source: usize, destination: usize) {
-        let (s, d) = self.storage.get_two_mut(source, destination).unwrap();
-        d.left.xor(&s.right);
-        s.right.truncate(0)
-    }
+    movements!(
+        (move_x_to_x, left, left),
+        (move_x_to_z, left, right),
+        (move_z_to_x, right, left),
+        (move_z_to_z, right, right)
+    );
 
-    fn full_move_z_to_z(&mut self, source: usize, destination: usize) {
-        let (s, d) = self.storage.get_two_mut(source, destination).unwrap();
-        d.right.xor(&s.right);
-        s.right.truncate(0)
+    fn measure(&mut self, bit: usize) -> Option<PauliVec> {
+        self.storage.remove_pauli(bit)
     }
-
-    fn move_z_to_z(&mut self, source: usize, destination: usize) {
-        let (s, d) = self.storage.get_two_mut(source, destination).unwrap();
-        d.right.xor(&s.right);
-        s.right.clear()
-    }
-
-    // pub fn reset_all(&mut self) {
-    //     for (_, p) in self.storage.iter_mut() {
-    //         p.reset()
-    //     }
-    //     self.frames_num = 0;
-    // }
 }
 
 #[cfg(test)]
