@@ -66,9 +66,10 @@ impl<Storage: StackStorage> Frames<Storage> {
         storage.insert_pauli(qubit, self.measure(qubit).unwrap());
     }
 
-    pub fn measure_and_store_all(self, storage: &mut impl StackStorage) {
-        for (i, p) in self.storage.into_iter() {
-            storage.insert_pauli(i, p);
+    pub fn measure_and_store_all(&mut self, storage: &mut impl StackStorage) {
+        let keys: Vec<usize> = self.storage.iter().map(|(i, _)| i).collect();
+        for key in keys {
+            self.measure_and_store(key, storage);
         }
     }
 }

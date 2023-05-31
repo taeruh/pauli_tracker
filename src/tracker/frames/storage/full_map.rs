@@ -7,8 +7,8 @@ use std::{
 };
 
 use super::super::{
-    StackStorage,
     PauliVec,
+    StackStorage,
 };
 
 pub type FullMap = HashMap<usize, PauliVec>;
@@ -23,18 +23,22 @@ impl StackStorage for FullMap {
         fn((&usize, &'a PauliVec)) -> (usize, &'a PauliVec),
     >;
 
+    #[inline]
     fn insert_pauli(&mut self, qubit: usize, pauli: PauliVec) -> Option<PauliVec> {
         self.insert(qubit, pauli)
     }
 
+    #[inline]
     fn remove_pauli(&mut self, qubit: usize) -> Option<PauliVec> {
         self.remove(&qubit)
     }
 
+    #[inline]
     fn get(&self, qubit: usize) -> Option<&PauliVec> {
         self.get(&qubit)
     }
 
+    #[inline]
     fn get_mut(&mut self, qubit: usize) -> Option<&mut PauliVec> {
         self.get_mut(&qubit)
     }
@@ -62,10 +66,12 @@ impl StackStorage for FullMap {
         Some((a, b))
     }
 
+    #[inline]
     fn iter(&self) -> Self::Iter<'_> {
         self.iter().map(|(&i, p)| (i, p))
     }
 
+    #[inline]
     fn iter_mut(&mut self) -> Self::IterMut<'_> {
         self.iter_mut().map(|(&i, p)| (i, p))
     }
@@ -78,7 +84,7 @@ impl StackStorage for FullMap {
         ret
     }
 
-    #[inline(always)]
+    #[inline]
     fn is_empty(&self) -> bool {
         self.is_empty()
     }

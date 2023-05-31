@@ -10,27 +10,9 @@ use crate::pauli::Pauli;
 pub struct PauliVec {
     // the bit representing the left qubit on the left-hand side in the tableau
     // representation, i.e., X
-    pub left: BitVec,
+    pub(crate) left: BitVec,
     // right-hand side, i.e., Z
-    pub right: BitVec,
-}
-
-impl TryFrom<(&str, &str)> for PauliVec {
-    type Error = String;
-
-    fn try_from(value: (&str, &str)) -> Result<Self, Self::Error> {
-        fn to_bool(c: char) -> Result<bool, String> {
-            match c.to_digit(2) {
-                Some(d) => Ok(d == 1),
-                None => Err(format!("{} is not a valid binary", c)),
-            }
-        }
-
-        Ok(PauliVec {
-            left: value.0.chars().flat_map(to_bool).collect(),
-            right: value.1.chars().flat_map(to_bool).collect(),
-        })
-    }
+    pub(crate) right: BitVec,
 }
 
 impl PauliVec {
@@ -39,6 +21,19 @@ impl PauliVec {
             left: BitVec::new(),
             right: BitVec::new(),
         }
+    }
+
+    pub fn try_from_str(left: &str, right: &str) -> Result<Self, String> {
+        fn to_bool(c: char) -> Result<bool, String> {
+            match c.to_digit(2) {
+                Some(d) => Ok(d == 1),
+                None => Err(format!("{} is not a valid binary", c)),
+            }
+        }
+        Ok(PauliVec {
+            left: left.chars().flat_map(to_bool).collect(),
+            right: right.chars().flat_map(to_bool).collect(),
+        })
     }
 
     pub fn zeros(len: usize) -> Self {
@@ -56,11 +51,6 @@ impl PauliVec {
         let r = self.right.pop().unwrap_or(false);
         Pauli::new(l, r)
     }
-
-    // pub fn reset(&mut self) {
-    //     self.left.clear();
-    //     self.right.clear();
-    // }
 
     // we can define the action of local gates
 
@@ -107,43 +97,50 @@ fn zero_bitvec(len: usize) -> BitVec {
 
 /// This trait describes the functionality that a storage of [PauliVec]s must provide to
 /// be used as storage for [Frames].
+// instead of requiring that &T and &mut T implement IntoIterator, we have the iter and
+// iter_mut methods, respectively; the reason is that having the additional bounds would
+// either need an annoying lifetime or HRTBs, which would limit the use cases of the
+// trait (for <'l> &'l T implies T: 'static); implementors of this type should probably
+// still implement IntoIterator for its references
 pub trait StackStorage: IntoIterator<Item = (usize, PauliVec)> {
-    type IterMut<'a>: Iterator<Item = (usize, &'a mut PauliVec)>
+    type IterMut<'l>: Iterator<Item = (usize, &'l mut PauliVec)>
     where
-        Self: 'a;
+        Self: 'l;
 
-    type Iter<'a>: Iterator<Item = (usize, &'a PauliVec)>
+    type Iter<'l>: Iterator<Item = (usize, &'l PauliVec)>
     where
-        Self: 'a;
+        Self: 'l;
 
-    fn insert_pauli(&mut self, qubit: usize, pauli: PauliVec) -> Option<PauliVec>;
-    fn remove_pauli(&mut self, qubit: usize) -> Option<PauliVec>;
-    fn get(&self, qubit: usize) -> Option<&PauliVec>;
-    fn get_mut(&mut self, qubit: usize) -> Option<&mut PauliVec>;
+    /// None if successful, Some(`pauli`) if key `bit` present
+    fn insert_pauli(&mut self, bit: usize, pauli: PauliVec) -> Option<PauliVec>;
+    /// None if qu`bit` not present
+    fn remove_pauli(&mut self, bit: usize) -> Option<PauliVec>;
+    fn get(&self, bit: usize) -> Option<&PauliVec>;
+    fn get_mut(&mut self, bit: usize) -> Option<&mut PauliVec>;
     fn get_two_mut(
         &mut self,
-        qubit_a: usize,
-        qubit_b: usize,
+        bit_a: usize,
+        bit_b: usize,
     ) -> Option<(&mut PauliVec, &mut PauliVec)>;
     fn iter(&self) -> Self::Iter<'_>;
     fn iter_mut(&mut self) -> Self::IterMut<'_>;
-    fn init(num_qubits: usize) -> Self;
+    fn init(num_bits: usize) -> Self;
     fn is_empty(&self) -> bool;
 }
 
-pub fn sort_pauli_storage(storage: &impl StackStorage) -> Vec<(usize, &PauliVec)> {
+pub fn sort_by_bit(storage: &impl StackStorage) -> Vec<(usize, &PauliVec)> {
     let mut ret = storage.iter().collect::<Vec<(usize, &PauliVec)>>();
     ret.sort_by_key(|(i, _)| *i);
     ret
 }
 
-pub fn into_sorted_pauli_storage(storage: impl StackStorage) -> Vec<(usize, PauliVec)> {
+pub fn into_sorted_by_bit(storage: impl StackStorage) -> Vec<(usize, PauliVec)> {
     let mut ret = storage.into_iter().collect::<Vec<(usize, PauliVec)>>();
     ret.sort_by_key(|(i, _)| *i);
     ret
 }
 
-pub fn layered_graph(
+pub fn create_dependency_graph(
     storage: &impl StackStorage,
     map: &[usize],
 ) -> Vec<Vec<(usize, Vec<usize>)>> {
@@ -176,7 +173,6 @@ pub fn layered_graph(
 
     let mut register: Vec<usize> = Vec::new();
     let mut layer_idx = 0;
-
 
     while !remaining.is_empty() {
         let layer = graph.get(layer_idx).unwrap();

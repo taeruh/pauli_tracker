@@ -8,15 +8,6 @@ crate-type = ["lib", "cdylib", "staticlib"]
 
 [features]
 circuit = ["dep:rand"]
-# nightly-features (it's a little bit tricky because there's no #[cfg(nightly)]):
-# when enabling --all-features, we usually do not want to enable the nightly features,
-# therefore, we combine each nightly feature with a not(feature = "not-nightly); this
-# works for example well when with the cargo.features = "all" configuration for
-# rust-analyzer; the drawback is that we cannot use --all-features to enable all nightly
-# features when compiling with the nightly toolchain; I think it's better to have
-# --all-features working on stable than on nigthly
-not-nightly = []
-doc-build-nightly = []
 
 [dependencies]
 bit-vec = "0.6.3"
@@ -24,7 +15,10 @@ itertools = "0.10.5"
 rand = { version = "0.8.5", optional = true }
 
 [package.metadata.docs.rs]
-features = ["doc-build-nightly"]
+all-features = true
+# we use cfg_attr(docsrs, <(nightly-)attribute>) to use (nightly)-attributes when
+# building the docs (note that Docs.rs builds the docs with the nightly toolchain)
+rustdoc-args = ["--cfg", "docsrs"]
 
 
 # I had problems with globs and the exclude array, so I just' don't use globs

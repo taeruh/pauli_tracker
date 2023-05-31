@@ -259,12 +259,12 @@ mod tests {
         circ.track_z(1);
 
         assert_eq!(
-            vec![(1, PauliVec::try_from(("0", "1")).unwrap())],
-            storage::into_sorted_pauli_storage(circ.tracker.into_storage())
+            vec![(1, PauliVec::try_from_str("0", "1").unwrap())],
+            storage::into_sorted_by_bit(circ.tracker.into_storage())
         );
         assert_eq!(
             vec![(0, PauliVec::new())],
-            storage::into_sorted_pauli_storage(circ.storage)
+            storage::into_sorted_by_bit(circ.storage)
         );
     }
 
@@ -292,18 +292,18 @@ mod tests {
 
         assert_eq!(
             vec![
-                (3, PauliVec::try_from(("000", "010")).unwrap()),
-                (4, PauliVec::try_from(("011", "000")).unwrap())
+                (3, PauliVec::try_from_str("000", "010").unwrap()),
+                (4, PauliVec::try_from_str("011", "000").unwrap())
             ],
-            storage::into_sorted_pauli_storage(circ.tracker.into_storage())
+            storage::into_sorted_by_bit(circ.tracker.into_storage())
         );
         assert_eq!(
             vec![
                 (0, PauliVec::new()),
-                (1, PauliVec::try_from(("00", "10")).unwrap()),
-                (2, PauliVec::try_from(("0", "1")).unwrap())
+                (1, PauliVec::try_from_str("00", "10").unwrap()),
+                (2, PauliVec::try_from_str("0", "1").unwrap())
             ],
-            storage::into_sorted_pauli_storage(circ.storage)
+            storage::into_sorted_by_bit(circ.storage)
         );
     }
 
@@ -348,23 +348,23 @@ mod tests {
 
         assert_eq!(
             vec![
-                (3, PauliVec::try_from(("0000000", "1101010")).unwrap()),
-                (6, PauliVec::try_from(("0000000", "0001111")).unwrap()),
-                (9, PauliVec::try_from(("0000001", "0000000")).unwrap()),
+                (3, PauliVec::try_from_str("0000000", "1101010").unwrap()),
+                (6, PauliVec::try_from_str("0000000", "0001111").unwrap()),
+                (9, PauliVec::try_from_str("0000001", "0000000").unwrap()),
             ],
-            storage::into_sorted_pauli_storage(circ.tracker.into_storage())
+            storage::into_sorted_by_bit(circ.tracker.into_storage())
         );
         assert_eq!(
             vec![
-                (0, PauliVec::try_from(("", "")).unwrap()),
-                (1, PauliVec::try_from(("0", "0")).unwrap()),
-                (2, PauliVec::try_from(("00", "00")).unwrap()),
-                (4, PauliVec::try_from(("000", "011")).unwrap()),
-                (5, PauliVec::try_from(("0000", "0010")).unwrap()),
-                (7, PauliVec::try_from(("00000", "00001")).unwrap()),
-                (8, PauliVec::try_from(("000000", "000001")).unwrap())
+                (0, PauliVec::try_from_str("", "").unwrap()),
+                (1, PauliVec::try_from_str("0", "0").unwrap()),
+                (2, PauliVec::try_from_str("00", "00").unwrap()),
+                (4, PauliVec::try_from_str("000", "011").unwrap()),
+                (5, PauliVec::try_from_str("0000", "0010").unwrap()),
+                (7, PauliVec::try_from_str("00000", "00001").unwrap()),
+                (8, PauliVec::try_from_str("000000", "000001").unwrap())
             ],
-            storage::into_sorted_pauli_storage(circ.storage)
+            storage::into_sorted_by_bit(circ.storage)
         );
     }
 
@@ -408,23 +408,23 @@ mod tests {
 
         assert_eq!(
             vec![
-                (3, PauliVec::try_from(("0000000", "1001110")).unwrap()),
-                (6, PauliVec::try_from(("0000000", "0101101")).unwrap()),
-                (9, PauliVec::try_from(("0010111", "0000000")).unwrap()),
+                (3, PauliVec::try_from_str("0000000", "1001110").unwrap()),
+                (6, PauliVec::try_from_str("0000000", "0101101").unwrap()),
+                (9, PauliVec::try_from_str("0010111", "0000000").unwrap()),
             ],
-            storage::into_sorted_pauli_storage(circ.tracker.into_storage())
+            storage::into_sorted_by_bit(circ.tracker.into_storage())
         );
         assert_eq!(
             vec![
-                (0, PauliVec::try_from(("", "")).unwrap()),
-                (1, PauliVec::try_from(("0", "")).unwrap()),
-                (2, PauliVec::try_from(("00", "")).unwrap()),
-                (4, PauliVec::try_from(("000", "")).unwrap()),
-                (5, PauliVec::try_from(("0000", "")).unwrap()),
-                (7, PauliVec::try_from(("00000", "")).unwrap()),
-                (8, PauliVec::try_from(("000000", "")).unwrap())
+                (0, PauliVec::try_from_str("", "").unwrap()),
+                (1, PauliVec::try_from_str("0", "").unwrap()),
+                (2, PauliVec::try_from_str("00", "").unwrap()),
+                (4, PauliVec::try_from_str("000", "").unwrap()),
+                (5, PauliVec::try_from_str("0000", "").unwrap()),
+                (7, PauliVec::try_from_str("00000", "").unwrap()),
+                (8, PauliVec::try_from_str("000000", "").unwrap())
             ],
-            storage::into_sorted_pauli_storage(circ.storage)
+            storage::into_sorted_by_bit(circ.storage)
         );
     }
 
@@ -473,9 +473,9 @@ mod tests {
 
         let mut check = BitVector::init(10);
         // compare toffoli tests with frame tracker
-        // (3, PauliVec::try_from(("0000000", "1001110")).unwrap()),
-        // (6, PauliVec::try_from(("0000000", "0101101")).unwrap()),
-        // (9, PauliVec::try_from(("0010111", "0000000")).unwrap()),
+        // (3, PauliVec::try_from("0000000", "1001110").unwrap()),
+        // (6, PauliVec::try_from("0000000", "0101101").unwrap()),
+        // (9, PauliVec::try_from("0010111", "0000000").unwrap()),
         check
             .get_mut(3)
             .unwrap()
@@ -535,7 +535,7 @@ mod tests {
         circ.measure(6);
         circ.measure(3);
 
-        let graph = crate::tracker::frames::storage::layered_graph(
+        let graph = crate::tracker::frames::storage::create_dependency_graph(
             &circ.storage,
             &[0, 1, 2, 4, 5, 7, 8],
         );
@@ -558,6 +558,7 @@ mod tests {
         impl TTele for TrackedCircuit<DummyCircuit, Frames<FixedVector>, ()> {
             fn t_tele(&mut self, origin: usize, new: usize) {
                 self.cx(origin, new);
+                self.full_move_z_to_z(origin, new);
                 self.measure(origin);
                 self.track_z(new);
             }
@@ -591,7 +592,7 @@ mod tests {
 
         println!("{:#?}", rest);
 
-        let graph = crate::tracker::frames::storage::layered_graph(
+        let graph = crate::tracker::frames::storage::create_dependency_graph(
             &rest,
             &[0, 1, 2, 4, 5, 7, 8],
         );

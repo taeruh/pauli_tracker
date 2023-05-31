@@ -3,41 +3,22 @@ A library to track Pauli frames through a Clifford circuit with measurements. A 
 introduction to this library is in the
 [README](https://github.com/taeruh/pauli_tracker) provided.
 # Crate features
-### Stable features
 * **circuit**
   Includes the [circuit] module which contains tools to combine the Pauli tracking
   mechanism with a circuit simulator/description.
-### Nightly features
-* **not-nightly**
-  This feature is exclusive with all other nightly features. This enables one to
-  use the flag `--all-features` on stable toolchain without without enabling the nightly
-  features. However, this also implies that using `--all-features` on the nightly
-  toolchain does not include the nightly features.
-* **doc-build-nightly**
-  Build the docs with additional nightly doc-features, e.g., annotating modules with
-  features.
 */
 
-#![cfg_attr(
-    all(feature = "doc-build-nightly", not(feature = "not-nightly")),
-    feature(doc_cfg)
-)]
+#![cfg_attr(docsrs, feature(doc_cfg))]
 //-
 // #![warn(missing_docs)] // turn on when things are more stable
 #![deny(unsafe_op_in_unsafe_fn)]
 
 // set up all feature code as follows (for proper documentation):
-// #[cfg(any(feature = "<feature>", doc))]
-// #[cfg_attr(
-//     all(feature = "doc-build-nightly", not(feature = "not-nightly")),
-//     doc(cfg(feature = "<feature>"))
-// )]
+// #[cfg(feature = "<feature>")]
+// #[cfg_attr(docsrs, doc(cfg(feature = "<feature>")))]
 
-#[cfg(any(feature = "circuit", doc))]
-#[cfg_attr(
-    all(feature = "doc-build-nightly", not(feature = "not-nightly")),
-    doc(cfg(feature = "circuit"))
-)]
+#[cfg(feature = "circuit")]
+#[cfg_attr(docsrs, doc(cfg(feature = "circuit")))]
 pub mod circuit;
 pub mod pauli;
 mod slice_extension;

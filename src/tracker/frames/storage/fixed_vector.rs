@@ -50,21 +50,27 @@ impl StackStorage for FixedVector {
     where
         Self: 'a;
 
-    fn insert_pauli(&mut self, qubit: usize, pauli: PauliVec) -> Option<PauliVec> {
-        match qubit.cmp(&self.len()) {
+    fn insert_pauli(&mut self, bit: usize, pauli: PauliVec) -> Option<PauliVec> {
+        match bit.cmp(&self.len()) {
             Ordering::Less => Some(pauli),
             Ordering::Equal => {
                 self.push(pauli);
                 None
             }
-            Ordering::Greater => panic!("..."),
+            Ordering::Greater => panic!(
+                "this type, FixedVector, only allows consecutively inserting elements"
+            ),
         }
     }
 
-    fn remove_pauli(&mut self, qubit: usize) -> Option<PauliVec> {
-        match qubit.cmp(&self.len()) {
-            Ordering::Less => panic!("..."),
-            Ordering::Equal => Some(self.pop().unwrap()),
+    fn remove_pauli(&mut self, bit: usize) -> Option<PauliVec> {
+        match bit.cmp(&(self.len().checked_sub(1)?)) {
+            Ordering::Less => panic!(
+                "this type, FixedVector, only allows consecutively removing elements"
+            ),
+            Ordering::Equal => {
+                Some(self.pop().expect("that's an implementation bug; please report"))
+            }
             Ordering::Greater => None,
         }
     }

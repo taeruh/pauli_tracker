@@ -95,6 +95,14 @@ function new_qubit(tracker::Ptr{Tracker}, qubit::UInt)
     @ccall lib.new_qubit(tracker::Ptr{Tracker}, qubit::UInt)::Cvoid
 end
 
+function show_storage(storage::Ptr{Storage})
+    @ccall lib.show_storage(storage::Ptr{Storage})::Cvoid
+end
+
+function get_tracker_storage(tracker::Ptr{Tracker})::Ptr{Storage}
+    @ccall lib.get_tracker_storage(tracker::Ptr{Tracker})::Ptr{Storage}
+end
+
 function sort_storage(storage::Ptr{Storage})::RawVec{Tuple}
     @ccall lib.sort_storage(storage::Ptr{Storage})::RawVec{Tuple}
 end

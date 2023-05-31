@@ -64,9 +64,24 @@ pub unsafe extern "C" fn free_tracker(tracker: *mut PauliTracker) {
     unsafe { Box::from_raw(tracker) };
 }
 
+/// deprecated
 #[no_mangle]
 pub extern "C" fn tracker_storage(tracker: &PauliTracker) -> *mut Storage {
     tracker.storage() as *const Storage as *mut Storage
+}
+
+#[repr(C)]
+pub struct Slice {
+    ptr: *mut usize,
+    len: usize,
+}
+
+#[no_mangle]
+pub extern "C" fn show_dependency_graph(storage: &Storage, map: Slice) {
+    let map = unsafe { std::slice::from_raw_parts(map.ptr, map.len) };
+    let graph =
+        pauli_tracker::tracker::frames::storage::create_dependency_graph(storage, map);
+    println!("{:?}", graph);
 }
 
 #[no_mangle]
@@ -90,7 +105,7 @@ pub extern "C" fn raw_storage(storage: &mut Storage) -> RawStorage {
 #[no_mangle]
 pub extern "C" fn put_some_stuff_into_storage(storage: &mut Storage) {
     let mut pauli = PauliVec::new();
-    pauli.push(Pauli::try_from(2).unwrap());
+    pauli.push(Pauli::new_x());
     storage.insert_pauli(42, pauli);
 }
 
@@ -139,6 +154,14 @@ pub extern "C" fn measure_and_store(
 }
 
 #[no_mangle]
+pub extern "C" fn measure_and_store_all(
+    tracker: &mut PauliTracker,
+    storage: &mut Storage,
+) {
+    tracker.measure_and_store_all(storage);
+}
+
+#[no_mangle]
 pub extern "C" fn new_qubit(tracker: &mut PauliTracker, qubit: usize) {
     tracker.new_qubit(qubit);
 }
@@ -147,6 +170,17 @@ pub extern "C" fn new_qubit(tracker: &mut PauliTracker, qubit: usize) {
 pub struct Tuple {
     qubit: usize,
     pauli: *const PauliVec,
+}
+
+#[no_mangle]
+pub extern "C" fn show_storage(storage: &Storage) {
+    let sorted = pauli_tracker::tracker::frames::storage::sort_by_bit(storage);
+    println!("{:#?}", sorted);
+}
+
+#[no_mangle]
+pub extern "C" fn get_tracker_storage(tracker: &PauliTracker) -> *mut Storage {
+    tracker.storage() as *const Storage as _
 }
 
 #[no_mangle]
@@ -169,20 +203,20 @@ pub extern "C" fn free_sorted_storage(raw_vec: RawVec<Tuple>) {
     unsafe { Vec::from_raw_parts(raw_vec.ptr, raw_vec.len, raw_vec.cap) };
 }
 
-#[no_mangle]
-pub extern "C" fn raw_pauli_vec(pauli_vec: &mut PauliVec) -> RawPauliVec {
-    RawPauliVec {
-        left: RawVec::<u32> {
-            ptr: unsafe { pauli_vec.left.storage_mut() }.as_mut_ptr() as *mut u32,
-            len: pauli_vec.left.storage().len(),
-            cap: pauli_vec.left.capacity(),
-        },
-        left_len: pauli_vec.left.len(),
-        right: RawVec::<u32> {
-            ptr: unsafe { pauli_vec.right.storage_mut() }.as_mut_ptr() as *mut u32,
-            len: pauli_vec.right.storage().len(),
-            cap: pauli_vec.right.capacity(),
-        },
-        right_len: pauli_vec.right.len(),
-    }
-}
+// #[no_mangle]
+// pub extern "C" fn raw_pauli_vec(pauli_vec: &mut PauliVec) -> RawPauliVec {
+//     RawPauliVec {
+//         left: RawVec::<u32> {
+//             ptr: unsafe { pauli_vec.left.storage_mut() }.as_mut_ptr() as *mut u32,
+//             len: pauli_vec.left.storage().len(),
+//             cap: pauli_vec.left.capacity(),
+//         },
+//         left_len: pauli_vec.left.len(),
+//         right: RawVec::<u32> {
+//             ptr: unsafe { pauli_vec.right.storage_mut() }.as_mut_ptr() as *mut u32,
+//             len: pauli_vec.right.storage().len(),
+//             cap: pauli_vec.right.capacity(),
+//         },
+//         right_len: pauli_vec.right.len(),
+//     }
+// }
