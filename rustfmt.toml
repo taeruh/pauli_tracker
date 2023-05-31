@@ -1,0 +1,28 @@
+edition = "2021"
+newline_style = "Native"
+
+max_width = 88
+use_small_heuristics = "Max"
+chain_width = 67
+fn_call_width = 67
+struct_lit_width = 32
+struct_variant_width = 32
+# attr_fn_like_width = 68
+
+use_field_init_shorthand = true
+use_try_shorthand = true
+
+# unstable stuff, which is only used in a nightly toolchain (to use it either be in a
+# nightly toolchain or pass +nightly to rustfmt/cargo fmt
+
+format_macro_matchers = true
+format_macro_bodies = true
+
+version = "Two"
+
+format_code_in_doc_comments = true
+format_strings = true
+
+group_imports = "StdExternalCrate"
+imports_layout = "Vertical"
+imports_granularity = "Crate"

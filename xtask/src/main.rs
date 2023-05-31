@@ -1,3 +1,3 @@
 fn main() {
-    xtask::some_task()
+    xtask::cicd::full();
 }

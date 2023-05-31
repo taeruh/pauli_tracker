@@ -1,4 +1,3 @@
-- set up ci/cd
 - set serde
 - more tests
   - write helper for all the basic gate tests
@@ -6,6 +5,11 @@
 - define more clifford gates
 - implement a file streaming storage
 
+- when public:
+  - uncomment workflows
+  brach rules:
+  - disable force push
+  - enable status checks
 
 
 - derive macro that automatically derives the build methods of the Circuit based on Gate

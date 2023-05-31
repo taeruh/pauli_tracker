@@ -67,7 +67,7 @@ pub unsafe extern "C" fn free_tracker(tracker: *mut PauliTracker) {
 /// deprecated
 #[no_mangle]
 pub extern "C" fn tracker_storage(tracker: &PauliTracker) -> *mut Storage {
-    tracker.storage() as *const Storage as *mut Storage
+    tracker.as_storage() as *const Storage as *mut Storage
 }
 
 #[repr(C)]
@@ -150,7 +150,7 @@ pub extern "C" fn measure_and_store(
     qubit: usize,
     storage: &mut Storage,
 ) {
-    tracker.measure_and_store(qubit, storage);
+    let _ = tracker.measure_and_store(qubit, storage);
 }
 
 #[no_mangle]
@@ -180,7 +180,7 @@ pub extern "C" fn show_storage(storage: &Storage) {
 
 #[no_mangle]
 pub extern "C" fn get_tracker_storage(tracker: &PauliTracker) -> *mut Storage {
-    tracker.storage() as *const Storage as _
+    tracker.as_storage() as *const Storage as _
 }
 
 #[no_mangle]

@@ -1,3 +1,5 @@
+pub mod cicd;
+
 pub fn some_task() {
     println!("some task")
 }
