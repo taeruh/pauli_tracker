@@ -16,9 +16,9 @@ use crate::pauli::Pauli;
 pub struct PauliVec {
     // the bit representing the left qubit on the left-hand side in the tableau
     // representation, i.e., X
-    pub(crate) left: BitVec,
+    pub left: BitVec,
     // right-hand side, i.e., Z
-    pub(crate) right: BitVec,
+    pub right: BitVec,
 }
 
 impl PauliVec {
@@ -56,14 +56,6 @@ impl PauliVec {
         let l = self.left.pop().unwrap_or(false);
         let r = self.right.pop().unwrap_or(false);
         Pauli::new(l, r)
-    }
-
-    pub fn xstack(&self) -> &BitVec {
-        &self.left
-    }
-
-    pub fn zstack(&self) -> &BitVec {
-        &self.left
     }
 
     // we can define the action of local gates
