@@ -1,3 +1,6 @@
+//! The underlining storage types for [Frames](super::Frames) and some functionality to
+//! analyze the storage.
+
 use std::mem;
 
 use bit_vec::BitVec;
@@ -134,18 +137,28 @@ pub trait StackStorage: IntoIterator<Item = (usize, PauliVec)> {
     fn is_empty(&self) -> bool;
 }
 
+/// Sort the `storage` according to the qubits.
 pub fn sort_by_bit(storage: &impl StackStorage) -> Vec<(usize, &PauliVec)> {
     let mut ret = storage.iter().collect::<Vec<(usize, &PauliVec)>>();
     ret.sort_by_key(|(i, _)| *i);
     ret
 }
 
+/// Convert the `storage` into an sorted array according to the qubits.
 pub fn into_sorted_by_bit(storage: impl StackStorage) -> Vec<(usize, PauliVec)> {
     let mut ret = storage.into_iter().collect::<Vec<(usize, PauliVec)>>();
     ret.sort_by_key(|(i, _)| *i);
     ret
 }
 
+/// Sort the `storage` according to the induced dependencies.
+///
+/// E.g., if the frames correspond to measurement results. The return value is a layered
+/// directed graph. Note that dependencies that are already covered by later
+/// dependencies are removed (see example).
+///
+/// # Examples
+/// todo
 pub fn create_dependency_graph(
     storage: &impl StackStorage,
     map: &[usize],

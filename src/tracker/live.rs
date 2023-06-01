@@ -1,3 +1,7 @@
+//! This module provides [Tracker]s that are similar to the ones in
+//! [frames](super::frames), with the major difference that there's effectively only one
+//! frames, which adds up multiple tracked Paulis.
+
 use std::{
     self,
     cmp::Ordering,

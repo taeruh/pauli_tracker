@@ -11,6 +11,10 @@ use super::super::{
     StackStorage,
 };
 
+/// A HashMap of [PauliVec]s. Much more flexible than [Vector], but for restricted use
+/// cases [Vector] might be more efficient.
+///
+///[Vector]: super::vector::Vector
 pub type Map = HashMap<usize, PauliVec>;
 
 impl StackStorage for Map {

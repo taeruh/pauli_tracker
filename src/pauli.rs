@@ -66,19 +66,19 @@ impl Pauli {
     }
 
     // Safety: hardcoded
-    // Create a new identity Pauli
+    /// Create a new identity Pauli.
     pub fn new_i() -> Self {
         unsafe { Self::from_unchecked(0) }
     }
-    // Create a new X Pauli
+    /// Create a new X Pauli.
     pub fn new_x() -> Self {
         unsafe { Self::from_unchecked(2) }
     }
-    // Create a new Y Pauli
+    /// Create a new Y Pauli.
     pub fn new_y() -> Self {
         unsafe { Self::from_unchecked(3) }
     }
-    // Create a new Z Pauli
+    /// Create a new Z Pauli.
     pub fn new_z() -> Self {
         unsafe { Self::from_unchecked(1) }
     }

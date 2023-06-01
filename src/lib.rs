@@ -2,6 +2,8 @@
 A library to track Pauli frames through a Clifford circuit with measurements. A general
 introduction to this library is provided in the
 [README](https://github.com/taeruh/pauli_tracker).
+
+*more documentation and functionality coming soon*
 # Crate features
 * **serde**
   Support [serde](https://docs.rs/serde/latest/serde/).

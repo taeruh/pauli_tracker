@@ -1,3 +1,14 @@
+//! A [Frames] type can be used as [Tracker] to analyze how the
+//! tracked Paulis effect the qubits.
+//!
+//! Each new tracked Pauli introduces a new frame on
+//! the qubits, for example corresponding to a measurement, with the tracked Pauli on
+//! the qubit where it has been initialized and on all other qubits identities. The
+//! Clifford gates act on this frame, according to the conjugation rules, causing the
+//! tracked Pauli to being copied, moved, swaped, ... within the frame. The frames of
+//! multiple tracked Paulis are stacked up together, not effectiving each other; this is
+//! the main difference to the tracker defined in [live](super::live).
+
 use std::mem;
 
 #[cfg(feature = "serde")]

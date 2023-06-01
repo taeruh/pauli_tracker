@@ -1,8 +1,6 @@
-/*!
-This module defines the [Tracker] trait and provides different implementors through the
-[frames] and [live] module. The [Tracker] trait provides the core functionality of
-tracking Pauli gates through a Clifford circuit.
-*/
+//! This module defines the [Tracker] trait and provides different implementors through
+//! the [frames] and [live] module. The [Tracker] trait provides the core functionality
+//! of tracking Pauli gates through a Clifford circuit.
 
 use crate::pauli::Pauli;
 
@@ -18,6 +16,12 @@ use crate::pauli::Pauli;
 /// [PauliVec]: frames::storage::PauliVec
 pub type PauliString = Vec<(usize, Pauli)>;
 
+/// This trait provides the core API to track Paulis through a clifford circuit. The
+/// implementors must ensure that they implement the functions correctly according to
+/// the conjugation rules of Clifford gates with Pauli Gates
+///
+/// *currently, the set of supported Cliffords is very limited, it will be extended over
+/// time*
 pub trait Tracker {
     type Stack;
     /// Initialize the tracker with qubits from 0 to `num_bits`-1.
