@@ -12,6 +12,11 @@ use std::{
 };
 
 use itertools::Itertools;
+#[cfg(feature = "serde")]
+use serde::{
+    Deserialize,
+    Serialize,
+};
 
 use super::super::{
     PauliVec,
@@ -24,6 +29,7 @@ use crate::slice_extension::GetTwoMutSlice;
 // HashMap<key=usize, position_in_vec_=usize> and Vec<value=PauliVec>; we do this
 // because it is more memory-efficient for many PauliVec(s) since HashMaps kinda need
 // the memory even if there's no key
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct MappedVector {
     // note that we are effectively using an array of array; this wouldn't be optimal
     // if the inner array has a fixed size (then one could do the usual thing and

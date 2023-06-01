@@ -1,12 +1,18 @@
 use std::mem;
 
 use bit_vec::BitVec;
+#[cfg(feature = "serde")]
+use serde::{
+    Deserialize,
+    Serialize,
+};
 
 use crate::pauli::Pauli;
 
 /// Multiple encoded Paulis compressed into two [BitVec]s.
 // each Pauli can be described by two bits (neglecting phases)
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Default)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct PauliVec {
     // the bit representing the left qubit on the left-hand side in the tableau
     // representation, i.e., X

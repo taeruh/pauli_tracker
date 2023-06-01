@@ -5,6 +5,12 @@ use std::fmt::{
     Display,
 };
 
+#[cfg(feature = "serde")]
+use serde::{
+    Deserialize,
+    Serialize,
+};
+
 // just to effectively have an impl bool to make things more convenient here; the
 // disadvantage is that we cannot define the methods to be const but we don't need that
 trait ResolvePauli {
@@ -34,6 +40,7 @@ impl ResolvePauli for bool {
 /// [Self::storage] and using it to index a pointer), therefore, functions that make it
 /// possible to circumvent the invariant are unsafe.
 #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct Pauli {
     storage: u8,
 }

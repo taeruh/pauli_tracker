@@ -3,6 +3,12 @@ use std::{
     cmp::Ordering,
 };
 
+#[cfg(feature = "serde")]
+use serde::{
+    Deserialize,
+    Serialize,
+};
+
 use super::{
     PauliString,
     Tracker,
@@ -16,6 +22,7 @@ use crate::{
 
 #[derive(Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Default, Debug)]
 /// Currently actually not a bitvector ..., but it will be
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct BitVector {
     // this will become a bitvector later ...
     inner: Vec<Pauli>,

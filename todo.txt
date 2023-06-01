@@ -1,9 +1,8 @@
-- set serde
+- implement a file streaming storage
 - more tests
   - write helper for all the basic gate tests
   - better circuit module for testing
 - define more clifford gates
-- implement a file streaming storage
 
 - when public:
   - uncomment workflows

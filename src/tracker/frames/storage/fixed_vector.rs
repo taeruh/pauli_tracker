@@ -8,6 +8,12 @@ use std::{
     slice,
 };
 
+#[cfg(feature = "serde")]
+use serde::{
+    Deserialize,
+    Serialize,
+};
+
 use super::super::{
     PauliVec,
     StackStorage,
@@ -15,6 +21,7 @@ use super::super::{
 use crate::slice_extension::GetTwoMutSlice;
 
 #[derive(Debug, Default)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct FixedVector {
     frames: Vec<PauliVec>,
 }

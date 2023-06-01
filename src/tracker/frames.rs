@@ -1,5 +1,11 @@
 use std::mem;
 
+#[cfg(feature = "serde")]
+use serde::{
+    Deserialize,
+    Serialize,
+};
+
 use self::storage::{
     PauliVec,
     StackStorage,
@@ -20,6 +26,7 @@ pub mod storage;
 /// or less enforced by [StackStorage]). The module [storage] provides some compatible
 /// storage types.
 #[derive(Clone, Debug, Default)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct Frames<Storage /* : StackStorage */> {
     storage: Storage,
     frames_num: usize,

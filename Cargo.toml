@@ -9,17 +9,22 @@ crate-type = ["lib", "cdylib", "staticlib"]
 
 [features]
 circuit = ["dep:rand"]
+serde = ["dep:serde", "bit-vec/serde"]
 
 [dependencies]
 bit-vec = "0.6.3"
 itertools = "0.10.5"
 rand = { version = "0.8.5", optional = true }
+serde = { version = "1.0.163", optional = true, features = ["derive"] }
 
 [package.metadata.docs.rs]
 all-features = true
 # we use cfg_attr(docsrs, <(nightly-)attribute>) to use (nightly)-attributes when
 # building the docs (note that Docs.rs builds the docs with the nightly toolchain)
 rustdoc-args = ["--cfg", "docsrs"]
+
+[dev-dependencies]
+serde_yaml = "0.9.21"
 
 
 # I had problems with globs and the exclude array, so I just' don't use globs

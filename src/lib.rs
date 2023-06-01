@@ -6,6 +6,8 @@ introduction to this library is in the
 * **circuit**
   Includes the [circuit] module which contains tools to combine the Pauli tracking
   mechanism with a circuit simulator/description.
+* **serde**
+  Support [serde](https://docs.rs/serde/latest/serde/).
 */
 
 #![cfg_attr(docsrs, feature(doc_cfg))]
