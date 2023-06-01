@@ -9,6 +9,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 ### Deprecated
 ### Removed
 ### Fixed
+- Bug in the movement operations for the live tracker
 ### Security
 
 ## [0.1.0] - 2023-06-01
