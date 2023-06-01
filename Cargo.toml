@@ -1,8 +1,17 @@
 [package]
 name = "pauli_tracker"
 version = "0.1.0"
+authors = ["Jannis Ruh <ruh.j81@gmail.com>"]
+
 edition = "2021"
 rust-version = "1.65.0" # needed for GATs
+
+license = "MIT OR Apache-2.0"
+
+repository = "https://github.com/taeruh/pauli_tracker"
+description = "A library to track Pauli gates through a Clifford circuit."
+keywords = ["quantum", "clifford", "mbqc"]
+categories = ["simulation"]
 
 [lib]
 crate-type = ["lib"]

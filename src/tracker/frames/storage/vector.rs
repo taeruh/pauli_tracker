@@ -22,24 +22,24 @@ use crate::slice_extension::GetTwoMutSlice;
 
 #[derive(Debug, Default)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-pub struct FixedVector {
+pub struct Vector {
     frames: Vec<PauliVec>,
 }
 
-impl Deref for FixedVector {
+impl Deref for Vector {
     type Target = Vec<PauliVec>;
     fn deref(&self) -> &Self::Target {
         &self.frames
     }
 }
 
-impl DerefMut for FixedVector {
+impl DerefMut for Vector {
     fn deref_mut(&mut self) -> &mut Self::Target {
         &mut self.frames
     }
 }
 
-impl IntoIterator for FixedVector {
+impl IntoIterator for Vector {
     type Item = (usize, PauliVec);
 
     type IntoIter = Enumerate<<Vec<PauliVec> as IntoIterator>::IntoIter>;
@@ -49,7 +49,7 @@ impl IntoIterator for FixedVector {
     }
 }
 
-impl StackStorage for FixedVector {
+impl StackStorage for Vector {
     type IterMut<'a> = Enumerate<slice::IterMut<'a, PauliVec>>
     where
         Self: 'a;

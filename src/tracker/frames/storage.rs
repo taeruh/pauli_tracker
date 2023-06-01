@@ -58,6 +58,14 @@ impl PauliVec {
         Pauli::new(l, r)
     }
 
+    pub fn xstack(&self) -> &BitVec {
+        &self.left
+    }
+
+    pub fn zstack(&self) -> &BitVec {
+        &self.left
+    }
+
     // we can define the action of local gates
 
     // Pauli gates don't do anything; we just include them for completeness and since it
@@ -216,14 +224,15 @@ pub fn create_dependency_graph(
     graph
 }
 
-mod fixed_vector;
-pub use fixed_vector::FixedVector;
+mod vector;
+pub use vector::Vector;
 
-mod full_map;
-pub use full_map::FullMap;
+mod map;
+pub use map::Map;
 
 mod mapped_vector;
-pub use mapped_vector::MappedVector;
+#[allow(unused)] // we're using it in some tests
+pub(crate) use mapped_vector::MappedVector;
 
 // #[cfg(test)]
 // mod tests {

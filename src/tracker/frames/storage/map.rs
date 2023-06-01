@@ -3,7 +3,7 @@ use std::{
         hash_map,
         HashMap,
     },
-    iter::Map,
+    iter,
 };
 
 use super::super::{
@@ -11,14 +11,14 @@ use super::super::{
     StackStorage,
 };
 
-pub type FullMap = HashMap<usize, PauliVec>;
+pub type Map = HashMap<usize, PauliVec>;
 
-impl StackStorage for FullMap {
-    type IterMut<'a> = Map<
+impl StackStorage for Map {
+    type IterMut<'a> = iter::Map<
         hash_map::IterMut<'a, usize, PauliVec>,
         fn((&usize, &'a mut PauliVec)) -> (usize, &'a mut PauliVec),
     >;
-    type Iter<'a> = Map<
+    type Iter<'a> = iter::Map<
         hash_map::Iter<'a, usize, PauliVec>,
         fn((&usize, &'a PauliVec)) -> (usize, &'a PauliVec),
     >;

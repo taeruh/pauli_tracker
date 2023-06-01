@@ -21,10 +21,9 @@ pub mod storage;
 /// A container of multiple Pauli frames, using a generic `Storage` type (that
 /// implements [StackStorage] if it shall be useful) as internal storage. The type
 /// implements the core functionality to track the Pauli frames through a Clifford
-/// circuit. As example view the documentation of [Circuit](crate::circuit). The
-/// explicit storage type should have the [PauliVec]s on it's minor axis (this is more
-/// or less enforced by [StackStorage]). The module [storage] provides some compatible
-/// storage types.
+/// circuit. The explicit storage type should have the [PauliVec]s on it's minor axis
+/// (this is more or less enforced by [StackStorage]). The module [storage] provides
+/// some compatible storage types.
 #[derive(Clone, Debug, Default)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct Frames<Storage /* : StackStorage */> {
@@ -229,7 +228,7 @@ mod tests {
         #[test]
         fn one_qubit() {
             // pauli p = ab in binary; encoding: x = a, z = b
-            type Action = fn(&mut Frames<FixedVector>, usize);
+            type Action = fn(&mut Frames<Vector>, usize);
             const GATES: [(
                 // action
                 Action,
@@ -241,7 +240,7 @@ mod tests {
             ); 2] = [(Frames::h, "H", [0, 2, 1, 3]), (Frames::s, "S", [0, 1, 3, 2])];
 
             for action in GATES {
-                let mut frames = Frames::<FixedVector>::default();
+                let mut frames = Frames::<Vector>::default();
                 frames.new_qubit(0);
                 for pauli in (0..4).rev() {
                     frames
@@ -264,7 +263,7 @@ mod tests {
         fn two_qubit() {
             // double-pauli p = abcd in binary;
             // encoding: x_0 = a, z_0 = b, x_1 = c, z_2 = d
-            type Action = fn(&mut Frames<FixedVector>, usize, usize);
+            type Action = fn(&mut Frames<Vector>, usize, usize);
             const GATES: [(
                 // action
                 Action,
@@ -292,7 +291,7 @@ mod tests {
             const SECOND: u8 = 3;
 
             for action in GATES {
-                let mut frames = Frames::<FixedVector>::default();
+                let mut frames = Frames::<Vector>::default();
                 frames.new_qubit(0);
                 frames.new_qubit(1);
                 for pauli in (0..16).rev() {

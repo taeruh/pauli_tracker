@@ -228,13 +228,13 @@ mod tests {
         frames::{
             storage::{
                 self,
-                FixedVector,
                 MappedVector,
                 PauliVec,
+                Vector,
             },
             Frames,
         },
-        live::BitVector,
+        live::LiveVector,
     };
 
     #[test]
@@ -426,14 +426,14 @@ mod tests {
     fn toffoli_live() {
         let mut circ = TrackedCircuit {
             circuit: RandomMeasurementCircuit {},
-            tracker: BitVector::init(10),
+            tracker: LiveVector::init(10),
             storage: (),
         };
 
         trait TTele {
             fn t_tele(&mut self, origin: usize, new: usize) -> bool;
         }
-        impl TTele for TrackedCircuit<RandomMeasurementCircuit, BitVector, ()> {
+        impl TTele for TrackedCircuit<RandomMeasurementCircuit, LiveVector, ()> {
             fn t_tele(&mut self, origin: usize, new: usize) -> bool {
                 self.cx(origin, new);
                 self.move_z_to_z(origin, new);
@@ -465,7 +465,7 @@ mod tests {
         circ.cx(6, 9);
         circ.h(9);
 
-        let mut check = BitVector::init(10);
+        let mut check = LiveVector::init(10);
         // compare toffoli tests with frame tracker
         // (3, PauliVec::try_from("0000000", "1001110").unwrap()),
         // (6, PauliVec::try_from("0000000", "0101101").unwrap()),
@@ -540,7 +540,7 @@ mod tests {
     fn another_graph_test() {
         let mut circ = TrackedCircuit {
             circuit: DummyCircuit::new(),
-            tracker: Frames::<FixedVector>::init(10),
+            tracker: Frames::<Vector>::init(10),
             storage: (),
         };
 
@@ -549,7 +549,7 @@ mod tests {
         trait TTele {
             fn t_tele(&mut self, origin: usize, new: usize);
         }
-        impl TTele for TrackedCircuit<DummyCircuit, Frames<FixedVector>, ()> {
+        impl TTele for TrackedCircuit<DummyCircuit, Frames<Vector>, ()> {
             fn t_tele(&mut self, origin: usize, new: usize) {
                 self.cx(origin, new);
                 self.move_z_to_z(origin, new);

@@ -21,14 +21,13 @@ use crate::{
 // todo: also do it with a hashmap
 
 #[derive(Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Default, Debug)]
-/// Currently actually not a bitvector ..., but it will be
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-pub struct BitVector {
+pub struct LiveVector {
     // this will become a bitvector later ...
     inner: Vec<Pauli>,
 }
 
-impl BitVector {
+impl LiveVector {
     pub fn get(&self, bit: usize) -> Option<&Pauli> {
         self.inner.get(bit)
     }
@@ -59,11 +58,11 @@ macro_rules! single {
     )*};
 }
 
-impl Tracker for BitVector {
+impl Tracker for LiveVector {
     type Stack = Pauli;
 
     fn init(num_bits: usize) -> Self {
-        BitVector {
+        LiveVector {
             inner: vec![Pauli::new_i(); num_bits],
         }
     }
@@ -147,7 +146,7 @@ mod tests {
     fn two_qubit_gates() {
         // double-pauli p = abcd in binary;
         // encoding: x_0 = a, z_0 = b, x_1 = c, z_2 = d
-        type Action = fn(&mut BitVector, usize, usize);
+        type Action = fn(&mut LiveVector, usize, usize);
         const GATES: [(
             // action
             Action,
@@ -158,12 +157,12 @@ mod tests {
             [u8; 16],
         ); 2] = [
             (
-                BitVector::cx, // left->control, right->target
+                LiveVector::cx, // left->control, right->target
                 "CX",
                 [0, 5, 2, 7, 4, 1, 6, 3, 10, 15, 8, 13, 14, 11, 12, 9],
             ),
             (
-                BitVector::cz,
+                LiveVector::cz,
                 "CZ",
                 [0, 1, 6, 7, 4, 5, 2, 3, 9, 8, 15, 14, 13, 12, 11, 10],
             ),
@@ -176,7 +175,7 @@ mod tests {
 
         for action in GATES {
             for (input, check) in (0u8..).zip(action.2) {
-                let mut tracker = BitVector::init(2);
+                let mut tracker = LiveVector::init(2);
                 tracker.track_pauli_string(vec![
                     (0, Pauli::try_from((input & FIRST) >> FIRST_SHIFT).unwrap()),
                     (1, Pauli::try_from(input & SECOND).unwrap()),
@@ -198,9 +197,9 @@ mod tests {
 
     #[test]
     fn movement() {
-        type Action = fn(&mut BitVector, usize, usize);
+        type Action = fn(&mut LiveVector, usize, usize);
         const MOVEMENT: [(Action, &str, [u8; 16]); 1] = [(
-            BitVector::move_z_to_x,
+            LiveVector::move_z_to_x,
             "xz",
             [0, 1, 2, 3, 2, 3, 0, 1, 8, 9, 10, 11, 10, 11, 8, 9],
         )];
@@ -212,7 +211,7 @@ mod tests {
 
         for action in MOVEMENT {
             for (input, check) in (0u8..).zip(action.2) {
-                let mut tracker = BitVector::init(2);
+                let mut tracker = LiveVector::init(2);
                 tracker.track_pauli_string(vec![
                     (0, Pauli::try_from((input & FIRST) >> FIRST_SHIFT).unwrap()),
                     (1, Pauli::try_from(input & SECOND).unwrap()),

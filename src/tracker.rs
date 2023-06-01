@@ -1,3 +1,9 @@
+/*!
+This module defines the [Tracker] trait and provides different implementors through the
+[frames] and [live] module. The [Tracker] trait provides the core functionality of
+tracking Pauli gates through a Clifford circuit.
+*/
+
 use crate::pauli::Pauli;
 
 /// A vector describing an encoded Pauli string, for example, one frame of
