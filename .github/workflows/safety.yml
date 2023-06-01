@@ -1,15 +1,15 @@
-# name: safety
-# permissions:
-#   contents: read
-# on:
-#   push:
-#     branches: [main]
-#   pull_request:
-# concurrency:
-#   group: ${{ github.workflow }}-${{ github.ref || github.run_id }}
-#   cancel-in-progress: true
+name: safety
+permissions:
+  contents: read
+on:
+  push:
+    branches: [main]
+  pull_request:
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref || github.run_id }}
+  cancel-in-progress: true
 
-# jobs:
+jobs:
 
 #   miri:
 #     name: miri
