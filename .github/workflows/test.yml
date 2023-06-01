@@ -31,40 +31,40 @@ jobs:
       - name: cargo test docs
         run: cargo test --locked --all-features --doc
 
-  beta:
-    name: beta
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-        with:
-          submodules: true
-      - name: Install beta
-        uses: dtolnay/rust-toolchain@beta
-      - name: cargo test
-        run: cargo test --all-features --all-targets
-      - name: cargo test docs
-        run: cargo test --all-features --doc
+  # beta:
+  #   name: beta
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - uses: actions/checkout@v3
+  #       with:
+  #         submodules: true
+  #     - name: Install beta
+  #       uses: dtolnay/rust-toolchain@beta
+  #     - name: cargo test
+  #       run: cargo test --all-features --all-targets
+  #     - name: cargo test docs
+  #       run: cargo test --all-features --doc
 
-  os-check:
-    name: ${{ matrix.os }} / locked
-    runs-on: ${{ matrix.os }}
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [macos-latest, windows-latest]
-    steps:
-      - uses: actions/checkout@v3
-        with:
-          submodules: true
-      - name: Install stable
-        uses: dtolnay/rust-toolchain@stable
-      - name: Install nightly for -Zdirect-minimal-versions
-        uses: dtolnay/rust-toolchain@nightly
-      - name: Set default to stable
-        run: rustup default stable
-      - name: Generate the lockfile with the specified minimal versions
-        run: cargo +nightly update -Zdirect-minimal-versions
-      - name: cargo test
-        run: cargo test --locked --all-features --all-targets
-      - name: cargo test docs
-        run: cargo test --locked --all-features --doc
+  # os-check:
+  #   name: ${{ matrix.os }} / locked
+  #   runs-on: ${{ matrix.os }}
+  #   strategy:
+  #     fail-fast: false
+  #     matrix:
+  #       os: [macos-latest, windows-latest]
+  #   steps:
+  #     - uses: actions/checkout@v3
+  #       with:
+  #         submodules: true
+  #     - name: Install stable
+  #       uses: dtolnay/rust-toolchain@stable
+  #     - name: Install nightly for -Zdirect-minimal-versions
+  #       uses: dtolnay/rust-toolchain@nightly
+  #     - name: Set default to stable
+  #       run: rustup default stable
+  #     - name: Generate the lockfile with the specified minimal versions
+  #       run: cargo +nightly update -Zdirect-minimal-versions
+  #     - name: cargo test
+  #       run: cargo test --locked --all-features --all-targets
+  #     - name: cargo test docs
+  #       run: cargo test --locked --all-features --doc

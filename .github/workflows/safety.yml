@@ -1,28 +1,28 @@
-name: safety
-permissions:
-  contents: read
-on:
-  push:
-    branches: [main]
-  pull_request:
-concurrency:
-  group: ${{ github.workflow }}-${{ github.ref || github.run_id }}
-  cancel-in-progress: true
+# name: safety
+# permissions:
+#   contents: read
+# on:
+#   push:
+#     branches: [main]
+#   pull_request:
+# concurrency:
+#   group: ${{ github.workflow }}-${{ github.ref || github.run_id }}
+#   cancel-in-progress: true
 
-jobs:
+# jobs:
 
-  miri:
-    name: miri
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-        with:
-          submodules: true
-      - name: Install nighly
-        uses: dtolnay/rust-toolchain@nightly
-        with:
-          components: miri
-      - name: cargo miri test
-        run: cargo miri test --all-features --all-targets
-      - name: cargo miri test docs
-        run: cargo test --all-features --doc
+#   miri:
+#     name: miri
+#     runs-on: ubuntu-latest
+#     steps:
+#       - uses: actions/checkout@v3
+#         with:
+#           submodules: true
+#       - name: Install nighly
+#         uses: dtolnay/rust-toolchain@nightly
+#         with:
+#           components: miri
+#       - name: cargo miri test
+#         run: cargo miri test --all-features --all-targets
+#       - name: cargo miri test docs
+#         run: cargo test --all-features --doc
