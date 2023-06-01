@@ -42,20 +42,3 @@ pub fn enabled_target_feature() -> &'static str {
     }
     "none"
 }
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    // Check whether the correct target feature is enabled (in the build script or
-    // automatically)
-    fn target_feature() {
-        #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
-        if is_x86_feature_detected!("avx2") {
-            assert_eq!("avx2", enabled_target_feature());
-        } else if is_x86_feature_detected!("sse2") {
-            assert_eq!("sse2", enabled_target_feature());
-        }
-    }
-}

@@ -5,4 +5,3 @@ Cargo.lock
 # personal development config and caches
 .tmux-session
 Session.vim
-.ccls-cache

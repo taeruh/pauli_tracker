@@ -5,7 +5,7 @@ edition = "2021"
 rust-version = "1.65.0" # needed for GATs
 
 [lib]
-crate-type = ["lib", "cdylib", "staticlib"]
+crate-type = ["lib"]
 
 [features]
 circuit = ["dep:rand"]
@@ -27,16 +27,11 @@ rustdoc-args = ["--cfg", "docsrs"]
 serde_yaml = "0.9.21"
 
 
-# I had problems with globs and the exclude array, so I just' don't use globs
 [workspace]
 members = [
   "./",
-  "foreign_api/c",
   "xtask",
 ]
 default-members = [
   "./",
-  "foreign_api/c",
 ]
-# exclude = [
-# ]

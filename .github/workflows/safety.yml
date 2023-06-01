@@ -11,7 +11,7 @@ concurrency:
 
 jobs:
 
-#   miri:
+  miri:
 #     name: miri
 #     runs-on: ubuntu-latest
 #     steps:
