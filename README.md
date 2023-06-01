@@ -1,7 +1,8 @@
 # Pauli Tracker
 
-**Initial phase; really, really unstable at the moment**
+**Initial phase; very unstable at the moment**
+___
 
 A library to track Pauli frames through a Clifford circuit with measurements.
 
-[Building](./docs/building.md)
+*more documentation coming soon*
