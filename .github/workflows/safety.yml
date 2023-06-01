@@ -12,17 +12,17 @@ concurrency:
 jobs:
 
   miri:
-#     name: miri
-#     runs-on: ubuntu-latest
-#     steps:
-#       - uses: actions/checkout@v3
-#         with:
-#           submodules: true
-#       - name: Install nighly
-#         uses: dtolnay/rust-toolchain@nightly
-#         with:
-#           components: miri
-#       - name: cargo miri test
-#         run: cargo miri test --all-features --all-targets
-#       - name: cargo miri test docs
-#         run: cargo test --all-features --doc
+    name: miri
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          submodules: true
+      - name: Install nighly
+        uses: dtolnay/rust-toolchain@nightly
+        with:
+          components: miri
+      - name: cargo miri test
+        run: cargo miri test --all-features --all-targets
+      - name: cargo miri test docs
+        run: cargo test --all-features --doc
