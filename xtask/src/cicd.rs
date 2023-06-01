@@ -68,6 +68,11 @@ pub mod test {
         println!("TEST: OS_CHECK");
         println!("skipped (obviously)");
     }
+
+    pub fn coverage() {
+        println!("TEST: COVERAGE");
+        cargo!("llvm-cov", "--all-features");
+    }
 }
 
 pub mod safety {
@@ -93,10 +98,11 @@ pub fn full() {
     check::clippy();
     check::docs();
     check::fmt();
+    safety::miri();
     test::required();
     test::beta();
     test::os_check();
-    safety::miri();
+    test::coverage();
 }
 
 fn _cargo<const N: usize>(args: [&str; N]) {
