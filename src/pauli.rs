@@ -1,4 +1,4 @@
-//! Dense encoding for a single Pauli operator.
+//! Encoding of a single Pauli operator.
 
 use std::fmt::{
     Debug,
