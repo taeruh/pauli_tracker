@@ -219,112 +219,112 @@ impl<Storage: StackStorage> Tracker for Frames<Storage> {
     }
 }
 
-// #[cfg(test)]
-// mod tests {
-//     use super::{
-//         storage::*,
-//         *,
-//     };
+#[cfg(test)]
+mod tests {
+    use super::{
+        storage::*,
+        *,
+    };
 
-//     // we only check the basic functionality here, more complicated circuits are tested
-//     // in [super::circuit] to test the tracker and the circuit at once
+    // we only check the basic functionality here, more complicated circuits are tested
+    // in [super::circuit] to test the tracker and the circuit at once
 
-//     mod gate_definition_check {
-//         use super::*;
+    mod gate_definition_check {
+        use super::*;
 
-//         // maybe todo: in the following functions there's a pattern behind how we encode
-//         // one-qubit and two-qubit actions, it's like a "TwoBitVec"; one could probably
-//         // implement that in connection with [Pauli]
+        // maybe todo: in the following functions there's a pattern behind how we encode
+        // one-qubit and two-qubit actions, it's like a "TwoBitVec"; one could probably
+        // implement that in connection with [Pauli]
 
-//         #[test]
-//         fn one_qubit() {
-//             // pauli p = ab in binary; encoding: x = a, z = b
-//             type Action = fn(&mut Frames<Vector>, usize);
-//             const GATES: [(
-//                 // action
-//                 Action,
-//                 // name for debugging
-//                 &str,
-//                 // result: calculated by hand
-//                 // encoded input: p = 0 1 2 3
-//                 [u8; 4],
-//             ); 2] = [(Frames::h, "H", [0, 2, 1, 3]), (Frames::s, "S", [0, 1, 3, 2])];
+        #[test]
+        fn one_qubit() {
+            // pauli p = ab in binary; encoding: x = a, z = b
+            type Action = fn(&mut Frames<Vector>, usize);
+            const GATES: [(
+                // action
+                Action,
+                // name for debugging
+                &str,
+                // result: calculated by hand
+                // encoded input: p = 0 1 2 3
+                [u8; 4],
+            ); 2] = [(Frames::h, "H", [0, 2, 1, 3]), (Frames::s, "S", [0, 1, 3, 2])];
 
-//             for action in GATES {
-//                 let mut frames = Frames::<Vector>::default();
-//                 frames.new_qubit(0);
-//                 for pauli in (0..4).rev() {
-//                     frames
-//                         .track_pauli_string(vec![(0, Pauli::try_from(pauli).unwrap())]);
-//                 }
-//                 (action.0)(&mut frames, 0);
-//                 for (input, check) in (0u8..).zip(action.2) {
-//                     assert_eq!(
-//                         *frames.pop_frame().unwrap().get(0).unwrap().1.storage(),
-//                         check,
-//                         "{}, {}",
-//                         action.1,
-//                         input
-//                     );
-//                 }
-//             }
-//         }
+            for action in GATES {
+                let mut frames = Frames::<Vector>::default();
+                frames.new_qubit(0);
+                for pauli in (0..4).rev() {
+                    frames
+                        .track_pauli_string(vec![(0, Pauli::try_from(pauli).unwrap())]);
+                }
+                (action.0)(&mut frames, 0);
+                for (input, check) in (0u8..).zip(action.2) {
+                    assert_eq!(
+                        *frames.pop_frame().unwrap().get(0).unwrap().1.storage(),
+                        check,
+                        "{}, {}",
+                        action.1,
+                        input
+                    );
+                }
+            }
+        }
 
-//         #[test]
-//         fn two_qubit() {
-//             // double-pauli p = abcd in binary;
-//             // encoding: x_0 = a, z_0 = b, x_1 = c, z_2 = d
-//             type Action = fn(&mut Frames<Vector>, usize, usize);
-//             const GATES: [(
-//                 // action
-//                 Action,
-//                 // name for debugging
-//                 &str,
-//                 // result: calculated by hand
-//                 // encoded input: p = 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15
-//                 [u8; 16],
-//             ); 2] = [
-//                 (
-//                     Frames::cx, // left->control, right->target
-//                     "CX",
-//                     [0, 5, 2, 7, 4, 1, 6, 3, 10, 15, 8, 13, 14, 11, 12, 9],
-//                 ),
-//                 (
-//                     Frames::cz,
-//                     "CZ",
-//                     [0, 1, 6, 7, 4, 5, 2, 3, 9, 8, 15, 14, 13, 12, 11, 10],
-//                 ),
-//             ];
+        #[test]
+        fn two_qubit() {
+            // double-pauli p = abcd in binary;
+            // encoding: x_0 = a, z_0 = b, x_1 = c, z_2 = d
+            type Action = fn(&mut Frames<Vector>, usize, usize);
+            const GATES: [(
+                // action
+                Action,
+                // name for debugging
+                &str,
+                // result: calculated by hand
+                // encoded input: p = 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15
+                [u8; 16],
+            ); 2] = [
+                (
+                    Frames::cx, // left->control, right->target
+                    "CX",
+                    [0, 5, 2, 7, 4, 1, 6, 3, 10, 15, 8, 13, 14, 11, 12, 9],
+                ),
+                (
+                    Frames::cz,
+                    "CZ",
+                    [0, 1, 6, 7, 4, 5, 2, 3, 9, 8, 15, 14, 13, 12, 11, 10],
+                ),
+            ];
 
-//             // masks to decode p in 0..16 into two paulis and vice versa
-//             const FIRST: u8 = 12;
-//             const FIRST_SHIFT: u8 = 2;
-//             const SECOND: u8 = 3;
+            // masks to decode p in 0..16 into two paulis and vice versa
+            const FIRST: u8 = 12;
+            const FIRST_SHIFT: u8 = 2;
+            const SECOND: u8 = 3;
 
-//             for action in GATES {
-//                 let mut frames = Frames::<Vector>::default();
-//                 frames.new_qubit(0);
-//                 frames.new_qubit(1);
-//                 for pauli in (0..16).rev() {
-//                     frames.track_pauli_string(vec![
-//                         (0, Pauli::try_from((pauli & FIRST) >> FIRST_SHIFT).unwrap()),
-//                         (1, Pauli::try_from(pauli & SECOND).unwrap()),
-//                     ]);
-//                 }
-//                 (action.0)(&mut frames, 0, 1);
-//                 for (input, check) in (0u8..).zip(action.2) {
-//                     let frame = frames.pop_frame().unwrap();
-//                     let mut result = 0;
-//                     for (i, p) in frame {
-//                         if i == 0 {
-//                             result += p.storage() << FIRST_SHIFT
-//                         } else if i == 1 {
-//                             result += p.storage()
-//                         }
-//                     }
-//                     assert_eq!(result, check, "{}, {}", action.1, input);
-//                 }
-//             }
-//         }
-//     }
-// }
+            for action in GATES {
+                let mut frames = Frames::<Vector>::default();
+                frames.new_qubit(0);
+                frames.new_qubit(1);
+                for pauli in (0..16).rev() {
+                    frames.track_pauli_string(vec![
+                        (0, Pauli::try_from((pauli & FIRST) >> FIRST_SHIFT).unwrap()),
+                        (1, Pauli::try_from(pauli & SECOND).unwrap()),
+                    ]);
+                }
+                (action.0)(&mut frames, 0, 1);
+                for (input, check) in (0u8..).zip(action.2) {
+                    let frame = frames.pop_frame().unwrap();
+                    let mut result = 0;
+                    for (i, p) in frame {
+                        if i == 0 {
+                            result += p.storage() << FIRST_SHIFT
+                        } else if i == 1 {
+                            result += p.storage()
+                        }
+                    }
+                    assert_eq!(result, check, "{}, {}", action.1, input);
+                }
+            }
+        }
+    }
+}
