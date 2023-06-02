@@ -200,27 +200,6 @@ impl Debug for Pauli {
 mod tests {
     use super::*;
 
-    #[test]
-    fn basic_definitions() {
-        type Action = fn(&mut Pauli);
-        const ACTIONS: [(
-            // action
-            Action,
-            // name for debugging
-            &str,
-            // result: calculated by hand
-            // input for storage: p = 0 1 2 3
-            [u8; 4],
-        ); 2] = [(Pauli::h, "H", [0, 2, 1, 3]), (Pauli::s, "S", [0, 1, 3, 2])];
-        let mut pauli = Pauli::new_i();
-        for action in ACTIONS {
-            for (input, check) in (0u8..).zip(action.2) {
-                pauli.set_storage(input);
-                (action.0)(&mut pauli);
-                assert_eq!(pauli.storage, check, "{}, {}", action.1, input);
-            }
-        }
-    }
 
     #[test]
     fn set() {

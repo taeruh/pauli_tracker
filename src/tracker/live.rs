@@ -143,131 +143,63 @@ impl Tracker for LiveVector {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
+    mod action_definition_check {
+        use super::super::*;
+        use crate::tracker::test::{
+            self,
+            *,
+        };
 
-    #[test]
-    fn two_qubit_actions() {
-        // double-pauli p = abcd in binary;
-        // encoding: x_0 = a, z_0 = b, x_1 = c, z_1 = d
-        // x_0 -> left input, x_1 -> right input
-        type Action = fn(&mut LiveVector, usize, usize);
-        const GATES: [(
-            // action
-            Action,
-            // name for debugging
-            &str,
-            // result: calculated by hand
-            // encoded input: p = 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15
-            [u8; 16],
-        ); 6] = [
-            (
-                LiveVector::cx,
-                "CX",
-                [0, 5, 2, 7, 4, 1, 6, 3, 10, 15, 8, 13, 14, 11, 12, 9],
-            ),
-            (
-                LiveVector::cz,
-                "CZ",
-                [0, 1, 6, 7, 4, 5, 2, 3, 9, 8, 15, 14, 13, 12, 11, 10],
-            ),
-            (
-                LiveVector::move_x_to_x,
-                "xx",
-                [0, 1, 2, 3, 4, 5, 6, 7, 2, 3, 0, 1, 6, 7, 4, 5],
-            ),
-            (
-                LiveVector::move_x_to_z,
-                "xz",
-                [0, 1, 2, 3, 4, 5, 6, 7, 1, 0, 3, 2, 5, 4, 7, 6],
-            ),
-            (
-                LiveVector::move_z_to_x,
-                "zx",
-                [0, 1, 2, 3, 2, 3, 0, 1, 8, 9, 10, 11, 10, 11, 8, 9],
-            ),
-            (
-                LiveVector::move_z_to_z,
-                "zz",
-                [0, 1, 2, 3, 1, 0, 3, 2, 8, 9, 10, 11, 9, 8, 11, 10],
-            ),
-        ];
+        #[test]
+        fn single() {
+            type Action = SingleAction<LiveVector>;
 
-        // masks to decode p in 0..16 into two paulis and vice versa
-        const FIRST: u8 = 12;
-        const FIRST_SHIFT: u8 = 2;
-        const SECOND: u8 = 3;
+            const ACTIONS: [Action; N_SINGLES] = [LiveVector::h, LiveVector::s];
 
-        for action in GATES {
-            for (input, check) in (0u8..).zip(action.2) {
-                let mut tracker = LiveVector::init(2);
-                tracker.track_pauli_string(vec![
-                    (0, Pauli::try_from((input & FIRST) >> FIRST_SHIFT).unwrap()),
-                    (1, Pauli::try_from(input & SECOND).unwrap()),
-                ]);
-                (action.0)(&mut tracker, 0, 1);
-                let frame = &tracker.inner;
-                let mut result = 0;
-                for (i, p) in frame.iter().enumerate() {
-                    if i == 0 {
-                        result += p.storage() << FIRST_SHIFT
-                    } else if i == 1 {
-                        result += p.storage()
-                    }
+            fn runner(action: Action, result: SingleResult) {
+                for (input, check) in (0u8..).zip(result.1) {
+                    let mut tracker = LiveVector::init(2);
+                    tracker
+                        .track_pauli_string(utils::single_init(input));
+                    (action)(&mut tracker, 0);
+                    assert_eq!(
+                        *tracker.inner.get(0).unwrap().storage(),
+                        check,
+                        "{}, {}",
+                        result.0,
+                        input
+                    );
                 }
-                assert_eq!(result, check, "{}, {}", action.1, input);
             }
+
+            test::single_check(runner, ACTIONS);
+        }
+
+        #[test]
+        fn double() {
+            type Action = DoubleAction<LiveVector>;
+
+            const ACTIONS: [Action; N_DOUBLES] = [
+                LiveVector::cx,
+                LiveVector::cz,
+                LiveVector::move_x_to_x,
+                LiveVector::move_x_to_z,
+                LiveVector::move_z_to_x,
+                LiveVector::move_z_to_z,
+            ];
+
+            fn runner(action: Action, result: DoubleResult) {
+                for (input, check) in (0u8..).zip(result.1) {
+                    let mut tracker = LiveVector::init(2);
+                    tracker.track_pauli_string(utils::double_init(input));
+                    (action)(&mut tracker, 0, 1);
+                    let output =
+                        utils::double_output(tracker.inner.into_iter().enumerate());
+                    assert_eq!(output, check, "{}, {}", result.0, input);
+                }
+            }
+
+            test::double_check(runner, ACTIONS);
         }
     }
-
-    // #[test]
-    // fn movement() {
-    //     type Action = fn(&mut LiveVector, usize, usize);
-    //     const MOVEMENT: [(Action, &str, [u8; 16]); 4] = [
-    //         (
-    //             LiveVector::move_x_to_x,
-    //             "xz",
-    //             [0, 1, 2, 3, 2, 3, 0, 1, 8, 9, 10, 11, 10, 11, 8, 9],
-    //         ),
-    //         (
-    //             LiveVector::move_x_to_z,
-    //             "xz",
-    //             [0, 1, 2, 3, 2, 3, 0, 1, 8, 9, 10, 11, 10, 11, 8, 9],
-    //         ),
-    //         (
-    //             LiveVector::move_z_to_x,
-    //             "xz",
-    //             [0, 1, 2, 3, 2, 3, 0, 1, 8, 9, 10, 11, 10, 11, 8, 9],
-    //         ),
-    //         (
-    //             LiveVector::move_z_to_z,
-    //             "xz",
-    //             [0, 1, 2, 3, 2, 3, 0, 1, 8, 9, 10, 11, 10, 11, 8, 9],
-    //         ),
-    //     ];
-    //     // masks to decode p in 0..16 into two paulis and vice versa
-    //     const FIRST: u8 = 12;
-    //     const FIRST_SHIFT: u8 = 2;
-    //     const SECOND: u8 = 3;
-
-    //     for action in MOVEMENT {
-    //         for (input, check) in (0u8..).zip(action.2) {
-    //             let mut tracker = LiveVector::init(2);
-    //             tracker.track_pauli_string(vec![
-    //                 (0, Pauli::try_from((input & FIRST) >> FIRST_SHIFT).unwrap()),
-    //                 (1, Pauli::try_from(input & SECOND).unwrap()),
-    //             ]);
-    //             (action.0)(&mut tracker, 0, 1);
-    //             let frame = &tracker.inner;
-    //             let mut result = 0;
-    //             for (i, p) in frame.iter().enumerate() {
-    //                 if i == 0 {
-    //                     result += p.storage() << FIRST_SHIFT
-    //                 } else if i == 1 {
-    //                     result += p.storage()
-    //                 }
-    //             }
-    //             assert_eq!(result, check, "{}, {}", action.1, input);
-    //         }
-    //     }
-    // }
 }

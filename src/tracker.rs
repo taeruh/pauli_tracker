@@ -70,3 +70,90 @@ pub trait Tracker {
 
 pub mod frames;
 pub mod live;
+
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    // when we update the results here and use this module in the test of the tracker
+    // implementors, the type system ensures that we test all gates/actions
+
+    //           name for debugging, expected result
+    pub type SingleResult = (&'static str, [u8; 4]);
+    pub type DoubleResult = (&'static str, [u8; 16]);
+    pub type SingleAction<T> = fn(&mut T, usize);
+    pub type DoubleAction<T> = fn(&mut T, usize, usize);
+
+    pub const N_SINGLES: usize = 2;
+    const SINGLES: [SingleResult; N_SINGLES] =
+        // pauli p = ab in binary; encoding: x = a, z = b; input: p = 0 1 2 3
+        [("X", [0, 2, 1, 3]), ("X", [0, 1, 3, 2])];
+
+    pub const N_DOUBLES: usize = 6;
+    const DOUBLES: [DoubleResult; N_DOUBLES] = [
+        // double-pauli p = abcd in binary;
+        // encoding: x_0 = a, z_0 = b, x_1 = c, z_1 = d;
+        // input: p = 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15
+        ("cx", [0, 5, 2, 7, 4, 1, 6, 3, 10, 15, 8, 13, 14, 11, 12, 9]),
+        ("cz", [0, 1, 6, 7, 4, 5, 2, 3, 9, 8, 15, 14, 13, 12, 11, 10]),
+        ("move_x_to_x", [0, 1, 2, 3, 4, 5, 6, 7, 2, 3, 0, 1, 6, 7, 4, 5]),
+        ("move_x_to_z", [0, 1, 2, 3, 4, 5, 6, 7, 1, 0, 3, 2, 5, 4, 7, 6]),
+        ("move_z_to_x", [0, 1, 2, 3, 2, 3, 0, 1, 8, 9, 10, 11, 10, 11, 8, 9]),
+        ("move_z_to_z", [0, 1, 2, 3, 1, 0, 3, 2, 8, 9, 10, 11, 9, 8, 11, 10]),
+    ];
+
+    pub fn single_check<T, R>(runner: R, actions: [SingleAction<T>; N_SINGLES])
+    where
+        T: Tracker,
+        R: Fn(SingleAction<T>, SingleResult),
+    {
+        for (action, result) in actions.into_iter().zip(SINGLES) {
+            (runner)(action, result)
+        }
+    }
+
+    pub fn double_check<T, R>(runner: R, actions: [DoubleAction<T>; N_DOUBLES])
+    where
+        T: Tracker,
+        R: Fn(DoubleAction<T>, DoubleResult),
+    {
+        for (action, result) in actions.into_iter().zip(DOUBLES) {
+            (runner)(action, result)
+        }
+    }
+
+    pub mod utils {
+        use crate::{
+            pauli::Pauli,
+            tracker::PauliString,
+        };
+
+        pub fn single_init(input: u8) -> PauliString {
+            vec![(0, Pauli::try_from(input).unwrap())]
+        }
+
+        // masks to decode p in 0..16 into two paulis and vice versa
+        const FIRST: u8 = 12;
+        const FIRST_SHIFT: u8 = 2;
+        const SECOND: u8 = 3;
+
+        pub fn double_init(input: u8) -> PauliString {
+            vec![
+                (0, Pauli::try_from((input & FIRST) >> FIRST_SHIFT).unwrap()),
+                (1, Pauli::try_from(input & SECOND).unwrap()),
+            ]
+        }
+
+        pub fn double_output(frame: impl IntoIterator<Item = (usize, Pauli)>) -> u8 {
+            let mut output = 0;
+            for (i, p) in frame {
+                if i == 0 {
+                    output += p.storage() << FIRST_SHIFT
+                } else if i == 1 {
+                    output += p.storage()
+                }
+            }
+            output
+        }
+    }
+}
