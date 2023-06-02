@@ -18,8 +18,8 @@ pub mod check {
     pub fn msrv() {
         println!("CHECK: MSRV");
         println!(
-            "skipped (don't expect contributor to have multiple Rust versions
-            installed)"
+            "skipped (don't expect contributors to have multiple Rust versions \
+             installed)"
         );
     }
 

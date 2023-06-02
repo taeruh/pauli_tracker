@@ -200,7 +200,6 @@ impl Debug for Pauli {
 mod tests {
     use super::*;
 
-
     #[test]
     fn set() {
         type Action = fn(&mut Pauli, bool);

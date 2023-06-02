@@ -159,8 +159,7 @@ mod tests {
             fn runner(action: Action, result: SingleResult) {
                 for (input, check) in (0u8..).zip(result.1) {
                     let mut tracker = LiveVector::init(2);
-                    tracker
-                        .track_pauli_string(utils::single_init(input));
+                    tracker.track_pauli_string(utils::single_init(input));
                     (action)(&mut tracker, 0);
                     assert_eq!(
                         *tracker.inner.get(0).unwrap().storage(),

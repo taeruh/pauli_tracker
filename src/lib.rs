@@ -1,16 +1,14 @@
-/*!
-A library to track Pauli frames through a Clifford circuit with measurements. A general
-introduction to this library is provided in the
-[README](https://github.com/taeruh/pauli_tracker).
-
-*more documentation and functionality coming soon*
-# Crate features
-* **serde**
-  Support [serde](https://docs.rs/serde/latest/serde/).
-*/
-// * **circuit**
-//   Includes the [circuit] module which contains tools to combine the Pauli tracking
-//   mechanism with a circuit simulator/description.
+//! A library to track Pauli frames through a Clifford circuit with measurements. A
+//! general introduction to this library is provided in the
+//! [README](https://github.com/taeruh/pauli_tracker).
+//!
+//! *more documentation and functionality coming soon*
+//! # Crate features
+//! * **circuit**
+//!   Includes the [circuit] module which contains tools to combine the Pauli tracking
+//!   mechanism with a circuit simulator/description.
+//! * **serde**
+//!   Support [serde](https://docs.rs/serde/latest/serde/) for the structs in [tracker].
 
 #![cfg_attr(docsrs, feature(doc_cfg))]
 //-
@@ -24,7 +22,7 @@ introduction to this library is provided in the
 #[cfg(feature = "circuit")]
 #[cfg_attr(docsrs, doc(cfg(feature = "circuit")))]
 #[allow(unused)]
-pub(crate) mod circuit;
+pub mod circuit;
 
 pub mod pauli;
 

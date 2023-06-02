@@ -1,10 +1,11 @@
-//! Currently, this module is more like an example usage of the trackers and a testing
-//! module; it will be more like a library when things are more stable
+//! A circuit wrapper around a Clifford circuit and a [Tracker].
 //!
-//! The main content of this module is a wrapper [TrackedCircuit], around a Clifford
-//! circuit simulator, that provides tools to track Pauli frames while building up the
-//! circuit. One can either use it directly by providing an appropriate circuit
-//! simulator or us as template/idea to write a custom wrapper.
+//! The main content of this module is a wrapper [TrackedCircuit] that provides an
+//! methods to track Paulis while building up the circuit or executing it. One can
+//! either use it directly by providing an appropriate circuit simulator (should
+//! implement [CliffordCircuit]) or use it as template/idea to write a custom wrapper.
+//! The module also provides two pseudo circuit simulators that can be used to test the
+//! Pauli tracking.
 
 use crate::{
     pauli::Pauli,
@@ -18,9 +19,11 @@ use crate::{
 };
 
 /// The interface into a circuit that can handle Clifford gates and (unspecified)
-/// measurements. We don't care what the circuit is actually doing, we only use this
-/// interface to pass the actions through to the implementing circuit.
+/// measurements. We don't really care what the circuit is actually doing, except for
+/// possible measurement outcomes, since we only use this interface to pass the actions
+/// through to the implementing circuit.
 pub trait CliffordCircuit {
+    type Outcome;
     /// Apply the **X** gate
     fn x(&mut self, bit: usize);
     /// Apply the **Y** gate
@@ -36,69 +39,21 @@ pub trait CliffordCircuit {
     /// Apply the **Control Z** gate
     fn cz(&mut self, bit_a: usize, bit_b: usize);
     /// **Measure** (unspecified)
-    fn measure(&mut self, bit: usize) -> Option<bool>;
+    fn measure(&mut self, bit: usize) -> Self::Outcome;
 }
 
-/// A dummy Clifford circuit that does nothing.
-#[derive(Default)]
-pub struct DummyCircuit {}
-impl DummyCircuit {
-    pub fn new() -> Self {
-        Self {}
-    }
-}
-impl CliffordCircuit for DummyCircuit {
-    #[inline(always)]
-    fn x(&mut self, _: usize) {}
-    #[inline(always)]
-    fn y(&mut self, _: usize) {}
-    #[inline(always)]
-    fn z(&mut self, _: usize) {}
-    #[inline(always)]
-    fn h(&mut self, _: usize) {}
-    #[inline(always)]
-    fn s(&mut self, _: usize) {}
-    #[inline(always)]
-    fn cx(&mut self, _: usize, _: usize) {}
-    #[inline(always)]
-    fn cz(&mut self, _: usize, _: usize) {}
-    #[inline(always)]
-    fn measure(&mut self, _: usize) -> Option<bool> {
-        None
-    }
-}
+mod dummy;
+pub use dummy::DummyCircuit;
+mod random_measurement;
+pub use random_measurement::RandomMeasurementCircuit;
 
-/// A dummy Clifford circuit that does nothing.
-pub struct RandomMeasurementCircuit {}
-impl CliffordCircuit for RandomMeasurementCircuit {
-    #[inline(always)]
-    fn x(&mut self, _: usize) {}
-    #[inline(always)]
-    fn y(&mut self, _: usize) {}
-    #[inline(always)]
-    fn z(&mut self, _: usize) {}
-    #[inline(always)]
-    fn h(&mut self, _: usize) {}
-    #[inline(always)]
-    fn s(&mut self, _: usize) {}
-    #[inline(always)]
-    fn cx(&mut self, _: usize, _: usize) {}
-    #[inline(always)]
-    fn cz(&mut self, _: usize, _: usize) {}
-    #[inline(always)]
-    fn measure(&mut self, _: usize) -> Option<bool> {
-        // Some(false)
-        // Some(true)
-        Some(rand::random::<bool>())
-    }
-}
-
-pub mod simple;
-
-/// A Combination of a Clifford circuit (simulator) with a Pauli tracker. The type can
+/// A Wrapper around a Clifford circuit (simulator) and a Pauli tracker.
+///
+/// The type can
 /// be used to build up the underlining circuit, while keeping track of the Pauli gates
 /// that shall be extracted from the (quantum) simulation, e.g., the Pauli corrections
 /// in [MBQC](https://doi.org/10.48550/arXiv.0910.1116).
+#[derive(Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
 pub struct TrackedCircuit<Circuit, Tracker, Storage> {
     /// The underlining circuit (simulator). Should implement [CliffordCircuit]
     pub circuit: Circuit,
@@ -131,12 +86,19 @@ where
         self.tracker.track_pauli(bit, unsafe { Pauli::from_unchecked(1) });
     }
 
-    /// In the Pauli tracker, move the **Z corrections** from the `source` qubit to the
-    /// `destination` qubit, transforming them to **X corrections**.
+    /// Call [Tracker::move_x_to_x] on the underlining tracker
+    pub fn move_x_to_x(&mut self, source: usize, destination: usize) {
+        self.tracker.move_x_to_x(source, destination);
+    }
+    /// Call [Tracker::move_x_to_z] on the underlining tracker
+    pub fn move_x_to_z(&mut self, source: usize, destination: usize) {
+        self.tracker.move_x_to_z(source, destination);
+    }
+    /// Call [Tracker::move_z_to_x] on the underlining tracker
     pub fn move_z_to_x(&mut self, source: usize, destination: usize) {
         self.tracker.move_z_to_x(source, destination);
     }
-
+    /// Call [Tracker::move_z_to_z] on the underlining tracker
     pub fn move_z_to_z(&mut self, source: usize, destination: usize) {
         self.tracker.move_z_to_z(source, destination);
     }
@@ -146,18 +108,47 @@ impl<C, T, S> TrackedCircuit<C, T, S>
 where
     C: CliffordCircuit,
 {
-    /// Apply the **X** gate on the circuit.
+    /// Apply the **X** gate on the circuit (identity on the tracker).
     pub fn x(&mut self, bit: usize) {
         self.circuit.x(bit);
     }
-    /// Apply the **Y** gate on the circuit.
+    /// Apply the **Y** gate on the circuit (identity on the tracker).
     pub fn y(&mut self, bit: usize) {
         self.circuit.x(bit);
     }
-    /// Apply the **Z** gate on the circuit.
+    /// Apply the **Z** gate on the circuit (identity on the tracker).
     pub fn z(&mut self, bit: usize) {
         self.circuit.x(bit);
     }
+
+    /// Perform a **Measurement** on the circuit, returning the result.
+    pub fn measure(&mut self, bit: usize) -> C::Outcome {
+        self.circuit.measure(bit)
+    }
+}
+
+macro_rules! single {
+    ($name:ident) => {
+        pub fn $name(&mut self, bit: usize) {
+            self.circuit.$name(bit);
+            self.tracker.$name(bit);
+        }
+    };
+}
+
+macro_rules! double {
+    ($name:ident) => {
+        pub fn $name(&mut self, bit_a: usize, bit_b: usize) {
+            self.circuit.$name(bit_a, bit_b);
+            self.tracker.$name(bit_a, bit_b);
+        }
+    };
+    ($name:ident, $bit_a:ident, $bit_b:ident) => {
+        pub fn $name(&mut self, $bit_a: usize, $bit_b: usize) {
+            self.circuit.$name($bit_a, $bit_b);
+            self.tracker.$name($bit_a, $bit_b);
+        }
+    };
 }
 
 impl<C, T, S> TrackedCircuit<C, T, S>
@@ -165,28 +156,17 @@ where
     C: CliffordCircuit,
     T: Tracker,
 {
-    /// Apply the **H** gate on the circuit and update the Pauli tracker.
-    pub fn h(&mut self, bit: usize) {
-        self.circuit.h(bit);
-        self.tracker.h(bit);
-    }
-    /// Apply the **S** gate on the circuit and update the Pauli tracker.
-    pub fn s(&mut self, bit: usize) {
-        self.circuit.s(bit);
-        self.tracker.s(bit);
-    }
+    /// Apply the **H** gate on the circuit and update the Pauli tracker accordingly.
+    single!(h);
+    /// Apply the **S** gate on the circuit and update the Pauli tracker accordingly.
+    single!(s);
 
     /// Apply the **Control X (Control Not)** gate on the circuit and update the Pauli
-    /// tracker.
-    pub fn cx(&mut self, control: usize, target: usize) {
-        self.circuit.cx(control, target);
-        self.tracker.cx(control, target);
-    }
-    /// Apply the **Control Z** gate on the circuit and update the Pauli tracker.
-    pub fn cz(&mut self, control: usize, target: usize) {
-        self.circuit.cz(control, target);
-        self.tracker.cz(control, target);
-    }
+    /// tracker accordingly.
+    double!(cx, control, target);
+    /// Apply the **Control Z** gate on the circuit and update the Pauli tracker
+    /// accordingly.
+    double!(cz);
 }
 
 impl<C, A, S> TrackedCircuit<C, Frames<A>, S>
@@ -197,56 +177,44 @@ where
 {
     /// Perform a **Measurement** and move the according qubit from the tracker into the
     /// additional storage.
-    pub fn measure(&mut self, bit: usize) {
+    pub fn measure_and_store(&mut self, bit: usize) -> Result<(), String> {
         self.circuit.measure(bit);
-        let _ = self.tracker.measure_and_store(bit, &mut self.storage);
+        self.tracker.measure_and_store(bit, &mut self.storage)
     }
 }
-
-impl<C, A> TrackedCircuit<C, Frames<A>, ()>
-where
-    C: CliffordCircuit,
-    A: StackStorage,
-{
-    /// Perform a **Measurement** and move the according qubit from the tracker into the
-    /// additional storage.
-    pub fn measure(&mut self, bit: usize) {
-        self.circuit.measure(bit);
-    }
-}
-
-// TODO finish; maybe with some derive macros to reduce some boilerplate
-// pub mod dense;
 
 #[cfg(test)]
 mod tests {
-    use super::{
-        simple::SimpleCircuit,
-        *,
-    };
-    use crate::tracker::{
-        frames::{
-            storage::{
-                self,
-                MappedVector,
-                PauliVec,
-                Vector,
-            },
-            Frames,
+    use super::*;
+    use crate::{
+        circuit::{
+            DummyCircuit,
+            RandomMeasurementCircuit,
         },
-        live::LiveVector,
+        tracker::{
+            frames::{
+                storage::{
+                    self,
+                    MappedVector,
+                    PauliVec,
+                    Vector,
+                },
+                Frames,
+            },
+            live::LiveVector,
+        },
     };
 
     #[test]
     fn single_rotation_teleportation() {
         let mut circ = TrackedCircuit {
-            circuit: SimpleCircuit::new(),
+            circuit: DummyCircuit {},
             tracker: Frames::<MappedVector>::init(2),
             storage: MappedVector::default(),
         };
 
         circ.cz(0, 1);
-        circ.measure(0);
+        circ.measure_and_store(0);
         // this hadamard corrects the hadamard from the rotation, therefore, we put the
         // tracked_z behind it (it is effectively commuted through the identity)
         circ.h(1);
@@ -271,15 +239,15 @@ mod tests {
         };
 
         circ.cx(0, 2);
-        circ.measure(0);
+        circ.measure_and_store(0);
         circ.track_z(2);
         circ.h(1);
         circ.cx(1, 2);
         circ.cx(2, 3);
-        circ.measure(2);
+        circ.measure_and_store(2);
         circ.track_z(3);
         circ.cx(1, 4);
-        circ.measure(1);
+        circ.measure_and_store(1);
         circ.track_z(4);
         circ.cx(4, 3);
         circ.h(4);
@@ -304,7 +272,7 @@ mod tests {
     #[test]
     fn toffoli_time_dependent() {
         let mut circ = TrackedCircuit {
-            circuit: SimpleCircuit::new(),
+            circuit: DummyCircuit {},
             tracker: Frames::<MappedVector>::init(10),
             storage: MappedVector::default(),
         };
@@ -314,10 +282,10 @@ mod tests {
         trait TTele {
             fn t_tele(&mut self, origin: usize, new: usize);
         }
-        impl TTele for TrackedCircuit<SimpleCircuit, Frames<MappedVector>, MappedVector> {
+        impl TTele for TrackedCircuit<DummyCircuit, Frames<MappedVector>, MappedVector> {
             fn t_tele(&mut self, origin: usize, new: usize) {
                 self.cx(origin, new);
-                self.measure(origin);
+                self.measure_and_store(origin);
                 self.track_z(new);
             }
         }
@@ -377,7 +345,7 @@ mod tests {
             fn t_tele(&mut self, origin: usize, new: usize) {
                 self.cx(origin, new);
                 self.move_z_to_z(origin, new);
-                self.measure(origin);
+                self.measure_and_store(origin);
                 self.track_z(new);
             }
         }
@@ -437,7 +405,7 @@ mod tests {
             fn t_tele(&mut self, origin: usize, new: usize) -> bool {
                 self.cx(origin, new);
                 self.move_z_to_z(origin, new);
-                let result = self.circuit.measure(origin).unwrap();
+                let result = self.circuit.measure(origin);
                 if result {
                     self.track_z(new);
                 };
@@ -490,7 +458,7 @@ mod tests {
     #[test]
     fn first_graph_test() {
         let mut circ = TrackedCircuit {
-            circuit: SimpleCircuit::new(),
+            circuit: DummyCircuit {},
             tracker: Frames::<MappedVector>::init(10),
             storage: MappedVector::default(),
         };
@@ -500,10 +468,10 @@ mod tests {
         trait TTele {
             fn t_tele(&mut self, origin: usize, new: usize);
         }
-        impl TTele for TrackedCircuit<SimpleCircuit, Frames<MappedVector>, MappedVector> {
+        impl TTele for TrackedCircuit<DummyCircuit, Frames<MappedVector>, MappedVector> {
             fn t_tele(&mut self, origin: usize, new: usize) {
                 self.cx(origin, new);
-                self.measure(origin);
+                self.measure_and_store(origin);
                 self.track_z(new);
             }
         }
@@ -525,9 +493,9 @@ mod tests {
         circ.t_tele(8, 9);
         circ.cx(6, 9);
         circ.h(9);
-        circ.measure(9);
-        circ.measure(6);
-        circ.measure(3);
+        circ.measure_and_store(9);
+        circ.measure_and_store(6);
+        circ.measure_and_store(3);
 
         let graph = crate::tracker::frames::storage::create_dependency_graph(
             &circ.storage,
@@ -539,7 +507,7 @@ mod tests {
     #[test]
     fn another_graph_test() {
         let mut circ = TrackedCircuit {
-            circuit: DummyCircuit::new(),
+            circuit: DummyCircuit {},
             tracker: Frames::<Vector>::init(10),
             storage: (),
         };

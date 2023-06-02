@@ -87,7 +87,7 @@ mod test {
     pub const N_SINGLES: usize = 2;
     const SINGLES: [SingleResult; N_SINGLES] =
         // pauli p = ab in binary; encoding: x = a, z = b; input: p = 0 1 2 3
-        [("X", [0, 2, 1, 3]), ("X", [0, 1, 3, 2])];
+        [("H", [0, 2, 1, 3]), ("S", [0, 1, 3, 2])];
 
     pub const N_DOUBLES: usize = 6;
     const DOUBLES: [DoubleResult; N_DOUBLES] = [
