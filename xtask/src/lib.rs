@@ -1,4 +1,5 @@
-pub mod cicd;
+pub mod commands;
+pub mod ci_cd;
 
 pub fn some_task() {
     println!("some task")
