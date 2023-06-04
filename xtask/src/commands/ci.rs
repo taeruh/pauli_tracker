@@ -7,15 +7,16 @@ use clap::{
 };
 use proc::ArgDispatch;
 
-use crate::ci_cd;
+use crate::cicd;
 
 #[derive(Clone, Copy, ValueEnum, ArgDispatch)]
-#[arg_dispatch(module = "ci_cd")]
+#[arg_dispatch(module = "cicd")]
 enum Test {
     Full,
     Hack,
     Msrv,
     Clippy,
+    ClippyBeta,
     Docs,
     Fmt,
     Locked,

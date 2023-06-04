@@ -29,18 +29,19 @@ macro_rules! unwrap_or_compile_error {
 #[proc_macro_derive(ArgDispatch, attributes(arg_dispatch))]
 pub fn arg_dispatch(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
-    let (name, variants, serialized_variants) = unwrap_or_compile_error!(parse_input(&input));
+    let (name, variants, serialized_variants) =
+        unwrap_or_compile_error!(parse_input(&input));
 
     fn lit_str_from_meta(meta: &Meta) -> syn::Result<&LitStr> {
         match meta.require_name_value()?.value {
             Expr::Lit(ExprLit { lit: Lit::Str(ref s), .. }) => Ok(s),
-            _ => {
-                let value = &meta.require_name_value().unwrap().value;
-                Err(Error::new(
-                    meta.path().get_ident().unwrap().span(),
-                    format!("{:?} is not a string literal", quote!(#value)),
-                ))
-            }
+            ref other => Err(Error::new(
+                meta.path()
+                    .get_ident()
+                    .expect("problem getting the ident when lit_str_from_meta fails")
+                    .span(),
+                format!("{:?} is not a string literal", quote!(#other)),
+            )),
         }
     }
 

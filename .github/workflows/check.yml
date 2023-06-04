@@ -88,4 +88,4 @@ jobs:
         with:
           components: rustfmt
       - name: cargo fmt
-        run: cargo fmt --check
+        run: cargo fmt --check --package --pauli_tracker

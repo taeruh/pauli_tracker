@@ -2,13 +2,14 @@ use std::process::Command;
 
 macro_rules! cargo {
     ($($arg:literal),*) => {
-        crate::ci_cd::_cargo([$($arg),*])
+        crate::cicd::_cargo([$($arg),*])
     };
     ($(($key:literal,$value:literal),)+ $($arg:literal),*) => {
-        crate::ci_cd::_cargo_envs([$($arg),*], [$(($key, $value)),*])
+        crate::cicd::_cargo_envs([$($arg),*], [$(($key, $value)),*])
     };
 }
 
+// {{ check
 pub fn hack() {
     println!("CHECK: HACK");
     cargo!("hack", "check", "--feature-powerset", "--no-dev-deps")
@@ -31,6 +32,17 @@ pub fn clippy() {
     );
 }
 
+pub fn clippy_beta() {
+    println!("CHECK: CLIPPY BETA");
+    cargo!(
+        ("RUSTFLAGS", "-Dwarnings"),
+        "+beta",
+        "clippy",
+        "--all-targets",
+        "--all-features"
+    );
+}
+
 pub fn docs() {
     println!("CHECK: DOCS");
     cargo!(
@@ -44,9 +56,12 @@ pub fn docs() {
 
 pub fn fmt() {
     println!("CHECK: FMT");
-    cargo!("+nightly", "fmt", "--check");
+    // cargo fmt ignores workspace default-members
+    cargo!("+nightly", "fmt", "--check", "--package", "pauli_tracker");
 }
+// }}
 
+// test
 pub fn locked() {
     println!("TEST: LOCKED");
     cargo!("+nightly", "update", "-Zdirect-minimal-versions");
@@ -69,7 +84,9 @@ pub fn coverage() {
     println!("TEST: COVERAGE");
     cargo!("llvm-cov", "--all-features");
 }
+// }}
 
+// {{ safety
 pub fn miri() {
     println!("SAFETY: MIRI");
     // here's something weird happening: when we do `cargo run` for this package,
@@ -84,33 +101,38 @@ pub fn miri() {
     cargo!("+nightly", "miri", "test", "--all-features", "--all-targets");
     cargo!("+nightly", "miri", "test", "--all-features", "--doc");
 }
+// }}
 
 pub fn full() {
-    hack();
+    // sorted so that we don't have to recompile that often (with limited success ...)
     msrv();
-    clippy();
+    os_check();
     docs();
     fmt();
     miri();
-    locked();
     beta();
-    os_check();
+    clippy_beta();
+    clippy();
+    locked();
+    hack();
     coverage();
 }
 
 fn _cargo<const N: usize>(args: [&str; N]) {
-    Command::new("cargo").args(args).spawn().unwrap().wait().unwrap();
+    spawn(Command::new("cargo").args(args));
 }
 
 fn _cargo_envs<const N: usize, const M: usize>(
     args: [&str; N],
     envs: [(&str, &str); M],
 ) {
-    Command::new("cargo")
-        .args(args)
-        .envs(envs)
+    spawn(Command::new("cargo").args(args).envs(envs));
+}
+
+fn spawn(command: &mut Command) {
+    command
         .spawn()
-        .unwrap()
+        .expect("failed to spawn cargo command")
         .wait()
-        .unwrap();
+        .expect("failed to wait for cargo command");
 }
