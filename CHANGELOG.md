@@ -8,6 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 - **Possible Breaking change**; Implement/derive `Debug` for `DummyCircuit` and
   `RandomMeasurementCircuit`
 - **Possible Breaking change**; Implement `From<Vec<Pauli>> for LiveVector`
+- Add `DependencyGraph` type
 ### Changed
 ### Deprecated
 ### Removed
@@ -16,7 +17,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 
 ## [0.1.1] - 2023-06-01
 ### Added
-- Add the circuit module
+- Add the `circuit` module
 ### Fixed
 - Fix bug in the movement operations for the live tracker
 
