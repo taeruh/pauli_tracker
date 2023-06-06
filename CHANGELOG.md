@@ -5,6 +5,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 
 ## [Unreleased]
 ### Added
+- **Possible Breaking change**; Implement/derive `Debug` for `DummyCircuit` and
+  `RandomMeasurementCircuit`
+- **Possible Breaking change**; Implement `From<Vec<Pauli>> for LiveVector`
 ### Changed
 ### Deprecated
 ### Removed

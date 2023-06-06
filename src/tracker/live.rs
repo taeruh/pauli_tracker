@@ -30,6 +30,12 @@ pub struct LiveVector {
     inner: Vec<Pauli>,
 }
 
+impl From<Vec<Pauli>> for LiveVector {
+    fn from(value: Vec<Pauli>) -> Self {
+        Self { inner: value }
+    }
+}
+
 impl LiveVector {
     pub fn get(&self, bit: usize) -> Option<&Pauli> {
         self.inner.get(bit)

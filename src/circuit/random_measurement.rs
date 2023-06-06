@@ -1,7 +1,7 @@
 use super::CliffordCircuit;
 
 /// A circuit where the gates do nothing, but the measurements return random bools.
-#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Default, Debug)]
 pub struct RandomMeasurementCircuit {}
 
 impl CliffordCircuit for RandomMeasurementCircuit {

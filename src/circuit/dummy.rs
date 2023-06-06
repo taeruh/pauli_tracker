@@ -1,7 +1,7 @@
 use super::CliffordCircuit;
 
 /// A dummy Clifford circuit that does nothing.
-#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Default, Debug)]
 pub struct DummyCircuit {}
 impl CliffordCircuit for DummyCircuit {
     type Outcome = ();
