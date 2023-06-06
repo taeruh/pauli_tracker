@@ -151,7 +151,7 @@ pub fn into_sorted_by_bit(storage: impl StackStorage) -> Vec<(usize, PauliVec)> 
     ret
 }
 
-pub type DependencyGraph = Vec<Vec<(usize, Vec<usize>)>>; 
+pub type DependencyGraph = Vec<Vec<(usize, Vec<usize>)>>;
 
 /// Sort the `storage` according to the induced dependencies.
 ///

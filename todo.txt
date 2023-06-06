@@ -1,17 +1,7 @@
-make it public
-
-- when public:
-  - uncomment workflows
-  brach rules:
-  - disable force push
-  - enable status checks
-
 - implement a file streaming storage
 - more tests
   - write helper for all the basic gate tests
   - better circuit module for testing
 - define more clifford gates
-
-
-
-- derive macro that automatically derives the build methods of the Circuit based on Gate
+- maybe try to depend only on proptest when we really run proptest (for less
+  dependencies in ci)

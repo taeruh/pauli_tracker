@@ -84,6 +84,11 @@ pub fn coverage() {
     println!("TEST: COVERAGE");
     cargo!("llvm-cov", "--all-features");
 }
+
+pub fn proptest() {
+    println!("TEST: PROPTEST");
+    cargo!("test", "--test", "roundtrip", "--all-features", "--", "--ignored");
+}
 // }}
 
 // {{ safety

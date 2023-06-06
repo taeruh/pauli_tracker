@@ -23,6 +23,7 @@ enum Test {
     Beta,
     OsCheck,
     Coverage,
+    Proptest,
     Miri,
 }
 
