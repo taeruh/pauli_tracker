@@ -151,6 +151,8 @@ pub fn into_sorted_by_bit(storage: impl StackStorage) -> Vec<(usize, PauliVec)> 
     ret
 }
 
+pub type DependencyGraph = Vec<Vec<(usize, Vec<usize>)>>; 
+
 /// Sort the `storage` according to the induced dependencies.
 ///
 /// E.g., if the frames correspond to measurement results. The return value is a layered
@@ -162,7 +164,7 @@ pub fn into_sorted_by_bit(storage: impl StackStorage) -> Vec<(usize, PauliVec)> 
 pub fn create_dependency_graph(
     storage: &impl StackStorage,
     map: &[usize],
-) -> Vec<Vec<(usize, Vec<usize>)>> {
+) -> DependencyGraph {
     let mut graph: Vec<Vec<(usize, Vec<usize>)>> = vec![Vec::new()];
     let mut remaining: Vec<(usize, Vec<usize>, Vec<usize>)> = Vec::new();
 
@@ -194,6 +196,7 @@ pub fn create_dependency_graph(
     let mut layer_idx = 0;
 
     while !remaining.is_empty() {
+        // while !remaining.is_empty() && layer_idx < 5 { // debugging
         let layer = graph.get(layer_idx).unwrap();
         let mut new_layer = Vec::new();
         for (known, deps) in layer.iter() {
