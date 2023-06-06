@@ -25,5 +25,6 @@ impl CliffordCircuit for RandomMeasurementCircuit {
 
     fn measure(&mut self, _: usize) -> bool {
         rand::random::<bool>()
+        // true
     }
 }

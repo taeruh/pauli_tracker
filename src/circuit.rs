@@ -451,8 +451,8 @@ mod tests {
             .unwrap()
             .set_storage(((results[2] + results[4] + results[5] + results[6]) % 2) * 2);
 
-        assert_eq!(circ.tracker, check);
         // println!("{:?}", circ.tracker);
+        assert_eq!(circ.tracker, check);
     }
 
     #[test]
@@ -501,7 +501,7 @@ mod tests {
             &circ.storage,
             &[0, 1, 2, 4, 5, 7, 8],
         );
-        println!("{:?}", graph);
+        // println!("{:?}", graph);
     }
 
     #[test]
@@ -552,13 +552,13 @@ mod tests {
 
         let rest = circ.tracker.into_storage();
 
-        println!("{:#?}", rest);
+        // println!("{:#?}", rest);
 
         let graph = crate::tracker::frames::storage::create_dependency_graph(
             &rest,
             &[0, 1, 2, 4, 5, 7, 8],
         );
-        println!("{:?}", graph);
-        println!("{:?}", graph.len());
+        // println!("{:?}", graph);
+        // println!("{:?}", graph.len());
     }
 }

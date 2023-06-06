@@ -33,6 +33,7 @@ all-features = true
 rustdoc-args = ["--cfg", "docsrs"]
 
 [dev-dependencies]
+proptest = "1.2.0"
 serde_yaml = "0.9.21"
 
 
