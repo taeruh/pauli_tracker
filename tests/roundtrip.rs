@@ -39,15 +39,15 @@ use proptest::{
     },
 };
 
-const MAX_INIT: usize = 2;
-const MAX_OPS: usize = 2;
+const MAX_INIT: usize = 10;
+const MAX_OPS: usize = 100;
 proptest! {
     #![proptest_config(Config {
-        cases: 10,
-        // proptest! just overwrites (see source code); it doesn't really matter, except
-        // that we get a warning but that is ok; we could solve it by manually doing
-        // what proptest! does (the basics are straightforward, but it also does some
-        // nice things that are not straightforward)
+        // cases: 10,
+        // proptest! just overwrites this (see source code); it doesn't really matter,
+        // except that we get a warning but that is ok; we could solve it by manually
+        // doing what proptest! does (the basics are straightforward, but it also does
+        // some nice things that are not straightforward)
         failure_persistence: Some(Box::new(FileFailurePersistence::WithSource(
             "regressions",
         ))),
