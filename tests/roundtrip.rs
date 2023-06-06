@@ -1,6 +1,9 @@
 #![cfg(feature = "circuit")]
 
-use std::fmt::Debug;
+use std::{
+    collections::HashMap,
+    fmt::Debug,
+};
 
 use bit_vec::BitVec;
 use pauli_tracker::{
@@ -14,6 +17,8 @@ use pauli_tracker::{
     tracker::{
         frames::{
             storage::{
+                self,
+                DependencyGraph,
                 Map,
                 PauliVec,
             },
@@ -34,10 +39,11 @@ use proptest::{
     },
 };
 
-const INIT: usize = 2;
+const MAX_INIT: usize = 2;
+const MAX_OPS: usize = 2;
 proptest! {
     #![proptest_config(Config {
-        cases: 4,
+        cases: 10,
         // proptest! just overwrites (see source code); it doesn't really matter, except
         // that we get a warning but that is ok; we could solve it by manually doing
         // what proptest! does (the basics are straightforward, but it also does some
@@ -48,45 +54,115 @@ proptest! {
         ..Default::default()
     })]
     #[test]
-    #[ignore = "run it explicitly"]
-    fn live_full_compatibility(ops in vec_operation(70)) {
-        // println!("{:?}", config);
-        let mut generator = Generator::new(INIT, ops);
+    #[ignore = "run proptests explicitly"]
+    fn roundtrip(init in (0..MAX_INIT), ops in vec_operation(MAX_OPS)) {
+        // println!("len:  {}", ops.len());
+        // println!("init: {}", init);
+        let mut generator = Generator::new(init, ops);
         let mut circuit = TrackedCircuit {
             circuit: DummyCircuit {},
-            tracker: Frames::<Map>::init(INIT),
+            tracker: Frames::<Map>::init(init),
             storage: Map::default(),
         };
-        let mut measurements = Ignore {};
+        let mut measurements = WhereMeasured(Vec::new());
         generator.apply(&mut circuit, &mut measurements);
         circuit.tracker.measure_and_store_all(&mut circuit.storage);
 
-        // println!("{:?}", generator.operations);
-        // println!(
-        //     "{:?}",
-        //     pauli_tracker::tracker::frames::storage::sort_by_bit(&circuit.storage)
-        // );
+        let graph = storage::create_dependency_graph(&circuit.storage, &measurements.0);
+        assert!(check_graph(&graph, &circuit.storage, &measurements.0));
 
-        generator.reinit(INIT);
+        // println!("{:?}", graph);
+        // println!("{}", graph.len());
+        // println!("{:?}", measurements.0);
+
+        // println!("{:?}", generator.operations);
+        // println!("{:?}\n", storage::sort_by_bit(&circuit.storage));
+
+        generator.reinit(init);
         let mut live_circuit = TrackedCircuit {
             circuit: RandomMeasurementCircuit {},
-            tracker: LiveVector::init(INIT),
+            tracker: LiveVector::init(init),
             storage: (),
         };
-        let mut measurements = Vec::<bool>::new();
+        let mut measurements = ResultMeasured(Vec::new());
         generator.apply(&mut live_circuit, &mut measurements);
         // println!("{:?}", measurements);
         // println!("{:?}", live_circuit.tracker);
 
         let mut check = vec![Pauli::new_i(); generator.used];
         for (i, pauli) in circuit.storage.iter() {
-            check[*i].set_storage(sum_up(pauli, &measurements));
+            check[*i].set_storage(sum_up(pauli, &measurements.0));
         }
         let check: LiveVector = check.into();
         // println!("{:?}", a);
 
         assert_eq!(check, live_circuit.tracker);
     }
+}
+
+fn check_graph(graph: &DependencyGraph, storage: &Map, measurements: &[usize]) -> bool {
+    fn check(
+        dep: (usize, bool),
+        measured: &HashMap<usize, ()>,
+        measurements: &[usize],
+    ) -> bool {
+        !dep.1
+            || measured
+                .contains_key(measurements.get(dep.0).expect("missing measurement"))
+    }
+
+    fn node_check(
+        node: &usize,
+        deps: &Vec<usize>,
+        storage: &Map,
+        measurements: &[usize],
+        measured: &HashMap<usize, ()>,
+    ) -> bool {
+        for dep in deps {
+            if !measured.contains_key(dep) {
+                return false;
+            }
+        }
+        let pauli = storage.get(node).expect("node does not exist");
+        // we explicitly do not xor(left, right), because that's what we are doing
+        // in the create_dependency_graph function; here we keep it as simple is
+        // possible
+        for dep in pauli.left.iter().enumerate() {
+            if !check(dep, measured, measurements) {
+                return false;
+            }
+        }
+        for dep in pauli.right.iter().enumerate() {
+            if !check(dep, measured, measurements) {
+                return false;
+            }
+        }
+        true
+    }
+
+    let mut measured = HashMap::<usize, ()>::new();
+    let mut iter = graph.iter().peekable();
+
+    // for layer in iter {
+    while let Some(this_layer) = iter.next() {
+        if let Some(next_layer) = iter.peek() {
+            for (node, deps) in *next_layer {
+                // if a node in the next_layer could be measured, we fail, because then
+                // it should be in this_layer
+                if node_check(node, deps, storage, measurements, &measured) {
+                    println!("next: {:?}, {:?}, {:?}", node, deps, measured);
+                    return false;
+                }
+            }
+        }
+        for (node, deps) in this_layer {
+            if !node_check(node, deps, storage, measurements, &measured) {
+                return false;
+            }
+            measured.insert(*node, ());
+        }
+    }
+    true
 }
 
 fn sum_up(pauli: &PauliVec, measurements: &[bool]) -> u8 {
@@ -102,17 +178,20 @@ fn sum_up(pauli: &PauliVec, measurements: &[bool]) -> u8 {
 }
 
 trait Measurements<T: ExtendCircuit> {
-    fn store(&mut self, result: T::Output);
+    fn store(&mut self, bit: usize, result: T::Output);
 }
-struct Ignore {}
-impl Measurements<TrackedCircuit<DummyCircuit, Frames<Map>, Map>> for Ignore {
-    fn store(&mut self, _: ()) {}
+struct WhereMeasured(Vec<usize>);
+impl Measurements<TrackedCircuit<DummyCircuit, Frames<Map>, Map>> for WhereMeasured {
+    fn store(&mut self, bit: usize, _: ()) {
+        self.0.push(bit)
+    }
 }
+struct ResultMeasured(Vec<bool>);
 impl Measurements<TrackedCircuit<RandomMeasurementCircuit, LiveVector, ()>>
-    for Vec<bool>
+    for ResultMeasured
 {
-    fn store(&mut self, result: bool) {
-        self.push(result);
+    fn store(&mut self, _: usize, result: bool) {
+        self.0.push(result);
     }
 }
 
@@ -180,57 +259,39 @@ impl Generator {
         T: Tracker,
         TrackedCircuit<C, T, S>: ExtendCircuit,
     {
-        fn idx(bit: usize, gen: &Generator) -> usize {
-            gen.memory[bit % gen.memory.len()]
-        }
-        fn double_idx(
-            bit_a: usize,
-            bit_b: usize,
-            gen: &Generator,
-        ) -> Option<(usize, usize)> {
-            let len = gen.memory.len();
-            if len == 1 {
-                return None;
-            }
-            let a = bit_a % len;
-            let mut b = bit_b % len;
-            if a == b {
-                b = (bit_b + 1) % len;
-            }
-            Some((gen.memory[a], gen.memory[b]))
-        }
-
         for op in self.operations.iter() {
+            // for small circuits, we loose some ops
             if self.memory.is_empty() {
                 Self::new_qubit(&mut self.memory, &mut self.used, circuit)
             }
 
             match *op {
-                Operation::X(b) => circuit.x(idx(b, self)),
-                Operation::Y(b) => circuit.y(idx(b, self)),
-                Operation::Z(b) => circuit.z(idx(b, self)),
-                Operation::H(b) => circuit.h(idx(b, self)),
-                Operation::S(b) => circuit.s(idx(b, self)),
+                Operation::X(b) => circuit.x(self.mem_idx(b)),
+                Operation::Y(b) => circuit.y(self.mem_idx(b)),
+                Operation::Z(b) => circuit.z(self.mem_idx(b)),
+                Operation::H(b) => circuit.h(self.mem_idx(b)),
+                Operation::S(b) => circuit.s(self.mem_idx(b)),
                 Operation::CX(a, b) => {
-                    match double_idx(a, b, self) {
+                    match self.double_mem_idx(a, b) {
                         Some((a, b)) => circuit.cx(a, b),
                         None => continue,
                     };
                 }
-                Operation::CZ(a, b) => match double_idx(a, b, self) {
+                Operation::CZ(a, b) => match self.double_mem_idx(a, b) {
                     Some((a, b)) => circuit.cz(a, b),
                     None => continue,
                 },
                 Operation::RZ(b) => {
                     measurements.store(
-                        circuit.z_rotation_teleportation(idx(b, self), self.used),
+                        self.mem_idx(b),
+                        circuit.z_rotation_teleportation(self.mem_idx(b), self.used),
                     );
-                    let i = b % self.memory.len();
+                    let i = self.idx(b);
                     self.memory[i] = self.used;
                     self.used += 1;
                 }
                 Operation::Measure(b) => {
-                    circuit.measure(idx(b, self));
+                    circuit.measure(self.mem_idx(b));
                     self.memory.swap_remove(b % self.memory.len());
                 }
                 Operation::NewQubit(_) => {
@@ -238,6 +299,28 @@ impl Generator {
                 }
             }
         }
+    }
+    #[inline(always)]
+    fn idx(&self, bit: usize) -> usize {
+        bit % self.memory.len()
+    }
+    #[inline]
+    fn mem_idx(&self, bit: usize) -> usize {
+        self.memory[self.idx(bit)]
+    }
+    fn double_mem_idx(&self, bit_a: usize, bit_b: usize) -> Option<(usize, usize)> {
+        let len = self.memory.len();
+        // for small circuits, we loose some ops
+        if len == 1 {
+            return None;
+        }
+        let a = bit_a % len;
+        let mut b = bit_b % len;
+        if a == b {
+            // this destroys some randomness; should barely happen for large circuits
+            b = (bit_b + 1) % len;
+        }
+        Some((self.memory[a], self.memory[b]))
     }
     fn new_qubit<C, T, S>(
         memory: &mut Vec<usize>,
@@ -273,21 +356,25 @@ fn operation() -> impl Strategy<Value = Operation> {
         1 => any::<usize>().prop_map(Operation::X),
         1 => any::<usize>().prop_map(Operation::Y),
         1 => any::<usize>().prop_map(Operation::Z),
-        1 => any::<usize>().prop_map(Operation::H),
-        1 => any::<usize>().prop_map(Operation::S),
-        3 => (any::<usize>(), any::<usize>()).prop_map(|(a, b)| Operation::CX(a, b)),
-        3 => (any::<usize>(), any::<usize>()).prop_map(|(a, b)| Operation::CZ(a, b)),
-        10 => any::<usize>().prop_map(Operation::RZ),
+        30 => any::<usize>().prop_map(Operation::H),
+        30 => any::<usize>().prop_map(Operation::S),
+        30 => (any::<usize>(), any::<usize>()).prop_map(|(a, b)| Operation::CX(a, b)),
+        30 => (any::<usize>(), any::<usize>()).prop_map(|(a, b)| Operation::CZ(a, b)),
+        100 => any::<usize>().prop_map(Operation::RZ),
         1 => any::<usize>().prop_map(Operation::Measure),
         1 => any::<usize>().prop_map(Operation::NewQubit),
     ]
 }
 
-fn vec_operation(mut max: usize) -> impl Strategy<Value = Vec<Operation>> {
+fn fixed_vec_operation(mut max: usize) -> impl Strategy<Value = Vec<Operation>> {
     let mut res = Vec::new();
     while max > 0 {
         res.push(operation());
         max -= 1;
     }
     res
+}
+
+fn vec_operation(max: usize) -> impl Strategy<Value = Vec<Operation>> {
+    (0..max).prop_flat_map(fixed_vec_operation)
 }
