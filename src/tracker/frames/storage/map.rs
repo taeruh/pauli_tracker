@@ -6,44 +6,50 @@ use std::{
     iter,
 };
 
-use super::super::{
+use super::{
+    super::StackStorage,
     PauliVec,
-    StackStorage,
 };
+use crate::bool_vector::BoolVector;
 
 /// A HashMap of [PauliVec]s. Much more flexible than [Vector], but for restricted use
 /// cases [Vector] might be more efficient.
 ///
 ///[Vector]: super::vector::Vector
-pub type Map = HashMap<usize, PauliVec>;
+pub type Map<B> = HashMap<usize, PauliVec<B>>;
 
-impl StackStorage for Map {
-    type IterMut<'a> = iter::Map<
-        hash_map::IterMut<'a, usize, PauliVec>,
-        fn((&usize, &'a mut PauliVec)) -> (usize, &'a mut PauliVec),
-    >;
-    type Iter<'a> = iter::Map<
-        hash_map::Iter<'a, usize, PauliVec>,
-        fn((&usize, &'a PauliVec)) -> (usize, &'a PauliVec),
-    >;
+impl<B: BoolVector> StackStorage for Map<B> {
+    type PauliBoolVec = B;
+    type IterMut<'l> = iter::Map<
+        hash_map::IterMut<'l, usize, PauliVec<B>>,
+        fn((&usize, &'l mut PauliVec<B>)) -> (usize, &'l mut PauliVec<B>),
+    > where B: 'l;
+    type Iter<'l> = iter::Map<
+        hash_map::Iter<'l, usize, PauliVec<B>>,
+        fn((&usize, &'l PauliVec<B>)) -> (usize, &'l PauliVec<B>),
+    > where B: 'l;
 
     #[inline]
-    fn insert_pauli(&mut self, qubit: usize, pauli: PauliVec) -> Option<PauliVec> {
+    fn insert_pauli(
+        &mut self,
+        qubit: usize,
+        pauli: PauliVec<B>,
+    ) -> Option<PauliVec<B>> {
         self.insert(qubit, pauli)
     }
 
     #[inline]
-    fn remove_pauli(&mut self, qubit: usize) -> Option<PauliVec> {
+    fn remove_pauli(&mut self, qubit: usize) -> Option<PauliVec<B>> {
         self.remove(&qubit)
     }
 
     #[inline]
-    fn get(&self, qubit: usize) -> Option<&PauliVec> {
+    fn get(&self, qubit: usize) -> Option<&PauliVec<Self::PauliBoolVec>> {
         self.get(&qubit)
     }
 
     #[inline]
-    fn get_mut(&mut self, qubit: usize) -> Option<&mut PauliVec> {
+    fn get_mut(&mut self, qubit: usize) -> Option<&mut PauliVec<B>> {
         self.get_mut(&qubit)
     }
 
@@ -51,7 +57,7 @@ impl StackStorage for Map {
         &mut self,
         qubit_a: usize,
         qubit_b: usize,
-    ) -> Option<(&mut PauliVec, &mut PauliVec)> {
+    ) -> Option<(&mut PauliVec<B>, &mut PauliVec<B>)> {
         if qubit_a == qubit_b {
             return None;
         }
@@ -63,8 +69,8 @@ impl StackStorage for Map {
         // doing basically the same with Vec/slice does trigger an error. In general it
         // would be cleaner to go over pointers as I do it for the MappedVector but a
         // HashMap is more complicated and the tools for that are not stable yet
-        let a = unsafe { &mut *(self.get_mut(&qubit_a)? as *mut PauliVec) };
-        let b = unsafe { &mut *(self.get_mut(&qubit_b)? as *mut PauliVec) };
+        let a = unsafe { &mut *(self.get_mut(&qubit_a)? as *mut PauliVec<B>) };
+        let b = unsafe { &mut *(self.get_mut(&qubit_b)? as *mut PauliVec<B>) };
         // that would catch a bug in the hashing algorithm
         // assert!(!std::ptr::eq(a, b));
         Some((a, b))
@@ -83,7 +89,7 @@ impl StackStorage for Map {
     fn init(num_qubits: usize) -> Self {
         let mut ret = HashMap::with_capacity(num_qubits);
         for i in 0..num_qubits {
-            ret.insert(i, PauliVec::new());
+            ret.insert(i, PauliVec::<B>::new());
         }
         ret
     }

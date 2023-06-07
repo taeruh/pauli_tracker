@@ -119,6 +119,7 @@ pub fn full() {
     clippy_beta();
     clippy();
     locked();
+    proptest();
     hack();
     coverage();
 }

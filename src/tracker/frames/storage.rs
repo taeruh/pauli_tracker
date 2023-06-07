@@ -3,33 +3,46 @@
 
 use std::mem;
 
-use bit_vec::BitVec;
+// use bit_vec::BitVec;
+// use bitvec::BitVec;
 #[cfg(feature = "serde")]
 use serde::{
     Deserialize,
     Serialize,
 };
 
-use crate::pauli::Pauli;
+use crate::{
+    bool_vector::BoolVector,
+    pauli::Pauli,
+};
+
+#[cfg(feature = "bitvec")]
+#[cfg_attr(docsrs, doc(cfg(feature = "bitvec")))]
+pub type PauliBitVec = PauliVec<BitVec>;
+#[cfg(feature = "bitvec")]
+use bitvec::vec::BitVec;
+
+#[cfg(feature = "bitvec_simd")]
+#[cfg_attr(docsrs, doc(cfg(feature = "bitvec_simd")))]
+pub type PauliSimdBitVec = PauliVec<bitvec_simd::BitVec>;
+#[cfg(feature = "bitvec_simd")]
+use bitvec_simd;
 
 /// Multiple encoded Paulis compressed into two [BitVec]s.
 // each Pauli can be described by two bits (neglecting phases)
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Default)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-pub struct PauliVec {
+pub struct PauliVec<T> {
     // the bit representing the left qubit on the left-hand side in the tableau
     // representation, i.e., X
-    pub left: BitVec,
+    pub left: T,
     // right-hand side, i.e., Z
-    pub right: BitVec,
+    pub right: T,
 }
 
-impl PauliVec {
+impl<T: BoolVector> PauliVec<T> {
     pub fn new() -> Self {
-        Self {
-            left: BitVec::new(),
-            right: BitVec::new(),
-        }
+        Self { left: T::new(), right: T::new() }
     }
 
     pub fn try_from_str(left: &str, right: &str) -> Result<Self, String> {
@@ -39,14 +52,14 @@ impl PauliVec {
                 None => Err(format!("{} is not a valid binary", c)),
             }
         }
-        Ok(PauliVec {
+        Ok(Self {
             left: left.chars().flat_map(to_bool).collect(),
             right: right.chars().flat_map(to_bool).collect(),
         })
     }
 
     pub fn zeros(len: usize) -> Self {
-        let zero = zero_bitvec(len);
+        let zero = T::zeros(len);
         Self { left: zero.clone(), right: zero }
     }
 
@@ -78,30 +91,15 @@ impl PauliVec {
     /// Apply Hadamard
     #[inline]
     pub fn h(&mut self) {
-        mem::swap(
-            // Safety:
-            // we don't do anything with the storage itself, so we should be good
-            unsafe { self.left.storage_mut() },
-            unsafe { self.right.storage_mut() },
-        );
+        mem::swap(&mut self.left, &mut self.right);
     }
 
     /// Apply Phase S
     #[inline]
     pub fn s(&mut self) {
-        self.right.xor(&self.left);
+        // self.right.xor(&self.left);
+        self.right.xor_inplace(&self.left);
     }
-}
-
-// not sure whether that is the fastest way
-fn zero_bitvec(len: usize) -> BitVec {
-    let rest = len % 8;
-    let bytes = (len - rest) / 8;
-    let mut ret = BitVec::from_bytes(&vec![0; bytes]);
-    for _ in 0..rest {
-        ret.push(false)
-    }
-    ret
 }
 
 /// This trait describes the functionality that a storage of [PauliVec]s must provide to
@@ -111,26 +109,35 @@ fn zero_bitvec(len: usize) -> BitVec {
 // either need an annoying lifetime or HRTBs, which would limit the use cases of the
 // trait (for <'l> &'l T implies T: 'static); implementors of this type should probably
 // still implement IntoIterator for its references
-pub trait StackStorage: IntoIterator<Item = (usize, PauliVec)> {
-    type IterMut<'l>: Iterator<Item = (usize, &'l mut PauliVec)>
+pub trait StackStorage:
+    IntoIterator<Item = (usize, PauliVec<Self::PauliBoolVec>)>
+{
+    type PauliBoolVec: BoolVector;
+    type Iter<'l>: Iterator<Item = (usize, &'l PauliVec<Self::PauliBoolVec>)>
     where
         Self: 'l;
-
-    type Iter<'l>: Iterator<Item = (usize, &'l PauliVec)>
+    type IterMut<'l>: Iterator<Item = (usize, &'l mut PauliVec<Self::PauliBoolVec>)>
     where
         Self: 'l;
 
     /// None if successful, Some(`pauli`) if key `bit` present
-    fn insert_pauli(&mut self, bit: usize, pauli: PauliVec) -> Option<PauliVec>;
+    fn insert_pauli(
+        &mut self,
+        bit: usize,
+        pauli: PauliVec<Self::PauliBoolVec>,
+    ) -> Option<PauliVec<Self::PauliBoolVec>>;
     /// None if qu`bit` not present
-    fn remove_pauli(&mut self, bit: usize) -> Option<PauliVec>;
-    fn get(&self, bit: usize) -> Option<&PauliVec>;
-    fn get_mut(&mut self, bit: usize) -> Option<&mut PauliVec>;
+    fn remove_pauli(&mut self, bit: usize) -> Option<PauliVec<Self::PauliBoolVec>>;
+    fn get(&self, bit: usize) -> Option<&PauliVec<Self::PauliBoolVec>>;
+    fn get_mut(&mut self, bit: usize) -> Option<&mut PauliVec<Self::PauliBoolVec>>;
     fn get_two_mut(
         &mut self,
         bit_a: usize,
         bit_b: usize,
-    ) -> Option<(&mut PauliVec, &mut PauliVec)>;
+    ) -> Option<(
+        &mut PauliVec<Self::PauliBoolVec>,
+        &mut PauliVec<Self::PauliBoolVec>,
+    )>;
     fn iter(&self) -> Self::Iter<'_>;
     fn iter_mut(&mut self) -> Self::IterMut<'_>;
     fn init(num_bits: usize) -> Self;
@@ -138,15 +145,23 @@ pub trait StackStorage: IntoIterator<Item = (usize, PauliVec)> {
 }
 
 /// Sort the `storage` according to the qubits.
-pub fn sort_by_bit(storage: &impl StackStorage) -> Vec<(usize, &PauliVec)> {
-    let mut ret = storage.iter().collect::<Vec<(usize, &PauliVec)>>();
+pub fn sort_by_bit<B: StackStorage>(
+    storage: &B,
+) -> Vec<(usize, &PauliVec<B::PauliBoolVec>)> {
+    let mut ret = storage
+        .iter()
+        .collect::<Vec<(usize, &PauliVec<B::PauliBoolVec>)>>();
     ret.sort_by_key(|(i, _)| *i);
     ret
 }
 
 /// Convert the `storage` into an sorted array according to the qubits.
-pub fn into_sorted_by_bit(storage: impl StackStorage) -> Vec<(usize, PauliVec)> {
-    let mut ret = storage.into_iter().collect::<Vec<(usize, PauliVec)>>();
+pub fn into_sorted_by_bit<B: StackStorage>(
+    storage: B,
+) -> Vec<(usize, PauliVec<B::PauliBoolVec>)> {
+    let mut ret = storage
+        .into_iter()
+        .collect::<Vec<(usize, PauliVec<B::PauliBoolVec>)>>();
     ret.sort_by_key(|(i, _)| *i);
     ret
 }
@@ -173,14 +188,14 @@ pub fn create_dependency_graph(
     for (bit, stack) in storage.iter() {
         let mut deps: Vec<usize> = Vec::new();
 
-        let max = stack.left.len().max(stack.right.len());
+        let max = stack.left.bits().max(stack.right.bits());
         let mut left = stack.left.clone();
-        left.grow(max - stack.left.len(), false);
+        left.resize(max, false);
         let mut right = stack.right.clone();
-        right.grow(max - stack.right.len(), false);
-        left.or(&right);
+        right.resize(max, false);
+        left.or_inplace(&right);
 
-        for (dep, flag) in left.iter().enumerate() {
+        for (dep, flag) in left.iter_vals().enumerate() {
             if flag {
                 deps.push(map[dep]);
             }

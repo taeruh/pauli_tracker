@@ -25,7 +25,10 @@ use super::{
     PauliString,
     Tracker,
 };
-use crate::pauli::Pauli;
+use crate::{
+    bool_vector::BoolVector,
+    pauli::Pauli,
+};
 
 pub mod storage;
 
@@ -71,7 +74,10 @@ impl<Storage> Frames<Storage> {
     pub fn y(&self, _: usize) {}
 }
 
-impl<Storage: StackStorage> Frames<Storage> {
+impl<Storage> Frames<Storage>
+where
+    Storage: StackStorage,
+{
     /// Pop the last tracked Pauli frame.
     pub fn pop_frame(&mut self) -> Option<PauliString> {
         if self.storage.is_empty() || self.frames_num == 0 {
@@ -90,7 +96,7 @@ impl<Storage: StackStorage> Frames<Storage> {
     pub fn measure_and_store(
         &mut self,
         bit: usize,
-        storage: &mut impl StackStorage,
+        storage: &mut impl StackStorage<PauliBoolVec = Storage::PauliBoolVec>,
     ) -> Result<(), String> {
         storage.insert_pauli(
             bit,
@@ -104,7 +110,10 @@ impl<Storage: StackStorage> Frames<Storage> {
 
     /// Measure all qubits and put the according stack of Paulis into `storage`, i.e.,
     /// do [Frames::measure_and_store] for all qubits.
-    pub fn measure_and_store_all(&mut self, storage: &mut impl StackStorage) {
+    pub fn measure_and_store_all(
+        &mut self,
+        storage: &mut impl StackStorage<PauliBoolVec = Storage::PauliBoolVec>,
+    ) {
         for (bit, pauli) in
             mem::replace(&mut self.storage, Storage::init(0)).into_iter()
         {
@@ -120,8 +129,8 @@ macro_rules! movements {
             .get_two_mut(source, destination)
             .unwrap_or_else(|| panic!(
                     "qubit {source} and/or {destination} do not exist"));
-            d.$to_side.xor(&s.$from_side);
-            s.$from_side.truncate(0)
+            d.$to_side.xor_inplace(&s.$from_side);
+            s.$from_side.resize(0, false)
         }
     )*}
 }
@@ -137,8 +146,11 @@ macro_rules! single {
     )*};
 }
 
-impl<Storage: StackStorage> Tracker for Frames<Storage> {
-    type Stack = PauliVec;
+impl<Storage> Tracker for Frames<Storage>
+where
+    Storage: StackStorage,
+{
+    type Stack = PauliVec<Storage::PauliBoolVec>;
 
     fn init(num_qubits: usize) -> Self {
         Self {
@@ -149,7 +161,7 @@ impl<Storage: StackStorage> Tracker for Frames<Storage> {
 
     fn new_qubit(&mut self, qubit: usize) -> Option<usize> {
         self.storage
-            .insert_pauli(qubit, PauliVec::zeros(self.frames_num))
+            .insert_pauli(qubit, Self::Stack::zeros(self.frames_num))
             .map(|_| qubit)
     }
 
@@ -193,8 +205,8 @@ impl<Storage: StackStorage> Tracker for Frames<Storage> {
             .storage
             .get_two_mut(control, target)
             .unwrap_or_else(|| panic!("qubit {control} and/or {target} do not exist"));
-        t.left.xor(&c.left);
-        c.right.xor(&t.right);
+        t.left.xor_inplace(&c.left);
+        c.right.xor_inplace(&t.right);
     }
 
     fn cz(&mut self, bit_a: usize, bit_b: usize) {
@@ -202,11 +214,10 @@ impl<Storage: StackStorage> Tracker for Frames<Storage> {
             .storage
             .get_two_mut(bit_a, bit_b)
             .unwrap_or_else(|| panic!("qubit {bit_a} and/or {bit_b} do not exist"));
-        a.right.xor(&b.left);
-        b.right.xor(&a.left);
+        a.right.xor_inplace(&b.left);
+        b.right.xor_inplace(&a.left);
     }
 
-    // todo: test movements similar to the gates
     movements!(
         (move_x_to_x, left, left),
         (move_x_to_z, left, right),
@@ -214,7 +225,7 @@ impl<Storage: StackStorage> Tracker for Frames<Storage> {
         (move_z_to_z, right, right)
     );
 
-    fn measure(&mut self, bit: usize) -> Option<PauliVec> {
+    fn measure(&mut self, bit: usize) -> Option<PauliVec<Storage::PauliBoolVec>> {
         self.storage.remove_pauli(bit)
     }
 }
@@ -239,7 +250,8 @@ mod tests {
         // one-qubit and two-qubit actions, it's like a "TwoBitVec"; one could probably
         // implement that in connection with [Pauli]
 
-        type ThisTracker = Frames<Vector>;
+        // type ThisTracker = Frames<Vector<bitvec::vec::BitVec>>;
+        type ThisTracker = Frames<Vector<crate::bool_vector::bitvec_simd::BitVec>>;
 
         #[test]
         fn single() {

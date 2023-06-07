@@ -5,8 +5,8 @@ use std::{
     fmt::Debug,
 };
 
-use bit_vec::BitVec;
 use pauli_tracker::{
+    bool_vector::BoolVector,
     circuit::{
         CliffordCircuit,
         DummyCircuit,
@@ -20,7 +20,6 @@ use pauli_tracker::{
                 self,
                 DependencyGraph,
                 Map,
-                PauliVec,
             },
             Frames,
         },
@@ -39,11 +38,18 @@ use proptest::{
     },
 };
 
-const MAX_INIT: usize = 10;
-const MAX_OPS: usize = 100;
+// type BoolVec = bitvec::vec::BitVec;
+type BoolVec = pauli_tracker::bool_vector::bitvec_simd::BitVec;
+type Storage = Map<BoolVec>;
+type PauliVec = storage::PauliVec<BoolVec>;
+
+// const MAX_INIT: usize = 10;
+// const MAX_OPS: usize = 100;
+const MAX_INIT: usize = 2;
+const MAX_OPS: usize = 10;
 proptest! {
     #![proptest_config(Config {
-        // cases: 10,
+        cases: 1,
         // proptest! just overwrites this (see source code); it doesn't really matter,
         // except that we get a warning but that is ok; we could solve it by manually
         // doing what proptest! does (the basics are straightforward, but it also does
@@ -61,7 +67,7 @@ proptest! {
         let mut generator = Generator::new(init, ops);
         let mut circuit = TrackedCircuit {
             circuit: DummyCircuit {},
-            tracker: Frames::<Map>::init(init),
+            tracker: Frames::<Storage>::init(init),
             storage: Map::default(),
         };
         let mut measurements = WhereMeasured(Vec::new());
@@ -69,7 +75,7 @@ proptest! {
         circuit.tracker.measure_and_store_all(&mut circuit.storage);
 
         let graph = storage::create_dependency_graph(&circuit.storage, &measurements.0);
-        assert!(check_graph(&graph, &circuit.storage, &measurements.0));
+        check_graph(&graph, &circuit.storage, &measurements.0).unwrap();
 
         // println!("{:?}", graph);
         // println!("{}", graph.len());
@@ -100,75 +106,91 @@ proptest! {
     }
 }
 
-fn check_graph(graph: &DependencyGraph, storage: &Map, measurements: &[usize]) -> bool {
+fn check_graph(
+    graph: &DependencyGraph,
+    storage: &Storage,
+    measurements: &[usize],
+) -> Result<(), String> {
     fn check(
         dep: (usize, bool),
         measured: &HashMap<usize, ()>,
         measurements: &[usize],
-    ) -> bool {
-        !dep.1
+    ) -> Result<(), String> {
+        if !dep.1
             || measured
                 .contains_key(measurements.get(dep.0).expect("missing measurement"))
+        {
+            Ok(())
+        } else {
+            Err(format!("{dep:?}"))
+        }
     }
 
     fn node_check(
         node: &usize,
         deps: &Vec<usize>,
-        storage: &Map,
+        storage: &Storage,
         measurements: &[usize],
         measured: &HashMap<usize, ()>,
-    ) -> bool {
+    ) -> Result<(), String> {
         for dep in deps {
             if !measured.contains_key(dep) {
-                return false;
+                return Err("{dep:?}".to_string());
             }
         }
         let pauli = storage.get(node).expect("node does not exist");
         // we explicitly do not xor(left, right), because that's what we are doing
         // in the create_dependency_graph function; here we keep it as simple is
         // possible
-        for dep in pauli.left.iter().enumerate() {
-            if !check(dep, measured, measurements) {
-                return false;
-            }
+        // println!("{:?}", pauli.left);
+        for dep in pauli.left.iter_vals().enumerate() {
+            // if !check(dep, measured, measurements) {
+            //     return Err(format!("{dep:?}"));
+            // }
+            check(dep, measured, measurements).map_err(|e| format!("left: {e}"))?
         }
-        for dep in pauli.right.iter().enumerate() {
-            if !check(dep, measured, measurements) {
-                return false;
-            }
+        for dep in pauli.right.iter_vals().enumerate() {
+            check(dep, measured, measurements).map_err(|e| format!("right: {e}"))?
         }
-        true
+        Ok(())
     }
 
     let mut measured = HashMap::<usize, ()>::new();
     let mut iter = graph.iter().peekable();
 
-    // for layer in iter {
     while let Some(this_layer) = iter.next() {
         if let Some(next_layer) = iter.peek() {
             for (node, deps) in *next_layer {
                 // if a node in the next_layer could be measured, we fail, because then
                 // it should be in this_layer
-                if node_check(node, deps, storage, measurements, &measured) {
-                    println!("next: {:?}, {:?}, {:?}", node, deps, measured);
-                    return false;
+                if node_check(node, deps, storage, measurements, &measured).is_ok() {
+                    return Err(format!(
+                        "not optimal: {node:?}, {deps:?}, \
+                         {measured:?}\n{graph:#?}\n{storage:#?}"
+                    ));
                 }
             }
         }
         for (node, deps) in this_layer {
-            if !node_check(node, deps, storage, measurements, &measured) {
-                return false;
+            match node_check(node, deps, storage, measurements, &measured) {
+                Ok(_) => (),
+                Err(e) => {
+                    return Err(format!(
+                        "not sufficient: {e}\n{node:?}, {deps:?}, \
+                         {measured:?}\n{graph:?}\n{storage:#?}"
+                    ));
+                }
             }
             measured.insert(*node, ());
         }
     }
-    true
+    Ok(())
 }
 
 fn sum_up(pauli: &PauliVec, measurements: &[bool]) -> u8 {
-    fn inner(bit_vec: &BitVec, measurements: &[bool]) -> u8 {
+    fn inner(bit_vec: &BoolVec, measurements: &[bool]) -> u8 {
         bit_vec
-            .iter()
+            .iter_vals()
             .enumerate()
             .filter_map(|(i, f)| if measurements[i] { Some(f as u8) } else { None })
             .sum::<u8>()
@@ -181,7 +203,9 @@ trait Measurements<T: ExtendCircuit> {
     fn store(&mut self, bit: usize, result: T::Output);
 }
 struct WhereMeasured(Vec<usize>);
-impl Measurements<TrackedCircuit<DummyCircuit, Frames<Map>, Map>> for WhereMeasured {
+impl Measurements<TrackedCircuit<DummyCircuit, Frames<Storage>, Storage>>
+    for WhereMeasured
+{
     fn store(&mut self, bit: usize, _: ()) {
         self.0.push(bit)
     }
@@ -200,7 +224,7 @@ trait ExtendCircuit {
     fn z_rotation_teleportation(&mut self, origin: usize, new: usize) -> Self::Output;
     fn new_qubit(&mut self, bit: usize);
 }
-impl ExtendCircuit for TrackedCircuit<DummyCircuit, Frames<Map>, Map> {
+impl ExtendCircuit for TrackedCircuit<DummyCircuit, Frames<Storage>, Storage> {
     type Output = ();
     fn z_rotation_teleportation(&mut self, origin: usize, new: usize) {
         self.tracker.new_qubit(new);

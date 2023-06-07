@@ -19,6 +19,8 @@
 // #[cfg(feature = "<feature>")]
 // #[cfg_attr(docsrs, doc(cfg(feature = "<feature>")))]
 
+pub mod bool_vector;
+
 #[cfg(feature = "circuit")]
 #[cfg_attr(docsrs, doc(cfg(feature = "circuit")))]
 #[allow(unused)]

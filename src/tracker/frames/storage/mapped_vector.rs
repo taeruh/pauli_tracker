@@ -18,11 +18,14 @@ use serde::{
     Serialize,
 };
 
-use super::super::{
+use super::{
+    super::StackStorage,
     PauliVec,
-    StackStorage,
 };
-use crate::slice_extension::GetTwoMutSlice;
+use crate::{
+    bool_vector::BoolVector,
+    slice_extension::GetTwoMutSlice,
+};
 
 #[derive(Debug, Default)]
 // this is basically a HashMap<key=usize, value=PauliVec> splitted into
@@ -30,22 +33,22 @@ use crate::slice_extension::GetTwoMutSlice;
 // because it is more memory-efficient for many PauliVec(s) since HashMaps kinda need
 // the memory even if there's no key
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-pub struct MappedVector {
+pub struct MappedVector<B> {
     // note that we are effectively using an array of array; this wouldn't be optimal
     // if the inner array has a fixed size (then one could do the usual thing and
     // flatten the arrays into one array), however, this is not necessarily true
     // for us since we might continuesly add frames and remove qubits (when it is
     // measured) to reduce the required memory
-    frames: Vec<PauliVec>,
+    frames: Vec<PauliVec<B>>,
     position: HashMap<usize, usize>,
     inverse_position: Vec<usize>,
 }
 
-impl IntoIterator for MappedVector {
-    type Item = (usize, PauliVec);
+impl<B> IntoIterator for MappedVector<B> {
+    type Item = (usize, PauliVec<B>);
     type IntoIter = Zip<
         <Vec<usize> as IntoIterator>::IntoIter,
-        <Vec<PauliVec> as IntoIterator>::IntoIter,
+        <Vec<PauliVec<B>> as IntoIterator>::IntoIter,
     >;
 
     fn into_iter(self) -> Self::IntoIter {
@@ -53,12 +56,12 @@ impl IntoIterator for MappedVector {
     }
 }
 
-impl<'l> IntoIterator for &'l MappedVector {
-    type Item = (usize, &'l PauliVec);
+impl<'l, B> IntoIterator for &'l MappedVector<B> {
+    type Item = (usize, &'l PauliVec<B>);
     type IntoIter = Zip<
-        Map<slice::Iter<'l, usize>, fn(&usize) -> usize>, slice::Iter<'l, PauliVec>>
-    where
-        Self: 'l;
+        Map<slice::Iter<'l, usize>, fn(&usize) -> usize>,
+        slice::Iter<'l, PauliVec<B>>,
+    >;
 
     fn into_iter(self) -> Self::IntoIter {
         self.inverse_position
@@ -68,11 +71,11 @@ impl<'l> IntoIterator for &'l MappedVector {
     }
 }
 
-impl<'l> IntoIterator for &'l mut MappedVector {
-    type Item = (usize, &'l mut PauliVec);
+impl<'l, B> IntoIterator for &'l mut MappedVector<B> {
+    type Item = (usize, &'l mut PauliVec<B>);
     type IntoIter = Zip<
         Map<slice::Iter<'l, usize>, fn(&usize) -> usize>,
-        slice::IterMut<'l, PauliVec>,
+        slice::IterMut<'l, PauliVec<B>>,
     >;
 
     fn into_iter(self) -> Self::IntoIter {
@@ -83,11 +86,12 @@ impl<'l> IntoIterator for &'l mut MappedVector {
     }
 }
 
-impl StackStorage for MappedVector {
-    type IterMut<'l> = <&'l mut Self as IntoIterator>::IntoIter;
-    type Iter<'l> = <&'l Self as IntoIterator>::IntoIter;
+impl<B: BoolVector> StackStorage for MappedVector<B> {
+    type PauliBoolVec = B;
+    type IterMut<'l> = <&'l mut Self as IntoIterator>::IntoIter where B: 'l;
+    type Iter<'l> = <&'l Self as IntoIterator>::IntoIter where B: 'l;
 
-    fn insert_pauli(&mut self, bit: usize, pauli: PauliVec) -> Option<PauliVec> {
+    fn insert_pauli(&mut self, bit: usize, pauli: PauliVec<B>) -> Option<PauliVec<B>> {
         if self.position.insert(bit, self.frames.len()).is_some() {
             return Some(pauli);
         }
@@ -96,7 +100,7 @@ impl StackStorage for MappedVector {
         None
     }
 
-    fn remove_pauli(&mut self, bit: usize) -> Option<PauliVec> {
+    fn remove_pauli(&mut self, bit: usize) -> Option<PauliVec<B>> {
         let bit_position = self.position.remove(&bit)?;
         self.inverse_position.swap_remove(bit_position);
         if bit_position != self.inverse_position.len() {
@@ -114,12 +118,12 @@ impl StackStorage for MappedVector {
     }
 
     #[inline]
-    fn get(&self, bit: usize) -> Option<&PauliVec> {
+    fn get(&self, bit: usize) -> Option<&PauliVec<B>> {
         Some(self.frames.index(*self.position.get(&bit)?))
     }
 
     #[inline]
-    fn get_mut(&mut self, bit: usize) -> Option<&mut PauliVec> {
+    fn get_mut(&mut self, bit: usize) -> Option<&mut PauliVec<B>> {
         Some(self.frames.index_mut(*self.position.get(&bit)?))
     }
 
@@ -127,7 +131,7 @@ impl StackStorage for MappedVector {
         &mut self,
         bit_a: usize,
         bit_b: usize,
-    ) -> Option<(&mut PauliVec, &mut PauliVec)> {
+    ) -> Option<(&mut PauliVec<B>, &mut PauliVec<B>)> {
         self.frames
             .get_two_mut(*self.position.get(&bit_a)?, *self.position.get(&bit_b)?)
     }
@@ -158,8 +162,8 @@ impl StackStorage for MappedVector {
     }
 }
 
-impl MappedVector {
-    pub fn frames(&self) -> &Vec<PauliVec> {
+impl<B> MappedVector<B> {
+    pub fn frames(&self) -> &Vec<PauliVec<B>> {
         &self.frames
     }
 

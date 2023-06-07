@@ -1,5 +1,6 @@
 use std::{
     cmp::Ordering,
+    fmt::Debug,
     iter::Enumerate,
     ops::{
         Deref,
@@ -14,52 +15,56 @@ use serde::{
     Serialize,
 };
 
-use super::super::{
+use super::{
+    super::StackStorage,
     PauliVec,
-    StackStorage,
 };
-use crate::slice_extension::GetTwoMutSlice;
+use crate::{
+    bool_vector::BoolVector,
+    slice_extension::GetTwoMutSlice,
+};
 
 /// Basically a vector of [PauliVec]s. Restricted, but if that is no problem, and the
 /// type is used correctly, it is more efficient than [Map](super::map::Map).
 #[derive(Debug, Default)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-pub struct Vector {
-    frames: Vec<PauliVec>,
+pub struct Vector<B> {
+    frames: Vec<PauliVec<B>>,
 }
 
-impl Deref for Vector {
-    type Target = Vec<PauliVec>;
+impl<B> Deref for Vector<B> {
+    type Target = Vec<PauliVec<B>>;
     fn deref(&self) -> &Self::Target {
         &self.frames
     }
 }
 
-impl DerefMut for Vector {
+impl<B> DerefMut for Vector<B> {
     fn deref_mut(&mut self) -> &mut Self::Target {
         &mut self.frames
     }
 }
 
-impl IntoIterator for Vector {
-    type Item = (usize, PauliVec);
+impl<B> IntoIterator for Vector<B> {
+    type Item = (usize, PauliVec<B>);
 
-    type IntoIter = Enumerate<<Vec<PauliVec> as IntoIterator>::IntoIter>;
+    type IntoIter = Enumerate<<Vec<PauliVec<B>> as IntoIterator>::IntoIter>;
 
     fn into_iter(self) -> Self::IntoIter {
         self.frames.into_iter().enumerate()
     }
 }
 
-impl StackStorage for Vector {
-    type IterMut<'a> = Enumerate<slice::IterMut<'a, PauliVec>>
+impl<B: BoolVector> StackStorage for Vector<B> {
+    type PauliBoolVec = B;
+    type IterMut<'a> = Enumerate<slice::IterMut<'a, PauliVec<B>>>
     where
         Self: 'a;
-    type Iter<'a> = Enumerate<slice::Iter<'a, PauliVec>>
+    type Iter<'a> = Enumerate<slice::Iter<'a, PauliVec<B>>>
     where
         Self: 'a;
 
-    fn insert_pauli(&mut self, bit: usize, pauli: PauliVec) -> Option<PauliVec> {
+    fn insert_pauli(&mut self, bit: usize, pauli: PauliVec<B>) -> Option<PauliVec<B>> {
         match bit.cmp(&self.len()) {
             Ordering::Less => Some(pauli),
             Ordering::Equal => {
@@ -72,7 +77,7 @@ impl StackStorage for Vector {
         }
     }
 
-    fn remove_pauli(&mut self, bit: usize) -> Option<PauliVec> {
+    fn remove_pauli(&mut self, bit: usize) -> Option<PauliVec<B>> {
         match bit.cmp(&(self.len().checked_sub(1)?)) {
             Ordering::Less => panic!(
                 "this type, FixedVector, only allows consecutively removing elements"
@@ -85,12 +90,12 @@ impl StackStorage for Vector {
     }
 
     #[inline(always)]
-    fn get(&self, qubit: usize) -> Option<&PauliVec> {
+    fn get(&self, qubit: usize) -> Option<&PauliVec<B>> {
         self.frames.get(qubit)
     }
 
     #[inline(always)]
-    fn get_mut(&mut self, qubit: usize) -> Option<&mut PauliVec> {
+    fn get_mut(&mut self, qubit: usize) -> Option<&mut PauliVec<B>> {
         self.frames.get_mut(qubit)
     }
 
@@ -98,7 +103,7 @@ impl StackStorage for Vector {
         &mut self,
         qubit_a: usize,
         qubit_b: usize,
-    ) -> Option<(&mut PauliVec, &mut PauliVec)> {
+    ) -> Option<(&mut PauliVec<B>, &mut PauliVec<B>)> {
         self.frames.get_two_mut(qubit_a, qubit_b)
     }
 

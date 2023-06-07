@@ -110,6 +110,10 @@ mod test {
         for (action, result) in actions.into_iter().zip(SINGLES) {
             (runner)(action, result)
         }
+        // for (i, (action, result)) in actions.into_iter().zip(SINGLES).enumerate() {
+        //     println!("{}", i);
+        //     (runner)(action, result)
+        // }
     }
 
     pub fn double_check<T, R>(runner: R, actions: [DoubleAction<T>; N_DOUBLES])

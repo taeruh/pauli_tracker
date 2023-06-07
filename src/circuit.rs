@@ -173,7 +173,7 @@ impl<C, A, S> TrackedCircuit<C, Frames<A>, S>
 where
     C: CliffordCircuit,
     A: StackStorage,
-    S: StackStorage,
+    S: StackStorage<PauliBoolVec = A::PauliBoolVec>,
 {
     /// Perform a **Measurement** and move the according qubit from the tracker into the
     /// additional storage.
@@ -185,6 +185,8 @@ where
 
 #[cfg(test)]
 mod tests {
+    use bitvec::vec::BitVec;
+
     use super::*;
     use crate::{
         circuit::{
@@ -196,7 +198,7 @@ mod tests {
                 storage::{
                     self,
                     MappedVector,
-                    PauliVec,
+                    PauliBitVec,
                     Vector,
                 },
                 Frames,
@@ -209,7 +211,7 @@ mod tests {
     fn single_rotation_teleportation() {
         let mut circ = TrackedCircuit {
             circuit: DummyCircuit {},
-            tracker: Frames::<MappedVector>::init(2),
+            tracker: Frames::<MappedVector<BitVec>>::init(2),
             storage: MappedVector::default(),
         };
 
@@ -221,11 +223,11 @@ mod tests {
         circ.track_z(1);
 
         assert_eq!(
-            vec![(1, PauliVec::try_from_str("0", "1").unwrap())],
+            vec![(1, PauliBitVec::try_from_str("0", "1").unwrap())],
             storage::into_sorted_by_bit(circ.tracker.into_storage())
         );
         assert_eq!(
-            vec![(0, PauliVec::new())],
+            vec![(0, PauliBitVec::new())],
             storage::into_sorted_by_bit(circ.storage)
         );
     }
@@ -234,7 +236,7 @@ mod tests {
     fn control_v_dagger() {
         let mut circ = TrackedCircuit {
             circuit: DummyCircuit {},
-            tracker: Frames::<MappedVector>::init(5),
+            tracker: Frames::<MappedVector<BitVec>>::init(5),
             storage: MappedVector::default(),
         };
 
@@ -254,16 +256,16 @@ mod tests {
 
         assert_eq!(
             vec![
-                (3, PauliVec::try_from_str("000", "010").unwrap()),
-                (4, PauliVec::try_from_str("011", "000").unwrap())
+                (3, PauliBitVec::try_from_str("000", "010").unwrap()),
+                (4, PauliBitVec::try_from_str("011", "000").unwrap())
             ],
             storage::into_sorted_by_bit(circ.tracker.into_storage())
         );
         assert_eq!(
             vec![
-                (0, PauliVec::new()),
-                (1, PauliVec::try_from_str("00", "10").unwrap()),
-                (2, PauliVec::try_from_str("0", "1").unwrap())
+                (0, PauliBitVec::new()),
+                (1, PauliBitVec::try_from_str("00", "10").unwrap()),
+                (2, PauliBitVec::try_from_str("0", "1").unwrap())
             ],
             storage::into_sorted_by_bit(circ.storage)
         );
@@ -273,7 +275,7 @@ mod tests {
     fn toffoli_time_dependent() {
         let mut circ = TrackedCircuit {
             circuit: DummyCircuit {},
-            tracker: Frames::<MappedVector>::init(10),
+            tracker: Frames::<MappedVector<BitVec>>::init(10),
             storage: MappedVector::default(),
         };
 
@@ -282,7 +284,13 @@ mod tests {
         trait TTele {
             fn t_tele(&mut self, origin: usize, new: usize);
         }
-        impl TTele for TrackedCircuit<DummyCircuit, Frames<MappedVector>, MappedVector> {
+        impl TTele
+            for TrackedCircuit<
+                DummyCircuit,
+                Frames<MappedVector<BitVec>>,
+                MappedVector<BitVec>,
+            >
+        {
             fn t_tele(&mut self, origin: usize, new: usize) {
                 self.cx(origin, new);
                 self.measure_and_store(origin);
@@ -310,21 +318,21 @@ mod tests {
 
         assert_eq!(
             vec![
-                (3, PauliVec::try_from_str("0000000", "1101010").unwrap()),
-                (6, PauliVec::try_from_str("0000000", "0001111").unwrap()),
-                (9, PauliVec::try_from_str("0000001", "0000000").unwrap()),
+                (3, PauliBitVec::try_from_str("0000000", "1101010").unwrap()),
+                (6, PauliBitVec::try_from_str("0000000", "0001111").unwrap()),
+                (9, PauliBitVec::try_from_str("0000001", "0000000").unwrap()),
             ],
             storage::into_sorted_by_bit(circ.tracker.into_storage())
         );
         assert_eq!(
             vec![
-                (0, PauliVec::try_from_str("", "").unwrap()),
-                (1, PauliVec::try_from_str("0", "0").unwrap()),
-                (2, PauliVec::try_from_str("00", "00").unwrap()),
-                (4, PauliVec::try_from_str("000", "011").unwrap()),
-                (5, PauliVec::try_from_str("0000", "0010").unwrap()),
-                (7, PauliVec::try_from_str("00000", "00001").unwrap()),
-                (8, PauliVec::try_from_str("000000", "000001").unwrap())
+                (0, PauliBitVec::try_from_str("", "").unwrap()),
+                (1, PauliBitVec::try_from_str("0", "0").unwrap()),
+                (2, PauliBitVec::try_from_str("00", "00").unwrap()),
+                (4, PauliBitVec::try_from_str("000", "011").unwrap()),
+                (5, PauliBitVec::try_from_str("0000", "0010").unwrap()),
+                (7, PauliBitVec::try_from_str("00000", "00001").unwrap()),
+                (8, PauliBitVec::try_from_str("000000", "000001").unwrap())
             ],
             storage::into_sorted_by_bit(circ.storage)
         );
@@ -334,14 +342,20 @@ mod tests {
     fn toffoli_time_independent() {
         let mut circ = TrackedCircuit {
             circuit: DummyCircuit {},
-            tracker: Frames::<MappedVector>::init(10),
+            tracker: Frames::<MappedVector<BitVec>>::init(10),
             storage: MappedVector::default(),
         };
 
         trait TTele {
             fn t_tele(&mut self, origin: usize, new: usize);
         }
-        impl TTele for TrackedCircuit<DummyCircuit, Frames<MappedVector>, MappedVector> {
+        impl TTele
+            for TrackedCircuit<
+                DummyCircuit,
+                Frames<MappedVector<BitVec>>,
+                MappedVector<BitVec>,
+            >
+        {
             fn t_tele(&mut self, origin: usize, new: usize) {
                 self.cx(origin, new);
                 self.move_z_to_z(origin, new);
@@ -370,21 +384,21 @@ mod tests {
 
         assert_eq!(
             vec![
-                (3, PauliVec::try_from_str("0000000", "1001110").unwrap()),
-                (6, PauliVec::try_from_str("0000000", "0101101").unwrap()),
-                (9, PauliVec::try_from_str("0010111", "0000000").unwrap()),
+                (3, PauliBitVec::try_from_str("0000000", "1001110").unwrap()),
+                (6, PauliBitVec::try_from_str("0000000", "0101101").unwrap()),
+                (9, PauliBitVec::try_from_str("0010111", "0000000").unwrap()),
             ],
             storage::into_sorted_by_bit(circ.tracker.into_storage())
         );
         assert_eq!(
             vec![
-                (0, PauliVec::try_from_str("", "").unwrap()),
-                (1, PauliVec::try_from_str("0", "").unwrap()),
-                (2, PauliVec::try_from_str("00", "").unwrap()),
-                (4, PauliVec::try_from_str("000", "").unwrap()),
-                (5, PauliVec::try_from_str("0000", "").unwrap()),
-                (7, PauliVec::try_from_str("00000", "").unwrap()),
-                (8, PauliVec::try_from_str("000000", "").unwrap())
+                (0, PauliBitVec::try_from_str("", "").unwrap()),
+                (1, PauliBitVec::try_from_str("0", "").unwrap()),
+                (2, PauliBitVec::try_from_str("00", "").unwrap()),
+                (4, PauliBitVec::try_from_str("000", "").unwrap()),
+                (5, PauliBitVec::try_from_str("0000", "").unwrap()),
+                (7, PauliBitVec::try_from_str("00000", "").unwrap()),
+                (8, PauliBitVec::try_from_str("000000", "").unwrap())
             ],
             storage::into_sorted_by_bit(circ.storage)
         );
@@ -459,7 +473,7 @@ mod tests {
     fn first_graph_test() {
         let mut circ = TrackedCircuit {
             circuit: DummyCircuit {},
-            tracker: Frames::<MappedVector>::init(10),
+            tracker: Frames::<MappedVector<BitVec>>::init(10),
             storage: MappedVector::default(),
         };
 
@@ -468,7 +482,13 @@ mod tests {
         trait TTele {
             fn t_tele(&mut self, origin: usize, new: usize);
         }
-        impl TTele for TrackedCircuit<DummyCircuit, Frames<MappedVector>, MappedVector> {
+        impl TTele
+            for TrackedCircuit<
+                DummyCircuit,
+                Frames<MappedVector<BitVec>>,
+                MappedVector<BitVec>,
+            >
+        {
             fn t_tele(&mut self, origin: usize, new: usize) {
                 self.cx(origin, new);
                 self.measure_and_store(origin);
@@ -508,7 +528,7 @@ mod tests {
     fn another_graph_test() {
         let mut circ = TrackedCircuit {
             circuit: DummyCircuit {},
-            tracker: Frames::<Vector>::init(10),
+            tracker: Frames::<Vector<BitVec>>::init(10),
             storage: (),
         };
 
@@ -517,7 +537,7 @@ mod tests {
         trait TTele {
             fn t_tele(&mut self, origin: usize, new: usize);
         }
-        impl TTele for TrackedCircuit<DummyCircuit, Frames<Vector>, ()> {
+        impl TTele for TrackedCircuit<DummyCircuit, Frames<Vector<BitVec>>, ()> {
             fn t_tele(&mut self, origin: usize, new: usize) {
                 self.cx(origin, new);
                 self.move_z_to_z(origin, new);
