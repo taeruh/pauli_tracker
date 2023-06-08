@@ -42,7 +42,9 @@ use proptest::{
 };
 
 // type BoolVec = bitvec::vec::BitVec;
-type BoolVec = pauli_tracker::boolean_vector::bitvec_simd::SimdBitVec;
+// type BoolVec = pauli_tracker::boolean_vector::bitvec_simd::SimdBitVec;
+type BoolVec = bit_vec::BitVec;
+
 type Storage = Map<BoolVec>;
 type PauliVec = pauli::PauliVec<BoolVec>;
 

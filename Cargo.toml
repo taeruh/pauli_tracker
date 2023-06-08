@@ -18,12 +18,13 @@ crate-type = ["lib"]
 
 [features]
 circuit = ["dep:rand"]
-serde = ["dep:serde", "bitvec?/serde", "bitvec_simd?/serde"]
+serde = ["dep:serde", "bitvec?/serde", "bitvec_simd?/serde", "bit-vec?/serde"]
 
 [dependencies]
 itertools = "0.10.5"
 bitvec = { version = "1.0.1", optional = true }
 bitvec_simd = { version = "0.20.5", optional = true }
+bit-vec = { version = "0.6.3", optional = true }
 rand = { version = "0.8.5", optional = true }
 serde = { version = "1.0.163", optional = true, features = ["derive"] }
 

@@ -14,6 +14,10 @@
 //!   Implement [BooleanVector](boolean_vector::BooleanVector) for
 //!   [bitvec::vec::BitVec](https://docs.rs/bitvec/latest/bitvec/vec/struct.BitVec.html)
 //!   (extern crate).
+//! * **bit-vec**
+//!   Implement [BooleanVector](boolean_vector::BooleanVector) for
+//!   [bit_vec::BitVec](https://docs.rs/bit-vec/latest/bit_vec/struct.BitVec.html)
+//!   (extern crate).
 //! * **bitvec_simd**
 //!   Implement [BooleanVector](boolean_vector::BooleanVector) for wrapper
 //!   [SimdBitVec](boolean_vector::bitvec_simd::SimdBitVec) around
