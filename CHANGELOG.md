@@ -1,15 +1,24 @@
 # Changelog
-All notable changes to this project will be documented in this file.
+All notable changes to this project will be documented in this file as best as possible.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 
 ## [Unreleased]
 ### Added
-- **Possible Breaking change**; Implement/derive `Debug` for `DummyCircuit` and
+- **Breaking Change**: Implement/derive `Debug` for `DummyCircuit` and.
   `RandomMeasurementCircuit`
-- **Possible Breaking change**; Implement `From<Vec<Pauli>> for LiveVector`
-- Add `DependencyGraph` type
+- **Breaking Change**: Implement `From<Vec<Pauli>> for LiveVector`.
+- Add `DependencyGraph` type.
+- Add `enabled_simd_target_feature` function.
 ### Changed
+- **Breaking Change**: Refactor, specifically `PauliVec`
+  `PauliVec` is now generic over its "Vec" type which has to implement the new
+  `BooleanVector` trait from the `boolean_vector` module (some implementors are
+  provided, based on extern libraries). The refactor also includes a new structering of
+  some modules and some other breaking changes around `PauliVec`. Some of them are:
+  - Add associated type `BoolVec` to `StackStorage`.
+  - Make the storage types in `storage` generic.
+  - Move `PauliVec` into its own module.
 ### Deprecated
 ### Removed
 ### Fixed
@@ -17,9 +26,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 
 ## [0.1.1] - 2023-06-01
 ### Added
-- Add the `circuit` module
+- Add the `circuit` module.
 ### Fixed
-- Fix bug in the movement operations for the live tracker
+- Fix bug in the movement operations for the live tracker.
 
 ## [0.1.0] - 2023-06-01
 
