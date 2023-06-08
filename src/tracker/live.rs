@@ -14,6 +14,8 @@ use serde::{
 };
 
 use super::{
+    unwrap_get_mut,
+    unwrap_get_two_mut,
     PauliString,
     Tracker,
 };
@@ -24,6 +26,9 @@ use crate::{
 
 // todo: also do it with a hashmap
 
+/// An implementor of [Tracker], similar to [Frames](super::frames::Frames), with the
+/// difference, that instead of storing each Pauli frame, it add the Pauli frames (mod
+/// 2).
 #[derive(Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Default, Debug)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct LiveVector {
@@ -43,26 +48,12 @@ impl LiveVector {
     pub fn get_mut(&mut self, bit: usize) -> Option<&mut Pauli> {
         self.inner.get_mut(bit)
     }
-
-    #[inline]
-    fn unwrap_get_two_mut(
-        &mut self,
-        bit_a: usize,
-        bit_b: usize,
-    ) -> (&mut Pauli, &mut Pauli) {
-        self.inner
-            .get_two_mut(bit_a, bit_b)
-            .unwrap_or_else(|| panic!("qubit {bit_a} and/or {bit_b} do not exist"))
-    }
 }
 
 macro_rules! single {
     ($($name:ident),*) => {$(
         fn $name(&mut self, bit: usize) {
-            self.inner
-                .get_mut(bit)
-                .unwrap_or_else(|| panic!("qubit {bit} does not exist"))
-                .$name();
+            unwrap_get_mut!(self.inner, bit, stringify!($name)).$name()
         }
     )*};
 }
@@ -111,35 +102,39 @@ impl Tracker for LiveVector {
     single!(h, s);
 
     fn cx(&mut self, control: usize, target: usize) {
-        let (c, t) = self.unwrap_get_two_mut(control, target);
+        let (c, t) = unwrap_get_two_mut!(self.inner, control, target, "cx");
         t.xor_u8(c.xmask());
         c.xor_u8(t.zmask());
     }
     fn cz(&mut self, bit_a: usize, bit_b: usize) {
-        let (a, b) = self.unwrap_get_two_mut(bit_a, bit_b);
+        let (a, b) = unwrap_get_two_mut!(self.inner, bit_a, bit_b, "cz");
         a.xor_u8(b.xmask() >> 1);
         b.xor_u8(a.xmask() >> 1);
     }
 
-    fn move_z_to_x(&mut self, source: usize, destination: usize) {
-        let (s, d) = self.unwrap_get_two_mut(source, destination);
-        d.xor_u8(s.zmask() << 1);
-        s.set_z(false);
-    }
-    fn move_z_to_z(&mut self, source: usize, destination: usize) {
-        let (s, d) = self.unwrap_get_two_mut(source, destination);
-        d.xor_u8(s.zmask());
-        s.set_z(false);
-    }
     fn move_x_to_x(&mut self, source: usize, destination: usize) {
-        let (s, d) = self.unwrap_get_two_mut(source, destination);
+        let (s, d) =
+            unwrap_get_two_mut!(self.inner, source, destination, "move_x_to_x");
         d.xor_u8(s.xmask());
         s.set_x(false);
     }
     fn move_x_to_z(&mut self, source: usize, destination: usize) {
-        let (s, d) = self.unwrap_get_two_mut(source, destination);
+        let (s, d) =
+            unwrap_get_two_mut!(self.inner, source, destination, "move_x_to_z");
         d.xor_u8(s.xmask() >> 1);
         s.set_x(false);
+    }
+    fn move_z_to_x(&mut self, source: usize, destination: usize) {
+        let (s, d) =
+            unwrap_get_two_mut!(self.inner, source, destination, "move_z_to_x");
+        d.xor_u8(s.zmask() << 1);
+        s.set_z(false);
+    }
+    fn move_z_to_z(&mut self, source: usize, destination: usize) {
+        let (s, d) =
+            unwrap_get_two_mut!(self.inner, source, destination, "move_z_to_z");
+        d.xor_u8(s.zmask());
+        s.set_z(false);
     }
 
     fn measure(&mut self, bit: usize) -> Option<Self::Stack> {

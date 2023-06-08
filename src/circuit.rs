@@ -173,7 +173,7 @@ impl<C, A, S> TrackedCircuit<C, Frames<A>, S>
 where
     C: CliffordCircuit,
     A: StackStorage,
-    S: StackStorage<PauliBoolVec = A::PauliBoolVec>,
+    S: StackStorage<BoolVec = A::BoolVec>,
 {
     /// Perform a **Measurement** and move the according qubit from the tracker into the
     /// additional storage.
@@ -186,6 +186,7 @@ where
 #[cfg(test)]
 mod tests {
     use bitvec::vec::BitVec;
+    type PauliBitVec = PauliVec<BitVec>;
 
     use super::*;
     use crate::{
@@ -193,12 +194,12 @@ mod tests {
             DummyCircuit,
             RandomMeasurementCircuit,
         },
+        pauli::PauliVec,
         tracker::{
             frames::{
                 storage::{
                     self,
                     MappedVector,
-                    PauliBitVec,
                     Vector,
                 },
                 Frames,

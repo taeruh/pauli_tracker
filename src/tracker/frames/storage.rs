@@ -1,106 +1,10 @@
 //! The underlining storage types for [Frames](super::Frames) and some functionality to
 //! analyze the storage.
 
-use std::mem;
-
-// use bit_vec::BitVec;
-// use bitvec::BitVec;
-#[cfg(feature = "serde")]
-use serde::{
-    Deserialize,
-    Serialize,
-};
-
 use crate::{
-    bool_vector::BoolVector,
-    pauli::Pauli,
+    boolean_vector::BooleanVector,
+    pauli::PauliVec,
 };
-
-#[cfg(feature = "bitvec")]
-#[cfg_attr(docsrs, doc(cfg(feature = "bitvec")))]
-pub type PauliBitVec = PauliVec<BitVec>;
-#[cfg(feature = "bitvec")]
-use bitvec::vec::BitVec;
-
-#[cfg(feature = "bitvec_simd")]
-#[cfg_attr(docsrs, doc(cfg(feature = "bitvec_simd")))]
-pub type PauliSimdBitVec = PauliVec<bitvec_simd::BitVec>;
-#[cfg(feature = "bitvec_simd")]
-use bitvec_simd;
-
-/// Multiple encoded Paulis compressed into two [BitVec]s.
-// each Pauli can be described by two bits (neglecting phases)
-#[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Default)]
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-pub struct PauliVec<T> {
-    // the bit representing the left qubit on the left-hand side in the tableau
-    // representation, i.e., X
-    pub left: T,
-    // right-hand side, i.e., Z
-    pub right: T,
-}
-
-impl<T: BoolVector> PauliVec<T> {
-    pub fn new() -> Self {
-        Self { left: T::new(), right: T::new() }
-    }
-
-    pub fn try_from_str(left: &str, right: &str) -> Result<Self, String> {
-        fn to_bool(c: char) -> Result<bool, String> {
-            match c.to_digit(2) {
-                Some(d) => Ok(d == 1),
-                None => Err(format!("{} is not a valid binary", c)),
-            }
-        }
-        Ok(Self {
-            left: left.chars().flat_map(to_bool).collect(),
-            right: right.chars().flat_map(to_bool).collect(),
-        })
-    }
-
-    pub fn zeros(len: usize) -> Self {
-        let zero = T::zeros(len);
-        Self { left: zero.clone(), right: zero }
-    }
-
-    pub fn push(&mut self, pauli: Pauli) {
-        self.left.push(pauli.get_x());
-        self.right.push(pauli.get_z());
-    }
-
-    pub fn pop_or_false(&mut self) -> Pauli {
-        let l = self.left.pop().unwrap_or(false);
-        let r = self.right.pop().unwrap_or(false);
-        Pauli::new(l, r)
-    }
-
-    // we can define the action of local gates
-
-    // Pauli gates don't do anything; we just include them for completeness and since it
-    // might be more convenient to have them on the caller side
-    /// Apply Pauli X, note that it is just the identity
-    #[inline(always)]
-    pub fn x(&self) {}
-    /// Apply Pauli Z, note that it is just the identity
-    #[inline(always)]
-    pub fn z(&self) {}
-    /// Apply Pauli Y, note that it is just the identity
-    #[inline(always)]
-    pub fn y(&self) {}
-
-    /// Apply Hadamard
-    #[inline]
-    pub fn h(&mut self) {
-        mem::swap(&mut self.left, &mut self.right);
-    }
-
-    /// Apply Phase S
-    #[inline]
-    pub fn s(&mut self) {
-        // self.right.xor(&self.left);
-        self.right.xor_inplace(&self.left);
-    }
-}
 
 /// This trait describes the functionality that a storage of [PauliVec]s must provide to
 /// be used as storage for [Frames](super::Frames).
@@ -109,14 +13,12 @@ impl<T: BoolVector> PauliVec<T> {
 // either need an annoying lifetime or HRTBs, which would limit the use cases of the
 // trait (for <'l> &'l T implies T: 'static); implementors of this type should probably
 // still implement IntoIterator for its references
-pub trait StackStorage:
-    IntoIterator<Item = (usize, PauliVec<Self::PauliBoolVec>)>
-{
-    type PauliBoolVec: BoolVector;
-    type Iter<'l>: Iterator<Item = (usize, &'l PauliVec<Self::PauliBoolVec>)>
+pub trait StackStorage: IntoIterator<Item = (usize, PauliVec<Self::BoolVec>)> {
+    type BoolVec: BooleanVector;
+    type Iter<'l>: Iterator<Item = (usize, &'l PauliVec<Self::BoolVec>)>
     where
         Self: 'l;
-    type IterMut<'l>: Iterator<Item = (usize, &'l mut PauliVec<Self::PauliBoolVec>)>
+    type IterMut<'l>: Iterator<Item = (usize, &'l mut PauliVec<Self::BoolVec>)>
     where
         Self: 'l;
 
@@ -124,20 +26,18 @@ pub trait StackStorage:
     fn insert_pauli(
         &mut self,
         bit: usize,
-        pauli: PauliVec<Self::PauliBoolVec>,
-    ) -> Option<PauliVec<Self::PauliBoolVec>>;
+        pauli: PauliVec<Self::BoolVec>,
+    ) -> Option<PauliVec<Self::BoolVec>>;
     /// None if qu`bit` not present
-    fn remove_pauli(&mut self, bit: usize) -> Option<PauliVec<Self::PauliBoolVec>>;
-    fn get(&self, bit: usize) -> Option<&PauliVec<Self::PauliBoolVec>>;
-    fn get_mut(&mut self, bit: usize) -> Option<&mut PauliVec<Self::PauliBoolVec>>;
+    fn remove_pauli(&mut self, bit: usize) -> Option<PauliVec<Self::BoolVec>>;
+    fn get(&self, bit: usize) -> Option<&PauliVec<Self::BoolVec>>;
+    fn get_mut(&mut self, bit: usize) -> Option<&mut PauliVec<Self::BoolVec>>;
+    #[allow(clippy::type_complexity)]
     fn get_two_mut(
         &mut self,
         bit_a: usize,
         bit_b: usize,
-    ) -> Option<(
-        &mut PauliVec<Self::PauliBoolVec>,
-        &mut PauliVec<Self::PauliBoolVec>,
-    )>;
+    ) -> Option<(&mut PauliVec<Self::BoolVec>, &mut PauliVec<Self::BoolVec>)>;
     fn iter(&self) -> Self::Iter<'_>;
     fn iter_mut(&mut self) -> Self::IterMut<'_>;
     fn init(num_bits: usize) -> Self;
@@ -147,10 +47,8 @@ pub trait StackStorage:
 /// Sort the `storage` according to the qubits.
 pub fn sort_by_bit<B: StackStorage>(
     storage: &B,
-) -> Vec<(usize, &PauliVec<B::PauliBoolVec>)> {
-    let mut ret = storage
-        .iter()
-        .collect::<Vec<(usize, &PauliVec<B::PauliBoolVec>)>>();
+) -> Vec<(usize, &PauliVec<B::BoolVec>)> {
+    let mut ret = storage.iter().collect::<Vec<(usize, &PauliVec<B::BoolVec>)>>();
     ret.sort_by_key(|(i, _)| *i);
     ret
 }
@@ -158,14 +56,13 @@ pub fn sort_by_bit<B: StackStorage>(
 /// Convert the `storage` into an sorted array according to the qubits.
 pub fn into_sorted_by_bit<B: StackStorage>(
     storage: B,
-) -> Vec<(usize, PauliVec<B::PauliBoolVec>)> {
-    let mut ret = storage
-        .into_iter()
-        .collect::<Vec<(usize, PauliVec<B::PauliBoolVec>)>>();
+) -> Vec<(usize, PauliVec<B::BoolVec>)> {
+    let mut ret = storage.into_iter().collect::<Vec<(usize, PauliVec<B::BoolVec>)>>();
     ret.sort_by_key(|(i, _)| *i);
     ret
 }
 
+/// A layered graph, describing the measurent dependency induced by tracked Paulis.
 pub type DependencyGraph = Vec<Vec<(usize, Vec<usize>)>>;
 
 /// Sort the `storage` according to the induced dependencies.
@@ -188,7 +85,7 @@ pub fn create_dependency_graph(
     for (bit, stack) in storage.iter() {
         let mut deps: Vec<usize> = Vec::new();
 
-        let max = stack.left.bits().max(stack.right.bits());
+        let max = stack.left.num_bools().max(stack.right.num_bools());
         let mut left = stack.left.clone();
         left.resize(max, false);
         let mut right = stack.right.clone();

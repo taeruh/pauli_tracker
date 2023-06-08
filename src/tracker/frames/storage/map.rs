@@ -10,7 +10,7 @@ use super::{
     super::StackStorage,
     PauliVec,
 };
-use crate::bool_vector::BoolVector;
+use crate::boolean_vector::BooleanVector;
 
 /// A HashMap of [PauliVec]s. Much more flexible than [Vector], but for restricted use
 /// cases [Vector] might be more efficient.
@@ -18,8 +18,8 @@ use crate::bool_vector::BoolVector;
 ///[Vector]: super::vector::Vector
 pub type Map<B> = HashMap<usize, PauliVec<B>>;
 
-impl<B: BoolVector> StackStorage for Map<B> {
-    type PauliBoolVec = B;
+impl<B: BooleanVector> StackStorage for Map<B> {
+    type BoolVec = B;
     type IterMut<'l> = iter::Map<
         hash_map::IterMut<'l, usize, PauliVec<B>>,
         fn((&usize, &'l mut PauliVec<B>)) -> (usize, &'l mut PauliVec<B>),
@@ -44,7 +44,7 @@ impl<B: BoolVector> StackStorage for Map<B> {
     }
 
     #[inline]
-    fn get(&self, qubit: usize) -> Option<&PauliVec<Self::PauliBoolVec>> {
+    fn get(&self, qubit: usize) -> Option<&PauliVec<Self::BoolVec>> {
         self.get(&qubit)
     }
 
@@ -63,15 +63,15 @@ impl<B: BoolVector> StackStorage for Map<B> {
         }
         // Safety: we checked above that the keys are different, so it is impossible
         // that we create two mutable references to the same object (except if there is
-        // a bug in hashing algorithm)
+        // a bug in the bucket assigment of the HashMap)
         //
-        // I do not know why this doesn't trigger an stack-borrow error in miri, but
-        // doing basically the same with Vec/slice does trigger an error. In general it
-        // would be cleaner to go over pointers as I do it for the MappedVector but a
-        // HashMap is more complicated and the tools for that are not stable yet
+        // I do not know why this isn't triggering an stack-borrow error in miri; doing
+        // the same with Vec/slice does trigger an error. In general it would be cleaner
+        // to go over pointers as I do it for the MappedVector but a HashMap is more
+        // complicated and the tools for that are not stable yet
         let a = unsafe { &mut *(self.get_mut(&qubit_a)? as *mut PauliVec<B>) };
         let b = unsafe { &mut *(self.get_mut(&qubit_b)? as *mut PauliVec<B>) };
-        // that would catch a bug in the hashing algorithm
+        // that would catch a bug in the bucket assignment
         // assert!(!std::ptr::eq(a, b));
         Some((a, b))
     }

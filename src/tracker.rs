@@ -5,15 +5,15 @@
 use crate::pauli::Pauli;
 
 /// A vector describing an encoded Pauli string, for example, one frame of
-/// [Frames](frames::Frames) (via [Frames::pop_frame](frames::Frames::pop_frame)). The
-/// `usize` element is the qubit index of the `Pauli` However, importantly note, that it
-/// is not optimal to build arrays with PauliStrings on the minor access. The library is
-/// build to use implementors of [StackStorage], which should have [PauliVec]s on the
-/// minor array axis, as workhorses. This vector should be mainly used to analyze single
-/// Pauli strings.
+/// [Frames](frames::Frames) (via [Frames::pop_frame](frames::Frames::pop_frame)).
+///
+/// The `usize` element is the qubit index of the `Pauli` However, importantly note,
+/// that it is not optimal to build arrays with PauliStrings on the minor access. The
+/// library is build to use implementors of [StackStorage], which should have
+/// [PauliVec](crate::pauli::PauliVec)s on the minor array axis, as workhorses. This
+/// vector should be mainly used to analyze single Pauli strings.
 ///
 /// [StackStorage]: frames::storage::StackStorage
-/// [PauliVec]: frames::storage::PauliVec
 pub type PauliString = Vec<(usize, Pauli)>;
 
 /// This trait provides the core API to track Paulis through a clifford circuit. The
@@ -24,7 +24,7 @@ pub type PauliString = Vec<(usize, Pauli)>;
 /// time*
 pub trait Tracker {
     type Stack;
-    /// Initialize the tracker with qubits from 0 to `num_bits`-1.
+    /// Initialize the tracker with qubits numbered from 0 to `num_bits`-1.
     fn init(num_bits: usize) -> Self;
 
     /// Insert a new qu`bit` into the tracker. If the qu`bit` is already present
@@ -67,6 +67,41 @@ pub trait Tracker {
     /// Remove the Pauli stack on qu`bit`, if it is present
     fn measure(&mut self, bit: usize) -> Option<Self::Stack>;
 }
+
+// {{ some helpers for simpler gate implementations
+macro_rules! unwrap_get_mut {
+    ($inner:expr, $bit:expr, $gate:expr) => {
+        $inner
+            .get_mut($bit)
+            .unwrap_or_else(|| panic!("{}: qubit {} does not exist", $gate, $bit))
+    };
+}
+use unwrap_get_mut;
+
+// // that's not stable yet, so we have to do it manually or try it with a functional
+// // macro
+// macro_rules! create_single {
+//     ($inner:ident) => {
+//         macro_rules! single {
+//             ($$($$name:ident),*) => {$$(
+//                 fn $$name(&mut self, bit: usize) {
+//                     unwrap_get_mut!(self.$inner, bit, stringify!($$name)).$name()
+//                 }
+//             )*};
+//         }
+//     }
+// }
+// use create_single;
+
+macro_rules! unwrap_get_two_mut {
+    ($inner:expr, $bit_a:expr, $bit_b:expr, $gate:expr) => {
+        $inner.get_two_mut($bit_a, $bit_b).unwrap_or_else(|| {
+            panic!("{}: qubit {} and/or {} do not exist", $gate, $bit_a, $bit_b)
+        })
+    };
+}
+use unwrap_get_two_mut;
+// }}
 
 pub mod frames;
 pub mod live;

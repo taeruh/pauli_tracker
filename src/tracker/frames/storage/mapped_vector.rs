@@ -23,7 +23,7 @@ use super::{
     PauliVec,
 };
 use crate::{
-    bool_vector::BoolVector,
+    boolean_vector::BooleanVector,
     slice_extension::GetTwoMutSlice,
 };
 
@@ -86,8 +86,8 @@ impl<'l, B> IntoIterator for &'l mut MappedVector<B> {
     }
 }
 
-impl<B: BoolVector> StackStorage for MappedVector<B> {
-    type PauliBoolVec = B;
+impl<B: BooleanVector> StackStorage for MappedVector<B> {
+    type BoolVec = B;
     type IterMut<'l> = <&'l mut Self as IntoIterator>::IntoIter where B: 'l;
     type Iter<'l> = <&'l Self as IntoIterator>::IntoIter where B: 'l;
 

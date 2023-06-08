@@ -20,7 +20,7 @@ use super::{
     PauliVec,
 };
 use crate::{
-    bool_vector::BoolVector,
+    boolean_vector::BooleanVector,
     slice_extension::GetTwoMutSlice,
 };
 
@@ -55,8 +55,8 @@ impl<B> IntoIterator for Vector<B> {
     }
 }
 
-impl<B: BoolVector> StackStorage for Vector<B> {
-    type PauliBoolVec = B;
+impl<B: BooleanVector> StackStorage for Vector<B> {
+    type BoolVec = B;
     type IterMut<'a> = Enumerate<slice::IterMut<'a, PauliVec<B>>>
     where
         Self: 'a;

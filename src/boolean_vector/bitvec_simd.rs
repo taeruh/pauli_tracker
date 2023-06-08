@@ -1,12 +1,16 @@
-use super::BoolVector;
+use bitvec_simd::BitVec;
 
+use super::BooleanVector;
+
+/// A transparent newtype wrapper around
+/// [bitvec_simd::BitVec](https://docs.rs/bitvec_simd/latest/bitvec_simd/type.BitVec.html).
 #[derive(Clone, PartialEq, Debug)]
-pub struct BitVec(pub bitvec_simd::BitVec);
+pub struct SimdBitVec(pub BitVec);
 
-impl FromIterator<bool> for BitVec {
+impl FromIterator<bool> for SimdBitVec {
     fn from_iter<T: IntoIterator<Item = bool>>(iter: T) -> Self {
         let iter = iter.into_iter();
-        let mut res = BitVec::zeros(iter.size_hint().1.unwrap());
+        let mut res = SimdBitVec::zeros(iter.size_hint().1.unwrap());
         for (i, f) in iter.enumerate() {
             res.0.set(i, f);
         }
@@ -14,8 +18,9 @@ impl FromIterator<bool> for BitVec {
     }
 }
 
+/// An [Iterator] over [SimdBitVec]. Create with [IntoIterator].
 pub struct Iter {
-    vec: BitVec,
+    vec: SimdBitVec,
     current: usize,
 }
 impl Iterator for Iter {
@@ -26,8 +31,9 @@ impl Iterator for Iter {
     }
 }
 
+/// An [Iterator] over &[SimdBitVec]. Created with [BooleanVector::iter_vals].
 pub struct IterFromRef<'l> {
-    vec: &'l BitVec,
+    vec: &'l SimdBitVec,
     current: usize,
 }
 impl<'l> Iterator for IterFromRef<'l> {
@@ -38,7 +44,7 @@ impl<'l> Iterator for IterFromRef<'l> {
     }
 }
 
-impl IntoIterator for BitVec {
+impl IntoIterator for SimdBitVec {
     type Item = bool;
 
     type IntoIter = Iter;
@@ -48,18 +54,19 @@ impl IntoIterator for BitVec {
     }
 }
 
-impl BoolVector for BitVec {
-    type Iter<'l> = IterFromRef<'l>;
+impl BooleanVector for SimdBitVec {
+    type IterVals<'l> = IterFromRef<'l>;
 
     fn new() -> Self {
         Self::zeros(0)
     }
 
     fn zeros(len: usize) -> Self {
-        Self(bitvec_simd::BitVec::zeros(len))
+        Self(BitVec::zeros(len))
     }
 
     fn set(&mut self, idx: usize, flag: bool) {
+        assert!(idx < self.num_bools());
         self.0.set(idx, flag);
     }
 
@@ -76,31 +83,36 @@ impl BoolVector for BitVec {
     }
 
     fn push(&mut self, flag: bool) {
-        let len = self.bits();
-        if len == 0 {
-            if flag {
-                self.0 = bitvec_simd::BitVec::ones(1);
-            } else {
-                self.0 = bitvec_simd::BitVec::zeros(1);
-            }
-        } else {
-            self.0.set(len, flag);
-        }
+        // let len = self.num_bools();
+        // println!("test: {}, {}, {}", flag, self.num_bools(), self.0.count_ones());
+        // // why do we have to do that, is this a bug in bitvec_simd? okay I don't get
+        // the set function, it also // breaks (in the roundtrip proptest) when we reach
+        // len=256 (which is bitvec_simds "bucket" size)
+        // if len == 0 {
+        //     if flag {
+        //         self.0 = BitVec::ones(1);
+        //     } else {
+        //         self.0 = BitVec::zeros(1);
+        //     }
+        // } else {
+        //     self.0.set(len, flag);
+        // }
+        self.0.resize(self.num_bools() + 1, flag)
     }
 
     fn pop(&mut self) -> Option<bool> {
-        let last = self.bits().checked_sub(1)?;
+        let last = self.num_bools().checked_sub(1)?;
         // last > self.0.len is not possible because of the above
         let res = self.0.get_unchecked(last);
         self.0.shrink_to(last);
         Some(res)
     }
 
-    fn bits(&self) -> usize {
+    fn num_bools(&self) -> usize {
         self.0.len()
     }
 
-    fn iter_vals(&self) -> Self::Iter<'_> {
+    fn iter_vals(&self) -> Self::IterVals<'_> {
         IterFromRef { vec: self, current: 0 }
     }
 }

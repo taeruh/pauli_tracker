@@ -7,9 +7,9 @@ use bitvec::{
     vec::BitVec,
 };
 
-use super::BoolVector;
+use super::BooleanVector;
 
-impl BoolVector for BitVec {
+impl BooleanVector for BitVec {
     fn new() -> Self {
         BitVec::new()
     }
@@ -42,15 +42,15 @@ impl BoolVector for BitVec {
         self.pop()
     }
 
-    fn bits(&self) -> usize {
+    fn num_bools(&self) -> usize {
         self.len()
     }
 
-    type Iter<'l> = BitValIter<'l, usize, Lsb0>
+    type IterVals<'l> = BitValIter<'l, usize, Lsb0>
     where
         Self: 'l;
 
-    fn iter_vals(&self) -> Self::Iter<'_> {
+    fn iter_vals(&self) -> Self::IterVals<'_> {
         BitSlice::iter(self).by_vals()
     }
 }

@@ -2,6 +2,7 @@
 - more tests
   - write helper for all the basic gate tests
   - better circuit module for testing
+  - test boolean_vector impls
 - define more clifford gates
 - maybe try to depend only on proptest when we really run proptest (for less
   dependencies in ci)

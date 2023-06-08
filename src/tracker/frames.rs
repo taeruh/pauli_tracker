@@ -17,27 +17,29 @@ use serde::{
     Serialize,
 };
 
-use self::storage::{
-    PauliVec,
-    StackStorage,
-};
+use self::storage::StackStorage;
 use super::{
     PauliString,
     Tracker,
 };
 use crate::{
-    bool_vector::BoolVector,
-    pauli::Pauli,
+    boolean_vector::BooleanVector,
+    pauli::{
+        Pauli,
+        PauliVec,
+    },
 };
 
 pub mod storage;
 
-/// A container of multiple Pauli frames, using a generic `Storage` type (that
-/// implements [StackStorage] if it shall be useful) as internal storage. The type
-/// implements the core functionality to track the Pauli frames through a Clifford
-/// circuit. The explicit storage type should have the [PauliVec]s on it's minor axis
-/// (this is more or less enforced by [StackStorage]). The module [storage] provides
-/// some compatible storage types.
+/// A container of multiple Pauli frames, using a generic `Storage` type  as internal
+/// storage, that implemenst [Tracker].
+///
+/// The type implements the core functionality to track the Pauli frames through a
+/// Clifford circuit. To be useful, the generic `Storage` type should implement
+/// [StackStorage]. The explicit storage type should have the [PauliVec]s on it's minor
+/// axis (this is more or less enforced by [StackStorage]). The module [storage]
+/// provides some compatible storage types.
 #[derive(Clone, Debug, Default)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct Frames<Storage /* : StackStorage */> {
@@ -96,7 +98,7 @@ where
     pub fn measure_and_store(
         &mut self,
         bit: usize,
-        storage: &mut impl StackStorage<PauliBoolVec = Storage::PauliBoolVec>,
+        storage: &mut impl StackStorage<BoolVec = Storage::BoolVec>,
     ) -> Result<(), String> {
         storage.insert_pauli(
             bit,
@@ -112,7 +114,7 @@ where
     /// do [Frames::measure_and_store] for all qubits.
     pub fn measure_and_store_all(
         &mut self,
-        storage: &mut impl StackStorage<PauliBoolVec = Storage::PauliBoolVec>,
+        storage: &mut impl StackStorage<BoolVec = Storage::BoolVec>,
     ) {
         for (bit, pauli) in
             mem::replace(&mut self.storage, Storage::init(0)).into_iter()
@@ -125,10 +127,12 @@ where
 macro_rules! movements {
     ($(($name:ident, $from_side:ident, $to_side:ident)),*) => {$(
         fn $name(&mut self, source: usize, destination: usize) {
-            let (s, d) = self.storage
-            .get_two_mut(source, destination)
-            .unwrap_or_else(|| panic!(
-                    "qubit {source} and/or {destination} do not exist"));
+            let (s, d) = unwrap_get_two_mut!(
+                self.storage,
+                source,
+                destination,
+                stringify!($name)
+            );
             d.$to_side.xor_inplace(&s.$from_side);
             s.$from_side.resize(0, false)
         }
@@ -138,10 +142,7 @@ macro_rules! movements {
 macro_rules! single {
     ($($name:ident),*) => {$(
         fn $name(&mut self, bit: usize) {
-            self.storage
-                .get_mut(bit)
-                .unwrap_or_else(|| panic!("qubit {bit} does not exist"))
-                .$name();
+            unwrap_get_mut!(self.storage, bit, stringify!($name)).$name()
         }
     )*};
 }
@@ -150,7 +151,7 @@ impl<Storage> Tracker for Frames<Storage>
 where
     Storage: StackStorage,
 {
-    type Stack = PauliVec<Storage::PauliBoolVec>;
+    type Stack = PauliVec<Storage::BoolVec>;
 
     fn init(num_qubits: usize) -> Self {
         Self {
@@ -201,19 +202,13 @@ where
     single!(h, s);
 
     fn cx(&mut self, control: usize, target: usize) {
-        let (c, t) = self
-            .storage
-            .get_two_mut(control, target)
-            .unwrap_or_else(|| panic!("qubit {control} and/or {target} do not exist"));
+        let (c, t) = unwrap_get_two_mut!(self.storage, control, target, "cx");
         t.left.xor_inplace(&c.left);
         c.right.xor_inplace(&t.right);
     }
 
     fn cz(&mut self, bit_a: usize, bit_b: usize) {
-        let (a, b) = self
-            .storage
-            .get_two_mut(bit_a, bit_b)
-            .unwrap_or_else(|| panic!("qubit {bit_a} and/or {bit_b} do not exist"));
+        let (a, b) = unwrap_get_two_mut!(self.storage, bit_a, bit_b, "cz");
         a.right.xor_inplace(&b.left);
         b.right.xor_inplace(&a.left);
     }
@@ -225,7 +220,7 @@ where
         (move_z_to_z, right, right)
     );
 
-    fn measure(&mut self, bit: usize) -> Option<PauliVec<Storage::PauliBoolVec>> {
+    fn measure(&mut self, bit: usize) -> Option<PauliVec<Storage::BoolVec>> {
         self.storage.remove_pauli(bit)
     }
 }
@@ -236,6 +231,8 @@ mod tests {
     // we only check the basic functionality here, more complicated circuits are tested
     // in [super::circuit] to test the tracker and the circuit at once
 
+    #[cfg(feature = "bitvec")]
+    // #[cfg(feature = "bitvec_simd")]
     mod action_definition_check {
         use super::super::{
             storage::*,
@@ -250,8 +247,9 @@ mod tests {
         // one-qubit and two-qubit actions, it's like a "TwoBitVec"; one could probably
         // implement that in connection with [Pauli]
 
-        // type ThisTracker = Frames<Vector<bitvec::vec::BitVec>>;
-        type ThisTracker = Frames<Vector<crate::bool_vector::bitvec_simd::BitVec>>;
+        type ThisTracker = Frames<Vector<bitvec::vec::BitVec>>;
+        // type ThisTracker =
+        //     Frames<Vector<crate::boolean_vector::bitvec_simd::SimdBitVec>>;
 
         #[test]
         fn single() {
