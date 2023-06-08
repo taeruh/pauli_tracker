@@ -52,10 +52,24 @@ impl<T: BooleanVector> PauliVec<T> {
         self.right.push(pauli.get_z());
     }
 
-    pub fn pop_or_false(&mut self) -> Pauli {
-        let l = self.left.pop().unwrap_or(false);
-        let r = self.right.pop().unwrap_or(false);
-        Pauli::new(l, r)
+    pub fn pop(&mut self) -> Option<Pauli> {
+        match self.left.len().cmp(&self.right.len()) {
+            std::cmp::Ordering::Less => Some(Pauli::new(
+                false,
+                self.right
+                    .pop()
+                    .expect("shouldn't be possible since right.len > left.len >= 0"),
+            )),
+            std::cmp::Ordering::Equal => {
+                Some(Pauli::new(self.left.pop()?, self.right.pop()?))
+            }
+            std::cmp::Ordering::Greater => Some(Pauli::new(
+                self.left
+                    .pop()
+                    .expect("shouldn't be possible since left.len > right.len >= 0"),
+                false,
+            )),
+        }
     }
 
     // we can define the action of local gates

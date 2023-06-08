@@ -66,7 +66,7 @@ impl BooleanVector for SimdBitVec {
     }
 
     fn set(&mut self, idx: usize, flag: bool) {
-        assert!(idx < self.num_bools());
+        assert!(idx < self.len());
         self.0.set(idx, flag);
     }
 
@@ -97,18 +97,18 @@ impl BooleanVector for SimdBitVec {
         // } else {
         //     self.0.set(len, flag);
         // }
-        self.0.resize(self.num_bools() + 1, flag)
+        self.0.resize(self.len() + 1, flag)
     }
 
     fn pop(&mut self) -> Option<bool> {
-        let last = self.num_bools().checked_sub(1)?;
+        let last = self.len().checked_sub(1)?;
         // last > self.0.len is not possible because of the above
         let res = self.0.get_unchecked(last);
         self.0.shrink_to(last);
         Some(res)
     }
 
-    fn num_bools(&self) -> usize {
+    fn len(&self) -> usize {
         self.0.len()
     }
 

@@ -87,7 +87,10 @@ where
         }
         let mut ret = Vec::new();
         for (i, p) in self.storage.iter_mut() {
-            ret.push((i, p.pop_or_false()));
+            match p.pop() {
+                Some(pauli) => ret.push((i, pauli)),
+                None => (),
+            }
         }
         self.frames_num -= 1;
         Some(ret)

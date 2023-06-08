@@ -85,7 +85,7 @@ pub fn create_dependency_graph(
     for (bit, stack) in storage.iter() {
         let mut deps: Vec<usize> = Vec::new();
 
-        let max = stack.left.num_bools().max(stack.right.num_bools());
+        let max = stack.left.len().max(stack.right.len());
         let mut left = stack.left.clone();
         left.resize(max, false);
         let mut right = stack.right.clone();

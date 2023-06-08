@@ -42,7 +42,7 @@ impl BooleanVector for BitVec {
         self.pop()
     }
 
-    fn num_bools(&self) -> usize {
+    fn len(&self) -> usize {
         self.len()
     }
 

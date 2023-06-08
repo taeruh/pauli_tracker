@@ -57,7 +57,7 @@ pub trait BooleanVector:
     fn pop(&mut self) -> Option<bool>;
 
     /// Return the number of contained elements.
-    fn num_bools(&self) -> usize;
+    fn len(&self) -> usize;
 
     /// Iterate over the stored values. Note that in contrast to the conventional iter()
     /// functions, the returned Iterator has `bool` items and not `&bool`. This is
