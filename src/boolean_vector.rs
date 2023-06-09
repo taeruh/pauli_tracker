@@ -64,6 +64,14 @@ pub trait BooleanVector:
     /// because some bit-vector iterators provide only this kind of iter() and for the
     /// other we can just deref the item via [map](Iterator::map).
     fn iter_vals(&self) -> Self::IterVals<'_>;
+
+    fn sum_up(&self, measurements: &[bool]) -> u8 {
+        self.iter_vals()
+            .enumerate()
+            .filter_map(|(i, f)| if measurements[i] { Some(f as u8) } else { None })
+            .sum::<u8>()
+            % 2
+    }
 }
 
 #[cfg(feature = "bitvec")]

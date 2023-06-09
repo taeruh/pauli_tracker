@@ -41,6 +41,18 @@ impl From<Vec<Pauli>> for LiveVector {
     }
 }
 
+impl From<LiveVector> for Vec<Pauli> {
+    fn from(value: LiveVector) -> Self {
+        value.inner
+    }
+}
+
+impl AsRef<Vec<Pauli>> for LiveVector {
+    fn as_ref(&self) -> &Vec<Pauli> {
+        &self.inner
+    }
+}
+
 impl LiveVector {
     pub fn get(&self, bit: usize) -> Option<&Pauli> {
         self.inner.get(bit)

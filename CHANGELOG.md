@@ -7,9 +7,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 ### Added
 - **Breaking Change**: Implement/derive `Debug` for `DummyCircuit` and.
   `RandomMeasurementCircuit`
-- **Breaking Change**: Implement `From<Vec<Pauli>> for LiveVector`.
+- **Breaking Change**: Implement `From<Vec<Pauli>> for LiveVector` and vice versa and
+  `AsRef<Vec<Pauli>> for LiveVector`.
 - Add `DependencyGraph` type.
 - Add `enabled_simd_target_feature` function.
+- **Breaking Change**: Add `BooleanVector::sum_up` with a default implementation.
+- Add `PauliVec::sum_up` method.
 ### Changed
 - **Breaking Change**: Refactor, specifically `PauliVec`
   `PauliVec` is now generic over its "Vec" type which has to implement the new

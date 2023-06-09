@@ -98,4 +98,13 @@ impl<T: BooleanVector> PauliVec<T> {
         // self.right.xor(&self.left);
         self.right.xor_inplace(&self.left);
     }
+
+    pub fn sum_up(&self, measurements: &[bool]) -> Pauli {
+        // Safety: BooleanVector::sum_up returns u8 <= 1
+        unsafe {
+            Pauli::from_unchecked(
+                self.right.sum_up(measurements) + self.left.sum_up(measurements) * 2,
+            )
+        }
+    }
 }

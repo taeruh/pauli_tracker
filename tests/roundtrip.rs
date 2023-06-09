@@ -111,7 +111,7 @@ fn roundtrip(init: usize, ops: Vec<Operation>) {
 
     let mut check = vec![Pauli::new_i(); generator.used];
     for (i, pauli) in circuit.storage.iter() {
-        check[*i].set_storage(sum_up(pauli, &measurements.0));
+        check[*i].set_storage(*pauli.sum_up(&measurements.0).storage());
     }
     let check: LiveVector = check.into();
     // println!("{:?}", a);
@@ -198,18 +198,6 @@ fn check_graph(
         }
     }
     Ok(())
-}
-
-fn sum_up(pauli: &PauliVec, measurements: &[bool]) -> u8 {
-    fn inner(bit_vec: &BoolVec, measurements: &[bool]) -> u8 {
-        bit_vec
-            .iter_vals()
-            .enumerate()
-            .filter_map(|(i, f)| if measurements[i] { Some(f as u8) } else { None })
-            .sum::<u8>()
-            % 2
-    }
-    inner(&pauli.right, measurements) + inner(&pauli.left, measurements) * 2
 }
 // }}
 
