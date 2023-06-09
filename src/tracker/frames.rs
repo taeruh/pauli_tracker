@@ -1,4 +1,4 @@
-//! A [Frames] type can be used as [Tracker] to analyze how the
+//! The [Frames] type can be used as [Tracker] to analyze how the
 //! tracked Paulis effect the qubits.
 //!
 //! Each new tracked Pauli introduces a new frame on

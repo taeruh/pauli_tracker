@@ -1,5 +1,5 @@
 //! A library to track Pauli frames through a Clifford circuit with measurements. A
-//! general introduction to this library is provided in the
+//! general brief introduction to Pauli tracking is given in the repository's
 //! [README](https://github.com/taeruh/pauli_tracker).
 //!
 //! *more documentation, especially examples, are in progress*
@@ -13,11 +13,15 @@
 //! * **bitvec**
 //!   Implement [BooleanVector](boolean_vector::BooleanVector) for
 //!   [bitvec::vec::BitVec](https://docs.rs/bitvec/latest/bitvec/vec/struct.BitVec.html)
-//!   (extern crate).
+//!   (extern crate). Note that we do not export any types of
+//!   [bitvec](https://docs.rs/bitvec/latest/bitvec/index.html); you need to depend on
+//!   it manually to use its types.
 //! * **bit-vec**
 //!   Implement [BooleanVector](boolean_vector::BooleanVector) for
 //!   [bit_vec::BitVec](https://docs.rs/bit-vec/latest/bit_vec/struct.BitVec.html)
-//!   (extern crate).
+//!   (extern crate). Note that we do not export any types of
+//!   [bit-vec](https://docs.rs/bit-vec/latest/bit_vec/index.html); you need to depend
+//!   on it manually to use its types.
 //! * **bitvec_simd**
 //!   Implement [BooleanVector](boolean_vector::BooleanVector) for wrapper
 //!   [SimdBitVec](boolean_vector::bitvec_simd::SimdBitVec) around
@@ -27,6 +31,104 @@
 //!   [smallvec](https://docs.rs/smallvec/1.10.0/smallvec/) for its inner storage. That
 //!   may be not memory efficient for the Pauli tracking since the storage is fairly
 //!   big.
+//!
+//! # Examples
+//!
+//! ### A first idea
+//!
+//! This example requires the "circuit" and "bit-vec" features as well as a dependency
+//! on the [bit-vec](https://crates.io/crates/bit-vec) crate.
+//! ```
+//! #[rustfmt::skip]
+//! use pauli_tracker::{
+//!     circuit::{CliffordCircuit, RandomMeasurementCircuit},
+//!     tracker::{Tracker, live::LiveVector},
+//!     tracker::frames::{self, storage, Frames},
+//!     pauli::{self, Pauli},
+//! };
+//!
+//! // first, we will use the Frames tracker to fully track all Pauli frames
+//!
+//! // the Frames tracker is generic over its storage types, which themeselves are
+//! // generic; it's almost always sensible to specific define types
+//! type BoolVec = bit_vec::BitVec;
+//! type Storage = storage::Map<BoolVec>;
+//! type PauliVec = pauli::PauliVec<BoolVec>;
+//!
+//! // initialize the tracker with three qubits
+//! let mut tracker = Frames::<Storage>::init(3);
+//!
+//! // track Paulis through an (imaginary) circuit
+//! // X(0), CX(0, 1), S(1), Z(2), CZ(1, 2), H(0)
+//! tracker.track_pauli(0, Pauli::new_x()); // track a new Pauli X; frame (0)
+//! tracker.cx(0, 1); // conjugate with a Control X gate
+//! tracker.s(1); // conjugate with an S gate
+//! tracker.track_pauli(2, Pauli::new_y()); // track a new Pauli Z; frame (1)
+//! tracker.cz(1, 2); // conjugate with a Control Z gate
+//! tracker.h(0); // conjugate with an H gate
+//!
+//! // let's get the frames (sorted into a Vec for convenience)
+//! let frames = storage::into_sorted_by_bit(tracker.into_storage());
+//!
+//! // what would we expect (calculate it by hand)?
+//! let mut expected =
+//!     vec![(0, PauliVec::new()), (1, PauliVec::new()), (2, PauliVec::new())];
+//! // {{ frame (0)
+//! expected[0].1.push(Pauli::new_z());
+//! expected[1].1.push(Pauli::new_y());
+//! expected[2].1.push(Pauli::new_z());
+//! // }}
+//! // {{ frame (1)
+//! expected[0].1.push(Pauli::new_i());
+//! expected[1].1.push(Pauli::new_z());
+//! expected[2].1.push(Pauli::new_y());
+//! // }}
+//!
+//! // let's check it
+//! assert_eq!(frames, expected);
+//!
+//! // let's vary the example from above a little bit: Paulis are often induced as
+//! // corrections in MBQC; these corrections might effect the measurement basis of
+//! // following measurements; to get the final correction before a measurement we could
+//! // add the frames in `frames` from above, however, we can also do it directly with
+//! // the LiveTracker:
+//!
+//! let mut tracker = LiveVector::init(3); // initialize the tracker with three qubits
+//!
+//! // we use RandomMeasurementCircuit to get random measurement outcomes (this circuit
+//! // does nothing, except of producing these outcomes via the rand crate)
+//! let mut circuit: RandomMeasurementCircuit = RandomMeasurementCircuit {};
+//!
+//! // a small helper to conditionally track Paulis (the circuit module provides similar
+//! // helpers
+//! let mut measurements = Vec::<bool>::new();
+//! let mut correct = |tracker: &mut LiveVector, bit, pauli| {
+//!     let outcome = circuit.measure(42 /* doesn't matter */);
+//!     if outcome {
+//!         tracker.track_pauli(bit, pauli);
+//!     }
+//!     measurements.push(outcome);
+//! };
+//!
+//! // the same circuit from above, but with conditional Paulis, e.g., MBQC corrections
+//! correct(&mut tracker, 0, Pauli::new_x());
+//! tracker.cx(0, 1);
+//! tracker.s(1);
+//! correct(&mut tracker, 2, Pauli::new_y());
+//! tracker.cz(1, 2);
+//! tracker.h(0);
+//!
+//! // let's checkout the final corrections
+//! println!("{tracker:?}");
+//!
+//! // we can check whether the output of the live tracker aligns with the frames
+//! // tracker
+//! let conditional_summed_frames: Vec<_> = frames
+//!     .into_iter()
+//!     .map(|(_, pauli_stack)| pauli_stack.sum_up(&measurements))
+//!     .collect();
+//! assert_eq!(*tracker.as_ref(), conditional_summed_frames);
+//! ```
 
 #![cfg_attr(docsrs, feature(doc_cfg))]
 //-
@@ -62,7 +164,6 @@ pub mod tracker;
 /// }
 /// ```
 /// ***currently this function only tests against "avx2" and "sse"***
-
 #[allow(unreachable_code)] // because rust-analyzer detects the target_feature(s)
 pub fn enabled_simd_target_feature() -> &'static str {
     #[cfg(target_feature = "avx2")]
