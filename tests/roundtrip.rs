@@ -13,10 +13,7 @@ use pauli_tracker::{
         RandomMeasurementCircuit,
         TrackedCircuit,
     },
-    pauli::{
-        self,
-        Pauli,
-    },
+    pauli::Pauli,
     tracker::{
         frames::{
             storage::{
@@ -46,7 +43,7 @@ use proptest::{
 type BoolVec = bit_vec::BitVec;
 
 type Storage = Map<BoolVec>;
-type PauliVec = pauli::PauliVec<BoolVec>;
+// type PauliVec = pauli::PauliVec<BoolVec>;
 
 const MAX_INIT: usize = 100;
 const MAX_OPS: usize = 1000;

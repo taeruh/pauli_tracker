@@ -59,6 +59,11 @@ pub trait BooleanVector:
     /// Return the number of contained elements.
     fn len(&self) -> usize;
 
+    /// Check whether the vector is empty.
+    fn is_empty(&self) -> bool {
+        self.len() == 0
+    }
+
     /// Iterate over the stored values. Note that in contrast to the conventional iter()
     /// functions, the returned Iterator has `bool` items and not `&bool`. This is
     /// because some bit-vector iterators provide only this kind of iter() and for the
