@@ -87,9 +87,8 @@ where
         }
         let mut ret = Vec::new();
         for (i, p) in self.storage.iter_mut() {
-            match p.pop() {
-                Some(pauli) => ret.push((i, pauli)),
-                None => (),
+            if let Some(pauli) = p.pop() {
+                ret.push((i, pauli))
             }
         }
         self.frames_num -= 1;
@@ -127,8 +126,31 @@ where
     }
 }
 
+macro_rules! single {
+    ($($name:ident),*) => {$(
+        fn $name(&mut self, bit: usize) {
+            unwrap_get_mut!(self.storage, bit, stringify!($name)).$name()
+        }
+    )*};
+}
+
 macro_rules! movements {
-    ($(($name:ident, $from_side:ident, $to_side:ident)),*) => {$(
+    ($((
+        $name:ident,
+        $from_side:ident,
+        $to_side:ident,
+        $from_doc:literal,
+        $to_doc:literal
+    )),*) => {$(
+        /// "Move" the
+        #[doc=$from_doc]
+        /// Pauli stack from the `origin` qubit to to `destination` qubit, transforming
+        /// it to an
+        #[doc=$to_doc]
+        /// stack. "Moving" means literally removing the stack from `origin` memory and
+        /// adding (mod 2) on `destination`. Because of that, this operation should only
+        /// be used directly before the `origin` qubit is measured; otherwise it breaks
+        /// the logic of other methods and might cause panics.
         fn $name(&mut self, source: usize, destination: usize) {
             let (s, d) = unwrap_get_two_mut!(
                 self.storage,
@@ -140,14 +162,6 @@ macro_rules! movements {
             s.$from_side.resize(0, false)
         }
     )*}
-}
-
-macro_rules! single {
-    ($($name:ident),*) => {$(
-        fn $name(&mut self, bit: usize) {
-            unwrap_get_mut!(self.storage, bit, stringify!($name)).$name()
-        }
-    )*};
 }
 
 impl<Storage> Tracker for Frames<Storage>
@@ -217,10 +231,10 @@ where
     }
 
     movements!(
-        (move_x_to_x, left, left),
-        (move_x_to_z, left, right),
-        (move_z_to_x, right, left),
-        (move_z_to_z, right, right)
+        (move_x_to_x, left, left, "X", "X"),
+        (move_x_to_z, left, right, "X", "Z"),
+        (move_z_to_x, right, left, "Z", "X"),
+        (move_z_to_z, right, right, "Z", "Z")
     );
 
     fn measure(&mut self, bit: usize) -> Option<PauliVec<Storage::BoolVec>> {

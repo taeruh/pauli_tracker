@@ -16,9 +16,56 @@ use crate::pauli::Pauli;
 /// [StackStorage]: frames::storage::StackStorage
 pub type PauliString = Vec<(usize, Pauli)>;
 
-/// This trait provides the core API to track Paulis through a clifford circuit. The
-/// implementors must ensure that they implement the functions correctly according to
-/// the conjugation rules of Clifford gates with Pauli Gates
+macro_rules! single {
+    ($(( $name:ident, $gate:literal),)*) => {$(
+        /// Update the tracked frames according the
+        #[doc=$gate]
+        /// gate on qu`bit`.
+        fn $name(&mut self, bit: usize);
+    )*}
+}
+
+macro_rules! double {
+    ($name:ident, $gate:literal) => {
+        /// Update the tracked frames according to the
+        #[doc=$gate]
+        /// on qu`bit_a` and qu`bit_b`.
+        fn $name(&mut self, bit_a: usize, bit_b: usize);
+    };
+    ($name:ident, $gate:literal, $bit_a:ident, $bit_b:ident) => {
+        /// Update the tracked frames according to the
+        #[doc=$gate]
+        /// on the `
+        #[doc=stringify!($bit_a)]
+        /// ` and `
+        #[doc=stringify!($bit_b)]
+        /// ` qubits.
+        fn $name(&mut self, $bit_a: usize, $bit_b: usize);
+    };
+}
+
+macro_rules! movements {
+    ($((
+        $name:ident,
+        $from_doc:literal,
+        $to_doc:literal
+    ),)*) => {$(
+        /// "Move" the
+        #[doc=$from_doc]
+        /// Pauli stack from the `origin` qubit to the `destination` qubit, transforming
+        /// it to an
+        #[doc=$to_doc]
+        /// stack.
+        fn $name(&mut self, source: usize, destination: usize);
+    )*}
+}
+
+/// The core API to track Paulis through a clifford circuit.
+///
+/// The implementors must ensure that they implement the methods correctly according
+/// to the conjugation rules of Clifford gates with Pauli Gates. Apart from that the
+/// implementors might have their own invariant and it is recommend to look at their
+/// specific implementation documentation
 ///
 /// *currently, the set of supported Cliffords is very limited, it will be extended over
 /// time*
@@ -31,40 +78,27 @@ pub trait Tracker {
     /// [Some](Some)(`bit`) is returned, otherwise [None]
     fn new_qubit(&mut self, bit: usize) -> Option<usize>;
 
-    /// Append the Tracker with one frame consisting of the [Pauli] gate `pauli` at
-    /// qu`bit`.
+    /// Track a new frame consisting of the [Pauli] gate `pauli` at qu`bit`.
     fn track_pauli(&mut self, bit: usize, pauli: Pauli);
 
-    /// Append a frame including multiple [Pauli] gates, i.e., e [PauliString] to the
+    /// Track a new frame including multiple [Pauli] gates, i.e., e [PauliString] to the
     /// Tracker, i.e., do [Tracker::track_pauli] for multiple [Pauli]s but all within
-    /// the same frame
+    /// the same frame.
     fn track_pauli_string(&mut self, string: PauliString);
 
-    /// Update the tracked frames according to a Hadamard gate on qu`bit`
-    fn h(&mut self, bit: usize);
-    /// Update the tracked frames according to an S gate on qu`bit`
-    fn s(&mut self, bit: usize);
+    single!((h, "Hadamard"), (s, "S"),);
 
-    /// Update the tracked frames according to Control X (Control Not) on the `control`
-    /// and `target` bits.
-    fn cx(&mut self, control: usize, target: usize);
-    /// Update the tracked frames according to Control Z on `bit_a` and `bit_b`.
-    fn cz(&mut self, bit_a: usize, bit_b: usize);
+    double!(cx, "Control X (Control Not)", control, target);
+    double!(cz, "Control Z");
 
-    /// "Move" the Z Pauli stack from `origin` to `destination`, transforming it to an X
-    /// stack. "Moving" means removing on `origin` and adding (mod 2) on `destination`.
-    fn move_z_to_x(&mut self, source: usize, destination: usize);
-    /// "Move" the Z Pauli stack from `origin` to `destination`, transforming it to an Z
-    /// stack. "Moving" means removing on `origin` and adding (mod 2) on `destination`.
-    fn move_z_to_z(&mut self, source: usize, destination: usize);
-    /// "Move" the X Pauli stack from `origin` to `destination`, transforming it to an X
-    /// stack. "Moving" means removing on `origin` and adding (mod 2) on `destination`.
-    fn move_x_to_x(&mut self, source: usize, destination: usize);
-    /// "Move" the X Pauli stack from `origin` to `destination`, transforming it to an Z
-    /// stack. "Moving" means removing on `origin` and adding (mod 2) on `destination`.
-    fn move_x_to_z(&mut self, source: usize, destination: usize);
+    movements!(
+        (move_x_to_x, "X", "X"),
+        (move_x_to_z, "X", "Z"),
+        (move_z_to_x, "Z", "X"),
+        (move_z_to_z, "Z", "Z"),
+    );
 
-    /// Remove the Pauli stack on qu`bit`, if it is present
+    /// Remove the Pauli stack on qu`bit`, if it is present.
     fn measure(&mut self, bit: usize) -> Option<Self::Stack>;
 }
 
