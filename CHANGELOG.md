@@ -12,6 +12,7 @@ possible.
 ### Changed
 ### Deprecated
 ### Removed
+- Make the `bit_vec` module private (had no public items).
 ### Fixed
 ### Security
 

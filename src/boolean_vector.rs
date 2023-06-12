@@ -89,4 +89,4 @@ pub mod bitvec_simd;
 
 #[cfg(feature = "bit-vec")]
 #[cfg_attr(docsrs, doc(cfg(feature = "bit-vec")))]
-pub mod bit_vec;
+mod bit_vec;
