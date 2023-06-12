@@ -1,7 +1,11 @@
 # Changelog
 All notable changes to this project will be documented in this file as best as possible.
 
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
+
+We try to follow the [SemVer](https://semver.org/) rules, specifically 
+[Cargo guidelines](https://doc.rust-lang.org/cargo/reference/semver.html), as best as
+possible.
 
 ## [Unreleased]
 ### Added
@@ -13,14 +17,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 
 ## [0.2.0] - 2023-06-09
 ### Added
-- **Breaking Change**: Implement/derive `Debug` for `DummyCircuit` and.
+- **Possible Breaking Change**: Implement/derive `Debug` for `DummyCircuit` and.
   `RandomMeasurementCircuit`
-- **Breaking Change**: Implement `From<Vec<Pauli>> for LiveVector` and vice versa and
-  `AsRef<Vec<Pauli>> for LiveVector`.
+- **Possible Breaking Change**: Implement `From<Vec<Pauli>> for LiveVector` and vice
+  versa and `AsRef<Vec<Pauli>> for LiveVector`.
 - Add `DependencyGraph` type.
 - Add `enabled_simd_target_feature` function.
-- **Breaking Change**: Add `BooleanVector::sum_up` with a default implementation.
-- Add `PauliVec::sum_up` method.
+- **Possible Breaking Change**: Add `BooleanVector::sum_up` with a default
+  implementation.
+- **Possible Breaking Change**: Add `PauliVec::sum_up` method.
 ### Changed
 - **Breaking Change**: Refactor, specifically `PauliVec`
   `PauliVec` is now generic over its "Vec" type which has to implement the new

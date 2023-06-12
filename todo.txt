@@ -6,3 +6,7 @@
 - define more clifford gates
 - maybe try to depend only on proptest when we really run proptest (for less
   dependencies in ci)
+
+before next major bump:
+- pauli_insert -> return old value; and similar
+- more clifford gates
