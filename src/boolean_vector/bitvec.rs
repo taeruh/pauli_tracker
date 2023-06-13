@@ -10,6 +10,10 @@ use bitvec::{
 use super::BooleanVector;
 
 impl BooleanVector for BitVec {
+    type IterVals<'l> = BitValIter<'l, usize, Lsb0>
+    where
+        Self: 'l;
+
     fn new() -> Self {
         BitVec::new()
     }
@@ -45,10 +49,6 @@ impl BooleanVector for BitVec {
     fn len(&self) -> usize {
         self.len()
     }
-
-    type IterVals<'l> = BitValIter<'l, usize, Lsb0>
-    where
-        Self: 'l;
 
     fn iter_vals(&self) -> Self::IterVals<'_> {
         BitSlice::iter(self).by_vals()

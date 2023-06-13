@@ -9,7 +9,9 @@ possible.
 
 ## [Unreleased]
 ### Added
-- **Possible Breaking Change**: Implement `BooleanVector` for `Vec<bool>`.
+- **Possible Breaking Change**: Add `impl BooleanVector for Vec<bool>`.
+- **Possible Breaking Change**: Add `impl<T: BooleanVector> FromIterator<Pauli> for
+  PauliVec<T>`.
 ### Changed
 ### Deprecated
 ### Removed

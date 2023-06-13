@@ -35,6 +35,7 @@ impl ResolvePauli for bool {
 ///
 /// The inner storage holds the invariant that it's value is between 0 and 3
 /// (inclusive). The encoding is as follows: 0 <-> identity, 1 <-> Z, 2 <-> X, 3 <-> Y.
+/// This encoding is often used under the name tableau representation.
 ///
 /// Unsafe code might rely on that invariant (e.g., via accessing the storage with
 /// [Self::storage] and using it to index a pointer), therefore, functions that make it

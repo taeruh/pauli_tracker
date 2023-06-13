@@ -11,9 +11,9 @@ use crate::boolean_vector::BooleanVector;
 
 /// Multiple encoded Paulis compressed into two [BooleanVector]s.
 ///
-/// Instead of having a vector over [Pauli](super::Pauli)s, we separate the X and Z
-/// parts into two vectors. This enables us to efficiently perform (Clifford) operations
-/// on those [PauliVec]s.
+/// Instead of having a vector over [Pauli]s, we separate the X and Z parts into two
+/// vectors (cf. [Pauli] for encoding). This enables us to efficiently perform
+/// (Clifford) operations on those [PauliVec]s.
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Default)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct PauliVec<T /* : BooleanVector */> {
@@ -99,12 +99,46 @@ impl<T: BooleanVector> PauliVec<T> {
         self.right.xor_inplace(&self.left);
     }
 
-    pub fn sum_up(&self, measurements: &[bool]) -> Pauli {
+    /// Multiply the Paulis, i.e., summing them up mod 2 in the tableau representation,
+    /// with a `filter` while neglecting any phases. An element `e` is filtered if
+    /// `filter[i] = true` where `i` is `e`'s index in
+    /// [iter_vals](BooleanVector::iter_vals). Compare [BooleanVector::sum_up].
+    ///
+    /// # Panics
+    /// Panics if `filter.len()` < number of Paulis
+    ///
+    /// # Examples
+    /// ```
+    /// # use pauli_tracker::{pauli::{Pauli, PauliVec}, boolean_vector::BooleanVector};
+    /// let paulis = [
+    ///     Pauli::new_x(),
+    ///     Pauli::new_y(),
+    ///     Pauli::new_z(),
+    ///     Pauli::new_x(),
+    ///     Pauli::new_y(),
+    ///     Pauli::new_z(),
+    /// ]
+    /// .into_iter()
+    /// .collect::<PauliVec<Vec<bool>>>();
+    /// let filter = [true, true, true, false, false, false];
+    /// assert_eq!(paulis.sum_up(&filter), Pauli::new_i());
+    /// ```
+    pub fn sum_up(&self, filter: &[bool]) -> Pauli {
         // Safety: BooleanVector::sum_up returns u8 <= 1
         unsafe {
             Pauli::from_unchecked(
-                self.right.sum_up(measurements) + self.left.sum_up(measurements) * 2,
+                self.right.sum_up(filter) + self.left.sum_up(filter) * 2,
             )
         }
+    }
+}
+
+impl<T: BooleanVector> FromIterator<Pauli> for PauliVec<T> {
+    fn from_iter<I: IntoIterator<Item = Pauli>>(iter: I) -> Self {
+        let mut ret = PauliVec::new();
+        for pauli in iter {
+            ret.push(pauli);
+        }
+        ret
     }
 }
