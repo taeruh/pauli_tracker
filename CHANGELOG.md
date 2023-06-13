@@ -12,6 +12,7 @@ possible.
 - **Possible Breaking Change**: Add `impl BooleanVector for Vec<bool>`.
 - **Possible Breaking Change**: Add `impl<T: BooleanVector> FromIterator<Pauli> for
   PauliVec<T>`.
+- **Possible Breaking Change**: Add `TrackedCircuit::measure_and_store_all`.
 ### Changed
 ### Deprecated
 ### Removed

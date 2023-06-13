@@ -7,6 +7,8 @@
 //! The module also provides two pseudo circuit simulators that can be used to test the
 //! Pauli tracking.
 
+use std::mem;
+
 use crate::{
     pauli::Pauli,
     tracker::{
@@ -180,6 +182,16 @@ where
     pub fn measure_and_store(&mut self, bit: usize) -> Result<(), String> {
         self.circuit.measure(bit);
         self.tracker.measure_and_store(bit, &mut self.storage)
+    }
+
+    pub fn measure_and_store_all(&mut self) -> Result<(), String> {
+        for (bit, pauli) in
+            mem::replace(&mut self.tracker, Frames::<A>::init(0)).into_storage()
+        {
+            self.circuit.measure(bit);
+            self.storage.insert_pauli(bit, pauli);
+        }
+        Ok(())
     }
 }
 
@@ -514,9 +526,8 @@ mod tests {
         circ.t_tele(8, 9);
         circ.cx(6, 9);
         circ.h(9);
-        circ.measure_and_store(9);
-        circ.measure_and_store(6);
-        circ.measure_and_store(3);
+
+        circ.measure_and_store_all();
 
         let graph = crate::tracker::frames::storage::create_dependency_graph(
             &circ.storage,
