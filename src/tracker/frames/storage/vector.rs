@@ -29,7 +29,7 @@ use crate::{
 #[derive(Debug, Default)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct Vector<B> {
-    frames: Vec<PauliVec<B>>,
+    pub frames: Vec<PauliVec<B>>,
 }
 
 impl<B> Deref for Vector<B> {

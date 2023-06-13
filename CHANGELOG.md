@@ -14,6 +14,7 @@ possible.
   PauliVec<T>`.
 - **Possible Breaking Change**: Add `TrackedCircuit::measure_and_store_all`.
 ### Changed
+- Make `Vector` inner field public.
 ### Deprecated
 ### Removed
 - Make the `bit_vec` module private (had no public items).
