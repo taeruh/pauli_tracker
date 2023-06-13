@@ -70,14 +70,31 @@ pub trait BooleanVector:
     /// other we can just deref the item via [map](Iterator::map).
     fn iter_vals(&self) -> Self::IterVals<'_>;
 
-    fn sum_up(&self, measurements: &[bool]) -> u8 {
+    /// Sum up the elements modulo 2 with a `filter`. We represent `true <-> 1`, `false
+    /// <-> 0` and sum the filtered elements mod 2. An element `e` is filtered if
+    /// `filter[i] = true` where `i` is `e`'s index in
+    /// [iter_vals](BooleanVector::iter_vals).
+    ///
+    /// # Panics
+    /// Panics if `filter.len()` < number of itered elements (should be self.len()).
+    ///
+    /// # Examples
+    /// ```
+    /// # use pauli_tracker::boolean_vector::BooleanVector;
+    /// let bools = vec![true, false, true, false, true, false];
+    /// let filter = [true, true, true, false, false, false];
+    /// assert_eq!(bools.sum_up(&filter), 0);
+    /// ```
+    fn sum_up(&self, filter: &[bool]) -> u8 {
         self.iter_vals()
             .enumerate()
-            .filter_map(|(i, f)| if measurements[i] { Some(f as u8) } else { None })
+            .filter_map(|(i, f)| if filter[i] { Some(f as u8) } else { None })
             .sum::<u8>()
             % 2
     }
 }
+
+mod std_vec;
 
 #[cfg(feature = "bitvec")]
 #[cfg_attr(docsrs, doc(cfg(feature = "bitvec")))]

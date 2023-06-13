@@ -9,6 +9,7 @@ possible.
 
 ## [Unreleased]
 ### Added
+- **Possible Breaking Change**: Implement `BooleanVector` for `Vec<bool>`.
 ### Changed
 ### Deprecated
 ### Removed
