@@ -5,6 +5,7 @@
 //! *more documentation, especially examples, are in progress*
 //!
 //! # Crate features
+//!
 //! * **serde**
 //!   Support [serde](https://docs.rs/serde/latest/serde/) for custom types.
 //! * **circuit**
@@ -36,23 +37,19 @@
 //!
 //! ### A first idea
 //!
-//! This example requires the "bit-vec" feature as well as the
-//! [bit-vec](https://crates.io/crates/bit-vec) crate and and the
-//! [rand](https://crates.io/crates/rand) crate.
+//! This example requires the [rand](https://crates.io/crates/rand) crate.
 //! ```
 //! #[rustfmt::skip]
 //! use pauli_tracker::{
-//!     circuit::{CliffordCircuit, RandomMeasurementCircuit},
-//!     tracker::{Tracker, live::LiveVector},
-//!     tracker::frames::{self, storage, Frames},
+//!     tracker::{Tracker, live::LiveVector, frames::{storage, Frames}},
 //!     pauli::{self, Pauli},
 //! };
 //!
 //! // first, we will use the Frames tracker to fully track all Pauli frames
 //!
-//! // the Frames tracker is generic over its storage types, which themeselves are
+//! // the Frames tracker is generic over its storage types, which themselves are
 //! // generic; it's almost always sensible to specific define types
-//! type BoolVec = bit_vec::BitVec;
+//! type BoolVec = Vec<bool>; // you might want to use a "bit-vector"; cf. features
 //! type Storage = storage::Map<BoolVec>;
 //! type PauliVec = pauli::PauliVec<BoolVec>;
 //!
@@ -84,6 +81,8 @@
 //! expected[1].1.push(Pauli::new_z());
 //! expected[2].1.push(Pauli::new_y());
 //! // }}
+//! // (creating `expected` can be faster achieved with PauliVec::try_from_str, e.g., as
+//! // in the example "The dependency graph")
 //!
 //! // let's check it
 //! assert_eq!(frames, expected);
@@ -127,6 +126,77 @@
 //!     .map(|(_, pauli_stack)| pauli_stack.sum_up(&measurements))
 //!     .collect();
 //! assert_eq!(*tracker.as_ref(), conditional_summed_frames, "{measurements:?}");
+//! ```
+//!
+//! ### The dependency graph
+//! ```
+//! #[rustfmt::skip]
+//! use pauli_tracker::{
+//!     tracker::{Tracker, frames::{storage, Frames}},
+//!     pauli::{self, Pauli},
+//! };
+//!
+//! type BoolVec = bit_vec::BitVec;
+//! // we want a fixed order in our storage for this test, so we use Vector and not Map
+//! type Storage = storage::Vector<BoolVec>;
+//! type PauliVec = pauli::PauliVec<BoolVec>;
+//!
+//! // let's consider the following tracking pattern
+//!
+//! let mut tracker = Frames::<Storage>::init(6);
+//!
+//! tracker.track_pauli(0, Pauli::new_x()); // frame (0)
+//! tracker.cx(0, 1);
+//! tracker.s(1);
+//! tracker.track_pauli(2, Pauli::new_y()); // frame (1)
+//! tracker.cz(1, 2);
+//! tracker.cx(3, 2);
+//! tracker.track_pauli(1, Pauli::new_z()); // frame (2)
+//! tracker.h(1);
+//! tracker.cx(3, 1);
+//! tracker.cz(3, 2);
+//!
+//! // check its output
+//! assert_eq!(
+//!     storage::sort_by_bit(tracker.as_storage()),
+//!     vec![ // tableau representation:  X      Z   ; the columns are the frames
+//!         (0, &PauliVec::try_from_str("100", "000").unwrap()),
+//!         (1, &PauliVec::try_from_str("111", "100").unwrap()),
+//!         (2, &PauliVec::try_from_str("010", "110").unwrap()),
+//!         (3, &PauliVec::try_from_str("000", "000").unwrap()),
+//!         (4, &PauliVec::try_from_str("000", "000").unwrap()),
+//!         (5, &PauliVec::try_from_str("000", "000").unwrap()),
+//!     ]
+//! );
+//!
+//! // now, we assume that when the real circuit is executed, the paulis are
+//! // conditionally tracked on measurement outcomes of the qubits 3,4 and 0, i.e.
+//! let map =  // describe the relation between frames and qubits
+//!     4, // frame (0) depends on the measurement on qubit 3
+//!     5, // frame (1) on the measurement on qubit 4
+//!     0, // frame (1) on the measurement on qubit 0
+//! ;
+//!
+//! // we are interested in how many steps of parallel measurement we need to measure
+//! // qubits "0" to "4"; this can be figured out with the dependency graph:
+//! let graph = storage::create_dependency_graph(tracker.as_storage(), &map);
+//! assert_eq!(
+//!     graph, // fixed order because we set Storage = Vector
+//!     // the tuples consist of the qubit and its dependencies
+//!     vec![
+//!         vec![(3, vec![]), (4, vec![]), (5, vec![])], // layer 0
+//!         vec![(0, vec![4]), (2, vec![4, 5])],         // layer 1
+//!         vec![(1, vec![5, 0])],                       // layer 2
+//!     ]
+//! );
+//! // - in layer 0, there are no Paulis before the measurements, i.e., we have no
+//! //   dependecies; the qubits in layer 1 depend only on outcomes of qubits in layer
+//! //   0; the qubits in layer 2 depend only on qubits in layer 0, ..., 1; and so on
+//! // - the graph removes redundent dependencies, e.g., although qubit 1 depends on
+//! //   [0, 4, 5] (cf. the output of the tracker above), the graph only lists [0, 5];
+//! //   this is because qubit 0 already depends on the outcome of qubit 4
+//! // - we see that the graph has three layers, this means that the six measurements
+//! //   can be performed in 3 steps
 //! ```
 
 #![cfg_attr(docsrs, feature(doc_cfg))]

@@ -7,6 +7,9 @@
 - maybe try to depend only on proptest when we really run proptest (for less
   dependencies in ci)
 
+make create_dependency_graph more secure against wrong input, e.g., break the endless
+loops
+
 before next major bump:
 - pauli_insert -> return old value; and similar
 - more clifford gates
