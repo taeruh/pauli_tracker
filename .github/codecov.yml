@@ -8,8 +8,8 @@ coverage:
         target: auto
         threshold: 0%
 
-ignore:
-  - "tests"
+# ignore:
+#   - "tests"
 
 comment:
   layout: "files"
