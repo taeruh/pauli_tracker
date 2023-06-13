@@ -36,8 +36,9 @@
 //!
 //! ### A first idea
 //!
-//! This example requires the "circuit" and "bit-vec" features as well as a dependency
-//! on the [bit-vec](https://crates.io/crates/bit-vec) crate.
+//! This example requires the "bit-vec" feature as well as the
+//! [bit-vec](https://crates.io/crates/bit-vec) crate and and the
+//! [rand](https://crates.io/crates/rand) crate.
 //! ```
 //! #[rustfmt::skip]
 //! use pauli_tracker::{
@@ -95,15 +96,13 @@
 //!
 //! let mut tracker = LiveVector::init(3); // initialize the tracker with three qubits
 //!
-//! // we use RandomMeasurementCircuit to get random measurement outcomes (this circuit
-//! // does nothing, except of producing these outcomes via the rand crate)
-//! let mut circuit: RandomMeasurementCircuit = RandomMeasurementCircuit {};
-//!
-//! // a small helper to conditionally track Paulis (the circuit module provides similar
-//! // helpers
+//! // a small helper to track Paulis conditioned on measurements (the circuit module
+//! // provides similar helpers)
 //! let mut measurements = Vec::<bool>::new();
 //! let mut correct = |tracker: &mut LiveVector, bit, pauli| {
-//!     let outcome = circuit.measure(42 /* doesn't matter */);
+//!     // "measurement"; in a real use case this would be, for example, a quantum
+//!     // measurement
+//!     let outcome = rand::random::<bool>();
 //!     if outcome {
 //!         tracker.track_pauli(bit, pauli);
 //!     }
@@ -127,7 +126,7 @@
 //!     .into_iter()
 //!     .map(|(_, pauli_stack)| pauli_stack.sum_up(&measurements))
 //!     .collect();
-//! assert_eq!(*tracker.as_ref(), conditional_summed_frames);
+//! assert_eq!(*tracker.as_ref(), conditional_summed_frames, "{measurements:?}");
 //! ```
 
 #![cfg_attr(docsrs, feature(doc_cfg))]
