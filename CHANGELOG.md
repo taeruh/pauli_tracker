@@ -1,5 +1,6 @@
 # Changelog
-All notable changes to this project will be documented in this file as best as possible.
+All notable changes to this project will be documented in this file, as best as
+possible.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
@@ -13,6 +14,8 @@ possible.
 - **Possible Breaking Change**: Add `impl<T: BooleanVector> FromIterator<Pauli> for
   PauliVec<T>`.
 - **Possible Breaking Change**: Add `TrackedCircuit::measure_and_store_all`.
+- **Possible Breaking Change**: Add `Tracker::track_$pauli` methods where $pauli in x,
+  y, z
 ### Changed
 - Make `Vector` inner field public.
 ### Deprecated

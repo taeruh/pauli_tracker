@@ -62,6 +62,18 @@ macro_rules! movements {
     )*}
 }
 
+macro_rules! track_pauli {
+    ($(($name:ident, $gate:literal, $call:ident),)*) => {$(
+        /// Track a new frame consisting of the [Pauli]
+        #[doc = $gate]
+        /// at qu`bit`.
+        #[inline]
+        fn $name(&mut self, bit: usize) {
+            self.track_pauli(bit, Pauli::$call() );
+        }
+    )*};
+}
+
 /// The core API to track Paulis through a clifford circuit.
 ///
 /// The implementors must ensure that they implement the methods correctly according
@@ -87,6 +99,8 @@ pub trait Tracker {
     /// Tracker, i.e., do [Tracker::track_pauli] for multiple [Pauli]s but all within
     /// the same frame.
     fn track_pauli_string(&mut self, string: PauliString);
+
+    track_pauli!((track_x, "X", new_x), (track_y, "Y", new_y), (track_z, "Z", new_z),);
 
     single!((h, "Hadamard"), (s, "S"),);
 
