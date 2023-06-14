@@ -29,10 +29,7 @@ macro_rules! single {
 
 macro_rules! double {
     ($name:ident, $gate:literal) => {
-        /// Update the tracked frames according to the
-        #[doc=$gate]
-        /// on qu`bit_a` and qu`bit_b`.
-        fn $name(&mut self, bit_a: usize, bit_b: usize);
+        double!($name, $gate, bit_a, bit_b);
     };
     ($name:ident, $gate:literal, $bit_a:ident, $bit_b:ident) => {
         /// Update the tracked frames according to the
@@ -84,7 +81,10 @@ macro_rules! track_pauli {
 /// *currently, the set of supported Cliffords is very limited, it will be extended over
 /// time*
 pub trait Tracker {
+    /// The storage type used to store the tracked Paulis for each qubit, e.g.,
+    /// [PauliVec](crate::pauli::PauliVec) for the [Frames](frames::Frames) tracker.
     type Stack;
+
     /// Initialize the tracker with qubits numbered from 0 to `num_bits`-1.
     fn init(num_bits: usize) -> Self;
 
@@ -128,8 +128,9 @@ macro_rules! unwrap_get_mut {
 }
 use unwrap_get_mut;
 
-// // that's not stable yet, so we have to do it manually or try it with a functional
-// // macro
+// that's not stable yet (https://github.com/rust-lang/rust/issues/83527), so we have
+// to do it manually or try it with a functional macro
+
 // macro_rules! create_single {
 //     ($inner:ident) => {
 //         macro_rules! single {

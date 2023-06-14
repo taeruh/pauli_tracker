@@ -11,6 +11,8 @@ make create_dependency_graph more secure against wrong input, e.g., break the en
 loops
 
 before next major bump:
+- maybe remove deref for storage::Vector
+- remove AsRef for LiveVector
 - use real error types when returning an error, not just Strings
 - pauli_insert -> return old value; and similar
 - more clifford gates

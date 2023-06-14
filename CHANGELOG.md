@@ -17,7 +17,7 @@ possible.
 - **Possible Breaking Change**: Add `Tracker::track_$pauli` methods where $pauli in x,
   y, z
 ### Changed
-- Make `Vector` inner field public.
+- Make `Vector`s inner field public.
 ### Deprecated
 ### Removed
 - Make the `bit_vec` module private (had no public items).

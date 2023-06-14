@@ -5,13 +5,10 @@
 
 # Pauli Tracker
 
-**Initial phase; rather unstable at the moment**
+**Initial development (version 0.x,y); rather unstable**
 ___
 
 A library to track Pauli frames through a Clifford circuit with measurements.
-
-*more documentation in progress*
-
 
 ## What is Pauli tracking
 
@@ -35,4 +32,6 @@ tools to track the Pauli operators through the circuit, while building up the ci
 while simulating the circuit.
 
 For examples, please look into the the [crate
-documentation](https://docs.rs/pauli_tracker/).
+documentation](https://docs.rs/pauli_tracker/#examples).
+
+*... in progress ...*

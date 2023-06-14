@@ -29,8 +29,10 @@ use crate::{
 // todo: also do it with a hashmap
 
 /// An implementor of [Tracker], similar to [Frames](super::frames::Frames), with the
-/// difference, that instead of storing each Pauli frame, it add the Pauli frames (mod
+/// difference, that instead of storing each Pauli frame, it adds the Pauli frames (mod
 /// 2).
+// I'm not sure what the most efficient inner type would be here, Vec<bool>, Vec<Pauli>,
+// BitVec, ...
 #[derive(Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Default, Debug)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct LiveVector {
@@ -56,9 +58,12 @@ impl AsRef<Vec<Pauli>> for LiveVector {
 }
 
 impl LiveVector {
+    /// Returns a reference to an element at index. Returns [None] if out of bounds.
     pub fn get(&self, bit: usize) -> Option<&Pauli> {
         self.inner.get(bit)
     }
+    /// Returns a mutable reference to an element at index. Returns [None] if out of
+    /// bounds.
     pub fn get_mut(&mut self, bit: usize) -> Option<&mut Pauli> {
         self.inner.get_mut(bit)
     }

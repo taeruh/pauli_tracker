@@ -26,6 +26,8 @@ use crate::{
 /// possible measurement outcomes, since we only use this interface to pass the actions
 /// through to the implementing circuit.
 pub trait CliffordCircuit {
+    /// The type of the measurement outcome, e.g., a boolean for
+    /// [RandomMeasurementCircuit].
     type Outcome;
     /// Apply the **X** gate
     fn x(&mut self, bit: usize);
@@ -52,10 +54,12 @@ pub use random_measurement::RandomMeasurementCircuit;
 
 /// A Wrapper around a Clifford circuit (simulator) and a Pauli tracker.
 ///
-/// The type can
-/// be used to build up the underlining circuit, while keeping track of the Pauli gates
-/// that shall be extracted from the (quantum) simulation, e.g., the Pauli corrections
-/// in [MBQC](https://doi.org/10.48550/arXiv.0910.1116).
+/// It basically just passes through most function calls directly to its circuit and
+/// tracker.
+///
+/// The type can be used to build up the underlining circuit, while keeping track of the
+/// Pauli gates that shall be extracted from the (quantum) simulation, e.g., the Pauli
+/// corrections in [MBQC](https://doi.org/10.48550/arXiv.0910.1116).
 #[derive(Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
 pub struct TrackedCircuit<Circuit, Tracker, Storage> {
     /// The underlining circuit (simulator). Should implement [CliffordCircuit]
@@ -71,105 +75,189 @@ pub struct TrackedCircuit<Circuit, Tracker, Storage> {
 // split impl into multiple blocks with the minimum required bounds, so that it is
 // simpler to write generic functions later on
 
+// cf create_single comment in frames -> macro to generate macro when it is stable
+
+macro_rules! single_circuit {
+    (
+        $(#[doc = $doc:expr])*
+        $name:ident
+    ) => {
+        $(#[doc = $doc])*
+        pub fn $name(&mut self, bit: usize) {
+            self.circuit.$name(bit)
+        }
+    };
+}
+
+macro_rules! single_tracker {
+    (
+        $(#[doc = $doc:expr])*
+        $name:ident
+    ) => {
+        $(#[doc = $doc])*
+        pub fn $name(&mut self, bit: usize) {
+            self.tracker.$name(bit)
+        }
+    };
+}
+
+macro_rules! single_both {
+    (
+        $(#[doc = $doc:expr])*
+        $name:ident
+    ) => {
+        $(#[doc = $doc])*
+        pub fn $name(&mut self, bit: usize) {
+            self.circuit.$name(bit);
+            self.tracker.$name(bit)
+        }
+    };
+}
+
+macro_rules! track_paulis {
+    ($(($name:ident, $gate:literal),)*) => {$(
+        single_tracker!(
+            /// Append a tracked
+            #[doc = $gate]
+            /// gate to the tracker.
+            $name
+        );
+    )*};
+}
+
+macro_rules! apply_paulis {
+    ($(($name:ident, $gate:literal),)*) => {$(
+        single_circuit!(
+            /// Apply the
+            #[doc = $gate]
+            /// gate on the circuit (identity on the tracker).
+            $name
+        );
+    )*};
+}
+
+macro_rules! single_gate {
+    ($(($name:ident, $gate:literal),)*) => {$(
+        single_both!(
+            /// Apply the
+            #[doc = $gate]
+            /// gate on the circuit and update the Pauli tracker accordingly.
+            $name
+        );
+    )*};
+}
+
+macro_rules! double_tracker {
+    (
+        $(#[doc = $doc:expr])*
+        $name:ident
+    ) => {
+        double_tracker!(
+            $(#[doc = $doc])*
+            $name, bit_a, bit_b
+        );
+    };
+    (
+        $(#[doc = $doc:expr])*
+        $name:ident, $bit_a:ident, $bit_b:ident
+    ) => {
+        $(#[doc = $doc])*
+        pub fn $name(&mut self, $bit_a: usize, $bit_b: usize) {
+            self.tracker.$name($bit_a, $bit_b)
+        }
+    };
+}
+
+macro_rules! movements {
+    ($((
+        $name:ident,
+        $from_doc:literal,
+        $to_doc:literal
+    ),)*) => {$(
+        double_tracker!(
+            /// On the tracker, "move" the
+            #[doc=$from_doc]
+            /// Pauli stack from the `origin` qubit to the `destination` qubit,
+            /// transforming it to an
+            #[doc=$to_doc]
+            /// stack.
+            $name, source, destination
+        );
+    )*};
+}
+
+macro_rules! double_both {
+    (
+        $(#[doc = $doc:expr])*
+        $name:ident
+    ) => {
+        double_tracker!(
+            $(#[doc = $doc])*
+            $name, bit_a, bit_b
+        );
+    };
+    (
+        $(#[doc = $doc:expr])*
+        $name:ident, $bit_a:ident, $bit_b:ident
+    ) => {
+        $(#[doc = $doc])*
+        pub fn $name(&mut self, $bit_a: usize, $bit_b: usize) {
+            self.circuit.$name($bit_a, $bit_b);
+            self.tracker.$name($bit_a, $bit_b)
+        }
+    };
+}
+
+macro_rules! double_gate {
+    ($name:ident, $gate:literal) => {
+        double_gate!($name, $gate, bit_a, bit_b);
+    };
+    ($name:ident, $gate:literal, $bit_a:ident, $bit_b:ident) => {
+        double_both!(
+            /// Apply the
+            #[doc = $gate]
+            /// gate on the circuit and update the Pauli tracker accordingly.
+            $name,
+            $bit_a,
+            $bit_b
+        );
+    };
+}
+
 impl<C, T, S> TrackedCircuit<C, T, S>
 where
     T: Tracker,
 {
-    // Safety: storage < 4 is hardcoded
-    /// Append a tracked X gate to the tracker.
-    pub fn track_x(&mut self, bit: usize) {
-        self.tracker.track_pauli(bit, unsafe { Pauli::from_unchecked(2) });
-    }
-    /// Append a tracked Y gate to the tracker.
-    pub fn track_y(&mut self, bit: usize) {
-        self.tracker.track_pauli(bit, unsafe { Pauli::from_unchecked(3) });
-    }
-    /// Append a tracked Z gate to the tracker.
-    pub fn track_z(&mut self, bit: usize) {
-        self.tracker.track_pauli(bit, unsafe { Pauli::from_unchecked(1) });
-    }
-
-    /// Call [Tracker::move_x_to_x] on the underlining tracker
-    pub fn move_x_to_x(&mut self, source: usize, destination: usize) {
-        self.tracker.move_x_to_x(source, destination);
-    }
-    /// Call [Tracker::move_x_to_z] on the underlining tracker
-    pub fn move_x_to_z(&mut self, source: usize, destination: usize) {
-        self.tracker.move_x_to_z(source, destination);
-    }
-    /// Call [Tracker::move_z_to_x] on the underlining tracker
-    pub fn move_z_to_x(&mut self, source: usize, destination: usize) {
-        self.tracker.move_z_to_x(source, destination);
-    }
-    /// Call [Tracker::move_z_to_z] on the underlining tracker
-    pub fn move_z_to_z(&mut self, source: usize, destination: usize) {
-        self.tracker.move_z_to_z(source, destination);
-    }
+    track_paulis!((track_x, "X"), (track_y, "Y"), (track_z, "Z"),);
+    movements!(
+        (move_x_to_x, "X", "X"),
+        (move_x_to_z, "X", "Z"),
+        (move_z_to_x, "Z", "X"),
+        (move_z_to_z, "Z", "Z"),
+    );
 }
 
 impl<C, T, S> TrackedCircuit<C, T, S>
 where
     C: CliffordCircuit,
 {
-    /// Apply the **X** gate on the circuit (identity on the tracker).
-    pub fn x(&mut self, bit: usize) {
-        self.circuit.x(bit);
-    }
-    /// Apply the **Y** gate on the circuit (identity on the tracker).
-    pub fn y(&mut self, bit: usize) {
-        self.circuit.x(bit);
-    }
-    /// Apply the **Z** gate on the circuit (identity on the tracker).
-    pub fn z(&mut self, bit: usize) {
-        self.circuit.x(bit);
-    }
+    apply_paulis!((x, "X"), (y, "Y"), (z, "Z"),);
 
-    /// Perform a **Measurement** on the circuit, returning the result.
+    /// Perform a Measurement on the circuit, returning the result.
     pub fn measure(&mut self, bit: usize) -> C::Outcome {
         self.circuit.measure(bit)
     }
 }
 
-macro_rules! single {
-    ($name:ident) => {
-        pub fn $name(&mut self, bit: usize) {
-            self.circuit.$name(bit);
-            self.tracker.$name(bit);
-        }
-    };
-}
-
-macro_rules! double {
-    ($name:ident) => {
-        pub fn $name(&mut self, bit_a: usize, bit_b: usize) {
-            self.circuit.$name(bit_a, bit_b);
-            self.tracker.$name(bit_a, bit_b);
-        }
-    };
-    ($name:ident, $bit_a:ident, $bit_b:ident) => {
-        pub fn $name(&mut self, $bit_a: usize, $bit_b: usize) {
-            self.circuit.$name($bit_a, $bit_b);
-            self.tracker.$name($bit_a, $bit_b);
-        }
-    };
-}
-
 impl<C, T, S> TrackedCircuit<C, T, S>
 where
     C: CliffordCircuit,
     T: Tracker,
 {
-    /// Apply the **H** gate on the circuit and update the Pauli tracker accordingly.
-    single!(h);
-    /// Apply the **S** gate on the circuit and update the Pauli tracker accordingly.
-    single!(s);
+    single_gate!((h, "H"), (s, "S"),);
 
-    /// Apply the **Control X (Control Not)** gate on the circuit and update the Pauli
-    /// tracker accordingly.
-    double!(cx, control, target);
-    /// Apply the **Control Z** gate on the circuit and update the Pauli tracker
-    /// accordingly.
-    double!(cz);
+    double_gate!(cx, "Control X (Control Not)", control, target);
+    double_gate!(cz, "Control Z");
 }
 
 impl<C, A, S> TrackedCircuit<C, Frames<A>, S>
@@ -185,6 +273,8 @@ where
         self.tracker.measure_and_store(bit, &mut self.storage)
     }
 
+    /// Measure all qubits and put the according stack of Paulis into the additional
+    /// storage, i.e., do [Self::measure_and_store] for all qubits.
     pub fn measure_and_store_all(&mut self) -> Result<(), String> {
         for (bit, pauli) in
             mem::replace(&mut self.tracker, Frames::<A>::init(0)).into_storage()

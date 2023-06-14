@@ -69,19 +69,19 @@ impl Pauli {
     // Safety: hardcoded
     /// Create a new identity Pauli.
     pub fn new_i() -> Self {
-        unsafe { Self::from_unchecked(0) }
+        unsafe { Self::from_unchecked(super::I) }
     }
     /// Create a new X Pauli.
     pub fn new_x() -> Self {
-        unsafe { Self::from_unchecked(2) }
+        unsafe { Self::from_unchecked(super::X) }
     }
     /// Create a new Y Pauli.
     pub fn new_y() -> Self {
-        unsafe { Self::from_unchecked(3) }
+        unsafe { Self::from_unchecked(super::Y) }
     }
     /// Create a new Z Pauli.
     pub fn new_z() -> Self {
-        unsafe { Self::from_unchecked(1) }
+        unsafe { Self::from_unchecked(super::Z) }
     }
 
     /// Create a [Pauli] from a [u8] without checking the types invariant.

@@ -17,18 +17,39 @@ use crate::boolean_vector::BooleanVector;
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Default)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct PauliVec<T /* : BooleanVector */> {
-    // the bit representing the left qubit on the left-hand side in the tableau
-    // representation, i.e., X
+    /// The bits representing the left qubit on the left-hand side in the tableau
+    /// representation, i.e., X
     pub left: T,
-    // right-hand side, i.e., Z
+    /// The bits representing the left qubit on the left-hand side in the tableau
+    /// representation, i.e., Z
     pub right: T,
 }
 
 impl<T: BooleanVector> PauliVec<T> {
+    /// Create a new empty [PauliVec].
     pub fn new() -> Self {
         Self { left: T::new(), right: T::new() }
     }
 
+    /// Create a [PauliVec] from two strings. `left` (`right`) corresponds to
+    /// [PauliVec]s `left` (`right`) field.
+    ///
+    /// Errors if the strings do not consist only of '0' and '1' characters.
+    ///
+    /// # Examples
+    /// ```
+    /// # #[cfg_attr(coverage_nightly, no_coverage)]
+    /// # fn main() {
+    /// # use pauli_tracker::pauli::PauliVec;
+    /// assert_eq!(
+    ///     PauliVec::<Vec<bool>>::try_from_str("01", "10"),
+    ///     Ok(PauliVec::<Vec<bool>> {
+    ///         left: vec![false, true],
+    ///         right: vec![true, false]
+    ///     })
+    /// )
+    /// # }
+    /// ```
     pub fn try_from_str(left: &str, right: &str) -> Result<Self, String> {
         fn to_bool(c: char) -> Result<bool, String> {
             match c.to_digit(2) {
@@ -42,16 +63,21 @@ impl<T: BooleanVector> PauliVec<T> {
         })
     }
 
+    /// Create a new [PauliVec] with both sides `left` and `right` initialized with
+    /// `len` 0/false elements.
     pub fn zeros(len: usize) -> Self {
         let zero = T::zeros(len);
         Self { left: zero.clone(), right: zero }
     }
 
+    /// Push a new [Pauli] onto the Pauli stack.
     pub fn push(&mut self, pauli: Pauli) {
         self.left.push(pauli.get_x());
         self.right.push(pauli.get_z());
     }
 
+    /// Pop the last element from the stack and return it. Returns [None] if the vector
+    /// is empty.
     pub fn pop(&mut self) -> Option<Pauli> {
         match self.left.len().cmp(&self.right.len()) {
             std::cmp::Ordering::Less => Some(Pauli::new(

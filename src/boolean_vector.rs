@@ -23,15 +23,20 @@ use std::fmt::Debug;
 /// It is basically an interface that can be easily fullfilled by types like
 /// [Vec]<[bool]>, "bit-vectors" or similar structures. Types that implement the trait,
 /// can be used as generic parameter for the provided storage types in [storage].
+/// Depending on the context, we use true/false or 1/0 to when talking about the
+/// elements of the vector.
 ///
 /// [storage]: crate::tracker::frames::storage
 pub trait BooleanVector:
     Clone + FromIterator<bool> + IntoIterator<Item = bool> + Debug
 {
+    /// An iterator over the [bool]ean values of the vector. It can be created with
+    /// [Self::iter_vals].
     type IterVals<'l>: Iterator<Item = bool>
     where
         Self: 'l;
 
+    /// Create a new empty boolean vector.
     fn new() -> Self;
 
     /// Create [Self] with `len` many `false/0` elements.
@@ -43,16 +48,27 @@ pub trait BooleanVector:
     /// Panics if `idx` is out of bounds.
     fn set(&mut self, idx: usize, flag: bool);
 
+    /// Perform XOR between `self` and `rhs` elementwise, updating self.
+    ///
+    /// # Panics
+    /// Panics if self.len() \neq rhs.len().
     fn xor_inplace(&mut self, rhs: &Self);
 
+    /// Perform OR between `self` and `rhs` elementwise, updating self.
+    ///
+    /// # Panics
+    /// Panics if self.len() \neq rhs.len().
     fn or_inplace(&mut self, rhs: &Self);
 
     /// Resize the boolean vector to contain `len` elements, where new values are
     /// initialized with `flag`.
     fn resize(&mut self, len: usize, flag: bool);
 
+    /// Push a new element onto the vector.
     fn push(&mut self, flag: bool);
 
+    /// Pop the last element from the vector and return it. Returns [None] if the vector
+    /// is empty.
     fn pop(&mut self) -> Option<bool>;
 
     /// Return the number of contained elements.

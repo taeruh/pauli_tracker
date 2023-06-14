@@ -16,34 +16,83 @@ use crate::{
 // the trait (for <'l> &'l T implies T: 'static); implementors of this type should
 // probably still implement IntoIterator for its references
 pub trait StackStorage: IntoIterator<Item = (usize, PauliVec<Self::BoolVec>)> {
+    /// The storage type used for [PauliVec].
     type BoolVec: BooleanVector;
+
+    /// An iterator over the storage. The items are tuples of the qubits with references
+    /// to their corresponding [PauliVec] stack.
     type Iter<'l>: Iterator<Item = (usize, &'l PauliVec<Self::BoolVec>)>
     where
         Self: 'l;
+
+    /// An iterator over the storage. The items are tuples of the qubits with mutalbe
+    /// references to their corresponding [PauliVec] stack.
     type IterMut<'l>: Iterator<Item = (usize, &'l mut PauliVec<Self::BoolVec>)>
     where
         Self: 'l;
 
-    /// None if successful, Some(`pauli`) if key `bit` present
+    /// Initialize the storage to keep `num_bits` Pauli stacks, numbered from 0 to
+    /// `num_bits` - 1.
+    ///
+    /// # Example
+    /// ```
+    /// # #[cfg_attr(coverage_nightly, no_coverage)]
+    /// # fn main() {
+    /// use pauli_tracker::{
+    ///     pauli::PauliVec,
+    ///     tracker::frames::storage::{
+    ///         Map,
+    ///         StackStorage,
+    ///     },
+    /// };
+    /// let storage = Map::<Vec<bool>>::init(2);
+    /// assert_eq!(storage.get(&0), Some(&PauliVec::<Vec<bool>>::new()));
+    /// assert_eq!(storage.get(&1), Some(&PauliVec::<Vec<bool>>::new()));
+    /// assert_eq!(storage.get(&2), None);
+    /// # }
+    /// ```
+    fn init(num_bits: usize) -> Self;
+
+    /// Check whether the storage is empty.
+    fn is_empty(&self) -> bool;
+
+    /// Insert a `pauli` stack for qu`bit`. If the qu`bit` is already present,
+    /// [Some](Some)(`pauli`) is returned.
     fn insert_pauli(
         &mut self,
         bit: usize,
         pauli: PauliVec<Self::BoolVec>,
     ) -> Option<PauliVec<Self::BoolVec>>;
-    /// None if qu`bit` not present
+
+    /// Remove a qu`bit` and its stack from the storage. If the qubit is present, its
+    /// stack is returneddd, otherwise [None].
     fn remove_pauli(&mut self, bit: usize) -> Option<PauliVec<Self::BoolVec>>;
+
+    /// Get a references to qu`bit`s stack, if present, otherwise return [None].
     fn get(&self, bit: usize) -> Option<&PauliVec<Self::BoolVec>>;
+
+    /// Get a mutalbe references to qu`bit`s stack, if present, otherwise return [None].
     fn get_mut(&mut self, bit: usize) -> Option<&mut PauliVec<Self::BoolVec>>;
     #[allow(clippy::type_complexity)]
+
+    /// Get two mutable references to distinct elements.
+    ///
+    /// # Panics
+    /// Panics if the two references point to the same object, i.e., if `bit_a` =
+    /// `bit_b`.
     fn get_two_mut(
         &mut self,
         bit_a: usize,
         bit_b: usize,
     ) -> Option<(&mut PauliVec<Self::BoolVec>, &mut PauliVec<Self::BoolVec>)>;
+
+    /// Get an [Iterator] over the tuples of qubits and references of the corresponding
+    /// Pauli stacks.
     fn iter(&self) -> Self::Iter<'_>;
+
+    /// Get an [Iterator] over the tuples of qubits and mutable references of the
+    /// corresponding Pauli stacks.
     fn iter_mut(&mut self) -> Self::IterMut<'_>;
-    fn init(num_bits: usize) -> Self;
-    fn is_empty(&self) -> bool;
 }
 
 /// Sort the `storage` according to the qubits.

@@ -24,11 +24,12 @@ use crate::{
     slice_extension::GetTwoMutSlice,
 };
 
-/// Basically a vector of [PauliVec]s. Restricted, but if that is no problem, and the
+/// A newtype vector of [PauliVec]s. Restricted, but if that is no problem, and the
 /// type is used correctly, it is more efficient than [Map](super::map::Map).
 #[derive(Debug, Default)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct Vector<B> {
+    /// The inner storage.
     pub frames: Vec<PauliVec<B>>,
 }
 

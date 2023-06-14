@@ -1,12 +1,16 @@
+// lints and similar
 #![deny(unsafe_op_in_unsafe_fn)]
-// #![warn(missing_docs)]
-//-
+#![warn(missing_docs)]
+//
+// (nightly) features, only for development
 #![cfg_attr(docsrs, feature(doc_cfg))]
 #![cfg_attr(coverage_nightly, feature(no_coverage))]
 // cf .https://doc.rust-lang.org/rustdoc/write-documentation/documentation-tests.html (I
 // thought doc-test should capture the normal #! attributes?)
 #![cfg_attr(coverage_nightly, doc(test(attr(feature(no_coverage)))))]
-//-
+//
+// some guidelines (should do a better contributing file ...):
+//
 // set up all feature code as follows for proper feature documentation:
 // #[cfg(feature = "<feature>")]
 // #[cfg_attr(docsrs, doc(cfg(feature = "<feature>")))]
@@ -15,20 +19,20 @@
 // the lines of the tests should not be included in the coverage, therefore, put
 // #[cfg_attr(coverage_nightly, no_coverage)]
 // on every test function (except if the test is ignore, e.g., proptest); also on
-// closures (except if it is a oneline closure in, for example, iter::map, and adding
-// the annotation would change the formatting) and functions that are exclusively used
-// in the test (except we really want coverage for them); this attribute does sadly not
-// work with modules; to make things easier one can `use coverage_helper::test` in the
-// test modules and just use the (modified) #[test] attribute; in doc-tests we always
-// need to specify the main function explicitly and put the ...no_coverage... attribute
-// on it
+// closures (except if we are in a doc-test and it is is a oneline closure in, for
+// example, iter::map, and adding the annotation would change the formatting) and
+// functions that are exclusively used in the test (except we really want coverage for
+// them); this attribute does sadly not work with modules; to make things easier one can
+// `use coverage_helper::test` in the test modules and just use the (modified) #[test]
+// attribute; in doc-tests we always need to specify the main function explicitly and
+// put the ...no_coverage... attribute on it
+//
+// annotate tests with cfg-feature attributes if they use them
 
 /*!
 A library to track Pauli frames through a Clifford circuit with measurements. A
 general brief introduction to Pauli tracking is given in the repository's
 [README](https://github.com/taeruh/pauli_tracker).
-
-*more documentation, especially examples, are in progress*
 
 # Crate features
 
@@ -65,6 +69,7 @@ This examples gives a first introduction to the tracking mechanism. The example
 requires the [rand](https://crates.io/crates/rand) crate.
 ```
 # #[cfg_attr(coverage_nightly, no_coverage)]
+# #[cfg(feature = "rand")]
 # fn main() {
 # #[rustfmt::skip]
 use pauli_tracker::{
@@ -153,6 +158,9 @@ let conditional_summed_frames: Vec<_> = frames
     .collect();
 assert_eq!(*tracker.as_ref(), conditional_summed_frames, "{measurements:?}");
 # }
+# #[cfg_attr(coverage_nightly, no_coverage)]
+# #[cfg(not(feature = "rand"))]
+# fn main() {}
 ```
 
 ### The dependency graph
@@ -160,9 +168,9 @@ This example introduces the
 [create_dependency_graph](tracker::frames::storage::create_dependency_graph) function
 that can be used to analyse measurement dependencies.
 ```
-#[cfg_attr(coverage_nightly, no_coverage)]
+# #[cfg_attr(coverage_nightly, no_coverage)]
 # fn main() {
-#[rustfmt::skip]
+# #[rustfmt::skip]
 use pauli_tracker::{
     tracker::{Tracker, frames::{Frames, storage::{self, Vector}}},
     pauli::{self, Pauli},
@@ -242,9 +250,10 @@ can be decomposed into Clifford + T gates and how T gates can be teleported.
 We use the [circuit] module and [bit_vec::BitVec], i.e., the example requires the
 features "circuit" and "bit-vec", as well as a dependency on the bit_vec crate.
 ```
-#[cfg_attr(coverage_nightly, no_coverage)]
+# #[cfg_attr(coverage_nightly, no_coverage)]
+# #[cfg(all(feature = "circuit", feature = "bit-vec"))]
 # fn main() {
-#[rustfmt::skip]
+# #[rustfmt::skip]
 use pauli_tracker::{
     circuit::{CliffordCircuit, DummyCircuit, TrackedCircuit},
     tracker::{Tracker, frames::{Frames, storage::{self, Map, Vector}}},
@@ -358,6 +367,9 @@ assert_eq!(
     ]
 );
 # }
+# #[cfg_attr(coverage_nightly, no_coverage)]
+# #[cfg(not(all(feature = "circuit", feature = "bit-vec")))]
+# fn main() {}
 ```
 As noted in the code above, our teleported T gate is a little bit naive. When looking
 into more details of the [paper], one can see that the measurement that we perform for
@@ -372,9 +384,10 @@ account for the Z corrections directly in the Pauli tracker: Flipping the sign o
 measurement outcome is equivalent to completely remove the Z corrections from the
 teleported qubit and instead put them onto the new qubit as Z corrections since the
 teleportation introduces a Z correction. This can be achieved with
-[Tracker::move_z_to_z](tracker::Tracker::move_z_to_z).
+[Tracker::move_z_to_z](tracker::Tracker::move_z_to_z):
 ```
-#[cfg_attr(coverage_nightly, no_coverage)]
+# #[cfg_attr(coverage_nightly, no_coverage)]
+# #[cfg(all(feature = "circuit", feature = "bit-vec"))]
 # fn main() {
 # use pauli_tracker::{
 #     circuit::{CliffordCircuit, DummyCircuit, TrackedCircuit},
@@ -471,6 +484,9 @@ assert_eq!(
 );
 // -> only two layers instead of 5 layers!
 # }
+# #[cfg_attr(coverage_nightly, no_coverage)]
+# #[cfg(not(all(feature = "circuit", feature = "bit-vec")))]
+# fn main() {}
 ```
 
 [bit_vec::BitVec]: https://docs.rs/bit-vec/latest/bit_vec/struct.BitVec.html
@@ -520,6 +536,8 @@ pub fn enabled_simd_target_feature() -> &'static str {
 
 #[cfg(test)]
 mod tests {
+    use coverage_helper::test;
+
     use super::*;
 
     #[test]
