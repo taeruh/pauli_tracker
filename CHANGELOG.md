@@ -8,21 +8,27 @@ We try to follow the [SemVer](https://semver.org/) rules, specifically
 [Cargo guidelines](https://doc.rust-lang.org/cargo/reference/semver.html), as best as
 possible.
 
+
 ## [Unreleased]
+### Added
+### Changed
+### Deprecated
+### Removed
+### Fixed
+
+## [0.2.1] - 2023-06-14
 ### Added
 - **Possible Breaking Change**: Add `impl BooleanVector for Vec<bool>`.
 - **Possible Breaking Change**: Add `impl<T: BooleanVector> FromIterator<Pauli> for
   PauliVec<T>`.
 - **Possible Breaking Change**: Add `TrackedCircuit::measure_and_store_all`.
 - **Possible Breaking Change**: Add `Tracker::track_$pauli` methods where $pauli in x,
-  y, z
+  y, z.
 ### Changed
 - Make `Vector`s inner field public.
-### Deprecated
 ### Removed
 - Make the `bit_vec` module private (had no public items).
 ### Fixed
-### Security
 
 ## [0.2.0] - 2023-06-09
 ### Added
@@ -55,6 +61,7 @@ possible.
 
 ## [0.1.0] - 2023-06-01
 
-[Unreleased]: https://github.com/taeruh/pauli_tracker/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/taeruh/pauli_tracker/compare/v0.2.1...HEAD
+[0.2.0]: https://github.com/taeruh/pauli_tracker/compare/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/taeruh/pauli_tracker/compare/v0.1.1...v0.2.0
 [0.1.1]: https://github.com/taeruh/pauli_tracker/compare/v0.1.0...v0.1.1
