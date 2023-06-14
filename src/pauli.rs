@@ -1,4 +1,6 @@
-//! Encoding of Pauli operators.
+/*!
+Encoding of Pauli operators.
+*/
 
 mod single;
 pub use single::Pauli;

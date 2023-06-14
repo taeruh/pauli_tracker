@@ -1,13 +1,15 @@
-//! The [Frames] type can be used as [Tracker] to analyze how the
-//! tracked Paulis effect the qubits.
-//!
-//! Each new tracked Pauli introduces a new frame on
-//! the qubits, for example corresponding to a measurement, with the tracked Pauli on
-//! the qubit where it has been initialized and on all other qubits identities. The
-//! Clifford gates act on this frame, according to the conjugation rules, causing the
-//! tracked Pauli to being copied, moved, swaped, ... within the frame. The frames of
-//! multiple tracked Paulis are stacked up together, not effectiving each other; this is
-//! the main difference to the tracker defined in [live](super::live).
+/*!
+The [Frames] type can be used as [Tracker] to analyze how the tracked Paulis effect the
+qubits.
+
+Each new tracked Pauli introduces a new frame on the qubits, for example corresponding
+to a measurement, with the tracked Pauli on the qubit where it has been initialized and
+on all other qubits identities. The Clifford gates act on this frame, according to the
+conjugation rules, causing the tracked Pauli to being copied, moved, swaped, ... within
+the frame. The frames of multiple tracked Paulis are stacked up together, not
+effectiving each other; this is the main difference to the tracker defined in
+[live](super::live).
+*/
 
 use std::mem;
 
@@ -244,6 +246,9 @@ where
 
 #[cfg(test)]
 mod tests {
+    use coverage_helper::test;
+
+    use super::*;
 
     // we only check the basic functionality here, more complicated circuits are tested
     // in [super::circuit] to test the tracker and the circuit at once
@@ -251,8 +256,12 @@ mod tests {
     #[cfg(feature = "bitvec")]
     // #[cfg(feature = "bitvec_simd")]
     mod action_definition_check {
-        use super::super::{
-            storage::*,
+        use super::{
+            super::{
+                storage::*,
+                *,
+            },
+            test,
             *,
         };
         use crate::tracker::test::{
@@ -274,6 +283,7 @@ mod tests {
 
             const ACTIONS: [Action; N_SINGLES] = [Frames::h, Frames::s];
 
+            #[cfg_attr(coverage_nightly, no_coverage)]
             fn runner(action: Action, result: SingleResult) {
                 let mut tracker: ThisTracker = Frames::init(1);
                 for input in (0..4).rev() {
@@ -308,6 +318,7 @@ mod tests {
                 Frames::move_z_to_z,
             ];
 
+            #[cfg_attr(coverage_nightly, no_coverage)]
             fn runner(action: Action, result: DoubleResult) {
                 let mut tracker: ThisTracker = Frames::init(2);
                 for pauli in (0..16).rev() {

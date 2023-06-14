@@ -155,9 +155,12 @@ impl Pauli {
     ///
     /// # Examples
     /// ```
+    /// # #[cfg_attr(coverage_nightly, no_coverage)]
+    /// # fn main() {
     /// # use pauli_tracker::pauli::Pauli;
     /// assert_eq!(2, Pauli::new_x().xmask());
     /// assert_eq!(0, Pauli::new_z().xmask());
+    /// # }
     /// ```
     pub fn xmask(&self) -> u8 {
         self.storage & 2
@@ -165,9 +168,12 @@ impl Pauli {
     /// Get the Z mask of the encoded storage.
     /// # Examples
     /// ```
+    /// # #[cfg_attr(coverage_nightly, no_coverage)]
+    /// # fn main() {
     /// # use pauli_tracker::pauli::Pauli;
     /// assert_eq!(0, Pauli::new_x().zmask());
     /// assert_eq!(1, Pauli::new_z().zmask());
+    /// # }
     /// ```
     pub fn zmask(&self) -> u8 {
         self.storage & 1
@@ -199,6 +205,8 @@ impl Debug for Pauli {
 
 #[cfg(test)]
 mod tests {
+    use coverage_helper::test;
+
     use super::*;
 
     #[test]

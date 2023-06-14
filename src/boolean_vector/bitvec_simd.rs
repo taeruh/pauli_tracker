@@ -1,3 +1,7 @@
+/*!
+A [BooleanVector] impl for a SIMD vector.
+*/
+
 use bitvec_simd::BitVec;
 
 use super::BooleanVector;

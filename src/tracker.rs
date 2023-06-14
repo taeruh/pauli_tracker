@@ -1,6 +1,8 @@
-//! This module defines the [Tracker] trait and provides different implementors through
-//! the [frames] and [live] module. The [Tracker] trait provides the core functionality
-//! of tracking Pauli gates through a Clifford circuit.
+/*!
+This module defines the [Tracker] trait and provides different implementors through the
+[frames] and [live] module. The [Tracker] trait provides the core functionality of
+tracking Pauli gates through a Clifford circuit.
+*/
 
 use crate::pauli::Pauli;
 
@@ -171,6 +173,7 @@ mod test {
         ("move_z_to_z", [0, 1, 2, 3, 1, 0, 3, 2, 8, 9, 10, 11, 9, 8, 11, 10]),
     ];
 
+    #[cfg_attr(coverage_nightly, no_coverage)]
     pub fn single_check<T, R>(runner: R, actions: [SingleAction<T>; N_SINGLES])
     where
         T: Tracker,
@@ -185,6 +188,7 @@ mod test {
         // }
     }
 
+    #[cfg_attr(coverage_nightly, no_coverage)]
     pub fn double_check<T, R>(runner: R, actions: [DoubleAction<T>; N_DOUBLES])
     where
         T: Tracker,
@@ -201,6 +205,7 @@ mod test {
             tracker::PauliString,
         };
 
+        #[cfg_attr(coverage_nightly, no_coverage)]
         pub fn single_init(input: u8) -> PauliString {
             vec![(0, Pauli::try_from(input).unwrap())]
         }
@@ -210,6 +215,7 @@ mod test {
         const FIRST_SHIFT: u8 = 2;
         const SECOND: u8 = 3;
 
+        #[cfg_attr(coverage_nightly, no_coverage)]
         pub fn double_init(input: u8) -> PauliString {
             vec![
                 (0, Pauli::try_from((input & FIRST) >> FIRST_SHIFT).unwrap()),
@@ -217,6 +223,7 @@ mod test {
             ]
         }
 
+        #[cfg_attr(coverage_nightly, no_coverage)]
         pub fn double_output(frame: impl IntoIterator<Item = (usize, Pauli)>) -> u8 {
             let mut output = 0;
             for (i, p) in frame {

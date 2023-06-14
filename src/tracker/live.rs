@@ -1,6 +1,8 @@
-//! This module provides [Tracker]s that are similar to the ones in
-//! [frames](super::frames), with the major difference that there's effectively only one
-//! frames, which adds up multiple tracked Paulis.
+/*!
+This module provides [Tracker]s that are similar to the ones in [frames](super::frames),
+with the major difference that there's effectively only one frames, which adds up
+multiple tracked Paulis.
+*/
 
 use std::{
     self,
@@ -156,8 +158,15 @@ impl Tracker for LiveVector {
 
 #[cfg(test)]
 mod tests {
+    use coverage_helper::test;
+
+    use super::*;
+
     mod action_definition_check {
-        use super::super::*;
+        use super::{
+            test,
+            *,
+        };
         use crate::tracker::test::{
             self,
             *,
@@ -169,6 +178,7 @@ mod tests {
 
             const ACTIONS: [Action; N_SINGLES] = [LiveVector::h, LiveVector::s];
 
+            #[cfg_attr(coverage_nightly, no_coverage)]
             fn runner(action: Action, result: SingleResult) {
                 for (input, check) in (0u8..).zip(result.1) {
                     let mut tracker = LiveVector::init(2);
@@ -200,6 +210,7 @@ mod tests {
                 LiveVector::move_z_to_z,
             ];
 
+            #[cfg_attr(coverage_nightly, no_coverage)]
             fn runner(action: Action, result: DoubleResult) {
                 for (input, check) in (0u8..).zip(result.1) {
                     let mut tracker = LiveVector::init(2);

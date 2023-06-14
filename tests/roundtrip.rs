@@ -51,7 +51,7 @@ const MAX_OPS: usize = 1000;
 // const MAX_OPS: usize = 10;
 proptest! {
     #![proptest_config(Config {
-        // cases: 1,
+        cases: 1,
         // proptest! just overwrites this (see source code); it doesn't really matter,
         // except that we get a warning but that is ok; we could solve it by manually
         // doing what proptest! does (the basics are straightforward, but it also does

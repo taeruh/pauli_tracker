@@ -109,6 +109,8 @@ impl<T: BooleanVector> PauliVec<T> {
     ///
     /// # Examples
     /// ```
+    /// # #[cfg_attr(coverage_nightly, no_coverage)]
+    /// # fn main() {
     /// # use pauli_tracker::{pauli::{Pauli, PauliVec}, boolean_vector::BooleanVector};
     /// let paulis = [
     ///     Pauli::new_x(),
@@ -122,6 +124,7 @@ impl<T: BooleanVector> PauliVec<T> {
     /// .collect::<PauliVec<Vec<bool>>>();
     /// let filter = [true, true, true, false, false, false];
     /// assert_eq!(paulis.sum_up(&filter), Pauli::new_i());
+    /// # }
     /// ```
     pub fn sum_up(&self, filter: &[bool]) -> Pauli {
         // Safety: BooleanVector::sum_up returns u8 <= 1

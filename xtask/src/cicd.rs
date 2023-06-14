@@ -82,7 +82,7 @@ pub fn os_check() {
 
 pub fn coverage() {
     println!("TEST: COVERAGE");
-    cargo!("llvm-cov", "--all-features");
+    cargo!("+nightly", "llvm-cov", "--all-features", "--doctests");
 }
 
 pub fn proptest() {
@@ -94,7 +94,7 @@ pub fn proptest() {
 // {{ safety
 pub fn miri() {
     println!("SAFETY: MIRI");
-    // here's something weird happening: when we do `cargo run` for this package,
+    // something weird is happening here: when we do `cargo run` for this package,
     // miri starts to execute but fails with the error that we are not on nightly,
     // which is not true; we don't get this error if we directly execute the binary
     // manually (after building it); a wild guess what the problem could be: when we

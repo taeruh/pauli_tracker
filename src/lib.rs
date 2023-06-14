@@ -1,3 +1,28 @@
+#![deny(unsafe_op_in_unsafe_fn)]
+// #![warn(missing_docs)]
+//-
+#![cfg_attr(docsrs, feature(doc_cfg))]
+#![cfg_attr(coverage_nightly, feature(no_coverage))]
+// cf .https://doc.rust-lang.org/rustdoc/write-documentation/documentation-tests.html (I
+// thought doc-test should capture the normal #! attributes?)
+#![cfg_attr(coverage_nightly, doc(test(attr(feature(no_coverage)))))]
+//-
+// set up all feature code as follows for proper feature documentation:
+// #[cfg(feature = "<feature>")]
+// #[cfg_attr(docsrs, doc(cfg(feature = "<feature>")))]
+// --cfg docsrs is set when the documentation is build
+//
+// the lines of the tests should not be included in the coverage, therefore, put
+// #[cfg_attr(coverage_nightly, no_coverage)]
+// on every test function (except if the test is ignore, e.g., proptest); also on
+// closures (except if it is a oneline closure in, for example, iter::map, and adding
+// the annotation would change the formatting) and functions that are exclusively used
+// in the test (except we really want coverage for them); this attribute does sadly not
+// work with modules; to make things easier one can `use coverage_helper::test` in the
+// test modules and just use the (modified) #[test] attribute; in doc-tests we always
+// need to specify the main function explicitly and put the ...no_coverage... attribute
+// on it
+
 /*!
 A library to track Pauli frames through a Clifford circuit with measurements. A
 general brief introduction to Pauli tracking is given in the repository's
@@ -39,12 +64,13 @@ general brief introduction to Pauli tracking is given in the repository's
 This examples gives a first introduction to the tracking mechanism. The example
 requires the [rand](https://crates.io/crates/rand) crate.
 ```
-#[rustfmt::skip]
+# #[cfg_attr(coverage_nightly, no_coverage)]
+# fn main() {
+# #[rustfmt::skip]
 use pauli_tracker::{
     tracker::{Tracker, live::LiveVector, frames::{Frames, storage::{self, Map}}},
     pauli::{self, Pauli},
 };
-
 // first, we will use the Frames tracker to fully track all Pauli frames
 
 // the Frames tracker is generic over its storage types, which themselves are generic;
@@ -126,6 +152,7 @@ let conditional_summed_frames: Vec<_> = frames
     .map(|(_, pauli_stack)| pauli_stack.sum_up(&measurements))
     .collect();
 assert_eq!(*tracker.as_ref(), conditional_summed_frames, "{measurements:?}");
+# }
 ```
 
 ### The dependency graph
@@ -133,19 +160,19 @@ This example introduces the
 [create_dependency_graph](tracker::frames::storage::create_dependency_graph) function
 that can be used to analyse measurement dependencies.
 ```
+#[cfg_attr(coverage_nightly, no_coverage)]
+# fn main() {
 #[rustfmt::skip]
 use pauli_tracker::{
     tracker::{Tracker, frames::{Frames, storage::{self, Vector}}},
     pauli::{self, Pauli},
 };
-
 type BoolVec = Vec<bool>;
 // we want a fixed order in our storage for this test, so we use Vector and not Map
 type Storage = Vector<BoolVec>;
 type PauliVec = pauli::PauliVec<BoolVec>;
 
 // let's consider the following tracking pattern
-
 let mut tracker = Frames::<Storage>::init(6);
 
 tracker.track_pauli(0, Pauli::new_x()); // frame (0)
@@ -194,6 +221,7 @@ assert_eq!(
         vec![(1, vec![5, 0])],                       // layer 2
     ]
 );
+# }
 // - in layer 0, there are no Paulis before the measurements, i.e., we have no
 //   dependecies; the qubits in layer 1 depend only on outcomes of qubits in layer 0;
 //   the qubits in layer 2 depend only on qubits in layer 0, ..., 1; and so on
@@ -214,6 +242,8 @@ can be decomposed into Clifford + T gates and how T gates can be teleported.
 We use the [circuit] module and [bit_vec::BitVec], i.e., the example requires the
 features "circuit" and "bit-vec", as well as a dependency on the bit_vec crate.
 ```
+#[cfg_attr(coverage_nightly, no_coverage)]
+# fn main() {
 #[rustfmt::skip]
 use pauli_tracker::{
     circuit::{CliffordCircuit, DummyCircuit, TrackedCircuit},
@@ -246,6 +276,7 @@ trait ExtendTrackedCircuit {
     fn teleported_t(&mut self, origin: usize, new: usize);
 }
 impl ExtendTrackedCircuit for TrackedCircuit<DummyCircuit, Frames<Storage>, Storage> {
+    #[cfg_attr(coverage_nightly, no_coverage)]
     fn teleported_t(&mut self, origin: usize, new: usize) {
         // this is from the linked paper, naively implement, assuming that we don't know
         // anything about the type of measurement, except that it realizes the T gate
@@ -326,6 +357,7 @@ assert_eq!(
         vec![(6, vec![4, 8]), (9, vec![8])],
     ]
 );
+# }
 ```
 As noted in the code above, our teleported T gate is a little bit naive. When looking
 into more details of the [paper], one can see that the measurement that we perform for
@@ -342,6 +374,8 @@ teleported qubit and instead put them onto the new qubit as Z corrections since 
 teleportation introduces a Z correction. This can be achieved with
 [Tracker::move_z_to_z](tracker::Tracker::move_z_to_z).
 ```
+#[cfg_attr(coverage_nightly, no_coverage)]
+# fn main() {
 # use pauli_tracker::{
 #     circuit::{CliffordCircuit, DummyCircuit, TrackedCircuit},
 #     tracker::{Tracker, frames::{Frames, storage::{self, Map, Vector}}},
@@ -361,6 +395,7 @@ teleportation introduces a Z correction. This can be achieved with
 // ... same as before ...
 
 impl ExtendTrackedCircuit for TrackedCircuit<DummyCircuit, Frames<Storage>, Storage> {
+    #[cfg_attr(coverage_nightly, no_coverage)]
     fn teleported_t(&mut self, origin: usize, new: usize) {
         self.tracker.new_qubit(new);
         self.cx(origin, new);
@@ -435,20 +470,12 @@ assert_eq!(
     ]
 );
 // -> only two layers instead of 5 layers!
+# }
 ```
 
 [bit_vec::BitVec]: https://docs.rs/bit-vec/latest/bit_vec/struct.BitVec.html
 [paper]: https://arxiv.org/abs/2209.07345v2
 */
-
-#![cfg_attr(docsrs, feature(doc_cfg))]
-//-
-// #![warn(missing_docs)] // turn on when things are more stable
-#![deny(unsafe_op_in_unsafe_fn)]
-
-// set up all feature code as follows (for proper documentation):
-// #[cfg(feature = "<feature>")]
-// #[cfg_attr(docsrs, doc(cfg(feature = "<feature>")))]
 
 pub mod boolean_vector;
 
@@ -469,10 +496,13 @@ pub mod tracker;
 ///implementation of "simd-types". Some features are automatically enabled at compile
 ///time and some have to be enabled manually, for example, in your `build.rs` script:
 /// ```
+/// # #[cfg_attr(coverage_nightly, no_coverage)]
+/// # fn main() {
 /// #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
 /// if is_x86_feature_detected!("avx2") {
 ///     println!(r#"cargo:rustc-cfg=target_feature="avx2""#);
 /// }
+/// # }
 /// ```
 /// ***currently this function only tests against "avx2" and "sse"***
 #[allow(unreachable_code)] // because rust-analyzer detects the target_feature(s)

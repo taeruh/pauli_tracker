@@ -37,6 +37,7 @@ rustdoc-args = ["--cfg", "docsrs"]
 [dev-dependencies]
 proptest = "1.2.0"
 serde_yaml = "0.9.21"
+coverage-helper = "0.1.0"
 
 
 [workspace]

@@ -1,5 +1,7 @@
-//! The underlining storage types for [Frames](super::Frames) and some functionality to
-//! analyze the storage.
+/*!
+The underlining storage types for [Frames](super::Frames) and some functionality to
+analyze the storage.
+*/
 
 use crate::{
     boolean_vector::BooleanVector,
@@ -10,9 +12,9 @@ use crate::{
 /// be used as storage for [Frames](super::Frames).
 // instead of requiring that &T and &mut T implement IntoIterator, we have the iter and
 // iter_mut methods, respectively; the reason is that having the additional bounds would
-// either need an annoying lifetime or HRTBs, which would limit the use cases of the
-// trait (for <'l> &'l T implies T: 'static); implementors of this type should probably
-// still implement IntoIterator for its references
+// either need an annoying lifetime or HRTBs, the latter would limit the use cases of
+// the trait (for <'l> &'l T implies T: 'static); implementors of this type should
+// probably still implement IntoIterator for its references
 pub trait StackStorage: IntoIterator<Item = (usize, PauliVec<Self::BoolVec>)> {
     type BoolVec: BooleanVector;
     type Iter<'l>: Iterator<Item = (usize, &'l PauliVec<Self::BoolVec>)>
@@ -156,6 +158,7 @@ pub(crate) use mapped_vector::MappedVector;
 
 // #[cfg(test)]
 // mod tests {
+// use coverage_helper::test;
 //     // use super::*;
 
 //     // First we test the methods of [FullMap] that are not just simple redirections.

@@ -1,3 +1,7 @@
+/*!
+Some additional slice methods.
+*/
+
 /// Helper trait to basically use something like [slice::get_many_mut], which is
 /// currently unstable.
 pub trait GetTwoMutSlice {

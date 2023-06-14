@@ -1,11 +1,12 @@
-//! A circuit wrapper around a Clifford circuit and a [Tracker].
-//!
-//! The main content of this module is a wrapper [TrackedCircuit] that provides an
-//! methods to track Paulis while building up the circuit or executing it. One can
-//! either use it directly by providing an appropriate circuit simulator (should
-//! implement [CliffordCircuit]) or use it as template/idea to write a custom wrapper.
-//! The module also provides two pseudo circuit simulators that can be used to test the
-//! Pauli tracking.
+/*!
+A circuit wrapper around a Clifford circuit and a [Tracker].
+
+The main content of this module is a wrapper [TrackedCircuit] that provides an methods
+to track Paulis while building up the circuit or executing it. One can either use it
+directly by providing an appropriate circuit simulator (should implement
+[CliffordCircuit]) or use it as template/idea to write a custom wrapper. The module also
+provides two pseudo circuit simulators that can be used to test the Pauli tracking.
+*/
 
 use std::mem;
 
@@ -198,7 +199,7 @@ where
 #[cfg(test)]
 mod tests {
     use bitvec::vec::BitVec;
-    type PauliBitVec = PauliVec<BitVec>;
+    use coverage_helper::test;
 
     use super::*;
     use crate::{
@@ -219,6 +220,8 @@ mod tests {
             live::LiveVector,
         },
     };
+
+    type PauliBitVec = PauliVec<BitVec>;
 
     #[test]
     fn single_rotation_teleportation() {
@@ -296,6 +299,7 @@ mod tests {
             fn t_tele(&mut self, origin: usize, new: usize) -> bool;
         }
         impl TTele for TrackedCircuit<RandomMeasurementCircuit, LiveVector, ()> {
+            #[cfg_attr(coverage_nightly, no_coverage)]
             fn t_tele(&mut self, origin: usize, new: usize) -> bool {
                 self.cx(origin, new);
                 self.move_z_to_z(origin, new);
@@ -363,6 +367,7 @@ mod tests {
             fn t_tele(&mut self, origin: usize, new: usize);
         }
         impl TTele for TrackedCircuit<DummyCircuit, Frames<Vector<BitVec>>, ()> {
+            #[cfg_attr(coverage_nightly, no_coverage)]
             fn t_tele(&mut self, origin: usize, new: usize) {
                 self.cx(origin, new);
                 self.move_z_to_z(origin, new);
