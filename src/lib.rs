@@ -377,14 +377,12 @@ the teleported T gate actually anti-commutes with the Z gate. Importantly, this 
 true if we have some X corrections, because the X corrections would only change the
 angle in the measurement. This means that we do not have to change the measurement to
 compensate the Z corrections, instead we can account for them via post-processing - they
-only flip the sign of the measurement outcome - instead of changing the measurement.
-However, this does not improve the dependency structure, i.e., the measurement still has
-dependencies on earlier measurements, induced by the Z corrections. A better way is to
-account for the Z corrections directly in the Pauli tracker: Flipping the sign of the
-measurement outcome is equivalent to completely remove the Z corrections from the
-teleported qubit and instead put them onto the new qubit as Z corrections since the
-teleportation introduces a Z correction. This can be achieved with
-[Tracker::move_z_to_z](tracker::Tracker::move_z_to_z):
+only flip the sign of the measurement outcome - instead of changing the measurement. We
+can do this directly in the Pauli tracker: Flipping the sign of the measurement outcome,
+depending on the previous measurements, is equivalent to completely removing the Z
+corrections from the teleported qubit and instead putting them onto the new qubit as Z
+corrections, since the teleportation introduces a Z correction. This can be achieved
+with [Tracker::move_z_to_z](tracker::Tracker::move_z_to_z):
 ```
 # #[cfg_attr(coverage_nightly, no_coverage)]
 # #[cfg(all(feature = "circuit", feature = "bit-vec"))]
