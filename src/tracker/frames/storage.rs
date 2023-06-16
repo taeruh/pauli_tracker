@@ -155,29 +155,30 @@ pub fn create_dependency_graph(
         }
     }
 
-    let mut register: Vec<usize> = Vec::new();
+    if graph[0].is_empty() {
+        panic!("couldn't find any independent qubit");
+    }
+
     let mut layer_idx = 0;
 
     while !remaining.is_empty() {
-        // while !remaining.is_empty() && layer_idx < 5 { // debugging
-        let layer = graph.get(layer_idx).unwrap();
         let mut new_layer = Vec::new();
-        for (known, deps) in layer.iter() {
-            register.clear();
+        for (known, deps) in graph.get(layer_idx).unwrap().iter() {
+            let mut register = Vec::new();
             for (bit, (_, resolved, open)) in remaining.iter_mut().enumerate() {
-                if let Some(p) = open.iter().position(|&dep| dep == *known) {
-                    let mut duplicates = Vec::new();
+                if let Some(resolved_idx) = open.iter().position(|&dep| dep == *known) {
+                    let mut redundent_deps = Vec::new();
                     for (i, dep) in resolved.iter().enumerate() {
                         if deps.contains(dep) {
-                            duplicates.push(i);
+                            redundent_deps.push(i);
                         }
                     }
-                    // want to remove the duplicates; this here should work, because
-                    // duplicates is sorted with increasing order
-                    for duplicate in duplicates.iter().rev() {
-                        resolved.swap_remove(*duplicate);
+                    // want to remove the redundent deps; the swap_remove works, because
+                    // redundent_deps is sorted with increasing order
+                    for redundent in redundent_deps.iter().rev() {
+                        resolved.swap_remove(*redundent);
                     }
-                    resolved.push(open.swap_remove(p));
+                    resolved.push(open.swap_remove(resolved_idx));
                     if open.is_empty() {
                         register.push(bit);
                     }
@@ -188,6 +189,12 @@ pub fn create_dependency_graph(
                 new_layer.push((bit, deps));
             }
         }
+
+        if new_layer.is_empty() {
+            println!("{:?}", graph);
+            panic!("couldn't find qubit with resolved deps");
+        }
+
         graph.push(new_layer);
         layer_idx += 1;
     }
@@ -205,24 +212,62 @@ mod mapped_vector;
 #[allow(unused)] // we're using it in some tests
 pub(crate) use mapped_vector::MappedVector;
 
-// #[cfg(test)]
-// mod tests {
-// use coverage_helper::test;
-//     // use super::*;
+#[cfg(test)]
+mod tests {
+    use coverage_helper::test;
 
-//     // First we test the methods of [FullMap] that are not just simple redirections.
-//     // Then we use [FullMap] to as reference to test the other storages
+    use super::*;
 
-//     #[test]
-//     fn full_map() {
-//         /* all trivial */
-//     }
+    #[test]
+    #[should_panic]
+    fn graph_no_first_layer() {
+        let storage = Vector {
+            frames: vec![PauliVec::<Vec<bool>>::try_from_str("1", "0").unwrap()],
+        };
+        let map = vec![42];
+        create_dependency_graph(&storage, &map);
+    }
 
-//     #[test]
-//     fn mapped_vec() {
-//         // do some fuzzing using dispatch_storage_operation_comparison below
-//     }
-// }
+    #[test]
+    #[should_panic]
+    fn graph_no_new_layer() {
+        let storage = Vector {
+            frames: vec![
+                PauliVec::<Vec<bool>>::try_from_str("", "").unwrap(),
+                PauliVec::<Vec<bool>>::try_from_str("10", "00").unwrap(),
+                PauliVec::<Vec<bool>>::try_from_str("01", "00").unwrap(),
+            ],
+        };
+        let map = vec![1, 2];
+        create_dependency_graph(&storage, &map);
+    }
+
+    #[test]
+    fn graph_ok() {
+        let storage = Vector {
+            frames: vec![
+                PauliVec::<Vec<bool>>::try_from_str("", "").unwrap(),
+                PauliVec::<Vec<bool>>::try_from_str("10", "00").unwrap(),
+                PauliVec::<Vec<bool>>::try_from_str("01", "00").unwrap(),
+            ],
+        };
+        let map = vec![2, 0];
+        create_dependency_graph(&storage, &map);
+    }
+
+    // // First we test the methods of [FullMap] that are not just simple redirections.
+    // // Then we use [FullMap] to as reference to test the other storages
+
+    // #[test]
+    // fn full_map() {
+    //     /* all trivial */
+    // }
+
+    // #[test]
+    // fn mapped_vec() {
+    //     // do some fuzzing using dispatch_storage_operation_comparison below
+    // }
+}
 
 // #[cfg(test)]
 // fn dispatch_storage_operation_comparison(
