@@ -95,7 +95,7 @@ pub trait StackStorage: IntoIterator<Item = (usize, PauliVec<Self::BoolVec>)> {
     fn iter_mut(&mut self) -> Self::IterMut<'_>;
 }
 
-/// Sort the `storage` according to the qubits.
+/// Sort the `storage` according to the qubits numbers.
 pub fn sort_by_bit<B: StackStorage>(
     storage: &B,
 ) -> Vec<(usize, &PauliVec<B::BoolVec>)> {
@@ -104,7 +104,7 @@ pub fn sort_by_bit<B: StackStorage>(
     ret
 }
 
-/// Convert the `storage` into an sorted array according to the qubits.
+/// Convert the `storage` into a sorted array according to the qubits numbers.
 pub fn into_sorted_by_bit<B: StackStorage>(
     storage: B,
 ) -> Vec<(usize, PauliVec<B::BoolVec>)> {
@@ -113,17 +113,53 @@ pub fn into_sorted_by_bit<B: StackStorage>(
     ret
 }
 
-/// A layered graph, describing the measurent dependency induced by tracked Paulis.
+/// A layered graph, describing the how the qubits depend on each other. Each layer l =
+/// DependencyGraph\[i\] consist of an vector of tuples, where the first tuple element is
+/// the node qubits and the second tuple element contains all qubits on which the node
+/// qubit depends.
 pub type DependencyGraph = Vec<Vec<(usize, Vec<usize>)>>;
 
-/// Sort the `storage` according to the induced dependencies.
+/// Sort the `storage` according to the induced dependencies by the frames. Each frame
+/// in `storage` maps to a qubit number in `map`; frame (i) -> `map`\[i\]. If a qubit's
+/// Pauli stack has non-zero elements in a frame (i), the qubit is assumed to depend on
+/// `map`\[i\]
 ///
-/// E.g., if the frames correspond to measurement results. The return value is a layered
-/// directed graph. Note that dependencies that are already covered by later
-/// dependencies are removed (see example).
+/// Dependencies that are already covered by later dependencies, i.e., dependencies that
+/// are in a higher layer, are removed. For example if 0 depends on 1 and 2 but 1 also
+/// depends on 2, then 2 is not listed in the dependencies of 0.
+///
+/// Note that while the sorting is deterministic, up to `storage`'s
+/// [iter_vals](StackStorage::iter) implementation, the output might not be sorted
+/// as expected, since nodes are swapped around for better efficiency.
+///
+/// # Panics
+/// May panic if `map`.len() < number of frames in storage (out of bounds).
 ///
 /// # Examples
-/// todo
+/// ```
+/// # #[cfg_attr(coverage_nightly, no_coverage)]
+/// # fn main() {
+/// # use pauli_tracker::tracker::frames::storage::{create_dependency_graph, Vector};
+/// # use pauli_tracker::pauli::PauliVec;
+/// let storage = Vector {
+///     frames: vec![
+///         PauliVec::<Vec<bool>>::try_from_str("", "").unwrap(),
+///         PauliVec::<Vec<bool>>::try_from_str("10", "00").unwrap(),
+///         PauliVec::<Vec<bool>>::try_from_str("01", "10").unwrap(),
+///         PauliVec::<Vec<bool>>::try_from_str("1", "0").unwrap(),
+///     ],
+/// };
+/// let map = vec![0, 3];
+/// assert_eq!(
+///     create_dependency_graph(&storage, &map),
+///     vec![
+///         vec![(0, vec![])],
+///         vec![(3, vec![0]), (1, vec![0])],
+///         vec![(2, vec![3])], // note that the redundent dependency on 0 is removed
+///     ]
+/// );
+/// # }
+/// ```
 pub fn create_dependency_graph(
     storage: &impl StackStorage,
     map: &[usize],
@@ -155,9 +191,7 @@ pub fn create_dependency_graph(
         }
     }
 
-    if graph[0].is_empty() {
-        panic!("couldn't find any independent qubit");
-    }
+    assert!(!graph[0].is_empty(), "couldn't find any independent qubit");
 
     let mut layer_idx = 0;
 
@@ -167,12 +201,13 @@ pub fn create_dependency_graph(
             let mut register = Vec::new();
             for (bit, (_, resolved, open)) in remaining.iter_mut().enumerate() {
                 if let Some(resolved_idx) = open.iter().position(|&dep| dep == *known) {
-                    let mut redundent_deps = Vec::new();
-                    for (i, dep) in resolved.iter().enumerate() {
-                        if deps.contains(dep) {
-                            redundent_deps.push(i);
-                        }
-                    }
+                    let redundent_deps: Vec<usize> = resolved
+                        .iter()
+                        .enumerate()
+                        .filter_map(
+                            |(i, dep)| if deps.contains(dep) { Some(i) } else { None },
+                        )
+                        .collect();
                     // want to remove the redundent deps; the swap_remove works, because
                     // redundent_deps is sorted with increasing order
                     for redundent in redundent_deps.iter().rev() {
@@ -190,10 +225,11 @@ pub fn create_dependency_graph(
             }
         }
 
-        if new_layer.is_empty() {
-            println!("{:?}", graph);
-            panic!("couldn't find qubit with resolved deps");
-        }
+        assert!(
+            !new_layer.is_empty(),
+            "couldn't find qubit with resolved deps in layer {}",
+            layer_idx + 1
+        );
 
         graph.push(new_layer);
         layer_idx += 1;

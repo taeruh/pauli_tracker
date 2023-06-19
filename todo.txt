@@ -17,3 +17,4 @@ before next major bump:
 - pauli_insert -> return old value; and similar
 - more clifford gates
 - panics in create_dependency_graph to return error
+- introduce a Node struct for DependencyGraph
