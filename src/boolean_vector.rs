@@ -17,6 +17,18 @@ bit-vector libraries too, for which it should be easy to implement [BooleanVecto
 
 use std::fmt::Debug;
 
+macro_rules! inplace {
+    ($(($name:ident, $action:literal),)*) => {$(
+        /// Perform
+        #[doc=$action]
+        /// between `self` and `rhs` elementwise, updating self.
+        ///
+        /// # Panics
+        /// Panics if self.len() \neq rhs.len().
+        fn $name(&mut self, rhs: &Self);
+    )*}
+}
+
 /// This trait defines the interface that we require for storage types of boolean
 /// values in [storage].
 ///
@@ -39,29 +51,50 @@ pub trait BooleanVector:
     /// Create a new empty boolean vector.
     fn new() -> Self;
 
-    /// Create [Self] with `len` many `false/0` elements.
+    /// Create a boolean vector with `len` many `false/0` elements.
+    ///
+    /// # Examples
+    ///```
+    /// # #[cfg_attr(coverage_nightly, no_coverage)]
+    /// # fn main() {
+    /// use pauli_tracker::boolean_vector::BooleanVector;
+    /// assert_eq!(Vec::<bool>::zeros(3), vec![false, false, false])
+    /// # }
+    /// ```
     fn zeros(len: usize) -> Self;
 
     /// Set the element at `idx` to `flag`.
     ///
     /// # Panics
     /// Panics if `idx` is out of bounds.
+    ///
+    /// # Examples
+    ///```
+    /// # #[cfg_attr(coverage_nightly, no_coverage)]
+    /// # fn main() {
+    /// use pauli_tracker::boolean_vector::BooleanVector;
+    /// let mut vec = vec![true, false];
+    /// vec.set(1, true);
+    /// assert_eq!(vec, vec![true, true]);
+    /// # }
     fn set(&mut self, idx: usize, flag: bool);
 
-    /// Perform XOR between `self` and `rhs` elementwise, updating self.
-    ///
-    /// # Panics
-    /// Panics if self.len() \neq rhs.len().
-    fn xor_inplace(&mut self, rhs: &Self);
-
-    /// Perform OR between `self` and `rhs` elementwise, updating self.
-    ///
-    /// # Panics
-    /// Panics if self.len() \neq rhs.len().
-    fn or_inplace(&mut self, rhs: &Self);
+    inplace!((xor_inplace, "XOR"), (or_inplace, "OR"),);
 
     /// Resize the boolean vector to contain `len` elements, where new values are
     /// initialized with `flag`.
+    ///
+    /// # Examples
+    ///```
+    /// # #[cfg_attr(coverage_nightly, no_coverage)]
+    /// # fn main() {
+    /// use pauli_tracker::boolean_vector::BooleanVector;
+    /// let mut vec = vec![true, false];
+    /// vec.resize(3, true);
+    /// assert_eq!(vec, vec![true, false, true]);
+    /// vec.resize(1, true);
+    /// assert_eq!(vec, vec![true]);
+    /// # }
     fn resize(&mut self, len: usize, flag: bool);
 
     /// Push a new element onto the vector.
@@ -83,6 +116,18 @@ pub trait BooleanVector:
     /// functions, the returned Iterator has `bool` items and not `&bool`. This is
     /// because some bit-vector iterators provide only this kind of iter() and for the
     /// other we can just deref the item via [map](Iterator::map).
+    ///
+    /// # Examples
+    ///```
+    /// # #[cfg_attr(coverage_nightly, no_coverage)]
+    /// # fn main() {
+    /// use pauli_tracker::boolean_vector::BooleanVector;
+    /// let vec = vec![true, false];
+    /// let mut iter = vec.iter_vals();
+    /// assert_eq!(iter.next(), Some(true));
+    /// assert_eq!(iter.next(), Some(false));
+    /// assert_eq!(iter.next(), None);
+    /// # }
     fn iter_vals(&self) -> Self::IterVals<'_>;
 
     /// Sum up the elements modulo 2 with a `filter`. We represent `true <-> 1`, `false
@@ -125,3 +170,16 @@ pub mod bitvec_simd;
 #[cfg(feature = "bit-vec")]
 #[cfg_attr(docsrs, doc(cfg(feature = "bit-vec")))]
 mod bit_vec;
+
+#[cfg(test)]
+mod tests {
+    use coverage_helper::test;
+
+    use super::*;
+
+    #[test]
+    fn is_empty() {
+        assert!(<Vec<bool> as BooleanVector>::is_empty(&vec![]));
+        assert!(!<Vec<bool> as BooleanVector>::is_empty(&vec![true]));
+    }
+}
