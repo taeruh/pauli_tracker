@@ -297,19 +297,6 @@ mod tests {
         create_dependency_graph(&storage, &map);
     }
 
-    #[test]
-    fn graph_ok() {
-        let storage = Vector {
-            frames: vec![
-                PauliVec::<Vec<bool>>::try_from_str("", "").unwrap(),
-                PauliVec::<Vec<bool>>::try_from_str("10", "00").unwrap(),
-                PauliVec::<Vec<bool>>::try_from_str("01", "00").unwrap(),
-            ],
-        };
-        let map = vec![2, 0];
-        create_dependency_graph(&storage, &map);
-    }
-
     // // First we test the methods of [FullMap] that are not just simple redirections.
     // // Then we use [FullMap] to as reference to test the other storages
 

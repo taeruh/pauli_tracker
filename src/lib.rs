@@ -220,6 +220,11 @@ let map = [
 // we are interested in how many steps of parallel measurement we need to measure qubits
 // "0" to "4"; this can be figured out with the dependency graph:
 let graph = storage::create_dependency_graph(tracker.as_storage(), &map);
+
+// in this case the graph is already sorted according to the node numbers, but that is
+// not always true, if not one can use storage::sort_layers_by_bits to sort it, if
+// needed
+
 assert_eq!(
     graph, // fixed order because we set Storage = Vector
     // the tuples consist of the qubit and its measurement dependencies
