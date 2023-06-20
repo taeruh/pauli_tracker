@@ -18,3 +18,4 @@ before next major bump:
 - more clifford gates
 - panics in create_dependency_graph to return error
 - introduce a Node struct for DependencyGraph
+- maybe put functions in storage.rs into StackStorage as default fns

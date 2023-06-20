@@ -238,6 +238,25 @@ pub fn create_dependency_graph(
     graph
 }
 
+/// Sort the nodes in a layer of `graph` according to their qubit number.
+///
+/// # Examples
+/// ```
+/// # #[cfg_attr(coverage_nightly, no_coverage)]
+/// # fn main() {
+/// # use pauli_tracker::tracker::frames::storage::{sort_layers_by_bits, Vector};
+/// let mut graph = vec![vec![(0, vec![])], vec![(3, vec![0]), (1, vec![0])]];
+/// sort_layers_by_bits(&mut graph);
+///
+/// assert_eq!(graph, vec![vec![(0, vec![])], vec![(1, vec![0]), (3, vec![0])],]);
+/// # }
+/// ```
+pub fn sort_layers_by_bits(graph: &mut DependencyGraph) {
+    for layer in graph {
+        layer.sort_by_key(|(bit, _)| *bit)
+    }
+}
+
 mod vector;
 pub use vector::Vector;
 

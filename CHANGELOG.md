@@ -11,10 +11,13 @@ possible.
 
 ## [Unreleased]
 ### Added
+- Add `sort_layers_by_bits` function.
 ### Changed
 ### Deprecated
 ### Removed
 ### Fixed
+- Panic in `create_dependency_graph` if the input doesn't make sense, instead of
+  endlessly looping.
 
 ## [0.2.1] - 2023-06-14
 ### Added
