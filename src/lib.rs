@@ -69,7 +69,9 @@ This examples gives a first introduction to the tracking mechanism. The example
 requires the [rand](https://crates.io/crates/rand) crate.
 ```
 # #[cfg_attr(coverage_nightly, no_coverage)]
-# #[cfg(feature = "rand")]
+# // "circuit" instead of "rand" because we do not export the "rand" feature, since we
+# // use it as dep:rand
+# #[cfg(feature = "circuit")]
 # fn main() {
 # #[rustfmt::skip]
 use pauli_tracker::{
@@ -159,7 +161,7 @@ let conditional_summed_frames: Vec<_> = frames
 assert_eq!(*tracker.as_ref(), conditional_summed_frames, "{measurements:?}");
 # }
 # #[cfg_attr(coverage_nightly, no_coverage)]
-# #[cfg(not(feature = "rand"))]
+# #[cfg(not(feature = "circuit"))]
 # fn main() {}
 ```
 
