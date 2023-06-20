@@ -25,8 +25,8 @@ possible.
 - **Possible Breaking Change**: Add `impl<T: BooleanVector> FromIterator<Pauli> for
   PauliVec<T>`.
 - **Possible Breaking Change**: Add `TrackedCircuit::measure_and_store_all`.
-- **Possible Breaking Change**: Add `Tracker::track_$pauli` methods where $pauli in x,
-  y, z.
+- **Possible Breaking Change**: Add `Tracker::track_$pauli` methods where $pauli = x, y,
+  z.
 ### Changed
 - Make `Vector`s inner field public.
 ### Removed

@@ -91,10 +91,10 @@ let mut tracker = Frames::<Storage>::init(3);
 
 // track Paulis through an (imaginary) circuit
 // X(0), CX(0, 1), S(1), Z(2), CZ(1, 2), H(0)
-tracker.track_pauli(0, Pauli::new_x()); // track a new Pauli X; frame (0)
+tracker.track_x(0); // track a new Pauli X; frame (0)
 tracker.cx(0, 1); // conjugate with a Control X gate
 tracker.s(1); // conjugate with an S gate
-tracker.track_pauli(2, Pauli::new_y()); // track a new Pauli Z; frame (1)
+tracker.track_y(2); // track a new Pauli Z; frame (1)
 tracker.cz(1, 2); // conjugate with a Control Z gate
 tracker.h(0); // conjugate with an H gate
 
@@ -185,13 +185,13 @@ type PauliVec = pauli::PauliVec<BoolVec>;
 // let's consider the following tracking pattern
 let mut tracker = Frames::<Storage>::init(6);
 
-tracker.track_pauli(0, Pauli::new_x()); // frame (0)
+tracker.track_x(0); // frame (0)
 tracker.cx(0, 1);
 tracker.s(1);
-tracker.track_pauli(2, Pauli::new_y()); // frame (1)
+tracker.track_y(2); // frame (1)
 tracker.cz(1, 2);
 tracker.cx(3, 2);
-tracker.track_pauli(1, Pauli::new_z()); // frame (2)
+tracker.track_z(1); // frame (2)
 tracker.h(1);
 tracker.cx(3, 1);
 tracker.cz(3, 2);
