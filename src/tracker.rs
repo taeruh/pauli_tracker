@@ -78,6 +78,8 @@ macro_rules! track_pauli {
 /// implementors might have their own invariant and it is recommend to look at their
 /// specific implementation documentation
 ///
+/// For extensive examples, plese refer to the [library documentation](crate#examples).
+///
 /// *currently, the set of supported Cliffords is very limited, it will be extended over
 /// time*
 pub trait Tracker {
@@ -169,6 +171,8 @@ mod test {
     pub type DoubleResult = (&'static str, [u8; 16]);
     pub type SingleAction<T> = fn(&mut T, usize);
     pub type DoubleAction<T> = fn(&mut T, usize, usize);
+
+    // the following expected results are proven in ./docs/conjugation_rules.md
 
     pub const N_SINGLES: usize = 2;
     const SINGLES: [SingleResult; N_SINGLES] =
