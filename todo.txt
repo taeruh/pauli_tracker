@@ -14,6 +14,7 @@ loops
 
 before next major bump:
 - Pauli::storage don't return reference
+- PauliVec's new to default and instead a real new
 - change Pauli Display and Debug
 - maybe remove deref for storage::Vector
 - remove AsRef for LiveVector

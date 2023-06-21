@@ -19,6 +19,9 @@ possible.
 ### Fixed
 - Panic in `create_dependency_graph` if the input doesn't make sense, instead of
   endlessly looping.
+- **Breaking**: In `PauliVec::push`, if the left (Z) and the right (X) stacks don't have
+  the same length, fill the shorter one with `false/0` so that they have the same
+  length, before pushing.
 
 ## [0.2.1] - 2023-06-14
 ### Added

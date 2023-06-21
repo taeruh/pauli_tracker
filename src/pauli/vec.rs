@@ -1,4 +1,7 @@
-use std::mem;
+use std::{
+    cmp::Ordering,
+    mem,
+};
 
 #[cfg(feature = "serde")]
 use serde::{
@@ -70,26 +73,62 @@ impl<T: BooleanVector> PauliVec<T> {
         Self { left: zero.clone(), right: zero }
     }
 
-    /// Push a new [Pauli] onto the Pauli stack.
+    /// Push a new [Pauli] onto the Pauli stack. If one part of the stack, i.e, `left`
+    /// or `right`, is shorter than the other, it is fill up with `false/0` to have the
+    /// same length, before the `pauli` is pushed.
+    ///
+    /// # Examples
+    /// ```
+    /// # #[cfg_attr(coverage_nightly, no_coverage)]
+    /// # fn main() {
+    /// # use pauli_tracker::pauli::{Pauli, PauliVec};
+    /// let mut pauli = PauliVec::try_from_str("1", "").unwrap();
+    /// pauli.push(Pauli::new_z());
+    /// assert_eq!(
+    ///     pauli,
+    ///     PauliVec::<Vec<bool>> {
+    ///         left: vec![true, false],
+    ///         right: vec![false, true]
+    ///     }
+    /// );
+    /// # }
     pub fn push(&mut self, pauli: Pauli) {
+        let left = self.left.len();
+        let right = self.right.len();
+        match left.cmp(&right) {
+            Ordering::Less => self.left.resize(right, false),
+            Ordering::Equal => {}
+            Ordering::Greater => self.right.resize(left, false),
+        }
         self.left.push(pauli.get_x());
         self.right.push(pauli.get_z());
     }
 
-    /// Pop the last element from the stack and return it. Returns [None] if the vector
+    /// Pop the last element from the stack and return it. If one part of the stack,
+    /// i.e., `left` or `right` is shorter than the other, it `false/0` is substituted
+    /// for the missing value. Returns [None] if both parts of the stacks are empty.
     /// is empty.
+    ///
+    /// # Examples
+    /// ```
+    /// # #[cfg_attr(coverage_nightly, no_coverage)]
+    /// # fn main() {
+    /// # use pauli_tracker::pauli::{Pauli, PauliVec};
+    /// let mut pauli = PauliVec::<Vec<bool>>::try_from_str("01", "1").unwrap();
+    /// assert_eq!(pauli.pop(), Some(Pauli::new_x()));
+    /// assert_eq!(pauli.pop(), Some(Pauli::new_z()));
+    /// assert_eq!(pauli.pop(), None);
+    /// # }
     pub fn pop(&mut self) -> Option<Pauli> {
         match self.left.len().cmp(&self.right.len()) {
-            std::cmp::Ordering::Less => Some(Pauli::new(
+            Ordering::Less => Some(Pauli::new(
                 false,
                 self.right
                     .pop()
                     .expect("shouldn't be possible since right.len > left.len >= 0"),
             )),
-            std::cmp::Ordering::Equal => {
-                Some(Pauli::new(self.left.pop()?, self.right.pop()?))
-            }
-            std::cmp::Ordering::Greater => Some(Pauli::new(
+            Ordering::Equal => Some(Pauli::new(self.left.pop()?, self.right.pop()?)),
+            Ordering::Greater => Some(Pauli::new(
                 self.left
                     .pop()
                     .expect("shouldn't be possible since left.len > right.len >= 0"),
@@ -102,23 +141,23 @@ impl<T: BooleanVector> PauliVec<T> {
 
     // Pauli gates don't do anything; we just include them for completeness and since it
     // might be more convenient to have them on the caller side
-    /// Apply Pauli X, note that it is just the identity
+    /// Apply Pauli X, note that it is just the identity.
     #[inline(always)]
     pub fn x(&self) {}
-    /// Apply Pauli Z, note that it is just the identity
+    /// Apply Pauli Z, note that it is just the identity.
     #[inline(always)]
     pub fn z(&self) {}
-    /// Apply Pauli Y, note that it is just the identity
+    /// Apply Pauli Y, note that it is just the identity.
     #[inline(always)]
     pub fn y(&self) {}
 
-    /// Apply Hadamard
+    /// Apply Hadamard gate.
     #[inline]
     pub fn h(&mut self) {
         mem::swap(&mut self.left, &mut self.right);
     }
 
-    /// Apply Phase S
+    /// Apply Phase S gate.
     #[inline]
     pub fn s(&mut self) {
         // self.right.xor(&self.left);
@@ -126,7 +165,7 @@ impl<T: BooleanVector> PauliVec<T> {
     }
 
     /// Multiply the Paulis, i.e., summing them up mod 2 in the tableau representation,
-    /// with a `filter` while neglecting any phases. An element `e` is filtered if
+    /// with a `filter`, while neglecting any phases. An element `e` is filtered if
     /// `filter[i] = true` where `i` is `e`'s index in
     /// [iter_vals](BooleanVector::iter_vals). Compare [BooleanVector::sum_up].
     ///
