@@ -12,6 +12,7 @@ possible.
 ## [Unreleased]
 ### Added
 - Add `sort_layers_by_bits` function.
+- Add `pauli::encoding` constants.
 ### Changed
 ### Deprecated
 ### Removed

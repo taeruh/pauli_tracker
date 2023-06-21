@@ -10,12 +10,15 @@
 make create_dependency_graph more secure against wrong input, e.g., break the endless
 loops
 
+- more clifford gates
+
 before next major bump:
+- Pauli::storage don't return reference
+- change Pauli Display and Debug
 - maybe remove deref for storage::Vector
 - remove AsRef for LiveVector
 - use real error types when returning an error, not just Strings
 - pauli_insert -> return old value; and similar
-- more clifford gates
 - panics in create_dependency_graph to return error
 - introduce a Node struct for DependencyGraph
 - maybe put functions in storage.rs into StackStorage as default fns
