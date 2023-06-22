@@ -25,8 +25,8 @@ into the literature, e.g.,:
   - [Stim: a fast stabilizer circuit simulator](https://arxiv.org/abs/2103.02202)
   - ...
 
-[Conjugation rules](./docs/conjugation_rules) lists the conjugation rules for the
-Clifford operations provided by the library (with proofs).
+[Conjugation rules](./docs/conjugation_rules.md) lists the conjugation rules for the
+Clifford operations provided by the library (with proofs) (should be viewed with Katex).
 
 ## What this library does
 
