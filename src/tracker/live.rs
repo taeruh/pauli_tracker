@@ -98,7 +98,7 @@ impl Tracker for LiveVector {
                 None
             }
             Ordering::Greater => {
-                let diff = bit - len - 1;
+                let diff = bit - len + 1;
                 self.inner.try_reserve(diff).unwrap_or_else(|e| {
                     panic!("error when trying to reserve enough memory: {e}")
                 });
@@ -238,5 +238,20 @@ mod tests {
 
             impl_utils::double_check(runner, ACTIONS);
         }
+    }
+
+    #[test]
+    fn new_qubit_and_measure() {
+        let mut tracker = LiveVector::init(1);
+        tracker.track_x(0);
+        assert_eq!(tracker.new_qubit(0), Some(0));
+        assert_eq!(tracker.new_qubit(1), None);
+        assert_eq!(*tracker.as_ref(), vec![Pauli::new_x(), Pauli::new_i()]);
+        assert_eq!(tracker.measure(0), Some(Pauli::new_x()));
+        assert_eq!(tracker.new_qubit(3), None);
+        assert_eq!(
+            *tracker.as_ref(),
+            vec![Pauli::new_x(), Pauli::new_i(), Pauli::new_i(), Pauli::new_i()]
+        );
     }
 }

@@ -22,6 +22,7 @@ possible.
 - **Breaking**: In `PauliVec::push`, if the left (Z) and the right (X) stacks don't have
   the same length, fill the shorter one with `false/0` so that they have the same
   length, before pushing.
+- Fix `LiveVector::new_qubit` when the index is bigger then the length.
 
 ## [0.2.1] - 2023-06-14
 ### Added
