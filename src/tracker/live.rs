@@ -184,7 +184,7 @@ mod tests {
             const ACTIONS: [Action; N_SINGLES] = [LiveVector::h, LiveVector::s];
 
             #[cfg_attr(coverage_nightly, no_coverage)]
-            fn runner(action: Action, result: SingleResult) {
+            fn runner(action: Action, result: SingleResults) {
                 for (input, check) in (0u8..).zip(result.1) {
                     let mut tracker = LiveVector::init(2);
                     tracker.track_pauli_string(utils::single_init(input));
@@ -216,7 +216,7 @@ mod tests {
             ];
 
             #[cfg_attr(coverage_nightly, no_coverage)]
-            fn runner(action: Action, result: DoubleResult) {
+            fn runner(action: Action, result: DoubleResults) {
                 for (input, check) in (0u8..).zip(result.1) {
                     let mut tracker = LiveVector::init(2);
                     tracker.track_pauli_string(utils::double_init(input));

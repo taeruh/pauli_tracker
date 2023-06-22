@@ -284,7 +284,7 @@ mod tests {
             const ACTIONS: [Action; N_SINGLES] = [Frames::h, Frames::s];
 
             #[cfg_attr(coverage_nightly, no_coverage)]
-            fn runner(action: Action, result: SingleResult) {
+            fn runner(action: Action, result: SingleResults) {
                 let mut tracker: ThisTracker = Frames::init(1);
                 for input in (0..4).rev() {
                     tracker
@@ -319,7 +319,7 @@ mod tests {
             ];
 
             #[cfg_attr(coverage_nightly, no_coverage)]
-            fn runner(action: Action, result: DoubleResult) {
+            fn runner(action: Action, result: DoubleResults) {
                 let mut tracker: ThisTracker = Frames::init(2);
                 for pauli in (0..16).rev() {
                     tracker.track_pauli_string(utils::double_init(pauli));

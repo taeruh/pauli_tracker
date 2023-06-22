@@ -25,6 +25,9 @@ into the literature, e.g.,:
   - [Stim: a fast stabilizer circuit simulator](https://arxiv.org/abs/2103.02202)
   - ...
 
+[Conjugation rules](./docs/conjugation_rules) lists the conjugation rules for the
+Clifford operations provided by the library (with proofs).
+
 ## What this library does
 
 This library does **not** provide a full quantum simulator. Instead it only provides

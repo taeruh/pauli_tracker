@@ -88,7 +88,7 @@ fn roundtrip(init: usize, ops: Vec<Operation>) {
     let graph = storage::create_dependency_graph(&circuit.storage, &measurements.0);
     check_graph(&graph, &circuit.storage, &measurements.0).unwrap();
 
-    // println!(graph: "{:?}", graph);
+    // println!("graph: {:?}", graph);
     // println!("graph.len: {}", graph.len());
     // println!("{:?}", measurements.0);
 
