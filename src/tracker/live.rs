@@ -175,9 +175,14 @@ mod tests {
             test,
             *,
         };
-        use crate::tracker::test::{
+        use crate::tracker::test::impl_utils::{
             self,
-            *,
+            DoubleAction,
+            DoubleResults,
+            SingleAction,
+            SingleResults,
+            N_DOUBLES,
+            N_SINGLES,
         };
 
         #[test]
@@ -190,7 +195,7 @@ mod tests {
             fn runner(action: Action, result: SingleResults) {
                 for (input, check) in (0u8..).zip(result.1) {
                     let mut tracker = LiveVector::init(2);
-                    tracker.track_pauli_string(utils::single_init(input));
+                    tracker.track_pauli_string(impl_utils::single_init(input));
                     (action)(&mut tracker, 0);
                     assert_eq!(
                         *tracker.inner.get(0).unwrap().storage(),
@@ -202,7 +207,7 @@ mod tests {
                 }
             }
 
-            test::single_check(runner, ACTIONS);
+            impl_utils::single_check(runner, ACTIONS);
         }
 
         #[test]
@@ -222,15 +227,16 @@ mod tests {
             fn runner(action: Action, result: DoubleResults) {
                 for (input, check) in (0u8..).zip(result.1) {
                     let mut tracker = LiveVector::init(2);
-                    tracker.track_pauli_string(utils::double_init(input));
+                    tracker.track_pauli_string(impl_utils::double_init(input));
                     (action)(&mut tracker, 0, 1);
-                    let output =
-                        utils::double_output(tracker.inner.into_iter().enumerate());
+                    let output = impl_utils::double_output(
+                        tracker.inner.into_iter().enumerate(),
+                    );
                     assert_eq!(output, check, "{}, {}", result.0, input);
                 }
             }
 
-            test::double_check(runner, ACTIONS);
+            impl_utils::double_check(runner, ACTIONS);
         }
     }
 }

@@ -266,9 +266,14 @@ mod tests {
             test,
             *,
         };
-        use crate::tracker::test::{
+        use crate::tracker::test::impl_utils::{
             self,
-            *,
+            DoubleAction,
+            DoubleResults,
+            SingleAction,
+            SingleResults,
+            N_DOUBLES,
+            N_SINGLES,
         };
 
         // maybe todo: in the following functions there's a pattern behind how we encode
@@ -304,7 +309,7 @@ mod tests {
                 }
             }
 
-            test::single_check(runner, ACTIONS)
+            impl_utils::single_check(runner, ACTIONS)
         }
 
         #[test]
@@ -324,16 +329,17 @@ mod tests {
             fn runner(action: Action, result: DoubleResults) {
                 let mut tracker: ThisTracker = Frames::init(2);
                 for pauli in (0..16).rev() {
-                    tracker.track_pauli_string(utils::double_init(pauli));
+                    tracker.track_pauli_string(impl_utils::double_init(pauli));
                 }
                 (action)(&mut tracker, 0, 1);
                 for (input, check) in (0u8..).zip(result.1) {
-                    let output = utils::double_output(tracker.pop_frame().unwrap());
+                    let output =
+                        impl_utils::double_output(tracker.pop_frame().unwrap());
                     assert_eq!(output, check, "{}, {}", result.0, input);
                 }
             }
 
-            test::double_check(runner, ACTIONS);
+            impl_utils::double_check(runner, ACTIONS);
         }
     }
 }

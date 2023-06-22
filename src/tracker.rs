@@ -159,77 +159,78 @@ pub mod live;
 
 #[cfg(test)]
 mod test {
-    use super::*;
-
-    // when we update the results here and use this module in the test of the tracker
-    // implementors, the type system ensures that we test all gates/actions
-
-    //                 name for debugging, expected results
-    pub type SingleResults = (&'static str, [u8; 4]);
-    pub type DoubleResults = (&'static str, [(u8, u8); 16]);
-    pub type SingleAction<T> = fn(&mut T, usize);
-    pub type DoubleAction<T> = fn(&mut T, usize, usize);
-
-    // the following expected results are proven in ./docs/conjugation_rules.md
-
-    pub const N_SINGLES: usize = 2;
-    const SINGLE_GENERATORS: [(&str, [u8; 2]); N_SINGLES] =
-        // (name, [conjugate X, conjugate Z])
-        [("H", [1, 2]), ("S", [3, 1])];
-
-    pub const N_DOUBLES: usize = 6;
-    const DOUBLE_GENERATORS: [(&str, [(u8, u8); 4]); N_DOUBLES] = [
-        // (name, [conjugate X1, conjugate Z1, conjugate 1X, conjugate 1Z])
-        ("cx", [(2, 2), (1, 0), (0, 2), (1, 1)]),
-        ("cz", [(2, 1), (1, 0), (1, 2), (0, 1)]),
-        // these here are not conjugations with unitary operators, however it still
-        // works, because the move operation is a homomorphism
-        ("move_x_to_x", [(0, 2), (1, 0), (0, 2), (0, 1)]),
-        ("move_x_to_z", [(0, 1), (1, 0), (0, 2), (0, 1)]),
-        ("move_z_to_x", [(2, 0), (0, 2), (0, 2), (0, 1)]),
-        ("move_z_to_z", [(2, 0), (0, 1), (0, 2), (0, 1)]),
-    ];
-
-    #[cfg_attr(coverage_nightly, no_coverage)]
-    pub fn single_check<T, R>(runner: R, actions: [SingleAction<T>; N_SINGLES])
-    where
-        T: Tracker,
-        R: Fn(SingleAction<T>, SingleResults),
-    {
-        for (action, result_generator) in actions.into_iter().zip(SINGLE_GENERATORS) {
-            let mut results = [0; 4];
-            for (i, r) in results.iter_mut().enumerate() {
-                *r = (if (i & 2) > 0 { result_generator.1[0] } else { 0 })
-                    ^ (if (i & 1) > 0 { result_generator.1[1] } else { 0 })
-            }
-            (runner)(action, (result_generator.0, results))
-        }
-    }
-
-    #[cfg_attr(coverage_nightly, no_coverage)]
-    pub fn double_check<T, R>(runner: R, actions: [DoubleAction<T>; N_DOUBLES])
-    where
-        T: Tracker,
-        R: Fn(DoubleAction<T>, DoubleResults),
-    {
-        for (action, result_generator) in actions.into_iter().zip(DOUBLE_GENERATORS) {
-            let mut results = [(0, 0); 16];
-            for (i, r) in (0..).zip(results.iter_mut()) {
-                let a = if (i & 8) > 0 { result_generator.1[0] } else { (0, 0) };
-                let b = if (i & 4) > 0 { result_generator.1[1] } else { (0, 0) };
-                let c = if (i & 2) > 0 { result_generator.1[2] } else { (0, 0) };
-                let d = if (i & 1) > 0 { result_generator.1[3] } else { (0, 0) };
-                *r = (a.0 ^ b.0 ^ c.0 ^ d.0, a.1 ^ b.1 ^ c.1 ^ d.1)
-            }
-            (runner)(action, (result_generator.0, results))
-        }
-    }
-
-    pub mod utils {
+    pub mod impl_utils {
+        use super::super::*;
         use crate::{
             pauli::Pauli,
             tracker::PauliString,
         };
+
+        // when we update the results here and use this module in the test of the tracker
+        // implementors, the type system ensures that we test all gates/actions
+
+        //                 name for debugging, expected results
+        pub type SingleResults = (&'static str, [u8; 4]);
+        pub type DoubleResults = (&'static str, [(u8, u8); 16]);
+        pub type SingleAction<T> = fn(&mut T, usize);
+        pub type DoubleAction<T> = fn(&mut T, usize, usize);
+
+        // the following expected results are proven in ./docs/conjugation_rules.md
+
+        pub const N_SINGLES: usize = 2;
+        const SINGLE_GENERATORS: [(&str, [u8; 2]); N_SINGLES] =
+            // (name, [conjugate X, conjugate Z])
+            [("H", [1, 2]), ("S", [3, 1])];
+
+        pub const N_DOUBLES: usize = 6;
+        const DOUBLE_GENERATORS: [(&str, [(u8, u8); 4]); N_DOUBLES] = [
+            // (name, [conjugate X1, conjugate Z1, conjugate 1X, conjugate 1Z])
+            ("cx", [(2, 2), (1, 0), (0, 2), (1, 1)]),
+            ("cz", [(2, 1), (1, 0), (1, 2), (0, 1)]),
+            // these here are not conjugations with unitary operators, however it still
+            // works, because the move operation is a homomorphism
+            ("move_x_to_x", [(0, 2), (1, 0), (0, 2), (0, 1)]),
+            ("move_x_to_z", [(0, 1), (1, 0), (0, 2), (0, 1)]),
+            ("move_z_to_x", [(2, 0), (0, 2), (0, 2), (0, 1)]),
+            ("move_z_to_z", [(2, 0), (0, 1), (0, 2), (0, 1)]),
+        ];
+
+        #[cfg_attr(coverage_nightly, no_coverage)]
+        pub fn single_check<T, R>(runner: R, actions: [SingleAction<T>; N_SINGLES])
+        where
+            T: Tracker,
+            R: Fn(SingleAction<T>, SingleResults),
+        {
+            for (action, result_generator) in actions.into_iter().zip(SINGLE_GENERATORS)
+            {
+                let mut results = [0; 4];
+                for (i, r) in results.iter_mut().enumerate() {
+                    *r = (if (i & 2) > 0 { result_generator.1[0] } else { 0 })
+                        ^ (if (i & 1) > 0 { result_generator.1[1] } else { 0 })
+                }
+                (runner)(action, (result_generator.0, results))
+            }
+        }
+
+        #[cfg_attr(coverage_nightly, no_coverage)]
+        pub fn double_check<T, R>(runner: R, actions: [DoubleAction<T>; N_DOUBLES])
+        where
+            T: Tracker,
+            R: Fn(DoubleAction<T>, DoubleResults),
+        {
+            for (action, result_generator) in actions.into_iter().zip(DOUBLE_GENERATORS)
+            {
+                let mut results = [(0, 0); 16];
+                for (i, r) in (0..).zip(results.iter_mut()) {
+                    let a = if (i & 8) > 0 { result_generator.1[0] } else { (0, 0) };
+                    let b = if (i & 4) > 0 { result_generator.1[1] } else { (0, 0) };
+                    let c = if (i & 2) > 0 { result_generator.1[2] } else { (0, 0) };
+                    let d = if (i & 1) > 0 { result_generator.1[3] } else { (0, 0) };
+                    *r = (a.0 ^ b.0 ^ c.0 ^ d.0, a.1 ^ b.1 ^ c.1 ^ d.1)
+                }
+                (runner)(action, (result_generator.0, results))
+            }
+        }
 
         #[cfg_attr(coverage_nightly, no_coverage)]
         pub fn single_init(input: u8) -> PauliString {
