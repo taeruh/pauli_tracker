@@ -24,8 +24,9 @@ use crate::{
     slice_extension::GetTwoMutSlice,
 };
 
-/// A newtype vector of [PauliVec]s. Restricted, but if that is no problem, and the
-/// type is used correctly, it is more efficient than [Map](super::map::Map).
+/// A newtype vector of [PauliVec]s. Restricted, since we don't have the flexibility of
+/// a hashmap, but if that is no problem, and the type is used correctly, it is more
+/// efficient than [Map](super::map::Map).
 #[derive(Debug, Default)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct Vector<B> {
@@ -56,6 +57,8 @@ impl<B> IntoIterator for Vector<B> {
     }
 }
 
+/// Note that [Vector] is essentially a [Vec]. Therefore, we can basically only insert
+/// and remove Pauli stacks at the end.
 impl<B: BooleanVector> StackStorage for Vector<B> {
     type BoolVec = B;
     type IterMut<'a> = Enumerate<slice::IterMut<'a, PauliVec<B>>>

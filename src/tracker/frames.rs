@@ -166,6 +166,8 @@ macro_rules! movements {
     )*}
 }
 
+/// Note that the methods that add or remove memory hold the invariants of Storage's
+/// [StackStorage] implementation.
 impl<Storage> Tracker for Frames<Storage>
 where
     Storage: StackStorage,

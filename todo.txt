@@ -1,9 +1,5 @@
 - implement a file streaming storage
 - more tests
-  - write helper for all the basic gate tests
-  - better circuit module for testing
-  - test boolean_vector impls
-- define more clifford gates
 - maybe try to depend only on proptest when we really run proptest (for less
   dependencies in ci)
 
@@ -11,15 +7,19 @@ make create_dependency_graph more secure against wrong input, e.g., break the en
 loops
 
 - more clifford gates
+- maybe: in storage::vector when inserting, do the same as as in livevector if index to
+  high, i.e., insert buffer stacks
 
 before next major bump:
 - Pauli::storage don't return reference
 - PauliVec's new to default and instead a real new
 - change Pauli Display and Debug
 - maybe remove deref for storage::Vector
-- remove AsRef for LiveVector
 - use real error types when returning an error, not just Strings
 - pauli_insert -> return old value; and similar
 - panics in create_dependency_graph to return error
 - introduce a Node struct for DependencyGraph
 - maybe put functions in storage.rs into StackStorage as default fns
+
+another major bump:
+- rewrite LiveVector to be generic like Frames

@@ -74,11 +74,9 @@ macro_rules! track_pauli {
 /// The core API to track Paulis through a clifford circuit.
 ///
 /// The implementors must ensure that they implement the methods correctly according
-/// to the conjugation rules of Clifford gates with Pauli Gates. Apart from that the
-/// implementors might have their own invariant and it is recommend to look at their
-/// specific implementation documentation
+/// to the conjugation rules of Clifford gates with Pauli gates.
 ///
-/// For extensive examples, plese refer to the [library documentation](crate#examples).
+/// For extensive examples, please refer to the [library documentation](crate#examples).
 ///
 /// *currently, the set of supported Cliffords is very limited, it will be extended over
 /// time*

@@ -7,6 +7,7 @@ multiple tracked Paulis.
 use std::{
     self,
     cmp::Ordering,
+    iter,
 };
 
 #[cfg(feature = "serde")]
@@ -26,7 +27,7 @@ use crate::{
     slice_extension::GetTwoMutSlice,
 };
 
-// todo: also do it with a hashmap
+// todo: make it generic and also do it with a hashmap
 
 /// An implementor of [Tracker], similar to [Frames](super::frames::Frames), with the
 /// difference, that instead of storing each Pauli frame, it adds the Pauli frames (mod
@@ -77,6 +78,8 @@ macro_rules! single {
     )*};
 }
 
+/// Note that the inner storage type is basically a vector. Therefore, the it may
+/// contain buffer qubits, even though they were not explicitly initialized.
 impl Tracker for LiveVector {
     type Stack = Pauli;
 
@@ -99,7 +102,7 @@ impl Tracker for LiveVector {
                 self.inner.try_reserve(diff).unwrap_or_else(|e| {
                     panic!("error when trying to reserve enough memory: {e}")
                 });
-                self.inner.extend(std::iter::repeat(Pauli::new_i()).take(diff));
+                self.inner.extend(iter::repeat(Pauli::new_i()).take(diff));
                 None
             }
         }
