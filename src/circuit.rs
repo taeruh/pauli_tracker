@@ -273,8 +273,8 @@ where
         self.tracker.measure_and_store(bit, &mut self.storage)
     }
 
-    /// Measure all qubits and put the according stack of Paulis into the additional
-    /// storage, i.e., do [Self::measure_and_store] for all qubits.
+    /// Measure all remaining qubits and put the according stack of Paulis into the
+    /// additional storage, i.e., do [Self::measure_and_store] for all qubits.
     pub fn measure_and_store_all(&mut self) -> Result<(), String> {
         for (bit, pauli) in
             mem::replace(&mut self.tracker, Frames::<A>::init(0)).into_storage()

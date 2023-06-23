@@ -16,10 +16,16 @@ before next major bump:
 - change Pauli Display and Debug
 - maybe remove deref for storage::Vector
 - use real error types when returning an error, not just Strings
-- pauli_insert -> return old value; and similar
+- pauli_insert -> replace value and return old value if necessary; and similar (more
+  like a hashmap)
 - panics in create_dependency_graph to return error
 - introduce a Node struct for DependencyGraph
 - maybe put functions in storage.rs into StackStorage as default fns
+- rename circuit measure_and_store_all to measure_and_store_remaining
+- add a measure_remaining ot CliffordCircuit and or a qubit loop
+- return Ok(measurement results) in the circuits measure methods
 
 another major bump:
 - rewrite LiveVector to be generic like Frames
+- maybe make Map's and Vector's inner type private (making Map to a newtype) and remove
+  Deref(Mut) impls

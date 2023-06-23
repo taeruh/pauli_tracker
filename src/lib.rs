@@ -355,7 +355,8 @@ assert_eq!(
 // let's view the dependency graph: we need to do some prework
 // first put everything into the storage
 circ.measure_and_store_all();
-// to make the assert work we need a storage with an determinitic iterator ...
+// to make the assert work we need a storage with an determinitic iterator; you probably
+// don't need to do this in a real application
 let storage = Vector {
     frames: storage::into_sorted_by_bit(circ.storage)
     .into_iter()
