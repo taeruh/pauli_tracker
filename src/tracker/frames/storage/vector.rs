@@ -27,7 +27,7 @@ use crate::{
 /// A newtype vector of [PauliVec]s. Restricted, since we don't have the flexibility of
 /// a hashmap, but if that is no problem, and the type is used correctly, it is more
 /// efficient than [Map](super::map::Map).
-#[derive(Debug, Default)]
+#[derive(Clone, PartialEq, Eq, PartialOrd, Ord, Default, Debug)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct Vector<B> {
     /// The inner storage.
@@ -58,7 +58,7 @@ impl<B> IntoIterator for Vector<B> {
 }
 
 /// Note that [Vector] is essentially a [Vec]. Therefore, we can basically only insert
-/// and remove Pauli stacks at the end.
+/// and remove Pauli stacks at the end without screwing things up.
 impl<B: BooleanVector> StackStorage for Vector<B> {
     type BoolVec = B;
     type IterMut<'a> = Enumerate<slice::IterMut<'a, PauliVec<B>>>
@@ -131,5 +131,39 @@ impl<B: BooleanVector> StackStorage for Vector<B> {
     #[inline(always)]
     fn is_empty(&self) -> bool {
         self.frames.is_empty()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use std::panic;
+
+    use coverage_helper::test;
+
+    use super::*;
+
+    #[test]
+    fn remove_and_insert() {
+        type B = Vec<bool>;
+        let pauli = PauliVec::<B>::zeros(2);
+        let mut storage = Vector::<B>::init(1);
+        assert_eq!(storage.insert_pauli(0, pauli.clone()), Some(pauli.clone()));
+        assert_eq!(storage.insert_pauli(1, pauli.clone()), None);
+        assert!(
+            panic::catch_unwind(|| {
+                let mut storage = storage.clone(); // cos &mut is not UnwindSafe
+                storage.insert_pauli(3, pauli.clone());
+            })
+            .is_err()
+        );
+        assert!(
+            panic::catch_unwind(|| {
+                let mut storage = storage.clone();
+                storage.remove_pauli(0);
+            })
+            .is_err()
+        );
+        assert_eq!(storage.remove_pauli(1), Some(pauli));
+        assert_eq!(storage.remove_pauli(1), None);
     }
 }

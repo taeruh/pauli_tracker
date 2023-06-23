@@ -13,6 +13,8 @@ possible.
 ### Added
 - Add `sort_layers_by_bits` function.
 - Add `pauli::encoding` constants.
+- **Possible Breaking Change**: Derive Clone, PartialEq, Eq, PartialOrd, Ord for
+  `storage::Vector`
 ### Changed
 ### Deprecated
 ### Removed
