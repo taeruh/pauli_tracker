@@ -3,12 +3,15 @@
 - maybe try to depend only on proptest when we really run proptest (for less
   dependencies in ci)
 
-make create_dependency_graph more secure against wrong input, e.g., break the endless
-loops
-
 - more clifford gates
 - maybe: in storage::vector when inserting, do the same as as in livevector if index to
   high, i.e., insert buffer stacks
+
+- add some standard test for autotraits like send, sync, ..
+
+- write a better contributing.md
+
+- write a proper todo.md
 
 before next major bump:
 - Pauli::storage don't return reference

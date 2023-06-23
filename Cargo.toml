@@ -20,13 +20,39 @@ crate-type = ["lib"]
 circuit = ["dep:rand"]
 serde = ["dep:serde", "bitvec?/serde", "bitvec_simd?/serde", "bit-vec?/serde"]
 
+# about the specified dependency version:
+# - we use the newest major version if possible: if we expose an item from a dependency,
+#   then bumping the dependencies major version is a break change, therefore, if we don't
+#   have to bump the dependency's version, we wait until we really want to increase our
+#   major version because of some other reasons
+# - we use the lowest possible minor version (manually search it with a binary like
+#   search and test with `./target/debug/xtask ci coverage`); this is okay because we
+#   test it in our CI (test locked) and provides maximal flexibility to users.
+#   However, note that we are not testing all versions in the possible range from our
+#   specified minimal version to the latest version. This means that there might be
+#   versions within the allowed range that do not compile. That is in general a problem
+#   and the only way out would be to define exact versions with "=", but that is too
+#   strict. However, this kind of breakage should be rare if the libraries follow the
+#   SemVer rules, as best as possible, and users don't use stuff like wildcard imports.
+#   Specifying the lowest possible minor versions, increases the chance for such
+#   breakages, but since this is rather a SemVer failure, I think this is better then
+#   restricting when this library can be used (through too tight dependency version
+#   bounds)
+# - we tend to use a higher patch version (because this are fixes or internal
+#   improvements), i.e., when adding a dependency or updating its major and/or minor
+#   versions, we select the highest possible patch version (because finding the minimal
+#   working patch version seems rather unnecessary - why would someone want to restrict
+#   a dependency to a smaller patch version (except if the patch breaks something, but
+#   then it should be fixed soonly))
+# the above is of course unnecessary for dev-dependencies, xtask, ...
+
 [dependencies]
-itertools = "0.10.5"
+itertools = "0.11.0"
 bitvec = { version = "1.0.1", optional = true }
-bitvec_simd = { version = "0.20.5", optional = true }
-bit-vec = { version = "0.6.3", optional = true }
-rand = { version = "0.8.5", optional = true }
-serde = { version = "1.0.163", optional = true, features = ["derive"] }
+bitvec_simd = { version = "0.20.0", optional = true }
+bit-vec = { version = "0.6.2", optional = true }
+rand = { version = "0.8.0", optional = true }
+serde = { version = "1.0.164", optional = true, features = ["derive"] }
 
 [package.metadata.docs.rs]
 all-features = true
