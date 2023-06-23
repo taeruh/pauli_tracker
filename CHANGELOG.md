@@ -8,20 +8,24 @@ We try to follow the [SemVer](https://semver.org/) rules, specifically
 [Cargo guidelines](https://doc.rust-lang.org/cargo/reference/semver.html), as best as
 possible.
 
-
 ## [Unreleased]
 ### Added
-- Add `sort_layers_by_bits` function.
-- Add `pauli::encoding` constants.
-- **Possible Breaking Change**: Derive Clone, PartialEq, Eq, PartialOrd, Ord for
-  `storage::Vector`
 ### Changed
 ### Deprecated
 ### Removed
 ### Fixed
+### Security
+
+## [0.2.2] + 2023-06-23
+### Added
+- Add `sort_layers_by_bits` function.
+- Add `pauli::encoding` constants.
+- **Possible Breaking Change**: Derive Clone, PartialEq, Eq, PartialOrd, Ord for
+  `storage::Vector`.
+### Fixed
 - Panic in `create_dependency_graph` if the input doesn't make sense, instead of
   endlessly looping.
-- **Breaking**: In `PauliVec::push`, if the left (Z) and the right (X) stacks don't have
+- In `PauliVec::push`, if the left (Z) and the right (X) stacks don't have
   the same length, fill the shorter one with `false/0` so that they have the same
   length, before pushing.
 - Fix `LiveVector::new_qubit` when the index is bigger then the length.
@@ -71,7 +75,8 @@ possible.
 
 ## [0.1.0] - 2023-06-01
 
-[Unreleased]: https://github.com/taeruh/pauli_tracker/compare/v0.2.1...HEAD
+[Unreleased]: https://github.com/taeruh/pauli_tracker/compare/v0.2.2...HEAD
+[0.2.2]: https://github.com/taeruh/pauli_tracker/compare/v0.2.1...v0.2.2
 [0.2.1]: https://github.com/taeruh/pauli_tracker/compare/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/taeruh/pauli_tracker/compare/v0.1.1...v0.2.0
 [0.1.1]: https://github.com/taeruh/pauli_tracker/compare/v0.1.0...v0.1.1
