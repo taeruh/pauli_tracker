@@ -18,6 +18,9 @@ possible.
   numbers.
 - **Breaking Change**: In `StackStorage::insert_pauli`, overwrite and return the old
   value if the qubit is already present, not the new value.
+- **Breaking Change**: Return the measurement outcomes in in
+  `circuit::measure_and_store(_all)` and error if one would overwrite something in the
+  additional storage.
 ### Deprecated
 ### Removed
 ### Fixed

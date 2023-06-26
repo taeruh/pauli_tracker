@@ -266,23 +266,33 @@ where
     A: StackStorage,
     S: StackStorage<BoolVec = A::BoolVec>,
 {
-    /// Perform a **Measurement** and move the according qubit from the tracker into the
-    /// additional storage.
-    pub fn measure_and_store(&mut self, bit: usize) -> Result<(), String> {
-        self.circuit.measure(bit);
-        self.tracker.measure_and_store(bit, &mut self.storage)
+    /// Perform a **Measurement** and move the according qubit with its Pauli stack from
+    /// the tracker into the additional storage. Returns the measurement outcome and
+    /// errors if if storing fails.
+    pub fn measure_and_store(&mut self, bit: usize) -> Result<C::Outcome, String> {
+        self.tracker.measure_and_store(bit, &mut self.storage)?;
+        Ok(self.circuit.measure(bit))
     }
 
     /// Measure all remaining qubits and put the according stack of Paulis into the
-    /// additional storage, i.e., do [Self::measure_and_store] for all qubits.
-    pub fn measure_and_store_all(&mut self) -> Result<(), String> {
+    /// additional storage, i.e., do [Self::measure_and_store] for all qubits. Return
+    /// the measurement outcomes as tuples (qubit, outcome) and errors if we would
+    /// overwrite a PauliStack
+    pub fn measure_and_store_all(
+        &mut self,
+    ) -> Result<Vec<(usize, C::Outcome)>, String> {
+        let mut outcome = Vec::<(usize, C::Outcome)>::new();
         for (bit, pauli) in
             mem::replace(&mut self.tracker, Frames::<A>::init(0)).into_storage()
         {
-            self.circuit.measure(bit);
-            self.storage.insert_pauli(bit, pauli);
+            outcome.push((bit, self.circuit.measure(bit)));
+            if self.storage.get(bit).is_some() {
+                return Err(format!("stack of {bit} would be overwritten"));
+            } else {
+                self.storage.insert_pauli(bit, pauli);
+            }
         }
-        Ok(())
+        Ok(outcome)
     }
 }
 

@@ -19,9 +19,6 @@ before next major bump:
 - panics in create_dependency_graph to return error
 - maybe introduce a Node struct for DependencyGraph
 - maybe put functions in storage.rs into StackStorage as default fns
-- rename circuit measure_and_store_all to measure_and_store_remaining
-- add a measure_remaining ot CliffordCircuit and or a qubit loop
-- return Ok(measurement results) in the circuits measure methods
 
 another major bump:
 - rewrite LiveVector to be generic like Frames
