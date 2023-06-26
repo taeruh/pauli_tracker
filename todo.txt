@@ -16,10 +16,8 @@
 before next major bump:
 - maybe remove deref for storage::Vector
 - use real error types when returning an error, not just Strings
-- pauli_insert -> replace value and return old value if necessary; and similar (more
-  like a hashmap)
 - panics in create_dependency_graph to return error
-- introduce a Node struct for DependencyGraph
+- maybe introduce a Node struct for DependencyGraph
 - maybe put functions in storage.rs into StackStorage as default fns
 - rename circuit measure_and_store_all to measure_and_store_remaining
 - add a measure_remaining ot CliffordCircuit and or a qubit loop

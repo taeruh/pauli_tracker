@@ -4,6 +4,7 @@ use std::{
         Map,
         Zip,
     },
+    mem,
     ops::{
         Index,
         IndexMut,
@@ -92,9 +93,11 @@ impl<B: BooleanVector> StackStorage for MappedVector<B> {
     type Iter<'l> = <&'l Self as IntoIterator>::IntoIter where B: 'l;
 
     fn insert_pauli(&mut self, bit: usize, pauli: PauliVec<B>) -> Option<PauliVec<B>> {
-        if self.position.insert(bit, self.frames.len()).is_some() {
-            return Some(pauli);
+        if let Some(&key) = self.position.get(&bit) {
+            let old = mem::replace(self.frames.index_mut(key), pauli);
+            return Some(old);
         }
+        self.position.insert(bit, self.frames.len());
         self.frames.push(pauli);
         self.inverse_position.push(bit);
         None

@@ -57,7 +57,8 @@ pub trait StackStorage: IntoIterator<Item = (usize, PauliVec<Self::BoolVec>)> {
     fn is_empty(&self) -> bool;
 
     /// Insert a `pauli` stack for qu`bit`. If the qu`bit` is already present,
-    /// [Some](Some)(`pauli`) is returned.
+    /// its stack is overwritten an the old value, [Some](Some)(\<old stack\>), is
+    /// returned.
     fn insert_pauli(
         &mut self,
         bit: usize,

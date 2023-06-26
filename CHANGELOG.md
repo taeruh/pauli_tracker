@@ -16,9 +16,13 @@ possible.
 - **Breaking Change**: Change the Debug and Display implementations of `Pauli`. Debug is
   now derived, so we have the standard format, and Display shows "X, Y, Z, I" instead of
   numbers.
+- **Breaking Change**: In `StackStorage::insert_pauli`, overwrite and return the old
+  value if the qubit is already present, not the new value.
 ### Deprecated
 ### Removed
 ### Fixed
+- Now `Map`s `StackStorage::insert_pauli` actually does what the trait's signature
+  documentation says.
 ### Security
 
 ## [0.2.2] + 2023-06-23

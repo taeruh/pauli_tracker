@@ -2,6 +2,7 @@ use std::{
     cmp::Ordering,
     fmt::Debug,
     iter::Enumerate,
+    mem,
     ops::{
         Deref,
         DerefMut,
@@ -70,7 +71,12 @@ impl<B: BooleanVector> StackStorage for Vector<B> {
 
     fn insert_pauli(&mut self, bit: usize, pauli: PauliVec<B>) -> Option<PauliVec<B>> {
         match bit.cmp(&self.len()) {
-            Ordering::Less => Some(pauli),
+            Ordering::Less => Some(mem::replace(
+                self.frames
+                    .get_mut(bit)
+                    .expect("can't be out of bounds in this match arm"),
+                pauli,
+            )),
             Ordering::Equal => {
                 self.push(pauli);
                 None
@@ -147,7 +153,7 @@ mod tests {
         type B = Vec<bool>;
         let pauli = PauliVec::<B>::zeros(2);
         let mut storage = Vector::<B>::init(1);
-        assert_eq!(storage.insert_pauli(0, pauli.clone()), Some(pauli.clone()));
+        assert_eq!(storage.insert_pauli(0, pauli.clone()), Some(PauliVec::<B>::new()));
         assert_eq!(storage.insert_pauli(1, pauli.clone()), None);
         assert!(
             panic::catch_unwind(|| {
