@@ -1,6 +1,6 @@
 [package]
 name = "pauli_tracker"
-version = "0.3.0-alpha.1"
+version = "0.3.0-alpha.2"
 authors = ["Jannis Ruh <ruh.j81@gmail.com>"]
 
 edition = "2021"
@@ -18,6 +18,7 @@ crate-type = ["lib"]
 
 [features]
 circuit = ["dep:rand"]
+analyse = []
 serde = ["dep:serde", "bitvec?/serde", "bitvec_simd?/serde", "bit-vec?/serde"]
 
 # about the specified dependency version:

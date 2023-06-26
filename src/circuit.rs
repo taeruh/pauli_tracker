@@ -504,8 +504,8 @@ mod tests {
 
         // println!("{:#?}", rest);
 
-        let graph = crate::tracker::frames::storage::create_dependency_graph(
-            &rest,
+        let graph = crate::analyse::create_dependency_graph(
+            rest.iter(),
             &[0, 1, 2, 4, 5, 7, 8],
         );
         // println!("{:?}", graph);

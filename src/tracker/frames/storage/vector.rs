@@ -3,10 +3,6 @@ use std::{
     fmt::Debug,
     iter::Enumerate,
     mem,
-    ops::{
-        Deref,
-        DerefMut,
-    },
     slice,
 };
 
@@ -35,19 +31,6 @@ pub struct Vector<B> {
     pub frames: Vec<PauliVec<B>>,
 }
 
-impl<B> Deref for Vector<B> {
-    type Target = Vec<PauliVec<B>>;
-    fn deref(&self) -> &Self::Target {
-        &self.frames
-    }
-}
-
-impl<B> DerefMut for Vector<B> {
-    fn deref_mut(&mut self) -> &mut Self::Target {
-        &mut self.frames
-    }
-}
-
 impl<B> IntoIterator for Vector<B> {
     type Item = (usize, PauliVec<B>);
 
@@ -70,7 +53,7 @@ impl<B: BooleanVector> StackStorage for Vector<B> {
         Self: 'a;
 
     fn insert_pauli(&mut self, bit: usize, pauli: PauliVec<B>) -> Option<PauliVec<B>> {
-        match bit.cmp(&self.len()) {
+        match bit.cmp(&self.frames.len()) {
             Ordering::Less => Some(mem::replace(
                 self.frames
                     .get_mut(bit)
@@ -78,7 +61,7 @@ impl<B: BooleanVector> StackStorage for Vector<B> {
                 pauli,
             )),
             Ordering::Equal => {
-                self.push(pauli);
+                self.frames.push(pauli);
                 None
             }
             Ordering::Greater => panic!(
@@ -88,13 +71,15 @@ impl<B: BooleanVector> StackStorage for Vector<B> {
     }
 
     fn remove_pauli(&mut self, bit: usize) -> Option<PauliVec<B>> {
-        match bit.cmp(&(self.len().checked_sub(1)?)) {
+        match bit.cmp(&(self.frames.len().checked_sub(1)?)) {
             Ordering::Less => panic!(
                 "this type, FixedVector, only allows consecutively removing elements"
             ),
-            Ordering::Equal => {
-                Some(self.pop().expect("that's an implementation bug; please report"))
-            }
+            Ordering::Equal => Some(
+                self.frames
+                    .pop()
+                    .expect("that's an implementation bug; please report"),
+            ),
             Ordering::Greater => None,
         }
     }

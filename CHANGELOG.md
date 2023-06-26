@@ -11,6 +11,7 @@ possible.
 ## [Unreleased]
 ### Added
 - **Breaking Change**: Add blanket `impl<S> AsRef<S> for Frames<S>`.
+- Add a new `analyse`, activatet by the "analyse" feature.
 ### Changed
 - **Breaking Change**: Return u8 `in Pauli::storage` instead of a reference.
 - **Breaking Change**: Change the Debug and Display implementations of `Pauli`. Debug is
@@ -21,6 +22,7 @@ possible.
 - **Breaking Change**: Return the measurement outcomes in in
   `circuit::measure_and_store(_all)` and error if one would overwrite something in the
   additional storage.
+- **Breaking Change**: Move `create_dependency_graph` into the `analyse` module
 ### Deprecated
 ### Removed
 ### Fixed

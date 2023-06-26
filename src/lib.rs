@@ -167,15 +167,18 @@ assert_eq!(*tracker.as_ref(), conditional_summed_frames, "{measurements:?}");
 
 ### The dependency graph
 This example introduces the
-[create_dependency_graph](tracker::frames::storage::create_dependency_graph) function
-that can be used to analyse measurement dependencies.
+[create_dependency_graph](analyse::create_dependency_graph) function
+that can be used to analyse measurement dependencies. The example requires the "graph"
+feature.
 ```
 # #[cfg_attr(coverage_nightly, no_coverage)]
+# #[cfg(feature = "graph")]
 # fn main() {
 # #[rustfmt::skip]
 use pauli_tracker::{
-    tracker::{Tracker, frames::{Frames, storage::{self, Vector}}},
+    tracker::{Tracker, frames::{Frames, storage::{self, StackStorage, Vector}}},
     pauli::{self, Pauli},
+    analyse,
 };
 type BoolVec = Vec<bool>;
 // we want a fixed order in our storage for this test, so we use Vector and not Map
@@ -221,7 +224,7 @@ let map = [
 
 // we are interested in how many steps of parallel measurement we need to measure qubits
 // "0" to "4"; this can be figured out with the dependency graph:
-let graph = storage::create_dependency_graph(tracker.as_storage(), &map);
+let graph = analyse::create_dependency_graph(tracker.as_storage().iter(), &map);
 
 // in this case the graph is already sorted according to the node numbers, but that is
 // not always true, if not one can use storage::sort_layers_by_bits to sort it, if
@@ -237,6 +240,9 @@ assert_eq!(
     ]
 );
 # }
+# #[cfg_attr(coverage_nightly, no_coverage)]
+# #[cfg(not(feature = "graph"))]
+# fn main() {}
 // - in layer 0, there are no Paulis before the measurements, i.e., we have no
 //   dependecies; the qubits in layer 1 depend only on outcomes of qubits in layer 0;
 //   the qubits in layer 2 depend only on qubits in layer 0, ..., 1; and so on
@@ -255,16 +261,17 @@ Check out this [paper] (specifically Fig. (6) and Fig. (12)) to see how the Toff
 can be decomposed into Clifford + T gates and how T gates can be teleported.
 
 We use the [circuit] module and [bit_vec::BitVec], i.e., the example requires the
-features "circuit" and "bit-vec", as well as a dependency on the bit_vec crate.
+features "circuit", "graph" and "bit-vec", as well as a dependency on the bit_vec crate.
 ```
 # #[cfg_attr(coverage_nightly, no_coverage)]
-# #[cfg(all(feature = "circuit", feature = "bit-vec"))]
+# #[cfg(all(feature = "circuit", feature = "graph", feature = "bit-vec"))]
 # fn main() {
 # #[rustfmt::skip]
 use pauli_tracker::{
     circuit::{CliffordCircuit, DummyCircuit, TrackedCircuit},
-    tracker::{Tracker, frames::{Frames, storage::{self, Map, Vector}}},
+    tracker::{Tracker, frames::{Frames, storage::{self, StackStorage, Map, Vector}}},
     pauli::{self, Pauli},
+    analyse,
 };
 
 type BoolVec = bit_vec::BitVec;
@@ -365,7 +372,7 @@ let storage = Vector {
 };
 // now the graph:
 assert_eq!(
-    storage::create_dependency_graph(&storage, &map),
+    analyse::create_dependency_graph(storage.iter(), &map),
     vec![
         vec![(0, vec![]), (1, vec![]), (2, vec![])],
         vec![(5, vec![2]), (4, vec![1, 2])],
@@ -376,7 +383,7 @@ assert_eq!(
 );
 # }
 # #[cfg_attr(coverage_nightly, no_coverage)]
-# #[cfg(not(all(feature = "circuit", feature = "bit-vec")))]
+# #[cfg(not(all(feature = "circuit", feature = "graph", feature = "bit-vec")))]
 # fn main() {}
 ```
 As noted in the code above, our teleported T gate is a little bit naive. When looking
@@ -397,8 +404,9 @@ with [Tracker::move_z_to_z](tracker::Tracker::move_z_to_z):
 # fn main() {
 # use pauli_tracker::{
 #     circuit::{CliffordCircuit, DummyCircuit, TrackedCircuit},
-#     tracker::{Tracker, frames::{Frames, storage::{self, Map, Vector}}},
+#     tracker::{Tracker, frames::{Frames, storage::{self, StackStorage, Map, Vector}}},
 #     pauli::{self, Pauli},
+#     analyse,
 # };
 # type BoolVec = bit_vec::BitVec;
 # type Storage = Map<BoolVec>;
@@ -479,7 +487,7 @@ assert_eq!(
 // ...
 
 assert_eq!(
-    storage::create_dependency_graph(&storage, &map),
+    analyse::create_dependency_graph(storage.iter(), &map),
     vec![
         vec![
             (0, vec![]), (1, vec![]), (2, vec![]),
@@ -505,6 +513,11 @@ pub mod boolean_vector;
 #[cfg_attr(docsrs, doc(cfg(feature = "circuit")))]
 #[allow(unused)]
 pub mod circuit;
+
+#[cfg(feature = "analyse")]
+#[cfg_attr(docsrs, doc(cfg(feature = "analyse")))]
+#[allow(unused)]
+pub mod analyse;
 
 pub mod pauli;
 
