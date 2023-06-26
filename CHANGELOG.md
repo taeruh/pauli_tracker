@@ -13,6 +13,9 @@ possible.
 - **Breaking Change**: Add blanket `impl<S> AsRef<S> for Frames<S>`.
 ### Changed
 - **Breaking Change**: Return u8 `in Pauli::storage` instead of a reference.
+- **Breaking Change**: Change the Debug and Display implementations of `Pauli`. Debug is
+  now derived, so we have the standard format, and Display shows "X, Y, Z, I" instead of
+  numbers.
 ### Deprecated
 ### Removed
 ### Fixed

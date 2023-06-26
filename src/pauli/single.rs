@@ -1,6 +1,6 @@
 use std::fmt::{
     Debug,
-    Display,
+    Display, self,
 };
 
 #[cfg(feature = "serde")]
@@ -41,7 +41,7 @@ impl ResolvePauli for bool {
 /// Unsafe code might rely on that invariant (e.g., via accessing the storage with
 /// [Self::storage] and using it to index a pointer), therefore, functions that make it
 /// possible to circumvent the invariant are unsafe.
-#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Default, Debug)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct Pauli {
     storage: u8,
@@ -261,16 +261,17 @@ impl Pauli {
 }
 
 impl Display for Pauli {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", self.storage)
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self.storage {
+            0 => write!(f, "I"),
+            1 => write!(f, "Z"),
+            2 => write!(f, "X"),
+            3 => write!(f, "Y"),
+            _ => panic!("unvalid {self:?}"),
+        }
     }
 }
 
-impl Debug for Pauli {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", self.storage)
-    }
-}
 
 #[cfg(test)]
 mod tests {

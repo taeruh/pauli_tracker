@@ -14,7 +14,6 @@
 - write a proper todo.md
 
 before next major bump:
-- change Pauli Display and Debug
 - maybe remove deref for storage::Vector
 - use real error types when returning an error, not just Strings
 - pauli_insert -> replace value and return old value if necessary; and similar (more
