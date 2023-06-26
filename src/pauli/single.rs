@@ -1,6 +1,7 @@
 use std::fmt::{
+    self,
     Debug,
-    Display, self,
+    Display,
 };
 
 #[cfg(feature = "serde")]
@@ -271,7 +272,6 @@ impl Display for Pauli {
         }
     }
 }
-
 
 #[cfg(test)]
 mod tests {
