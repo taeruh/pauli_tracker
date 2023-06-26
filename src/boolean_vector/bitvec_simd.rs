@@ -23,6 +23,7 @@ impl FromIterator<bool> for SimdBitVec {
 }
 
 /// An [Iterator] over [SimdBitVec]. Create with [IntoIterator].
+#[derive(Clone, PartialEq, Debug)]
 pub struct Iter {
     vec: SimdBitVec,
     current: usize,
@@ -36,6 +37,7 @@ impl Iterator for Iter {
 }
 
 /// An [Iterator] over &[SimdBitVec]. Created with [BooleanVector::iter_vals].
+#[derive(Copy, Clone, PartialEq, Debug)]
 pub struct IterFromRef<'l> {
     vec: &'l SimdBitVec,
     current: usize,

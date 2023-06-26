@@ -1,6 +1,7 @@
 // lints and similar
 #![deny(unsafe_op_in_unsafe_fn)]
 #![warn(missing_docs)]
+#![warn(missing_debug_implementations)]
 //
 // (nightly) features, only for development
 #![cfg_attr(docsrs, feature(doc_cfg))]
