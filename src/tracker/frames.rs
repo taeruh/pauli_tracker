@@ -44,9 +44,15 @@ pub mod storage;
 /// provides some compatible storage types.
 #[derive(Clone, Debug, Default)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-pub struct Frames<Storage /* : StackStorage */> {
+pub struct Frames<Storage> {
     storage: Storage,
     frames_num: usize,
+}
+
+impl<Storage> AsRef<Storage> for Frames<Storage> {
+    fn as_ref(&self) -> &Storage {
+        self.as_storage()
+    }
 }
 
 impl<Storage> Frames<Storage> {
@@ -195,7 +201,7 @@ where
             if i == qubit {
                 p.push(pauli);
             } else {
-                p.push(unsafe { Pauli::from_unchecked(0) });
+                p.push(Pauli::new_i());
             }
         }
         self.frames_num += 1;
@@ -206,7 +212,7 @@ where
             return;
         }
         for (_, p) in self.storage.iter_mut() {
-            p.push(unsafe { Pauli::from_unchecked(0) });
+            p.push(Pauli::new_i());
         }
         for (i, p) in string {
             match self.storage.get_mut(i) {

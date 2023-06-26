@@ -5,9 +5,6 @@
 
 # Pauli Tracker
 
-**Initial development (version 0.x,y); rather unstable**
-___
-
 A library to track Pauli frames through a Clifford circuit with measurements.
 
 ## What is Pauli tracking

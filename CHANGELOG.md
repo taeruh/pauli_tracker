@@ -10,6 +10,7 @@ possible.
 
 ## [Unreleased]
 ### Added
+- **Breaking Change**: Add blanket `impl<S> AsRef<S> for Frames<S>`.
 ### Changed
 ### Deprecated
 ### Removed
