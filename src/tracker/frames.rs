@@ -306,7 +306,7 @@ mod tests {
                 (action)(&mut tracker, 0);
                 for (input, check) in (0u8..).zip(result.1) {
                     assert_eq!(
-                        *tracker.pop_frame().unwrap().get(0).unwrap().1.storage(),
+                        tracker.pop_frame().unwrap().get(0).unwrap().1.storage(),
                         check,
                         "{}, {}",
                         result.0,

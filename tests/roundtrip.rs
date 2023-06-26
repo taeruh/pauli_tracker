@@ -108,7 +108,7 @@ fn roundtrip(init: usize, ops: Vec<Operation>) {
 
     let mut check = vec![Pauli::new_i(); generator.used];
     for (i, pauli) in circuit.storage.iter() {
-        check[*i].set_storage(*pauli.sum_up(&measurements.0).storage());
+        check[*i].set_storage(pauli.sum_up(&measurements.0).storage());
     }
     let check: LiveVector = check.into();
     // println!("{:?}", a);

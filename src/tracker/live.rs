@@ -198,7 +198,7 @@ mod tests {
                     tracker.track_pauli_string(impl_utils::single_init(input));
                     (action)(&mut tracker, 0);
                     assert_eq!(
-                        *tracker.inner.get(0).unwrap().storage(),
+                        tracker.inner.get(0).unwrap().storage(),
                         check,
                         "{}, {}",
                         result.0,

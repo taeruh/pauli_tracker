@@ -12,6 +12,7 @@ possible.
 ### Added
 - **Breaking Change**: Add blanket `impl<S> AsRef<S> for Frames<S>`.
 ### Changed
+- **Breaking Change**: Return u8 `in Pauli::storage` instead of a reference.
 ### Deprecated
 ### Removed
 ### Fixed

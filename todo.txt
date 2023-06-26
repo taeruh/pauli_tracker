@@ -14,8 +14,6 @@
 - write a proper todo.md
 
 before next major bump:
-- Pauli::storage don't return reference
-- PauliVec's new to default and instead a real new
 - change Pauli Display and Debug
 - maybe remove deref for storage::Vector
 - use real error types when returning an error, not just Strings

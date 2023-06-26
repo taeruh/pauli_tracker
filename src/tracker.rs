@@ -256,7 +256,7 @@ mod test {
         ) -> (u8, u8) {
             let mut output = [0, 0];
             for (i, p) in frame {
-                output[i] = *p.storage()
+                output[i] = p.storage()
             }
             (output[0], output[1])
         }

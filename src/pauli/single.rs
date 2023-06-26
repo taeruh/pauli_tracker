@@ -111,10 +111,10 @@ impl Pauli {
     /// # #[cfg_attr(coverage_nightly, no_coverage)]
     /// # fn main() {
     /// # use pauli_tracker::pauli::Pauli;
-    /// assert_eq!(*Pauli::new_x().storage(), 2);
+    /// assert_eq!(Pauli::new_x().storage(), 2);
     /// # }
-    pub fn storage(&self) -> &u8 {
-        &self.storage
+    pub fn storage(&self) -> u8 {
+        self.storage
     }
     /// Get mutable access to the underlining storage.
     ///
