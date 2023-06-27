@@ -10,15 +10,12 @@ provides two pseudo circuit simulators that can be used to test the Pauli tracki
 
 use std::mem;
 
-use crate::{
-    pauli::Pauli,
-    tracker::{
-        frames::{
-            storage::StackStorage,
-            Frames,
-        },
-        Tracker,
+use crate::tracker::{
+    frames::{
+        storage::StackStorage,
+        Frames,
     },
+    Tracker,
 };
 
 /// The interface into a circuit that can handle Clifford gates and (unspecified)
@@ -332,7 +329,7 @@ mod tests {
         };
 
         circ.cz(0, 1);
-        circ.measure_and_store(0);
+        circ.measure_and_store(0).unwrap();
         // this hadamard corrects the hadamard from the rotation, therefore, we put the
         // tracked_z behind it (it is effectively commuted through the identity)
         circ.h(1);
@@ -357,15 +354,15 @@ mod tests {
         };
 
         circ.cx(0, 2);
-        circ.measure_and_store(0);
+        circ.measure_and_store(0).unwrap();
         circ.track_z(2);
         circ.h(1);
         circ.cx(1, 2);
         circ.cx(2, 3);
-        circ.measure_and_store(2);
+        circ.measure_and_store(2).unwrap();
         circ.track_z(3);
         circ.cx(1, 4);
-        circ.measure_and_store(1);
+        circ.measure_and_store(1).unwrap();
         circ.track_z(4);
         circ.cx(4, 3);
         circ.h(4);
@@ -504,7 +501,7 @@ mod tests {
 
         // println!("{:#?}", rest);
 
-        let graph = crate::analyse::create_dependency_graph(
+        let _graph = crate::analyse::create_dependency_graph(
             rest.iter(),
             &[0, 1, 2, 4, 5, 7, 8],
         );

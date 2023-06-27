@@ -512,12 +512,10 @@ pub mod boolean_vector;
 
 #[cfg(feature = "circuit")]
 #[cfg_attr(docsrs, doc(cfg(feature = "circuit")))]
-#[allow(unused)]
 pub mod circuit;
 
 #[cfg(feature = "analyse")]
 #[cfg_attr(docsrs, doc(cfg(feature = "analyse")))]
-#[allow(unused)]
 pub mod analyse;
 
 pub mod pauli;

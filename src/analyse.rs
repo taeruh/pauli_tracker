@@ -2,6 +2,7 @@
 ... tools to analyse the tracking results ...
 */
 
+#[allow(unused)]
 pub(crate) mod space;
 
 use crate::{
