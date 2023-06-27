@@ -1,9 +1,9 @@
+# Pauli Tracker
+
 [![Crates.io](https://img.shields.io/crates/v/pauli_tracker.svg)](https://crates.io/crates/pauli_tracker)
 [![Documentation](https://docs.rs/pauli_tracker/badge.svg)](https://docs.rs/pauli_tracker/)
 [![Codecov](https://codecov.io/github/taeruh/pauli_tracker/coverage.svg?branch=main)](https://codecov.io/gh/taeruh/pauli_tracker)
 [![Dependency status](https://deps.rs/repo/github/taeruh/pauli_tracker/status.svg)](https://deps.rs/repo/github/taeruh/pauli_tracker)
-
-# Pauli Tracker
 
 A library to track Pauli frames through a Clifford circuit with measurements.
 
@@ -34,4 +34,9 @@ while simulating the circuit.
 For examples, please look into the the [crate
 documentation](https://docs.rs/pauli_tracker/#examples).
 
-*... in progress ...*
+## License
+
+Pauli Tracker is distributed under the terms of both the MIT license and the
+Apache License (Version 2.0).
+
+See [LICENSE-APACHE](LICENSE-APACHE) and [LICENSE-MIT](LICENSE-MIT).
