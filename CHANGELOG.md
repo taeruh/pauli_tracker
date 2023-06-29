@@ -12,6 +12,8 @@ possible.
 ### Added
 - **Breaking Change**: Add blanket `impl<S> AsRef<S> for Frames<S>`.
 - Add a new `analyse`, activated by the "analyse" feature.
+- **Possible Breaking Change**: Add `Frames::new`.
+- **Possible Breaking Change**: Add `impl Default for SimdBitVec`.
 ### Changed
 - **Breaking Change**: Return u8 `in Pauli::storage` instead of a reference.
 - **Breaking Change**: Change the Debug and Display implementations of `Pauli`. Debug is
@@ -25,11 +27,21 @@ possible.
 - **Breaking Change**: Move `create_dependency_graph` into the `analyse` module
 - **Possible Breaking Change**: Implement Clone, PartialEq, Debug for
   `bitvec_simd::Iter*`; Implement Debug for TrackedCircuit.
+- For the "fixed" `Vector`, it wasn't allowed to `insert_pauli`s at qubits which have a
+  higher number than the length of the inner storage type (it would panic). Now it is
+  allowed, but some buffer stacks are inserted.
+- **Breaking Change**: All functions that returned Results with Strings as Err, now
+  return real Error types.
+- **Breaking Change**: `TrackedCircuit::measure_and_store*` now return a tuple of the
+  measurement outcome and the storing result. Before, they returned a result, where the
+  Ok contained the measurement outcomes and Err the storing error.
+- **Breaking Change**: Add `FromIterator` as supertrait to `StackStorage`.
 ### Deprecated
 ### Removed
 ### Fixed
 - Now `Map`s `StackStorage::insert_pauli` actually does what the trait's signature
   documentation says.
+- Fix `impl FromIterator<bool> for SimdBitVec`; it was not working at all.
 ### Security
 
 ## [0.2.2] + 2023-06-23

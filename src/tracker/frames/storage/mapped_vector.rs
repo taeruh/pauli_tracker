@@ -87,6 +87,16 @@ impl<'l, B> IntoIterator for &'l mut MappedVector<B> {
     }
 }
 
+impl<B: BooleanVector> FromIterator<(usize, PauliVec<B>)> for MappedVector<B> {
+    fn from_iter<T: IntoIterator<Item = (usize, PauliVec<B>)>>(iter: T) -> Self {
+        let mut res = MappedVector::init(0);
+        for (bit, pauli) in iter {
+            res.insert_pauli(bit, pauli);
+        }
+        res
+    }
+}
+
 impl<B: BooleanVector> StackStorage for MappedVector<B> {
     type BoolVec = B;
     type IterMut<'l> = <&'l mut Self as IntoIterator>::IntoIter where B: 'l;

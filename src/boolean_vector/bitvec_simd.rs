@@ -14,11 +14,17 @@ pub struct SimdBitVec(pub BitVec);
 impl FromIterator<bool> for SimdBitVec {
     fn from_iter<T: IntoIterator<Item = bool>>(iter: T) -> Self {
         let iter = iter.into_iter();
-        let mut res = SimdBitVec::zeros(iter.size_hint().1.unwrap());
-        for (i, f) in iter.enumerate() {
-            res.0.set(i, f);
+        let mut res = SimdBitVec::new();
+        for f in iter {
+            res.push(f);
         }
         res
+    }
+}
+
+impl Default for SimdBitVec {
+    fn default() -> Self {
+        Self::zeros(0)
     }
 }
 

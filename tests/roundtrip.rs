@@ -345,7 +345,7 @@ impl ExtendCircuit for TrackedCircuit<DummyCircuit, Frames<Storage>, Storage> {
         self.tracker.new_qubit(new);
         self.cx(origin, new);
         self.move_z_to_z(origin, new);
-        self.measure_and_store(origin).unwrap();
+        self.measure_and_store(origin).1.unwrap();
         self.track_z(new);
     }
     fn new_qubit(&mut self, bit: usize) {

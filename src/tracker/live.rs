@@ -19,6 +19,7 @@ use serde::{
 use super::{
     unwrap_get_mut,
     unwrap_get_two_mut,
+    MissingStack,
     PauliString,
     Tracker,
 };
@@ -159,8 +160,8 @@ impl Tracker for LiveVector {
         s.set_z(false);
     }
 
-    fn measure(&mut self, bit: usize) -> Option<Self::Stack> {
-        Some(*self.get(bit)?)
+    fn measure(&mut self, bit: usize) -> Result<Self::Stack, MissingStack> {
+        self.get(bit).ok_or(MissingStack { bit }).copied()
     }
 }
 
@@ -247,7 +248,7 @@ mod tests {
         assert_eq!(tracker.new_qubit(0), Some(0));
         assert_eq!(tracker.new_qubit(1), None);
         assert_eq!(*tracker.as_ref(), vec![Pauli::new_x(), Pauli::new_i()]);
-        assert_eq!(tracker.measure(0), Some(Pauli::new_x()));
+        assert_eq!(tracker.measure(0), Ok(Pauli::new_x()));
         assert_eq!(tracker.new_qubit(3), None);
         assert_eq!(
             *tracker.as_ref(),

@@ -14,6 +14,8 @@ use crate::tracker::{
     frames::{
         storage::StackStorage,
         Frames,
+        OverwriteStack,
+        StoreError,
     },
     Tracker,
 };
@@ -265,31 +267,39 @@ where
 {
     /// Perform a **Measurement** and move the according qubit with its Pauli stack from
     /// the tracker into the additional storage. Returns the measurement outcome and
-    /// errors if if storing fails.
-    pub fn measure_and_store(&mut self, bit: usize) -> Result<C::Outcome, String> {
-        self.tracker.measure_and_store(bit, &mut self.storage)?;
-        Ok(self.circuit.measure(bit))
+    /// the result of [Frames::measure_and_store].
+    pub fn measure_and_store(
+        &mut self,
+        bit: usize,
+    ) -> (C::Outcome, Result<(), StoreError<S::BoolVec>>) {
+        let outcome = self.circuit.measure(bit);
+        match self.tracker.measure_and_store(bit, &mut self.storage) {
+            Ok(_) => (outcome, Ok(())),
+            Err(e) => (outcome, Err(e)),
+        }
     }
 
     /// Measure all remaining qubits and put the according stack of Paulis into the
     /// additional storage, i.e., do [Self::measure_and_store] for all qubits. Return
     /// the measurement outcomes as tuples (qubit, outcome) and errors if we would
     /// overwrite a PauliStack
+    #[allow(clippy::type_complexity)] // cos Result is basically two types
     pub fn measure_and_store_all(
         &mut self,
-    ) -> Result<Vec<(usize, C::Outcome)>, String> {
+    ) -> (Vec<(usize, C::Outcome)>, Result<(), OverwriteStack<S::BoolVec>>) {
         let mut outcome = Vec::<(usize, C::Outcome)>::new();
-        for (bit, pauli) in
-            mem::replace(&mut self.tracker, Frames::<A>::init(0)).into_storage()
-        {
+        let num_frames = self.tracker.frames_num();
+        let mut storage = mem::replace(&mut self.tracker, Frames::<A>::init(0))
+            .into_storage()
+            .into_iter();
+        while let Some((bit, pauli)) = storage.next() {
             outcome.push((bit, self.circuit.measure(bit)));
-            if self.storage.get(bit).is_some() {
-                return Err(format!("stack of {bit} would be overwritten"));
-            } else {
-                self.storage.insert_pauli(bit, pauli);
+            if let Some(stack) = self.storage.insert_pauli(bit, pauli) {
+                self.tracker = Frames::new(storage.collect(), num_frames);
+                return (outcome, Err(OverwriteStack { bit, stack }));
             }
         }
-        Ok(outcome)
+        (outcome, Ok(()))
     }
 }
 
@@ -300,6 +310,7 @@ mod tests {
 
     use super::*;
     use crate::{
+        boolean_vector::bitvec_simd::SimdBitVec,
         circuit::{
             DummyCircuit,
             RandomMeasurementCircuit,
@@ -309,16 +320,70 @@ mod tests {
             frames::{
                 storage::{
                     self,
+                    Map,
                     MappedVector,
                     Vector,
                 },
                 Frames,
             },
             live::LiveVector,
+            MissingStack,
         },
     };
 
     type PauliBitVec = PauliVec<BitVec>;
+    type PauliSimdBitVec = PauliVec<SimdBitVec>;
+
+    #[test]
+    fn measure_and_store() {
+        let mut circ = TrackedCircuit {
+            circuit: DummyCircuit {},
+            tracker: Frames::<MappedVector<BitVec>>::init(3),
+            storage: Map::default(),
+        };
+
+        circ.measure_and_store(0).1.unwrap();
+        circ.track_z(2);
+        circ.cx(1, 2);
+        circ.h(1);
+        circ.measure_and_store(2).1.unwrap();
+        circ.tracker.new_qubit(2);
+        match circ.measure_and_store(2).1.unwrap_err() {
+            StoreError::OverwriteStack(e) => {
+                assert_eq!(
+                    e,
+                    OverwriteStack {
+                        bit: 2,
+                        stack: PauliBitVec::try_from_str("0", "1").unwrap()
+                    }
+                );
+            }
+            StoreError::MissingStack(_) => panic!("wrong error"),
+        }
+        match circ.measure_and_store(2).1.unwrap_err() {
+            StoreError::OverwriteStack(_) => panic!("wrong error"),
+            StoreError::MissingStack(e) => {
+                assert_eq!(e, MissingStack { bit: 2 });
+            }
+        }
+        circ.tracker.new_qubit(2);
+        circ.tracker.new_qubit(3);
+        circ.tracker.new_qubit(4);
+        // note that the iterator of MappedVector is deterministic (that's not clear
+        // from the API, but from the source code); without that, the following wouldn't
+        // work
+        let (outcome, r) = circ.measure_and_store_all();
+        assert_eq!(outcome.len(), 2);
+        assert_eq!(r.unwrap_err(), {
+            OverwriteStack {
+                bit: 2,
+                stack: PauliBitVec::try_from_str("0", "0").unwrap(),
+            }
+        });
+        let (outcome, r) = circ.measure_and_store_all();
+        assert_eq!(outcome.len(), 2);
+        r.unwrap()
+    }
 
     #[test]
     fn single_rotation_teleportation() {
@@ -329,7 +394,7 @@ mod tests {
         };
 
         circ.cz(0, 1);
-        circ.measure_and_store(0).unwrap();
+        circ.measure_and_store(0).1.unwrap();
         // this hadamard corrects the hadamard from the rotation, therefore, we put the
         // tracked_z behind it (it is effectively commuted through the identity)
         circ.h(1);
@@ -349,36 +414,36 @@ mod tests {
     fn control_v_dagger() {
         let mut circ = TrackedCircuit {
             circuit: DummyCircuit {},
-            tracker: Frames::<MappedVector<BitVec>>::init(5),
+            tracker: Frames::<MappedVector<SimdBitVec>>::init(5),
             storage: MappedVector::default(),
         };
 
         circ.cx(0, 2);
-        circ.measure_and_store(0).unwrap();
+        circ.measure_and_store(0).1.unwrap();
         circ.track_z(2);
         circ.h(1);
         circ.cx(1, 2);
         circ.cx(2, 3);
-        circ.measure_and_store(2).unwrap();
+        circ.measure_and_store(2).1.unwrap();
         circ.track_z(3);
         circ.cx(1, 4);
-        circ.measure_and_store(1).unwrap();
+        circ.measure_and_store(1).1.unwrap();
         circ.track_z(4);
         circ.cx(4, 3);
         circ.h(4);
 
         assert_eq!(
             vec![
-                (3, PauliBitVec::try_from_str("000", "010").unwrap()),
-                (4, PauliBitVec::try_from_str("011", "000").unwrap())
+                (3, PauliSimdBitVec::try_from_str("000", "010").unwrap()),
+                (4, PauliSimdBitVec::try_from_str("011", "000").unwrap())
             ],
             storage::into_sorted_by_bit(circ.tracker.into_storage())
         );
         assert_eq!(
             vec![
-                (0, PauliBitVec::new()),
-                (1, PauliBitVec::try_from_str("00", "10").unwrap()),
-                (2, PauliBitVec::try_from_str("0", "1").unwrap())
+                (0, PauliSimdBitVec::new()),
+                (1, PauliSimdBitVec::try_from_str("00", "10").unwrap()),
+                (2, PauliSimdBitVec::try_from_str("0", "1").unwrap())
             ],
             storage::into_sorted_by_bit(circ.storage)
         );

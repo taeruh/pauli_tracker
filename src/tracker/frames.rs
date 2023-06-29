@@ -11,7 +11,16 @@ effectiving each other; this is the main difference to the tracker defined in
 [live](super::live).
 */
 
-use std::mem;
+use std::{
+    error::Error,
+    fmt::{
+        self,
+        Debug,
+        Display,
+        Formatter,
+    },
+    mem,
+};
 
 #[cfg(feature = "serde")]
 use serde::{
@@ -21,6 +30,7 @@ use serde::{
 
 use self::storage::StackStorage;
 use super::{
+    MissingStack,
     PauliString,
     Tracker,
 };
@@ -49,13 +59,68 @@ pub struct Frames<Storage> {
     frames_num: usize,
 }
 
+/// The Error when we overwrite a qubit's Pauli stack.
+#[derive(Clone, PartialEq, Eq, PartialOrd, Ord, Default, Debug)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+pub struct OverwriteStack<T> {
+    /// The qubit.
+    pub bit: usize,
+    /// The stack we have overwritten.
+    pub stack: PauliVec<T>,
+}
+impl<T> Display for OverwriteStack<T> {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        write!(f, "the Pauli stack for qubit {} has been overwritten", self.bit)
+    }
+}
+impl<T: Debug> Error for OverwriteStack<T> {}
+
 impl<Storage> AsRef<Storage> for Frames<Storage> {
     fn as_ref(&self) -> &Storage {
         self.as_storage()
     }
 }
 
+/// The Error when one tries to measure a qubit and store it stacks in another storage,
+/// as in [measure_and_store](Frames::measure_and_store).
+///
+/// It can be either a [MissingStack] error, if the qubit is missing, or an
+/// [OverwriteStack] error if the qubit was already present in the other storage.
+#[derive(Clone, PartialEq, Eq, PartialOrd, Ord, Debug)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+pub enum StoreError<T> {
+    /// If one would overwrite the stack in the other storage.
+    OverwriteStack(OverwriteStack<T>),
+    /// If the qubit and its stack are missing.
+    MissingStack(MissingStack),
+}
+impl<T> Display for StoreError<T> {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        match self {
+            StoreError::OverwriteStack(e) => write!(f, "{e}"),
+            StoreError::MissingStack(e) => write!(f, "{e}"),
+        }
+    }
+}
+impl<T: Debug> Error for StoreError<T> {}
+
+impl<T> From<OverwriteStack<T>> for StoreError<T> {
+    fn from(value: OverwriteStack<T>) -> Self {
+        StoreError::OverwriteStack(value)
+    }
+}
+impl<T> From<MissingStack> for StoreError<T> {
+    fn from(value: MissingStack) -> Self {
+        StoreError::MissingStack(value)
+    }
+}
+
 impl<Storage> Frames<Storage> {
+    /// Create a new [Frames] instance.
+    pub fn new(storage: Storage, frames_num: usize) -> Self {
+        Self { storage, frames_num }
+    }
+
     /// Get the underlining storage.
     pub fn as_storage(&self) -> &Storage {
         &self.storage
@@ -109,15 +174,11 @@ where
         &mut self,
         bit: usize,
         storage: &mut impl StackStorage<BoolVec = Storage::BoolVec>,
-    ) -> Result<(), String> {
-        storage.insert_pauli(
-            bit,
-            match self.measure(bit) {
-                Some(p) => p,
-                None => return Err(format!("{bit} is not present")),
-            },
-        );
-        Ok(())
+    ) -> Result<(), StoreError<Storage::BoolVec>> {
+        match storage.insert_pauli(bit, self.measure(bit)?) {
+            Some(p) => Err(OverwriteStack { bit, stack: p }.into()),
+            None => Ok(()),
+        }
     }
 
     /// Measure all qubits and put the according stack of Paulis into `storage`, i.e.,
@@ -247,8 +308,11 @@ where
         (move_z_to_z, right, right, "Z", "Z")
     );
 
-    fn measure(&mut self, bit: usize) -> Option<PauliVec<Storage::BoolVec>> {
-        self.storage.remove_pauli(bit)
+    fn measure(
+        &mut self,
+        bit: usize,
+    ) -> Result<PauliVec<Storage::BoolVec>, MissingStack> {
+        self.storage.remove_pauli(bit).ok_or(MissingStack { bit })
     }
 }
 

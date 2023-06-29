@@ -14,6 +14,7 @@
 - write a proper todo.md
 
 before next major bump:
+- put dependency graph into its own module
 - maybe remove deref for storage::Vector
 - use real error types when returning an error, not just Strings
 - panics in create_dependency_graph to return error

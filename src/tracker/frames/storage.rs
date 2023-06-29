@@ -15,7 +15,10 @@ use crate::{
 // either need an annoying lifetime or HRTBs, the latter would limit the use cases of
 // the trait (for <'l> &'l T implies T: 'static); implementors of this type should
 // probably still implement IntoIterator for its references
-pub trait StackStorage: IntoIterator<Item = (usize, PauliVec<Self::BoolVec>)> {
+pub trait StackStorage:
+    IntoIterator<Item = (usize, PauliVec<Self::BoolVec>)>
+    + FromIterator<(usize, PauliVec<Self::BoolVec>)>
+{
     /// The storage type used for [PauliVec].
     type BoolVec: BooleanVector;
 

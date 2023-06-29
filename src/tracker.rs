@@ -4,6 +4,20 @@ This module defines the [Tracker] trait and provides different implementors thro
 tracking Pauli gates through a Clifford circuit.
 */
 
+use std::{
+    error::Error,
+    fmt::{
+        Display,
+        Formatter,
+    },
+};
+
+#[cfg(feature = "serde")]
+use serde::{
+    Deserialize,
+    Serialize,
+};
+
 use crate::pauli::Pauli;
 
 /// A vector describing an encoded Pauli string, for example, one frame of
@@ -17,6 +31,20 @@ use crate::pauli::Pauli;
 ///
 /// [StackStorage]: frames::storage::StackStorage
 pub type PauliString = Vec<(usize, Pauli)>;
+
+/// The Error when we try to [measure](Tracker::measure) a missing qubit.
+#[derive(Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Default, Debug)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+pub struct MissingStack {
+    /// The missing qubit.
+    pub bit: usize,
+}
+impl Display for MissingStack {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        write!(f, "there's no Pauli stack for qubit {}", self.bit)
+    }
+}
+impl Error for MissingStack {}
 
 macro_rules! single {
     ($(( $name:ident, $gate:literal),)*) => {$(
@@ -115,7 +143,7 @@ pub trait Tracker {
     );
 
     /// Remove the Pauli stack on qu`bit`, if it is present.
-    fn measure(&mut self, bit: usize) -> Option<Self::Stack>;
+    fn measure(&mut self, bit: usize) -> Result<Self::Stack, MissingStack>;
 }
 
 // {{ some helpers for simpler gate implementations

@@ -1,5 +1,13 @@
+/*!
+  This module provides the [PauliVec] type, which stores multiple encoded Paulis.
+*/
+
 use std::{
     cmp::Ordering,
+    fmt::{
+        Display,
+        Formatter,
+    },
     mem,
 };
 
@@ -28,6 +36,20 @@ pub struct PauliVec<T /* : BooleanVector */> {
     pub right: T,
 }
 
+/// The Error when one tries to parse a char into a bool.
+#[derive(Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Default, Debug)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+pub struct BitCharError {
+    /// The invalid char.
+    pub string: String,
+}
+impl Display for BitCharError {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{} is not a valid binary", self.string)
+    }
+}
+impl std::error::Error for BitCharError {}
+
 impl<T: BooleanVector> PauliVec<T> {
     /// Create a new empty [PauliVec].
     pub fn new() -> Self {
@@ -53,11 +75,11 @@ impl<T: BooleanVector> PauliVec<T> {
     /// )
     /// # }
     /// ```
-    pub fn try_from_str(left: &str, right: &str) -> Result<Self, String> {
-        fn to_bool(c: char) -> Result<bool, String> {
+    pub fn try_from_str(left: &str, right: &str) -> Result<Self, BitCharError> {
+        fn to_bool(c: char) -> Result<bool, BitCharError> {
             match c.to_digit(2) {
                 Some(d) => Ok(d == 1),
-                None => Err(format!("{} is not a valid binary", c)),
+                None => Err(BitCharError { string: c.to_string() }),
             }
         }
         Ok(Self {

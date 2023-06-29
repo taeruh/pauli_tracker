@@ -5,7 +5,7 @@ Encoding of Pauli operators.
 mod single;
 pub use single::Pauli;
 
-mod vec;
+pub mod vec;
 pub use vec::PauliVec;
 
 /// Pauli encoding into two bits.

@@ -1,7 +1,10 @@
 use std::{
     cmp::Ordering,
     fmt::Debug,
-    iter::Enumerate,
+    iter::{
+        self,
+        Enumerate,
+    },
     mem,
     slice,
 };
@@ -41,8 +44,19 @@ impl<B> IntoIterator for Vector<B> {
     }
 }
 
-/// Note that [Vector] is essentially a [Vec]. Therefore, we can basically only insert
-/// and remove Pauli stacks at the end without screwing things up.
+impl<B: BooleanVector> FromIterator<(usize, PauliVec<B>)> for Vector<B> {
+    fn from_iter<T: IntoIterator<Item = (usize, PauliVec<B>)>>(iter: T) -> Self {
+        let mut res = Vector::init(0);
+        for (bit, pauli) in iter {
+            res.insert_pauli(bit, pauli);
+        }
+        res
+    }
+}
+
+/// Note that [Vector] is essentially a [Vec]. Therefore, we can basically only remove
+/// Pauli stacks at the end without screwing things up. When inserting Pauli stacks at
+/// qubits above the length, buffer stacks are added.
 impl<B: BooleanVector> StackStorage for Vector<B> {
     type BoolVec = B;
     type IterMut<'a> = Enumerate<slice::IterMut<'a, PauliVec<B>>>
@@ -53,7 +67,8 @@ impl<B: BooleanVector> StackStorage for Vector<B> {
         Self: 'a;
 
     fn insert_pauli(&mut self, bit: usize, pauli: PauliVec<B>) -> Option<PauliVec<B>> {
-        match bit.cmp(&self.frames.len()) {
+        let len = self.frames.len();
+        match bit.cmp(&len) {
             Ordering::Less => Some(mem::replace(
                 self.frames
                     .get_mut(bit)
@@ -64,16 +79,25 @@ impl<B: BooleanVector> StackStorage for Vector<B> {
                 self.frames.push(pauli);
                 None
             }
-            Ordering::Greater => panic!(
-                "this type, FixedVector, only allows consecutively inserting elements"
-            ),
+            Ordering::Greater => {
+                let diff = bit - len;
+                self.frames.try_reserve(diff).unwrap_or_else(|e| {
+                    panic!("error when trying to reserve enough memory: {e}")
+                });
+                self.frames.extend(
+                    iter::repeat(PauliVec::<B>::zeros(pauli.left.len())).take(diff),
+                );
+                self.frames.push(pauli);
+                None
+            }
         }
     }
 
     fn remove_pauli(&mut self, bit: usize) -> Option<PauliVec<B>> {
         match bit.cmp(&(self.frames.len().checked_sub(1)?)) {
             Ordering::Less => panic!(
-                "this type, FixedVector, only allows consecutively removing elements"
+                "this type, Vector, only allows removing elements consecutively from \
+                 the end"
             ),
             Ordering::Equal => Some(
                 self.frames
@@ -132,29 +156,31 @@ mod tests {
     use coverage_helper::test;
 
     use super::*;
+    use crate::pauli::Pauli;
 
     #[test]
     fn remove_and_insert() {
         type B = Vec<bool>;
-        let pauli = PauliVec::<B>::zeros(2);
+        let mut pauli = PauliVec::<B>::zeros(2);
+        pauli.push(Pauli::new_x());
         let mut storage = Vector::<B>::init(1);
         assert_eq!(storage.insert_pauli(0, pauli.clone()), Some(PauliVec::<B>::new()));
         assert_eq!(storage.insert_pauli(1, pauli.clone()), None);
-        assert!(
-            panic::catch_unwind(|| {
-                let mut storage = storage.clone(); // cos &mut is not UnwindSafe
-                storage.insert_pauli(3, pauli.clone());
-            })
-            .is_err()
-        );
+        assert_eq!(storage.insert_pauli(3, pauli.clone()), None);
         assert!(
             panic::catch_unwind(|| {
                 let mut storage = storage.clone();
-                storage.remove_pauli(0);
+                storage.remove_pauli(1);
             })
             .is_err()
         );
-        assert_eq!(storage.remove_pauli(1), Some(pauli));
+        assert_eq!(storage.remove_pauli(3), Some(pauli.clone()));
+        assert_eq!(storage.remove_pauli(3), None);
+        assert_eq!(storage.remove_pauli(2), Some(PauliVec::<B>::zeros(3)));
+        assert_eq!(storage.remove_pauli(2), None);
+        assert_eq!(storage.remove_pauli(1), Some(pauli.clone()));
         assert_eq!(storage.remove_pauli(1), None);
+        assert_eq!(storage.remove_pauli(0), Some(pauli.clone()));
+        assert!(storage.is_empty());
     }
 }
