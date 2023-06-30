@@ -43,6 +43,8 @@ pub struct Graph {
 
 type Deps = HashMap<usize, Vec<usize>>;
 
+type Schedule = Vec<Vec<usize>>;
+
 impl Graph {
     pub fn new(num: usize, edges: &[(usize, usize)]) -> Self {
         let mut nodes = vec![Node::default(); num];
@@ -121,8 +123,8 @@ impl Graph {
         lower_bound: usize, // inclusive
         upper_bound: usize, // exclusive
         get_shortest: bool,
-    ) -> (HashMap<usize, Vec<Vec<Vec<usize>>>>, Option<Vec<Vec<Vec<usize>>>>) {
-        fn schedule(s: Vec<usize>, deps_graph: &DependencyGraph) -> Vec<Vec<usize>> {
+    ) -> (HashMap<usize, Vec<Schedule>>, Option<Vec<Schedule>>) {
+        fn schedule(s: Vec<usize>, deps_graph: &DependencyGraph) -> Schedule {
             let mut path = Vec::new();
             let mut s = s.into_iter();
             let bit = s.next().unwrap();
@@ -143,7 +145,7 @@ impl Graph {
             path
         }
 
-        fn compare(present: &mut Vec<Vec<Vec<usize>>>, path: Vec<Vec<usize>>) {
+        fn compare(present: &mut Vec<Schedule>, path: Schedule) {
             match present[0].len().cmp(&path.len()) {
                 std::cmp::Ordering::Less => (),
                 std::cmp::Ordering::Equal => present.push(path),
@@ -154,8 +156,8 @@ impl Graph {
         let deps = Deps::from_iter(deps_graph.clone().into_iter().flatten());
         let len = self.nodes.len();
         let mut max = len + 1; // worst case + 1
-        let mut min_bits_path: Option<Vec<Vec<Vec<usize>>>> = None;
-        let mut res: HashMap<usize, Vec<Vec<Vec<usize>>>> = HashMap::new();
+        let mut min_bits_path: Option<Vec<Schedule>> = None;
+        let mut res: HashMap<usize, Vec<Schedule>> = HashMap::new();
         for s in (0..len).permutations(len).filter(|path| valid_path(path, &deps)) {
             let mut copy = self.clone();
             for &bit in &s {
@@ -232,29 +234,29 @@ mod tests {
         );
     }
 
-    #[test]
-    fn hey() {
-        let deps = vec![vec![(0, vec![]), (1, vec![])], vec![(2, vec![0, 1])]];
-        let mut graph = Graph::new(3, &[(0, 1), (1, 2)]);
-        println!("{:?}", graph.mixed(&deps, 1, 4, true));
-        println!("{:?}", graph.mixed(&deps, 1, 2, true));
+    // #[test]
+    // fn hey() {
+    //     let deps = vec![vec![(0, vec![]), (1, vec![])], vec![(2, vec![0, 1])]];
+    //     let mut graph = Graph::new(3, &[(0, 1), (1, 2)]);
+    //     println!("{:?}", graph.mixed(&deps, 1, 4, true));
+    //     println!("{:?}", graph.mixed(&deps, 1, 2, true));
 
-        let deps = vec![
-            vec![(0, vec![]), (1, vec![]), (6, vec![])],
-            vec![(2, vec![3, 1]), (3, vec![0, 1])],
-            vec![(4, vec![2, 1]), (5, vec![3, 1])],
-        ];
-        let mut graph = Graph::new(
-            7,
-            &[(0, 1), (1, 2), (2, 0), (2, 3), (1, 5), (4, 5), (2, 6), (0, 5)],
-        );
-        let (res, min) = graph.mixed(&deps, 1, 7, true);
-        println!("{:?}\n", min);
-        println!("3: {:?}\n", res.get(&3));
-        println!("4: {:?}\n", res.get(&4));
-        println!("5: {:?}\n", res.get(&5));
-        println!("{:?}", graph.mixed(&deps, 1, 3, true));
-    }
+    //     let deps = vec![
+    //         vec![(0, vec![]), (1, vec![]), (6, vec![])],
+    //         vec![(2, vec![3, 1]), (3, vec![0, 1])],
+    //         vec![(4, vec![2, 1]), (5, vec![3, 1])],
+    //     ];
+    //     let mut graph = Graph::new(
+    //         7,
+    //         &[(0, 1), (1, 2), (2, 0), (2, 3), (1, 5), (4, 5), (2, 6), (0, 5)],
+    //     );
+    //     let (res, min) = graph.mixed(&deps, 1, 7, true);
+    //     println!("{:?}\n", min);
+    //     println!("3: {:?}\n", res.get(&3));
+    //     println!("4: {:?}\n", res.get(&4));
+    //     println!("5: {:?}\n", res.get(&5));
+    //     println!("{:?}", graph.mixed(&deps, 1, 3, true));
+    // }
 }
 
 #[allow(unused)]
