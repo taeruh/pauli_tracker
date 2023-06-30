@@ -1,4 +1,9 @@
+/*!
+...
+*/
+
 use std::{
+    collections::HashMap,
     mem,
     slice,
 };
@@ -10,13 +15,15 @@ use serde::{
     Serialize,
 };
 
+use crate::analyse::DependencyGraph;
+
 #[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Default, Debug)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum State {
     #[default]
     Sleeping,
-    InMemory(usize),
-    Measured(usize),
+    InMemory,
+    Measured,
 }
 
 #[derive(Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Default, Debug)]
@@ -32,9 +39,9 @@ pub struct Graph {
     nodes: Vec<Node>,
     current: usize,
     max: usize,
-    // the updating of current_max is not bijective, we need to keep the history
-    max_history: Vec<usize>,
 }
+
+type Deps = HashMap<usize, Vec<usize>>;
 
 impl Graph {
     pub fn new(num: usize, edges: &[(usize, usize)]) -> Self {
@@ -44,35 +51,17 @@ impl Graph {
             nodes[left].neighbors.push(right);
             nodes[right].neighbors.push(left);
         }
-        Self {
-            nodes,
-            current: 0,
-            max: 0,
-            max_history: Vec::with_capacity(num),
-        }
+        Self { nodes, current: 0, max: 0 }
     }
 
     fn initialize(&mut self, bit: usize) -> Result<(), ()> {
         match &mut self.nodes[bit].state {
             state @ State::Sleeping => {
-                *state = State::InMemory(1);
+                *state = State::InMemory;
                 self.current += 1;
             }
-            State::InMemory(i) => *i += 1,
-            State::Measured(_) => return Err(()),
-        }
-        Ok(())
-    }
-
-    fn reverse_initialization(&mut self, bit: usize) -> Result<(), ()> {
-        match &mut self.nodes[bit].state {
-            State::Sleeping => return Err(()),
-            state @ State::InMemory(1) => {
-                *state = State::Sleeping;
-                self.current -= 1;
-            }
-            State::InMemory(i) => *i -= 1,
-            State::Measured(_) => return Err(()),
+            State::InMemory => (),
+            State::Measured => return Err(()),
         }
         Ok(())
     }
@@ -82,7 +71,12 @@ impl Graph {
         // valid way to get around the aliasing rules; one could do something like
         // std::slice::from_raw(...).iter() and Miri wouldn't error, but I think this is
         // not valid; of course we could get around it with an UnsafeCell to opt-out of
-        // the strict aliasing rules)
+        // the strict aliasing rules or use raw pointers in initialize); okay, the
+        // following works, but then we have index self.nodes in every round
+        // for i in 0..self.nodes[bit].neighbors.len() {
+        //     let _ = self.initialize(self.nodes[bit].neighbors[i]);
+        // }
+        // let node = &mut self.nodes[bit];
         let neighbors = mem::take(&mut self.nodes[bit].neighbors);
         for neighbor in neighbors.iter() {
             let _ = self.initialize(*neighbor);
@@ -92,12 +86,11 @@ impl Graph {
         match node.state {
             State::Sleeping => {
                 self.current += 1;
-                node.state = State::Measured(0)
+                node.state = State::Measured;
             }
-            State::InMemory(i) => node.state = State::Measured(i),
-            State::Measured(i) => return Err(()),
+            State::InMemory => node.state = State::Measured,
+            State::Measured => return Err(()),
         }
-        self.max_history.push(self.max);
         if self.current > self.max {
             self.max = self.current;
         }
@@ -105,43 +98,110 @@ impl Graph {
         Ok(())
     }
 
-    pub fn reverse_measure(&mut self, bit: usize) -> Result<(), ()> {
-        let node = &mut self.nodes[bit];
-        let inits = match node.state {
-            State::Sleeping => return Err(()),
-            State::InMemory(_) => return Err(()),
-            State::Measured(i) => i,
-        };
-        let neighbors = mem::take(&mut node.neighbors);
-        for neighbor in neighbors.iter() {
-            let _ = self.reverse_initialization(*neighbor);
-        }
-        let node = &mut self.nodes[bit];
-        mem::replace(&mut node.neighbors, neighbors);
-        self.max = self.max_history.pop().unwrap();
-        if inits == 0 {
-            node.state = State::Sleeping;
-        } else {
-            node.state = State::InMemory(inits);
-            self.current += 1;
-        }
-        Ok(())
-    }
-
-    pub fn shortest(&mut self) -> usize {
+    pub fn min_bits(&mut self, deps: &Deps) -> (usize, Vec<usize>) {
         let len = self.nodes.len();
-        let mut shortest = len; // worst case
-        for s in (0..len).permutations(len) {
+        let mut max = len + 1; // worst case + 1
+        let mut path = (0..len).collect();
+        for s in (0..len).permutations(len).filter(|path| valid_path(path, deps)) {
             let mut copy = self.clone();
-            for bit in s {
+            for &bit in &s {
                 copy.measure(bit);
             }
-            if copy.max < shortest {
-                shortest = copy.max
+            if copy.max < max {
+                max = copy.max;
+                path = s;
             }
         }
-        shortest
+        (max, path)
     }
+
+    pub fn mixed(
+        &mut self,
+        deps_graph: &DependencyGraph,
+        lower_bound: usize, // inclusive
+        upper_bound: usize, // exclusive
+        get_shortest: bool,
+    ) -> (HashMap<usize, Vec<Vec<Vec<usize>>>>, Option<Vec<Vec<Vec<usize>>>>) {
+        fn schedule(s: Vec<usize>, deps_graph: &DependencyGraph) -> Vec<Vec<usize>> {
+            let mut path = Vec::new();
+            let mut s = s.into_iter();
+            let bit = s.next().unwrap();
+            // first bit has to be in the zeroth layer
+            let mut last_layer = 0;
+            let mut layer = 0;
+            path.push(vec![bit]);
+            for bit in s {
+                let layer = find_layer(bit, deps_graph).unwrap();
+                if layer <= last_layer {
+                    path[last_layer].push(bit);
+                } else {
+                    debug_assert_eq!(last_layer + 1, layer);
+                    path.push(vec![bit]);
+                    last_layer = layer;
+                }
+            }
+            path
+        }
+
+        fn compare(present: &mut Vec<Vec<Vec<usize>>>, path: Vec<Vec<usize>>) {
+            match present[0].len().cmp(&path.len()) {
+                std::cmp::Ordering::Less => (),
+                std::cmp::Ordering::Equal => present.push(path),
+                std::cmp::Ordering::Greater => *present = vec![path],
+            }
+        }
+
+        let deps = Deps::from_iter(deps_graph.clone().into_iter().flatten());
+        let len = self.nodes.len();
+        let mut max = len + 1; // worst case + 1
+        let mut min_bits_path: Option<Vec<Vec<Vec<usize>>>> = None;
+        let mut res: HashMap<usize, Vec<Vec<Vec<usize>>>> = HashMap::new();
+        for s in (0..len).permutations(len).filter(|path| valid_path(path, &deps)) {
+            let mut copy = self.clone();
+            for &bit in &s {
+                copy.measure(bit);
+            }
+            if lower_bound <= copy.max && copy.max < upper_bound {
+                let path = schedule(s, deps_graph);
+                match res.get_mut(&copy.max) {
+                    Some(p) => compare(p, path),
+                    None => {
+                        let _ = res.insert(copy.max, vec![path]);
+                    }
+                };
+            } else if get_shortest && copy.max <= max {
+                max = copy.max;
+                let path = schedule(s, deps_graph);
+                match min_bits_path {
+                    Some(ref mut p) => compare(p, path),
+                    None => min_bits_path = Some(vec![path]),
+                }
+            }
+        }
+        (res, min_bits_path)
+    }
+}
+
+fn find_layer(bit: usize, deps: &DependencyGraph) -> Option<usize> {
+    for (i, layer) in deps.iter().enumerate() {
+        if layer.iter().map(|(i, _)| i).contains(&bit) {
+            return Some(i);
+        }
+    }
+    None
+}
+
+fn valid_path(path: &[usize], deps: &Deps) -> bool {
+    let mut measured = Vec::with_capacity(path.len());
+    for node in path {
+        for dep in deps.get(node).unwrap() {
+            if !measured.contains(dep) {
+                return false;
+            }
+        }
+        measured.push(*node);
+    }
+    true
 }
 
 #[cfg(test)]
@@ -151,65 +211,51 @@ mod tests {
     use super::*;
 
     #[test]
-    fn foo() {
-        let mut graph = Graph::new(3, &[(0, 1), (1, 2)]);
-        let mut copy = graph.clone();
-        copy.measure(0);
-        copy.measure(1);
-        copy.measure(2);
-        assert_eq!(copy.max, 2);
-        let mut copy = graph.clone();
-        copy.measure(1);
-        copy.measure(0);
-        copy.measure(2);
-        assert_eq!(copy.max, 3);
-        graph.measure(0);
-        assert_eq!(graph.current, 1);
-        assert_eq!(graph.max, 2);
-        graph.measure(1);
-        assert_eq!(graph.current, 1);
-        assert_eq!(graph.max, 2);
-        graph.measure(2);
-        assert_eq!(graph.current, 0);
-        assert_eq!(graph.max, 2);
-        graph.reverse_measure(2);
-        assert_eq!(graph.current, 1);
-        assert_eq!(graph.max, 2);
-        graph.reverse_measure(1);
-        assert_eq!(graph.current, 1);
-        assert_eq!(graph.max, 2);
-        graph.reverse_measure(0);
-        assert_eq!(graph.current, 0);
-        assert_eq!(graph.max, 0);
+    fn bar() {
+        let deps = Deps::from([(0, vec![]), (1, vec![]), (2, vec![0, 1])]);
+        // (0..deps.len())
+        //     .permutations(deps.len())
+        //     .filter(|path| valid_path(path, &deps))
+        //     .for_each(|path| println!("{:?}", path));
+        assert_eq!(
+            (2, vec![0, 1, 2]),
+            Graph::new(3, &[(0, 1), (1, 2)]).min_bits(&deps)
+        );
+        let deps = Deps::from([(0, vec![1]), (1, vec![]), (2, vec![0, 1])]);
+        // (0..deps.len())
+        //     .permutations(deps.len())
+        //     .filter(|path| valid_path(path, &deps))
+        //     .for_each(|path| println!("{:?}", path));
+        assert_eq!(
+            (3, vec![1, 0, 2]),
+            Graph::new(3, &[(0, 1), (1, 2)]).min_bits(&deps)
+        );
     }
 
     #[test]
-    fn bar() {
-        assert_eq!(2, Graph::new(3, &[(0, 1), (1, 2)]).shortest());
-        assert_eq!(3, Graph::new(3, &[(0, 1), (1, 2), (2, 0)]).shortest());
-        assert_eq!(
-            3,
-            Graph::new(5, &[(0, 1), (1, 2), (2, 0), (0, 3), (0, 4)]).shortest()
+    fn hey() {
+        let deps = vec![vec![(0, vec![]), (1, vec![])], vec![(2, vec![0, 1])]];
+        let mut graph = Graph::new(3, &[(0, 1), (1, 2)]);
+        println!("{:?}", graph.mixed(&deps, 1, 4, true));
+        println!("{:?}", graph.mixed(&deps, 1, 2, true));
+
+        let deps = vec![
+            vec![(0, vec![]), (1, vec![]), (6, vec![])],
+            vec![(2, vec![3, 1]), (3, vec![0, 1])],
+            vec![(4, vec![2, 1]), (5, vec![3, 1])],
+        ];
+        let mut graph = Graph::new(
+            7,
+            &[(0, 1), (1, 2), (2, 0), (2, 3), (1, 5), (4, 5), (2, 6), (0, 5)],
         );
-        // yup, more qubits than 10 and the runtime escalates
-        // assert_eq!(
-        //     3,
-        //     Graph::new(
-        //         10,
-        //         &[
-        //             (9, 8),
-        //             (8, 7),
-        //             (7, 6),
-        //             (6, 5),
-        //             (5, 0),
-        //             (0, 1),
-        //             (1, 2),
-        //             (2, 0),
-        //             (0, 3),
-        //             (0, 4)
-        //         ]
-        //     )
-        //     .shortest()
-        // );
+        let (res, min) = graph.mixed(&deps, 1, 7, true);
+        println!("{:?}\n", min);
+        println!("3: {:?}\n", res.get(&3));
+        println!("4: {:?}\n", res.get(&4));
+        println!("5: {:?}\n", res.get(&5));
+        println!("{:?}", graph.mixed(&deps, 1, 3, true));
     }
 }
+
+#[allow(unused)]
+pub(crate) mod maybe_better;

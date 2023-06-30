@@ -5,6 +5,8 @@
 #[allow(unused)]
 pub(crate) mod space;
 
+use std::collections::HashMap;
+
 use crate::{
     boolean_vector::BooleanVector,
     pauli::PauliVec,
@@ -162,6 +164,11 @@ pub fn sort_layers_by_bits(graph: &mut DependencyGraph) {
     for layer in graph {
         layer.sort_by_key(|(bit, _)| *bit)
     }
+}
+
+/// graph into hashmap
+pub fn into_hashmap(graph: DependencyGraph) -> HashMap<usize, Vec<usize>> {
+    HashMap::from_iter(graph.into_iter().flatten())
 }
 
 #[cfg(test)]

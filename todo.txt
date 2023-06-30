@@ -16,7 +16,6 @@
 before next major bump:
 - put dependency graph into its own module
 - maybe remove deref for storage::Vector
-- use real error types when returning an error, not just Strings
 - panics in create_dependency_graph to return error
 - maybe introduce a Node struct for DependencyGraph
 - maybe put functions in storage.rs into StackStorage as default fns
