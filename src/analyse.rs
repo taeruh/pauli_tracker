@@ -3,9 +3,10 @@
 */
 
 #[allow(unused)]
-pub(crate) mod space;
+pub(crate) mod schedule;
 
-use std::collections::HashMap;
+#[allow(unused)]
+pub(crate) mod combinatoric;
 
 use crate::{
     boolean_vector::BooleanVector,
@@ -147,6 +148,11 @@ where
     graph
 }
 
+// pub(crate) fn invert_dependency_graph<'l, BoolVec, Storage>(
+//     storage: Storage,
+//     map: &[usize],
+// ) -> DependencyGraph
+
 /// Sort the nodes in a layer of `graph` according to their qubit number.
 ///
 /// # Examples
@@ -166,10 +172,28 @@ pub fn sort_layers_by_bits(graph: &mut DependencyGraph) {
     }
 }
 
-/// graph into hashmap
-pub fn into_hashmap(graph: DependencyGraph) -> HashMap<usize, Vec<usize>> {
-    HashMap::from_iter(graph.into_iter().flatten())
-}
+// /// graph into hashmap
+// pub fn into_hashmap(graph: DependencyGraph) -> HashMap<usize, Vec<usize>> {
+//     HashMap::from_iter(graph.into_iter().flatten())
+// }
+
+// pub(crate) fn invert(mut graph: DependencyGraph) -> DependencyGraph {
+//     for layer_idx in 0..graph.len() {
+//         let mut this_layer = mem::take(graph.get_mut(layer_idx).unwrap());
+//         for (this_bit, dependents) in this_layer.iter_mut() {
+//             for layer in graph[(layer_idx + 1)..].iter_mut() {
+//                 for (bit, deps) in layer.iter_mut() {
+//                     if let Some(position) = deps.iter().position(|b| b == this_bit) {
+//                         dependents.push(*bit);
+//                         deps.swap_remove(position);
+//                     }
+//                 }
+//             }
+//         }
+//         let _ = mem::replace(graph.get_mut(layer_idx).unwrap(), this_layer);
+//     }
+//     graph
+// }
 
 #[cfg(test)]
 mod tests {
