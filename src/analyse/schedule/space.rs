@@ -39,7 +39,7 @@ pub struct Node {
 pub struct Graph {
     space: SpaceGraph,
     current_memory: usize,
-    max_memory: usize,
+    pub max_memory: usize,
 }
 
 type Deps = HashMap<usize, Vec<usize>>;
@@ -50,8 +50,8 @@ impl Graph {
     pub fn new(num: usize, edges: &[(usize, usize)]) -> Self {
         let mut nodes = vec![Node::default(); num];
         for &(left, right) in edges {
-            assert!(left != right, "no loops allowed");
-            if left != right {
+            // assert!(left != right, "no loops allowed");
+            if left == right {
                 continue;
             }
             nodes[left].neighbors.push(right);
@@ -94,15 +94,17 @@ impl Graph {
         Ok(())
     }
 
-    pub fn step(&mut self, bits: &[(usize, Vec<usize>)]) -> Result<(), ()> {
-        for (bit, deps) in bits {
-            self.measure(*bit)?;
+    pub fn step(&mut self, bits: &[usize]) -> Option<Self> {
+        let mut new = self.clone();
+        for bit in bits {
+            // new.measure(*bit)?;
+            new.measure(*bit).unwrap();
         }
-        if self.current_memory > self.max_memory {
-            self.max_memory = self.current_memory;
+        if new.current_memory > new.max_memory {
+            new.max_memory = new.current_memory;
         }
-        self.current_memory -= bits.len();
-        Ok(())
+        new.current_memory -= bits.len();
+        Some(new)
     }
 }
 

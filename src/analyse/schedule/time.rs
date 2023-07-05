@@ -19,7 +19,7 @@ type Deps = Vec<HashMap<usize, Vec<usize>>>;
 
 #[derive(Debug, Clone)]
 pub struct TimeGraph {
-    first: Partition<Vec<usize>>,
+    pub first: Partition<Vec<usize>>,
     deps: Deps,
     look: Look,
 }
@@ -72,7 +72,7 @@ impl TimeGraph {
         first
     }
 
-    fn step(&mut self) -> Option<(Self, Vec<usize>)> {
+    pub fn step(&mut self) -> Option<(Self, Vec<usize>)> {
         // switch comments here to switch order
         let (measuring, mut first) = self.first.next()?;
         // let (mut first, measuring) = self.first.next()?;
@@ -96,33 +96,6 @@ impl TimeGraph {
         Some((Self::new(Self::new_partition(first), deps, look), measuring))
     }
 
-    fn sweep(self) {
-        let mut stack = Vec::new();
-        let mut this = self;
-        let mut path = Vec::new();
-        loop {
-            match this.step() {
-                Some((that, mess)) => {
-                    path.push(mess);
-                    stack.push(mem::replace(&mut this, that));
-                }
-                None => {
-                    this = match stack.pop() {
-                        Some(old) => {
-                            if this.first.set.is_empty() {
-                                println!("{}; {:?}", path.len(), path);
-                            }
-                            path.pop();
-                            old
-                        }
-                        None => {
-                            break;
-                        }
-                    }
-                }
-            }
-        }
-    }
 }
 
 #[cfg(test)]
@@ -131,17 +104,6 @@ mod tests {
 
     use super::*;
 
-    #[test]
-    fn scheduler() {
-        let graph = vec![
-            vec![(0, vec![]), (2, vec![])],
-            vec![(3, vec![0]), (1, vec![0, 2])],
-            vec![(4, vec![0, 3])],
-        ];
-        println!("{:?}\n", graph);
-        let mut scheduler = TimeGraph::from(graph);
-        scheduler.sweep();
-    }
 
     #[test]
     fn invert_graph() {

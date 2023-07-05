@@ -1,3 +1,8 @@
+scheduling:
+- make it parallelize compatible
+- sort the results and introduce break conditions
+- overwork the api in general
+
 - implement a file streaming storage
 - more tests
 - maybe try to depend only on proptest when we really run proptest (for less
