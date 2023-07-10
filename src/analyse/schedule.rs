@@ -26,7 +26,7 @@ impl Scheduler {
     //
 }
 
-// just for debugging
+// just for seeing whether it works as expected while developing
 static mut COUNT: usize = 0;
 
 impl FocusNext for Scheduler {
@@ -38,13 +38,13 @@ impl FocusNext for Scheduler {
         Self: Sized,
     {
         let (new_time, mess) = self.time.step()?;
-        // unsafe { COUNT += 1 };
+        unsafe { COUNT += 1 };
         let new_space = self.space.step(&mess).unwrap();
         Some((Self { time: new_time, space: new_space }, mess))
     }
 
     fn check_end(&self) -> Self::EndOutcome {
-        self.time.first.set.is_empty().then_some(self.space.max_memory)
+        self.time.known.set.is_empty().then_some(self.space.max_memory)
     }
 }
 
@@ -99,8 +99,6 @@ mod tests {
     fn skipper() {
         let (space, time, num_nodes) = input();
 
-        let mut minimum_time = 0;
-        // let mut max_mem = 0;
         let mut predicates = vec![space.len() + 1; num_nodes + 1];
 
         let mut path = Vec::new();
@@ -114,39 +112,13 @@ mod tests {
             match step {
                 Step::Forward(mess) => {
                     let current = scheduler.current();
-                    minimum_time = if current.time.first.set.is_empty() {
-                        // path.len() + 1 + current.time.deps.len()
+                    let minimum_time = if current.time.known.set.is_empty() {
                         path.len() + 1
                     } else {
-                        // path.len() + 2 + current.time.deps.len()
                         path.len() + 2
                     };
-                    let mut bar = path.clone();
-                    bar.push(mess.clone());
-                    if bar.contains(&vec![0])
-                        && bar.contains(&vec![2])
-                        && bar.len() == 2
-                    {
-                        // println!("DEPS: {:?}", current.time.deps.len());
-                        // println!("DEPS: {:?}", current.time);
-                        // println!("{:?}", path);
-                        // println!("{:?}", bar);
-                        // println!(
-                        //     "DEPS: {:?}",
-                        //     (
-                        //         path.len(),
-                        //         current.time.deps.len(),
-                        //         minimum_time,
-                        //         current.space.max_memory,
-                        //         predicates[minimum_time]
-                        //     )
-                        // );
-                    }
                     // unsafe { COUNT += 1 };
-                    // println!("forw: {:?}", path);
                     if current.space.max_memory >= predicates[minimum_time] {
-                        println!("skip: {:?}", bar);
-                        // println!("skip");
                         if scheduler.skip_focus().is_err() {
                             break;
                         }
@@ -160,22 +132,18 @@ mod tests {
                         println!("{}; {}; {:?}", path.len(), max_memory, path);
                         results.push(path.clone());
                     }
-                    // println!("back: {:?}", path);
                     path.pop();
                     let current = scheduler.current();
                     // we are never at an end-node after a backward step, so the set is
                     // never empty and we can skip the check
-                    // minimum_time = if current.time.first.set.is_empty() {
-                    //     path.len() + 0 + current.time.deps.len()
+                    // let minimum_time = if current.time.first.set.is_empty() {
+                    //     path.len()
                     // } else {
-                    //     path.len() + 1 + current.time.deps.len()
+                    //     path.len() + 1
                     // };
-                    // minimum_time = path.len() + 1 + current.time.deps.len();
-                    minimum_time = path.len() + 1;
+                    let minimum_time = path.len() + 1;
                     // unsafe { COUNT += 1 };
                     if current.space.max_memory >= predicates[minimum_time] {
-                        // println!("skip: {:?}", path);
-                        // println!("skip");
                         path.pop();
                         if scheduler.skip_focus().is_err() {
                             break;
@@ -185,9 +153,6 @@ mod tests {
             }
         }
         println!("result: {:?}", results.len());
-        // for r in results {
-        //     println!("{:?}", r);
-        // }
         println!("count: {:?}", unsafe { COUNT });
     }
 
@@ -212,8 +177,8 @@ mod tests {
             vec![(3, vec![0]), (1, vec![0, 2])],
             vec![(4, vec![0, 3])],
         ];
-        let time =
-            vec![vec![(0, vec![]), (1, vec![]), (2, vec![]), (3, vec![]), (4, vec![])]];
+        // let time =
+        //     vec![vec![(0, vec![]), (1, vec![]), (2, vec![]), (3, vec![]), (4, vec![])]];
 
         // let space = [];
         // let time = vec![vec![(0, vec![])]];
@@ -221,16 +186,3 @@ mod tests {
         (space, time, 5)
     }
 }
-
-// fn prep_para(mut self, mut num_threads: usize) {
-//     let mut tasks = Vec::new();
-//     while let Some((new, mess)) = self.step() {
-//         tasks.push(new);
-//         num_threads -= 1;
-//         if num_threads == 1 {
-//             break;
-//         }
-//     }
-//     tasks.push(self);
-//     todo!()
-// }

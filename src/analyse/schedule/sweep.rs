@@ -53,7 +53,6 @@ impl<T: FocusNext> Iterator for Sweep<T> {
     fn next(&mut self) -> Option<Self::Item> {
         match self.current.step() {
             Some((new, mess)) => {
-                unsafe { super::COUNT += 1 };
                 self.stack.push(mem::replace(&mut self.current, new));
                 Some(Step::Forward(mess))
             }

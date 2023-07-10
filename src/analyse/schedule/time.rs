@@ -19,42 +19,18 @@ use crate::analyse::{
     DependencyGraph,
 };
 
-type Look = HashMap<usize, Vec<(usize, usize)>>;
-
-// I'm not so sure yet whether it's better to use a Vec + a layer_counter or a HashMap
-// or something like my MappedVector for the layers; so let's hide it
-#[derive(Debug, Clone, Default)]
-pub struct Deps {
-    deps: Vec<HashMap<usize, Vec<usize>>>,
-    num_layers: usize,
-}
-
-impl Deps {
-    pub fn len(&self) -> usize {
-        self.num_layers
-    }
-
-    pub fn iter(&self) -> Iter<'_, HashMap<usize, Vec<usize>>> {
-        self.deps.iter()
-    }
-
-    pub fn get_mut(&mut self, layer: usize) -> Option<&mut HashMap<usize, Vec<usize>>> {
-        self.deps.get_mut(layer)
-    }
-}
-
-impl FromIterator<HashMap<usize, Vec<usize>>> for Deps {
-    fn from_iter<T: IntoIterator<Item = HashMap<usize, Vec<usize>>>>(iter: T) -> Self {
-        let deps: Vec<HashMap<usize, Vec<usize>>> = iter.into_iter().collect();
-        Self { num_layers: deps.len(), deps }
-    }
-}
+type Map = HashMap<usize, Vec<usize>>;
 
 #[derive(Debug, Clone, Default)]
 pub struct TimeGraph {
-    pub first: Partition<Vec<usize>>,
-    pub deps: Deps,
-    look: Look,
+    // one could also put the dependents with the bit into the partition set and in deps
+    // have vaules of the form (dependents, dependencies), however, the Partition clones
+    // the set multiple times, therefore we don't want the dependents in there (also it
+    // makes the from(DependencyGraph) function and the step function simpler if it is
+    // separated)
+    pub known: Partition<Vec<usize>>,
+    pub deps: Map,
+    look: Map,
 }
 
 impl From<DependencyGraph> for TimeGraph {
@@ -63,43 +39,47 @@ impl From<DependencyGraph> for TimeGraph {
             return Self::default();
         }
 
-        fn resolve<'l>(
-            this_layer: impl Iterator<Item = (&'l usize, &'l Vec<usize>)>,
-            rest: &Enumerate<Iter<'_, HashMap<usize, Vec<usize>>>>,
-            look: &mut Look,
-        ) {
-            for (this_bit, dependencies) in this_layer {
-                let mut dependents = Vec::new();
-                for (mut layer_idx, layer) in rest.clone() {
-                    for (bit, deps) in layer.iter() {
-                        if let Some(position) = deps.iter().position(|b| b == this_bit)
-                        {
-                            dependents.push((layer_idx, *bit));
-                        }
+        fn resolve(bit: usize, rest: &[Vec<(usize, Vec<usize>)>], look: &mut Map) {
+            let mut dependents = Vec::new();
+            for layer in rest {
+                for (dep, deps) in layer {
+                    if let Some(position) = deps.iter().position(|b| *b == bit) {
+                        dependents.push(*dep);
                     }
                 }
-                look.insert(*this_bit, dependents);
+            }
+            look.insert(bit, dependents);
+        }
+
+        let mut known = Vec::new();
+        let mut look = HashMap::new();
+        let mut deps = HashMap::new();
+
+        let mut graph_iter = graph.into_iter();
+
+        let first = graph_iter.next().unwrap();
+        let rest = graph_iter.as_ref();
+        for (bit, _) in first {
+            resolve(bit, rest, &mut look);
+            known.push(bit);
+        }
+
+        while let Some(layer) = graph_iter.next() {
+            let rest = graph_iter.as_ref();
+            for (bit, dependency) in layer {
+                resolve(bit, rest, &mut look);
+                deps.insert(bit, dependency);
             }
         }
 
-        let mut graph = graph.into_iter();
-        let first = graph.next().unwrap();
-        let deps: Deps = graph.map(HashMap::from_iter).collect();
-        let mut look = HashMap::new();
-        let mut iter = deps.iter().enumerate();
-        resolve(first.iter().map(|(a, b)| (a, b)), &iter, &mut look);
-        let first: Vec<usize> = first.into_iter().map(|(b, _)| b).collect();
-        while let Some((_, this_layer)) = iter.next() {
-            resolve(this_layer.iter(), &iter, &mut look);
-        }
-        let first = Self::new_partition(first);
-        Self { first, deps, look }
+        let known = Self::new_partition(known);
+        Self { known, deps, look }
     }
 }
 
 impl TimeGraph {
-    fn new(first: Partition<Vec<usize>>, deps: Deps, look: Look) -> Self {
-        Self { first, deps, look }
+    fn new(first: Partition<Vec<usize>>, deps: Map, look: Map) -> Self {
+        Self { known: first, deps, look }
     }
 
     fn new_partition(a: Vec<usize>) -> Partition<Vec<usize>> {
@@ -119,7 +99,7 @@ impl FocusNext for TimeGraph {
         Self: Sized,
     {
         // switch comments here to switch order
-        let (measuring, mut first) = self.first.next()?;
+        let (measuring, mut first) = self.known.next()?;
         // let (mut first, measuring) = self.first.next()?;
         // if measuring.is_empty() {
         //     return None;
@@ -128,17 +108,13 @@ impl FocusNext for TimeGraph {
         let mut look = self.look.clone();
         for known in measuring.iter() {
             let dependents = look.remove(known).unwrap();
-            for (layer, bit) in dependents {
-                let layer = deps.get_mut(layer).unwrap();
-                let dependencies = layer.get_mut(&bit).unwrap();
+            for bit in dependents {
+                let dependencies = deps.get_mut(&bit).unwrap();
                 let pos = dependencies.iter().position(|e| e == known).unwrap();
                 dependencies.swap_remove(pos);
                 if dependencies.is_empty() {
-                    layer.remove(&bit).unwrap();
+                    deps.remove(&bit).unwrap();
                     first.push(bit);
-                    if layer.is_empty() {
-                        deps.num_layers -= 1;
-                    }
                 }
             }
         }
@@ -146,7 +122,7 @@ impl FocusNext for TimeGraph {
     }
 
     fn check_end(&self) -> Self::EndOutcome {
-        self.first.set.is_empty()
+        self.known.set.is_empty()
     }
 }
 
@@ -237,8 +213,8 @@ mod tests {
         //     // (8, vec![]),
         // ]];
         let graph = TimeGraph::from(time);
-        // println!("{:?}", graph);
-        // return;
+        println!("{:?}", graph);
+        return;
 
         let mut path = Vec::new();
         let mut results = Vec::new();

@@ -169,7 +169,8 @@ mod tests {
         // let mut path = Vec::new();
         // let mut results = Vec::new();
 
-        let splitted = super::super::time::split_instructions(graph.clone(), 5);
+        // let splitted = super::super::time::split_instructions(graph.clone(), 5);
+        let splitted = super::super::time::split_instructions(graph, 5);
 
         // for step in graph {
         //     match step {
