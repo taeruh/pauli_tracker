@@ -12,6 +12,15 @@ pub struct Partition<T> {
     iter: Powerset<Range<usize>>,
 }
 
+impl<T: Default> Default for Partition<T> {
+    fn default() -> Self {
+        Self {
+            set: T::default(),
+            iter: (0..0).powerset(),
+        }
+    }
+}
+
 impl<T> Partition<T> {
     pub fn new(set: T, len: usize) -> Self {
         Self { set, iter: (0..len).powerset() }

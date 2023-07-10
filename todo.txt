@@ -1,7 +1,13 @@
 scheduling:
-- make it parallelize compatible
-- sort the results and introduce break conditions
+- make it parallelize compatible; in progress
+- sort the results and introduce break conditions; in progress
 - overwork the api in general
+- test it
+
+- lock cargo hack
+- lock msrv
+
+- maybe derive macro for sweep::impl_into_iterator
 
 - implement a file streaming storage
 - more tests

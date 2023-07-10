@@ -15,6 +15,7 @@ use serde::{
     Serialize,
 };
 
+use super::time::Step;
 use crate::analyse::DependencyGraph;
 type SpaceGraph = Vec<Node>;
 
@@ -106,6 +107,46 @@ impl Graph {
         new.current_memory -= bits.len();
         Some(new)
     }
+
+    pub fn into_instructed_iterator<T: IntoIterator<Item = Step>>(
+        self,
+        instructions: T,
+    ) -> Sweep<T::IntoIter> {
+        Sweep {
+            current: self,
+            stack: Vec::new(),
+            instructions: instructions.into_iter(),
+        }
+    }
+}
+
+pub struct Sweep<T> {
+    current: Graph,
+    stack: Vec<Graph>,
+    instructions: T,
+}
+
+pub enum Next {
+    Mess(Vec<usize>),
+    Mem(Option<usize>),
+}
+
+impl<T: Iterator<Item = Step>> Iterator for Sweep<T> {
+    type Item = Next;
+    fn next(&mut self) -> Option<Self::Item> {
+        match self.instructions.next()? {
+            Step::Forward(mess) => {
+                let new = self.current.step(&mess).unwrap();
+                self.stack.push(mem::replace(&mut self.current, new));
+                Some(Next::Mess(mess))
+            }
+            Step::Backward(at_end) => {
+                let res = at_end.then_some(self.current.max_memory);
+                self.current = self.stack.pop().unwrap();
+                Some(Next::Mem(res))
+            }
+        }
+    }
 }
 
 #[cfg(test)]
@@ -113,6 +154,59 @@ mod tests {
     use coverage_helper::test;
 
     use super::*;
+    use crate::analyse::schedule::time::TimeGraph;
+
+    #[test]
+    fn tada() {
+        let time = vec![
+            vec![(0, vec![]), (2, vec![])],
+            vec![(3, vec![0]), (1, vec![0, 2])],
+            vec![(4, vec![0, 3])],
+        ];
+        let graph = TimeGraph::from(time);
+        let space = Graph::new(5, &[(0, 1), (1, 2), (1, 3), (2, 4), (4, 3)]);
+
+        // let mut path = Vec::new();
+        // let mut results = Vec::new();
+
+        let splitted = super::super::time::split_instructions(graph.clone(), 5);
+
+        // for step in graph {
+        //     match step {
+        //         Step::Forward(mess) => {
+        //             path.push(mess);
+        //         }
+        //         Step::Backward(at_end) => {
+        //             if at_end {
+        //                 println!("{}; {:?}", path.len(), path);
+        //                 results.push(path.clone());
+        //             }
+        //             path.pop();
+        //         }
+        //     }
+        // }
+
+        // println!();
+
+        for split in splitted {
+            let mut path = Vec::new();
+            let mut results = Vec::new();
+            for step in space.clone().into_instructed_iterator(split) {
+                match step {
+                    Next::Mess(mess) => {
+                        path.push(mess);
+                    }
+                    Next::Mem(mem) => {
+                        if let Some(mem) = mem {
+                            println!("{}; {}; {:?}", path.len(), mem, path);
+                            results.push(path.clone());
+                        }
+                        path.pop();
+                    }
+                }
+            }
+        }
+    }
 
     // #[test]
     // fn bar() {
