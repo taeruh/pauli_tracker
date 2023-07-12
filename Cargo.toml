@@ -17,8 +17,9 @@ categories = ["simulation"]
 crate-type = ["lib"]
 
 [features]
-circuit = ["dep:rand"]
 analyse = []
+circuit = ["dep:rand"]
+experimental = []
 serde = ["dep:serde", "bitvec?/serde", "bitvec_simd?/serde", "bit-vec?/serde"]
 
 # about the specified dependency version:

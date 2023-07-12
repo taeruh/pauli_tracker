@@ -1,3 +1,7 @@
+/*!
+...
+*/
+
 use std::{
     error::Error,
     fmt::{
@@ -7,6 +11,23 @@ use std::{
     },
     mem,
 };
+
+// should be able to error
+pub trait Focus<Instruction> {
+    type Error;
+    fn focus(&mut self, instruction: Instruction) -> Result<Self, Self::Error>
+    where
+        Self: Sized;
+}
+
+pub trait FocusIterator {
+    type IterItem;
+    type LeafItem;
+    fn next_and_focus(&mut self) -> Option<(Self, Self::IterItem)>
+    where
+        Self: Sized;
+    fn at_leaf(&self) -> Option<Self::LeafItem>;
+}
 
 #[derive(Clone, Debug)]
 pub enum Step<F, B> {
@@ -47,17 +68,17 @@ impl<T> Sweep<T> {
     }
 }
 
-impl<T: FocusNext> Iterator for Sweep<T> {
-    type Item = Step<T::Outcome, T::EndOutcome>;
+impl<T: FocusIterator> Iterator for Sweep<T> {
+    type Item = Step<T::IterItem, Option<T::LeafItem>>;
 
     fn next(&mut self) -> Option<Self::Item> {
-        match self.current.step() {
+        match self.current.next_and_focus() {
             Some((new, mess)) => {
                 self.stack.push(mem::replace(&mut self.current, new));
                 Some(Step::Forward(mess))
             }
             None => {
-                let at_end = self.current.check_end();
+                let at_end = self.current.at_leaf();
                 self.current = self.stack.pop()?;
                 Some(Step::Backward(at_end))
             }
@@ -65,20 +86,24 @@ impl<T: FocusNext> Iterator for Sweep<T> {
     }
 }
 
-pub trait FocusNext {
-    type Outcome;
-    type EndOutcome;
-    fn step(&mut self) -> Option<(Self, Self::Outcome)>
-    where
-        Self: Sized;
-    fn check_end(&self) -> Self::EndOutcome;
-}
-
+// well, now we are not really gaining anything from this macro, compared to
+// implementing it separately -> TODO: make a derive proc-macro
+// actually we are never calling it without the lifetime, but I let it here as it is,
+// because it doesn't hurt
 macro_rules! impl_into_iterator {
     ($name:ident) => {
         impl IntoIterator for $name {
             type Item = <Self::IntoIter as Iterator>::Item;
             type IntoIter = $crate::analyse::schedule::sweep::Sweep<Self>;
+            fn into_iter(self) -> Self::IntoIter {
+                Self::IntoIter::new(self, Vec::new())
+            }
+        }
+    };
+    ($name:ident with < $lifetime:tt >) => {
+        impl<$lifetime> IntoIterator for $name<$lifetime> {
+            type Item = <Self::IntoIter as Iterator>::Item;
+            type IntoIter = $crate::analyse::schedule::tree::Sweep<Self>;
             fn into_iter(self) -> Self::IntoIter {
                 Self::IntoIter::new(self, Vec::new())
             }

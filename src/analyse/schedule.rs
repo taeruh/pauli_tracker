@@ -1,61 +1,122 @@
-use std::mem;
+/*!
+...
+*/
+
+use std::fmt::Display;
 
 use self::{
     space::{
+        AlreadyMeasured,
         Graph,
-        Sweep,
     },
-    sweep::FocusNext,
-    time::TimeGraph,
+    time::{
+        PathGenerator,
+        TimeOrderingViolation,
+    },
+    tree::{
+        Focus,
+        FocusIterator,
+    },
 };
 
+macro_rules! update {
+    ($bit:expr, $map:expr) => {
+        $map.get($bit)
+            .unwrap_or_else(|| panic!("no bit mapping for bit {}", $bit))
+    };
+    ($bit:expr; $map:expr) => {
+        *$bit = *update!($bit, $map);
+    };
+}
 pub mod space;
-pub mod sweep;
 pub mod time;
+pub mod tree;
 
-struct Scheduler {
-    time: TimeGraph,
+pub struct Scheduler<'l> {
+    time: PathGenerator<'l>,
     space: Graph,
 }
 
-impl Scheduler {
-    fn new(time: TimeGraph, space: Graph) -> Self {
+impl<'l> Scheduler<'l> {
+    pub fn new(time: PathGenerator<'l>, space: Graph) -> Self {
         Self { time, space }
     }
-
-    //
 }
 
 // just for seeing whether it works as expected while developing
-static mut COUNT: usize = 0;
+pub(crate) static mut COUNT: usize = 0;
 
-impl FocusNext for Scheduler {
-    type Outcome = Vec<usize>;
-    type EndOutcome = Option<usize>;
-
-    fn step(&mut self) -> Option<(Self, Self::Outcome)>
+impl Focus<(&Vec<usize>, Vec<usize>)> for Scheduler<'_> {
+    type Error = InstructionError;
+    fn focus(
+        &mut self,
+        instruction: (&Vec<usize>, Vec<usize>),
+    ) -> Result<Self, Self::Error>
     where
         Self: Sized,
     {
-        let (new_time, mess) = self.time.step()?;
-        unsafe { COUNT += 1 };
-        let new_space = self.space.step(&mess).unwrap();
-        Some((Self { time: new_time, space: new_space }, mess))
-    }
-
-    fn check_end(&self) -> Self::EndOutcome {
-        self.time.known.set.is_empty().then_some(self.space.max_memory)
+        let new_space = self.space.focus(instruction.0)?;
+        let new_time = self.time.focus(instruction)?;
+        Ok(Self { time: new_time, space: new_space })
     }
 }
 
-sweep::impl_into_iterator!(Scheduler);
+impl FocusIterator for Scheduler<'_> {
+    type IterItem = Vec<usize>;
+    type LeafItem = usize;
+
+    fn next_and_focus(&mut self) -> Option<(Self, Self::IterItem)>
+    where
+        Self: Sized,
+    {
+        let (new_time, mess) = self.time.next_and_focus()?;
+        unsafe { COUNT += 1 };
+        let new_space = self.space.focus(&mess).unwrap();
+        Some((Self { time: new_time, space: new_space }, mess))
+    }
+
+    fn at_leaf(&self) -> Option<Self::LeafItem> {
+        self.time.finished_path().then_some(self.space.max_memory())
+    }
+}
+
+#[derive(Debug, Clone)]
+pub enum InstructionError {
+    TimeOrderingViolation(TimeOrderingViolation),
+    AlreadyMeasured(AlreadyMeasured),
+}
+impl Display for InstructionError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            InstructionError::TimeOrderingViolation(e) => {
+                write!(f, "time ordering violation: {}", e)
+            }
+            InstructionError::AlreadyMeasured(e) => {
+                write!(f, "bit already measured: {}", e)
+            }
+        }
+    }
+}
+impl std::error::Error for InstructionError {}
+impl From<TimeOrderingViolation> for InstructionError {
+    fn from(error: TimeOrderingViolation) -> Self {
+        Self::TimeOrderingViolation(error)
+    }
+}
+impl From<AlreadyMeasured> for InstructionError {
+    fn from(error: AlreadyMeasured) -> Self {
+        Self::AlreadyMeasured(error)
+    }
+}
+
+tree::impl_into_iterator!(Scheduler with <'l>);
 
 #[cfg(test)]
 mod tests {
     use coverage_helper::test;
 
     use super::*;
-    use crate::analyse::schedule::sweep::Step;
+    use crate::analyse::schedule::tree::Step;
 
     #[test]
     fn scheduler() {
@@ -71,8 +132,12 @@ mod tests {
             len
         });
 
-        let mut scheduler =
-            Scheduler::new(TimeGraph::from(time), Graph::new(num, &space));
+        let mut look = time::LookupBuffer::new(5);
+
+        let scheduler = Scheduler::new(
+            PathGenerator::from_dependency_graph(time, &mut look, None),
+            Graph::new(num, &space, None),
+        );
 
         let mut path = Vec::new();
         let mut results = Vec::new();
@@ -104,21 +169,24 @@ mod tests {
         let mut path = Vec::new();
         let mut results = Vec::new();
 
-        let mut scheduler =
-            Scheduler::new(TimeGraph::from(time), Graph::new(space.len(), &space))
-                .into_iter();
+        let mut look = time::LookupBuffer::new(5);
+        let mut scheduler = Scheduler::new(
+            PathGenerator::from_dependency_graph(time, &mut look, None),
+            Graph::new(space.len(), &space, None),
+        )
+        .into_iter();
 
         while let Some(step) = scheduler.next() {
             match step {
                 Step::Forward(mess) => {
                     let current = scheduler.current();
-                    let minimum_time = if current.time.known.set.is_empty() {
+                    let minimum_time = if current.time.finished_path() {
                         path.len() + 1
                     } else {
                         path.len() + 2
                     };
                     // unsafe { COUNT += 1 };
-                    if current.space.max_memory >= predicates[minimum_time] {
+                    if current.space.max_memory() >= predicates[minimum_time] {
                         if scheduler.skip_focus().is_err() {
                             break;
                         }
@@ -143,7 +211,7 @@ mod tests {
                     // };
                     let minimum_time = path.len() + 1;
                     // unsafe { COUNT += 1 };
-                    if current.space.max_memory >= predicates[minimum_time] {
+                    if current.space.max_memory() >= predicates[minimum_time] {
                         path.pop();
                         if scheduler.skip_focus().is_err() {
                             break;

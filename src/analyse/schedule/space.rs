@@ -4,20 +4,24 @@
 
 use std::{
     collections::HashMap,
+    error::Error,
+    fmt::Display,
     mem,
-    slice,
 };
 
-use itertools::Itertools;
 #[cfg(feature = "serde")]
 use serde::{
     Deserialize,
     Serialize,
 };
 
-use super::time::Step;
-use crate::analyse::DependencyGraph;
-type SpaceGraph = Vec<Node>;
+use super::{
+    time::Step,
+    tree::Focus,
+};
+
+type Node = (State, Vec<usize>);
+type Nodes = Vec<Node>;
 
 #[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Default, Debug)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
@@ -28,36 +32,42 @@ pub enum State {
     Measured,
 }
 
-#[derive(Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Default, Debug)]
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-pub struct Node {
-    state: State,
-    neighbors: Vec<usize>,
-}
-
 #[derive(Clone, PartialEq, Eq, Default, Debug)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct Graph {
-    space: SpaceGraph,
+    space: Nodes,
     current_memory: usize,
-    pub max_memory: usize,
+    max_memory: usize,
 }
 
-type Deps = HashMap<usize, Vec<usize>>;
-
-type Schedule = Vec<Vec<usize>>;
-
 impl Graph {
-    pub fn new(num: usize, edges: &[(usize, usize)]) -> Self {
-        let mut nodes = vec![Node::default(); num];
-        for &(left, right) in edges {
-            // assert!(left != right, "no loops allowed");
-            if left == right {
-                continue;
+    pub fn new(
+        num_bits: usize,
+        edges: &[(usize, usize)],
+        bit_mapping: Option<&HashMap<usize, usize>>,
+    ) -> Self {
+        let mut nodes = vec![Node::default(); num_bits];
+
+        if let Some(bit_mapping) = bit_mapping {
+            run(
+                edges.iter().map(|(left, right)| {
+                    (*update!(left, bit_mapping), *update!(right, bit_mapping))
+                }),
+                &mut nodes,
+            )
+        } else {
+            run(edges.iter().copied(), &mut nodes);
+        };
+        fn run<T: Iterator<Item = (usize, usize)>>(edges: T, nodes: &mut Nodes) {
+            for (left, right) in edges {
+                if left == right {
+                    continue;
+                }
+                nodes[left].1.push(right);
+                nodes[right].1.push(left);
             }
-            nodes[left].neighbors.push(right);
-            nodes[right].neighbors.push(left);
         }
+
         Self {
             space: nodes,
             current_memory: 0,
@@ -65,50 +75,102 @@ impl Graph {
         }
     }
 
-    fn initialize(&mut self, bit: usize) -> Result<(), ()> {
-        match &mut self.space[bit].state {
+    pub fn update(&mut self, bits: &[usize]) -> Result<(), AlreadyMeasured> {
+        for bit in bits {
+            self.measure(*bit)?;
+        }
+        if self.current_memory > self.max_memory {
+            self.max_memory = self.current_memory;
+        }
+        self.current_memory -= bits.len();
+        Ok(())
+    }
+
+    pub fn max_memory(&self) -> usize {
+        self.max_memory
+    }
+
+    fn initialize(&mut self, bit: usize) -> Result<(), AlreadyMeasured> {
+        match &mut self.space[bit].0 {
             state @ State::Sleeping => {
                 *state = State::InMemory;
                 self.current_memory += 1;
             }
             State::InMemory => (),
-            State::Measured => return Err(()),
+            State::Measured => {
+                return Err(AlreadyMeasured {
+                    bit,
+                    operation: Operation::Initialize,
+                });
+            }
         }
         Ok(())
     }
 
-    fn measure(&mut self, bit: usize) -> Result<(), ()> {
-        let neighbors = mem::take(&mut self.space[bit].neighbors);
+    fn measure(&mut self, bit: usize) -> Result<(), AlreadyMeasured> {
+        let neighbors = mem::take(&mut self.space[bit].1);
         for neighbor in neighbors.iter() {
             let _ = self.initialize(*neighbor); // Err is okay
         }
         let node = &mut self.space[bit];
-        mem::replace(&mut node.neighbors, neighbors);
-        match node.state {
+        let _ = mem::replace(&mut node.1, neighbors);
+        match node.0 {
             State::Sleeping => {
                 self.current_memory += 1;
-                node.state = State::Measured;
+                node.0 = State::Measured;
             }
-            State::InMemory => node.state = State::Measured,
-            State::Measured => return Err(()),
+            State::InMemory => node.0 = State::Measured,
+            State::Measured => {
+                return Err(AlreadyMeasured {
+                    bit,
+                    operation: Operation::Measure,
+                });
+            }
         }
         Ok(())
     }
+}
 
-    pub fn step(&mut self, bits: &[usize]) -> Option<Self> {
+impl Focus<&[usize]> for Graph {
+    type Error = AlreadyMeasured;
+    fn focus(&mut self, instruction: &[usize]) -> Result<Self, Self::Error>
+    where
+        Self: Sized,
+    {
         let mut new = self.clone();
-        for bit in bits {
-            // new.measure(*bit)?;
-            new.measure(*bit).unwrap();
-        }
-        if new.current_memory > new.max_memory {
-            new.max_memory = new.current_memory;
-        }
-        new.current_memory -= bits.len();
-        Some(new)
+        new.update(instruction)?;
+        Ok(new)
     }
+}
 
-    pub fn into_instructed_iterator<T: IntoIterator<Item = Step>>(
+#[derive(Debug, Clone)]
+pub struct AlreadyMeasured {
+    bit: usize,
+    operation: Operation,
+}
+#[derive(Debug, Clone)]
+pub enum Operation {
+    Initialize,
+    Measure,
+}
+impl Display for AlreadyMeasured {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "cannot perform operation \"{}\" on already measured bit {}",
+            match self.operation {
+                Operation::Initialize => "initialize",
+                Operation::Measure => "measure",
+            },
+            self.bit
+        )
+    }
+}
+impl Error for AlreadyMeasured {}
+
+#[allow(unused)]
+impl Graph {
+    fn into_instructed_iterator<T: IntoIterator<Item = Step>>(
         self,
         instructions: T,
     ) -> Sweep<T::IntoIter> {
@@ -120,13 +182,13 @@ impl Graph {
     }
 }
 
-pub struct Sweep<T> {
+struct Sweep<T> {
     current: Graph,
     stack: Vec<Graph>,
     instructions: T,
 }
 
-pub enum Next {
+enum Next {
     Mess(Vec<usize>),
     Mem(Option<usize>),
 }
@@ -136,12 +198,12 @@ impl<T: Iterator<Item = Step>> Iterator for Sweep<T> {
     fn next(&mut self) -> Option<Self::Item> {
         match self.instructions.next()? {
             Step::Forward(mess) => {
-                let new = self.current.step(&mess).unwrap();
+                let new = self.current.focus(&mess).unwrap();
                 self.stack.push(mem::replace(&mut self.current, new));
                 Some(Next::Mess(mess))
             }
-            Step::Backward(at_end) => {
-                let res = at_end.then_some(self.current.max_memory);
+            Step::Backward(at_leaf) => {
+                let res = at_leaf.and(Some(self.current.max_memory));
                 self.current = self.stack.pop().unwrap();
                 Some(Next::Mem(res))
             }
@@ -154,7 +216,7 @@ mod tests {
     use coverage_helper::test;
 
     use super::*;
-    use crate::analyse::schedule::time::TimeGraph;
+    use crate::analyse::schedule::time::PathGenerator;
 
     #[test]
     fn tada() {
@@ -163,14 +225,15 @@ mod tests {
             vec![(3, vec![0]), (1, vec![0, 2])],
             vec![(4, vec![0, 3])],
         ];
-        let graph = TimeGraph::from(time);
-        let space = Graph::new(5, &[(0, 1), (1, 2), (1, 3), (2, 4), (4, 3)]);
+        let mut look = super::super::time::LookupBuffer::new(5);
+        let time_graph = PathGenerator::from_dependency_graph(time, &mut look, None);
+        let space = Graph::new(5, &[(0, 1), (1, 2), (1, 3), (2, 4), (4, 3)], None);
 
         // let mut path = Vec::new();
         // let mut results = Vec::new();
 
         // let splitted = super::super::time::split_instructions(graph.clone(), 5);
-        let splitted = super::super::time::split_instructions(graph, 5);
+        let splitted = super::super::time::split_instructions(time_graph, 5);
 
         // for step in graph {
         //     match step {

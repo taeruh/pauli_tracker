@@ -4,6 +4,8 @@ scheduling:
 - overwork the api in general
 - test it
 
+- use hashbrown ...
+- maybe use https://docs.rs/err-derive/latest/err_derive/#
 - lock cargo hack
 - lock msrv
 

@@ -2,8 +2,10 @@
 ... tools to analyse the tracking results ...
 */
 
-#[allow(unused)]
-pub(crate) mod schedule;
+#[cfg(feature = "experimental")]
+#[cfg_attr(docsrs, doc(cfg(feature = "experimental")))]
+#[allow(missing_docs, missing_debug_implementations)]
+pub mod schedule;
 
 #[allow(unused)]
 pub(crate) mod combinatoric;
