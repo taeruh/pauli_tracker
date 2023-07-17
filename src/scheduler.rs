@@ -1,8 +1,12 @@
 /*!
-...
+... tools to analyse the tracking results ...
 */
 
+pub(crate) mod combinatoric;
+
 use std::fmt::Display;
+
+use combinatoric::Partition;
 
 use self::{
     space::{
@@ -17,9 +21,9 @@ use self::{
     tree::{
         Focus,
         FocusIterator,
+        Sweep,
     },
 };
-use super::combinatoric::Partition;
 
 macro_rules! update {
     ($bit:expr, $map:expr) => {
@@ -129,7 +133,7 @@ impl From<AlreadyMeasured> for InstructionError {
 
 impl<'l> IntoIterator for Scheduler<'l, Partition<Vec<usize>>> {
     type Item = <Self::IntoIter as Iterator>::Item;
-    type IntoIter = crate::analyse::schedule::tree::Sweep<Self>;
+    type IntoIter = Sweep<Self>;
     fn into_iter(self) -> Self::IntoIter {
         Self::IntoIter::new(self, Vec::new())
     }
@@ -143,9 +147,9 @@ mod tests {
 
     use super::{
         time::LookupBuffer,
+        tree::Step,
         *,
     };
-    use crate::analyse::schedule::tree::Step;
 
     #[test]
     fn simple_paths() {

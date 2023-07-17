@@ -76,7 +76,10 @@ requires the [rand](https://crates.io/crates/rand) crate.
 # fn main() {
 # #[rustfmt::skip]
 use pauli_tracker::{
-    tracker::{Tracker, live::LiveVector, frames::{Frames, storage::{self, Map}}},
+    tracker::{
+        Tracker, live::LiveVector,
+        frames::{Frames, storage::{self, StackStorage, Map}}
+    },
     pauli::{self, Pauli},
 };
 // first, we will use the Frames tracker to fully track all Pauli frames
@@ -100,7 +103,7 @@ tracker.cz(1, 2); // conjugate with a Control Z gate
 tracker.h(0); // conjugate with an H gate
 
 // let's get the frames (sorted into a Vec for convenience)
-let frames = storage::into_sorted_by_bit(tracker.into_storage());
+let frames = tracker.into_storage().into_sorted_by_bit();
 
 // what would we expect (calculate it by hand)?
 let mut expected =
@@ -168,9 +171,9 @@ assert_eq!(*tracker.as_ref(), conditional_summed_frames, "{measurements:?}");
 
 ### The dependency graph
 This example introduces the
-[create_dependency_graph](analyse::create_dependency_graph) function
-that can be used to analyse measurement dependencies. The example requires the "graph"
-feature.
+[create_dependency_graph](tracker::frames::storage::StackStorage::create_dependency_graph)
+function that can be used to analyse measurement dependencies. The example requires
+the "graph" feature.
 ```
 # #[cfg_attr(coverage_nightly, no_coverage)]
 # #[cfg(feature = "graph")]
@@ -202,7 +205,7 @@ tracker.cz(3, 2);
 
 // check its output
 assert_eq!(
-    storage::sort_by_bit(tracker.as_storage()),
+    tracker.as_storage().into_sorted_by_bit(),
     vec![
         // tableau representation:    X      Z    ; the columns are the frames
         (0, &PauliVec::try_from_str("100", "000").unwrap()),
@@ -342,7 +345,7 @@ assert_eq!(
         (6, &PauliVec::try_from_str("0000000", "0001111").unwrap()),
         (9, &PauliVec::try_from_str("0000001", "0000000").unwrap()),
     ],
-    storage::sort_by_bit(circ.tracker.as_storage())
+    circ.tracker.as_storage().sort_by_bit()
 );
 // and these are the other qubits, which have been put into the additional storage, as
 // soon as they have been measured; putting them into the additional storage saves
@@ -357,7 +360,7 @@ assert_eq!(
         (7, &PauliVec::try_from_str("00000", "00001").unwrap()),
         (8, &PauliVec::try_from_str("000000", "000001").unwrap())
     ],
-    storage::sort_by_bit(&circ.storage)
+    circ.storage.sort_by_bit()
 );
 
 // let's view the dependency graph: we need to do some prework
@@ -366,7 +369,7 @@ circ.measure_and_store_all();
 // to make the assert work we need a storage with an determinitic iterator; you probably
 // don't need to do this in a real application
 let storage = Vector {
-    frames: storage::into_sorted_by_bit(circ.storage)
+    frames: circ.storage.into_sorted_by_bit()
     .into_iter()
     .map(|(_, stack)| stack)
     .collect()
@@ -407,7 +410,6 @@ with [Tracker::move_z_to_z](tracker::Tracker::move_z_to_z):
 #     circuit::{CliffordCircuit, DummyCircuit, TrackedCircuit},
 #     tracker::{Tracker, frames::{Frames, storage::{self, StackStorage, Map, Vector}}},
 #     pauli::{self, Pauli},
-#     analyse,
 # };
 # type BoolVec = bit_vec::BitVec;
 # type Storage = Map<BoolVec>;
@@ -462,7 +464,7 @@ assert_eq!(
         (6, &PauliVec::try_from_str("0000000", "0101101").unwrap()),
         (9, &PauliVec::try_from_str("0010111", "0000000").unwrap()),
     ],
-    storage::sort_by_bit(circ.tracker.as_storage())
+    circ.tracker.as_storage().sort_by_bit()
 );
 // the other qubits; moving the Z corrections literally removed them from memory
 assert_eq!(
@@ -475,12 +477,12 @@ assert_eq!(
         (7, &PauliVec::try_from_str("00000", "").unwrap()),
         (8, &PauliVec::try_from_str("000000", "").unwrap())
     ],
-    storage::sort_by_bit(&circ.storage)
+    circ.storage.sort_by_bit()
 );
 
 # circ.measure_and_store_all();
 # let storage = Vector {
-#     frames: storage::into_sorted_by_bit(circ.storage)
+#     frames: circ.storage.into_sorted_by_bit()
 #     .into_iter()
 #     .map(|(_, stack)| stack)
 #     .collect()
@@ -488,7 +490,7 @@ assert_eq!(
 // ...
 
 assert_eq!(
-    analyse::create_dependency_graph(storage.iter(), &map),
+    storage.create_dependency_graph(&map),
     vec![
         vec![
             (0, vec![]), (1, vec![]), (2, vec![]),
@@ -514,9 +516,12 @@ pub mod boolean_vector;
 #[cfg_attr(docsrs, doc(cfg(feature = "circuit")))]
 pub mod circuit;
 
-#[cfg(feature = "analyse")]
-#[cfg_attr(docsrs, doc(cfg(feature = "analyse")))]
-pub mod analyse;
+// #[cfg(feature = "experimental")]
+// #[cfg_attr(docsrs, doc(cfg(feature = "experimental")))]
+#[allow(missing_docs, missing_debug_implementations)]
+#[cfg(feature = "scheduler")]
+#[cfg_attr(docsrs, doc(cfg(feature = "scheduler")))]
+pub mod scheduler;
 
 pub mod pauli;
 

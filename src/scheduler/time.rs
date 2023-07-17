@@ -15,15 +15,15 @@ use serde::{
     Serialize,
 };
 
-use super::tree::{
-    Focus,
-    FocusIterator,
-};
-use crate::analyse::{
+use super::{
     combinatoric::Partition,
-    schedule::tree::Sweep,
-    DependencyGraph,
+    tree::{
+        Focus,
+        FocusIterator,
+        Sweep,
+    },
 };
+use crate::tracker::frames::storage::DependencyGraph;
 
 type Deps = HashMap<usize, Vec<usize>>;
 type Look = Vec<Vec<usize>>;
@@ -273,7 +273,7 @@ impl<'l> IntoIterator for PathGenerator<'l, Partition<Vec<usize>>> {
 }
 
 mod sealed {
-    use crate::analyse::combinatoric::Partition;
+    use super::Partition;
     pub trait Sealed {}
     impl<T> Sealed for Vec<T> {}
     impl<T> Sealed for Partition<Vec<T>> {}
@@ -342,8 +342,10 @@ pub(crate) mod tests {
 
     use coverage_helper::test;
 
-    use super::*;
-    use crate::analyse::schedule::tree::Step;
+    use super::{
+        super::tree::Step,
+        *,
+    };
 
     #[cfg_attr(coverage_nightly, no_coverage)]
     pub fn example_ordering() -> DependencyGraph {

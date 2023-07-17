@@ -17,7 +17,7 @@ categories = ["simulation"]
 crate-type = ["lib"]
 
 [features]
-analyse = []
+scheduler = []
 circuit = ["dep:rand"]
 experimental = []
 serde = ["dep:serde", "bitvec?/serde", "bitvec_simd?/serde", "bit-vec?/serde"]

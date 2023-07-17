@@ -11,7 +11,7 @@ possible.
 ## [Unreleased]
 ### Added
 - **Breaking Change**: Add blanket `impl<S> AsRef<S> for Frames<S>`.
-- Add a new `analyse`, activated by the "analyse" feature.
+- Add a new `scheduler` module, activated by the "scheduler" feature.
 - **Possible Breaking Change**: Add `Frames::new`.
 - **Possible Breaking Change**: Add `impl Default for SimdBitVec`.
 - Add the `pauli::PAULI_*` constants.
@@ -25,7 +25,8 @@ possible.
 - **Breaking Change**: Return the measurement outcomes in in
   `circuit::measure_and_store(_all)` and error if one would overwrite something in the
   additional storage.
-- **Breaking Change**: Move `create_dependency_graph` into the `analyse` module
+- **Breaking Change**: Move `create_dependency_graph`, `sort_by_bit` and
+  `into_sorted_by_bit` into the `StackStorage` trait.
 - **Possible Breaking Change**: Implement Clone, PartialEq, Debug for
   `bitvec_simd::Iter*`; Implement Debug for TrackedCircuit.
 - For the "fixed" `Vector`, it wasn't allowed to `insert_pauli`s at qubits which have a

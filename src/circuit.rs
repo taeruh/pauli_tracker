@@ -331,7 +331,6 @@ mod tests {
         tracker::{
             frames::{
                 storage::{
-                    self,
                     Map,
                     MappedVector,
                     Vector,
@@ -414,12 +413,9 @@ mod tests {
 
         assert_eq!(
             vec![(1, PauliBitVec::try_from_str("0", "1").unwrap())],
-            storage::into_sorted_by_bit(circ.tracker.into_storage())
+            circ.tracker.into_storage().into_sorted_by_bit()
         );
-        assert_eq!(
-            vec![(0, PauliBitVec::new())],
-            storage::into_sorted_by_bit(circ.storage)
-        );
+        assert_eq!(vec![(0, PauliBitVec::new())], circ.storage.into_sorted_by_bit());
     }
 
     #[test]
@@ -449,7 +445,7 @@ mod tests {
                 (3, PauliSimdBitVec::try_from_str("000", "010").unwrap()),
                 (4, PauliSimdBitVec::try_from_str("011", "000").unwrap())
             ],
-            storage::into_sorted_by_bit(circ.tracker.into_storage())
+            circ.tracker.into_storage().into_sorted_by_bit()
         );
         assert_eq!(
             vec![
@@ -457,7 +453,7 @@ mod tests {
                 (1, PauliSimdBitVec::try_from_str("00", "10").unwrap()),
                 (2, PauliSimdBitVec::try_from_str("0", "1").unwrap())
             ],
-            storage::into_sorted_by_bit(circ.storage)
+            circ.storage.into_sorted_by_bit()
         );
     }
 
@@ -578,10 +574,7 @@ mod tests {
 
         // println!("{:#?}", rest);
 
-        let _graph = crate::analyse::create_dependency_graph(
-            rest.iter(),
-            &[0, 1, 2, 4, 5, 7, 8],
-        );
+        let _graph = rest.create_dependency_graph(&[0, 1, 2, 4, 5, 7, 8]);
         // println!("{:?}", graph);
         // println!("{:?}", graph.len());
     }

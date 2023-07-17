@@ -7,26 +7,23 @@ use std::{
 };
 
 use pauli_tracker::{
-    analyse::{
-        self,
-        schedule::{
-            space::Graph,
-            time::{
-                LookupBuffer,
-                Partitioner,
-                PathGenerator,
-            },
-            tree::{
-                Focus,
-                FocusIterator,
-                Step,
-            },
-            Scheduler,
-        },
-    },
     circuit::{
         DummyCircuit,
         TrackedCircuit,
+    },
+    scheduler::{
+        space::Graph,
+        time::{
+            LookupBuffer,
+            Partitioner,
+            PathGenerator,
+        },
+        tree::{
+            Focus,
+            FocusIterator,
+            Step,
+        },
+        Scheduler,
     },
     tracker::{
         frames::{
@@ -130,10 +127,7 @@ fn roundtrip(ops: Vec<Operation>, edges: Edges, num_nodes: usize) {
         return;
     }
 
-    let dependency_graph = analyse::create_dependency_graph(
-        <Storage as StackStorage>::iter(&circuit.storage),
-        &measurements.0,
-    );
+    let dependency_graph = circuit.storage.create_dependency_graph(&measurements.0);
     let _dependency_graph = dependency_graph.clone();
 
     // println!("{:?}", dependency_graph);

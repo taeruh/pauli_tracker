@@ -6,10 +6,6 @@ use std::{
 };
 
 use pauli_tracker::{
-    analyse::{
-        self,
-        DependencyGraph,
-    },
     boolean_vector::BooleanVector,
     circuit::{
         CliffordCircuit,
@@ -26,6 +22,7 @@ use pauli_tracker::{
     tracker::{
         frames::{
             storage::{
+                DependencyGraph,
                 Map,
                 StackStorage,
             },
@@ -95,10 +92,11 @@ fn roundtrip(init: usize, ops: Vec<Operation>) {
     circuit.tracker.measure_and_store_all(&mut circuit.storage);
 
     if !measurements.0.is_empty() {
-        let graph = analyse::create_dependency_graph(
-            <Storage as StackStorage>::iter(&circuit.storage),
-            &measurements.0,
-        );
+        // let graph = analyse::create_dependency_graph(
+        //     <Storage as StackStorage>::iter(&circuit.storage),
+        //     &measurements.0,
+        // );
+        let graph = circuit.storage.create_dependency_graph(&measurements.0);
         check_graph(&graph, &circuit.storage, &measurements.0).unwrap();
     }
 
