@@ -15,10 +15,7 @@ use serde::{
     Serialize,
 };
 
-use super::{
-    time::Step,
-    tree::Focus,
-};
+use super::tree::Focus;
 
 type Node = (State, Vec<usize>);
 type Nodes = Vec<Node>;
@@ -35,9 +32,41 @@ pub enum State {
 #[derive(Clone, PartialEq, Eq, Default, Debug)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct Graph {
-    space: Nodes,
+    nodes: Nodes,
     current_memory: usize,
     max_memory: usize,
+}
+
+macro_rules! new_loop {
+    ($nodes:expr, $edges:expr, $bit_mapping:expr, $check:tt) => {
+        if let Some(bit_mapping) = $bit_mapping {
+            for (left, right) in $edges.iter() {
+                let left = *update!(left, bit_mapping);
+                let right = *update!(right, bit_mapping);
+                new_body!(left, right, $nodes, $check);
+            }
+        } else {
+            for (left, right) in $edges.iter() {
+                new_body!(*left, *right, $nodes, $check);
+            }
+        }
+    };
+}
+
+macro_rules! new_body {
+    ($left:expr, $right:expr, $nodes:expr,checked) => {
+        if $left == $right {
+            continue;
+        }
+        if $nodes[$left].1.contains(&$right) {
+            continue;
+        }
+        new_body!($left, $right, $nodes, unchecked);
+    };
+    ($left:expr, $right:expr, $nodes:expr,unchecked) => {
+        $nodes[$left].1.push($right);
+        $nodes[$right].1.push($left);
+    };
 }
 
 impl Graph {
@@ -45,45 +74,29 @@ impl Graph {
         num_bits: usize,
         edges: &[(usize, usize)],
         bit_mapping: Option<&HashMap<usize, usize>>,
+        check_duplicates: bool,
     ) -> Self {
         let mut nodes = vec![Node::default(); num_bits];
 
-        if let Some(bit_mapping) = bit_mapping {
-            run(
-                edges.iter().map(|(left, right)| {
-                    (*update!(left, bit_mapping), *update!(right, bit_mapping))
-                }),
-                &mut nodes,
-            )
+        if check_duplicates {
+            new_loop!(nodes, edges, bit_mapping, checked);
         } else {
-            run(edges.iter().copied(), &mut nodes);
-        };
-        fn run<T: Iterator<Item = (usize, usize)>>(edges: T, nodes: &mut Nodes) {
-            for (left, right) in edges {
-                if left == right {
-                    continue;
-                }
-                nodes[left].1.push(right);
-                nodes[right].1.push(left);
-            }
+            new_loop!(nodes, edges, bit_mapping, unchecked);
         }
 
         Self {
-            space: nodes,
+            nodes,
             current_memory: 0,
             max_memory: 0,
         }
     }
 
-    pub fn update(&mut self, bits: &[usize]) -> Result<(), AlreadyMeasured> {
-        for bit in bits {
-            self.measure(*bit)?;
-        }
-        if self.current_memory > self.max_memory {
-            self.max_memory = self.current_memory;
-        }
-        self.current_memory -= bits.len();
-        Ok(())
+    pub fn nodes(&self) -> &[Node] {
+        &self.nodes
+    }
+
+    pub fn current_memory(&self) -> usize {
+        self.current_memory
     }
 
     pub fn max_memory(&self) -> usize {
@@ -91,7 +104,7 @@ impl Graph {
     }
 
     fn initialize(&mut self, bit: usize) -> Result<(), AlreadyMeasured> {
-        match &mut self.space[bit].0 {
+        match &mut self.nodes[bit].0 {
             state @ State::Sleeping => {
                 *state = State::InMemory;
                 self.current_memory += 1;
@@ -108,11 +121,11 @@ impl Graph {
     }
 
     fn measure(&mut self, bit: usize) -> Result<(), AlreadyMeasured> {
-        let neighbors = mem::take(&mut self.space[bit].1);
+        let neighbors = mem::take(&mut self.nodes[bit].1);
         for neighbor in neighbors.iter() {
             let _ = self.initialize(*neighbor); // Err is okay
         }
-        let node = &mut self.space[bit];
+        let node = &mut self.nodes[bit];
         let _ = mem::replace(&mut node.1, neighbors);
         match node.0 {
             State::Sleeping => {
@@ -138,8 +151,18 @@ impl Focus<&[usize]> for Graph {
         Self: Sized,
     {
         let mut new = self.clone();
-        new.update(instruction)?;
+        new.focus_inplace(instruction)?;
         Ok(new)
+    }
+    fn focus_inplace(&mut self, measure_set: &[usize]) -> Result<(), Self::Error> {
+        for bit in measure_set {
+            self.measure(*bit)?;
+        }
+        if self.current_memory > self.max_memory {
+            self.max_memory = self.current_memory;
+        }
+        self.current_memory -= measure_set.len();
+        Ok(())
     }
 }
 
@@ -168,260 +191,76 @@ impl Display for AlreadyMeasured {
 }
 impl Error for AlreadyMeasured {}
 
-#[allow(unused)]
-impl Graph {
-    fn into_instructed_iterator<T: IntoIterator<Item = Step>>(
-        self,
-        instructions: T,
-    ) -> Sweep<T::IntoIter> {
-        Sweep {
-            current: self,
-            stack: Vec::new(),
-            instructions: instructions.into_iter(),
-        }
-    }
-}
-
-struct Sweep<T> {
-    current: Graph,
-    stack: Vec<Graph>,
-    instructions: T,
-}
-
-enum Next {
-    Mess(Vec<usize>),
-    Mem(Option<usize>),
-}
-
-impl<T: Iterator<Item = Step>> Iterator for Sweep<T> {
-    type Item = Next;
-    fn next(&mut self) -> Option<Self::Item> {
-        match self.instructions.next()? {
-            Step::Forward(mess) => {
-                let new = self.current.focus(&mess).unwrap();
-                self.stack.push(mem::replace(&mut self.current, new));
-                Some(Next::Mess(mess))
-            }
-            Step::Backward(at_leaf) => {
-                let res = at_leaf.and(Some(self.current.max_memory));
-                self.current = self.stack.pop().unwrap();
-                Some(Next::Mem(res))
-            }
-        }
-    }
-}
-
 #[cfg(test)]
-mod tests {
+pub(crate) mod tests {
     use coverage_helper::test;
+    use State::*;
 
     use super::*;
-    use crate::analyse::schedule::time::PathGenerator;
+    // use crate::analyse::schedule::time::{
+    //     Partitioner,
+    //     PathGenerator,
+    // };
 
-    #[test]
-    fn tada() {
-        let time = vec![
-            vec![(0, vec![]), (2, vec![])],
-            vec![(3, vec![0]), (1, vec![0, 2])],
-            vec![(4, vec![0, 3])],
-        ];
-        let mut look = super::super::time::LookupBuffer::new(5);
-        let time_graph = PathGenerator::from_dependency_graph(time, &mut look, None);
-        let space = Graph::new(5, &[(0, 1), (1, 2), (1, 3), (2, 4), (4, 3)], None);
+    const NUM: usize = 4;
+    const GN: [(usize, usize); 4] = [(8, 1), (8, 5), (1, 3), (3, 5)];
+    const GM: [(usize, usize); 4] = [(0, 1), (0, 2), (1, 3), (3, 2)];
+    const GNW: [(usize, usize); 6] = [(8, 1), (8, 5), (8, 1), (1, 3), (3, 5), (5, 5)];
+    const GMW: [(usize, usize); 6] = [(0, 1), (0, 2), (0, 1), (1, 3), (3, 2), (2, 2)];
 
-        // let mut path = Vec::new();
-        // let mut results = Vec::new();
-
-        // let splitted = super::super::time::split_instructions(graph.clone(), 5);
-        let splitted = super::super::time::split_instructions(time_graph, 5);
-
-        // for step in graph {
-        //     match step {
-        //         Step::Forward(mess) => {
-        //             path.push(mess);
-        //         }
-        //         Step::Backward(at_end) => {
-        //             if at_end {
-        //                 println!("{}; {:?}", path.len(), path);
-        //                 results.push(path.clone());
-        //             }
-        //             path.pop();
-        //         }
-        //     }
-        // }
-
-        // println!();
-
-        for split in splitted {
-            let mut path = Vec::new();
-            let mut results = Vec::new();
-            for step in space.clone().into_instructed_iterator(split) {
-                match step {
-                    Next::Mess(mess) => {
-                        path.push(mess);
-                    }
-                    Next::Mem(mem) => {
-                        if let Some(mem) = mem {
-                            println!("{}; {}; {:?}", path.len(), mem, path);
-                            results.push(path.clone());
-                        }
-                        path.pop();
-                    }
-                }
-            }
-        }
+    #[cfg_attr(coverage_nightly, no_coverage)]
+    pub fn example_graph() -> Graph {
+        //     1
+        //   /  \
+        // 0     3
+        //   \  /
+        //     2
+        Graph::new(5, &GM, None, false)
     }
 
-    // #[test]
-    // fn bar() {
-    //     let deps = Deps::from([(0, vec![]), (1, vec![]), (2, vec![0, 1])]);
-    //     // (0..deps.len())
-    //     //     .permutations(deps.len())
-    //     //     .filter(|path| valid_path(path, &deps))
-    //     //     .for_each(|path| println!("{:?}", path));
-    //     assert_eq!(
-    //         (2, vec![0, 1, 2]),
-    //         Graph::new(3, &[(0, 1), (1, 2)]).min_bits(&deps)
-    //     );
-    //     let deps = Deps::from([(0, vec![1]), (1, vec![]), (2, vec![0, 1])]);
-    //     // (0..deps.len())
-    //     //     .permutations(deps.len())
-    //     //     .filter(|path| valid_path(path, &deps))
-    //     //     .for_each(|path| println!("{:?}", path));
-    //     assert_eq!(
-    //         (3, vec![1, 0, 2]),
-    //         Graph::new(3, &[(0, 1), (1, 2)]).min_bits(&deps)
-    //     );
-    // }
+    #[test]
+    fn creation() {
+        let mp = HashMap::from([(8, 0), (5, 2)]);
+        let graph = Graph::new(NUM, &GN, Some(&mp), false);
+        let mapped = Graph::new(NUM, &GM, None, false);
+        let graph_checked = Graph::new(NUM, &GNW, Some(&mp), true);
+        let mapped_checked = Graph::new(NUM, &GMW, None, true);
+        assert_eq!(graph, mapped);
+        assert_eq!(graph, graph_checked);
+        assert_eq!(graph, mapped_checked);
+        assert_eq!(
+            graph,
+            Graph {
+                nodes: vec![
+                    (Sleeping, vec![1, 2]),
+                    (Sleeping, vec![0, 3]),
+                    (Sleeping, vec![0, 3]),
+                    (Sleeping, vec![1, 2]),
+                ],
+                current_memory: 0,
+                max_memory: 0,
+            }
+        );
+    }
 
-    // #[test]
-    // fn hey() {
-    //     let deps = vec![vec![(0, vec![]), (1, vec![])], vec![(2, vec![0, 1])]];
-    //     let mut graph = Graph::new(3, &[(0, 1), (1, 2)]);
-    //     println!("{:?}", graph.mixed(&deps, 1, 4, true));
-    //     println!("{:?}", graph.mixed(&deps, 1, 2, true));
-
-    //     let deps = vec![
-    //         vec![(0, vec![]), (1, vec![]), (6, vec![])],
-    //         vec![(2, vec![3, 1]), (3, vec![0, 1])],
-    //         vec![(4, vec![2, 1]), (5, vec![3, 1])],
-    //     ];
-    //     let mut graph = Graph::new(
-    //         7,
-    //         &[(0, 1), (1, 2), (2, 0), (2, 3), (1, 5), (4, 5), (2, 6), (0, 5)],
-    //     );
-    //     let (res, min) = graph.mixed(&deps, 1, 7, true);
-    //     println!("{:?}\n", min);
-    //     println!("3: {:?}\n", res.get(&3));
-    //     println!("4: {:?}\n", res.get(&4));
-    //     println!("5: {:?}\n", res.get(&5));
-    //     println!("{:?}", graph.mixed(&deps, 1, 3, true));
-    // }
+    #[test]
+    fn updating() {
+        let init_graph = example_graph();
+        let mut graph = init_graph.clone();
+        let new = graph.focus(&[2, 3]).unwrap();
+        graph.focus_inplace(&[2, 3]).unwrap();
+        assert_eq!(graph, new);
+        let mut manually = init_graph.clone();
+        manually.nodes[2].0 = Measured;
+        manually.nodes[3].0 = Measured;
+        manually.nodes[0].0 = InMemory;
+        manually.nodes[1].0 = InMemory;
+        manually.current_memory = 2; // 4 -> 2
+        manually.max_memory = 4;
+        let mut graph = init_graph;
+        graph.focus_inplace(&[2]).unwrap();
+        graph.focus_inplace(&[3]).unwrap();
+        manually.max_memory = 3; // current_memory: 3 -> 2 -> 3 -> 2
+        assert_eq!(graph, manually);
+    }
 }
-
-#[allow(unused)]
-pub(crate) mod maybe_better;
-
-// pub fn mixed(
-//     &mut self,
-//     deps_graph: &DependencyGraph,
-//     lower_bound: usize, // inclusive
-//     upper_bound: usize, // exclusive
-//     get_shortest: bool,
-// ) -> (HashMap<usize, Vec<Schedule>>, Option<Vec<Schedule>>) {
-//     fn schedule(s: Vec<usize>, deps_graph: &DependencyGraph) -> Schedule {
-//         let mut path = Vec::new();
-//         let mut s = s.into_iter();
-//         let bit = s.next().unwrap();
-//         // first bit has to be in the zeroth layer
-//         let mut last_layer = 0;
-//         let mut layer = 0;
-//         path.push(vec![bit]);
-//         for bit in s {
-//             let layer = find_layer(bit, deps_graph).unwrap();
-//             if layer <= last_layer {
-//                 path[last_layer].push(bit);
-//             } else {
-//                 debug_assert_eq!(last_layer + 1, layer);
-//                 path.push(vec![bit]);
-//                 last_layer = layer;
-//             }
-//         }
-//         path
-//     }
-
-//     fn compare(present: &mut Vec<Schedule>, path: Schedule) {
-//         match present[0].len().cmp(&path.len()) {
-//             std::cmp::Ordering::Less => (),
-//             std::cmp::Ordering::Equal => present.push(path),
-//             std::cmp::Ordering::Greater => *present = vec![path],
-//         }
-//     }
-
-//     let deps = Deps::from_iter(deps_graph.clone().into_iter().flatten());
-//     let len = self.nodes.len();
-//     let mut max = len + 1; // worst case + 1
-//     let mut min_bits_path: Option<Vec<Schedule>> = None;
-//     let mut res: HashMap<usize, Vec<Schedule>> = HashMap::new();
-//     for s in (0..len).permutations(len).filter(|path| valid_path(path, &deps)) {
-//         let mut copy = self.clone();
-//         for &bit in &s {
-//             copy.measure_set(&[bit]);
-//         }
-//         if lower_bound <= copy.max && copy.max < upper_bound {
-//             let path = schedule(s, deps_graph);
-//             match res.get_mut(&copy.max) {
-//                 Some(p) => compare(p, path),
-//                 None => {
-//                     let _ = res.insert(copy.max, vec![path]);
-//                 }
-//             };
-//         } else if get_shortest && copy.max <= max {
-//             max = copy.max;
-//             let path = schedule(s, deps_graph);
-//             match min_bits_path {
-//                 Some(ref mut p) => compare(p, path),
-//                 None => min_bits_path = Some(vec![path]),
-//             }
-//         }
-//     }
-//     (res, min_bits_path)
-// }
-
-// fn find_layer(bit: usize, deps: &DependencyGraph) -> Option<usize> {
-//     for (i, layer) in deps.iter().enumerate() {
-//         if layer.iter().map(|(i, _)| i).contains(&bit) {
-//             return Some(i);
-//         }
-//     }
-//     None
-// }
-// fn valid_path(path: &[usize], deps: &Deps) -> bool {
-//     let mut measured = Vec::with_capacity(path.len());
-//     for node in path {
-//         for dep in deps.get(node).unwrap() {
-//             if !measured.contains(dep) {
-//                 return false;
-//             }
-//         }
-//         measured.push(*node);
-//     }
-//     true
-// }
-
-// pub fn min_bits(&mut self, deps: &Deps) -> (usize, Vec<usize>) {
-//     let len = self.nodes.len();
-//     let mut max = len + 1; // worst case + 1
-//     let mut path = (0..len).collect();
-//     for s in (0..len).permutations(len).filter(|path| valid_path(path, deps)) {
-//         let mut copy = self.clone();
-//         for &bit in &s {
-//             copy.measure_set(&[bit]);
-//         }
-//         if copy.max < max {
-//             max = copy.max;
-//             path = s;
-//         }
-//     }
-//     (max, path)
-// }

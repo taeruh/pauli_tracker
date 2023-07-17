@@ -100,4 +100,4 @@ jobs:
       - name: Install stable
         uses: dtolnay/rust-toolchain@stable
       - name: test proptests
-        run: cargo test --test roundtrip --all-features -- --ignored
+        run: cargo test --release proptest --all-features -- --ignored

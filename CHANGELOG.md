@@ -14,6 +14,7 @@ possible.
 - Add a new `analyse`, activated by the "analyse" feature.
 - **Possible Breaking Change**: Add `Frames::new`.
 - **Possible Breaking Change**: Add `impl Default for SimdBitVec`.
+- Add the `pauli::PAULI_*` constants.
 ### Changed
 - **Breaking Change**: Return u8 `in Pauli::storage` instead of a reference.
 - **Breaking Change**: Change the Debug and Display implementations of `Pauli`. Debug is

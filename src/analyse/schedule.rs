@@ -10,6 +10,7 @@ use self::{
         Graph,
     },
     time::{
+        Init,
         PathGenerator,
         TimeOrderingViolation,
     },
@@ -18,11 +19,11 @@ use self::{
         FocusIterator,
     },
 };
+use super::combinatoric::Partition;
 
 macro_rules! update {
     ($bit:expr, $map:expr) => {
-        $map.get($bit)
-            .unwrap_or_else(|| panic!("no bit mapping for bit {}", $bit))
+        $map.get($bit).unwrap_or($bit)
     };
     ($bit:expr; $map:expr) => {
         *$bit = *update!($bit, $map);
@@ -32,36 +33,49 @@ pub mod space;
 pub mod time;
 pub mod tree;
 
-pub struct Scheduler<'l> {
-    time: PathGenerator<'l>,
+#[derive(Clone, Debug)]
+pub struct Scheduler<'l, T> {
+    time: PathGenerator<'l, T>,
     space: Graph,
 }
 
-impl<'l> Scheduler<'l> {
-    pub fn new(time: PathGenerator<'l>, space: Graph) -> Self {
+impl<'l, T> Scheduler<'l, T> {
+    pub fn new(time: PathGenerator<'l, T>, space: Graph) -> Self {
         Self { time, space }
+    }
+
+    pub fn time(&self) -> &PathGenerator<'l, T> {
+        &self.time
+    }
+
+    pub fn space(&self) -> &Graph {
+        &self.space
     }
 }
 
 // just for seeing whether it works as expected while developing
 pub(crate) static mut COUNT: usize = 0;
 
-impl Focus<(&Vec<usize>, Vec<usize>)> for Scheduler<'_> {
+impl<T: Init<usize>> Focus<&[usize]> for Scheduler<'_, T> {
     type Error = InstructionError;
-    fn focus(
-        &mut self,
-        instruction: (&Vec<usize>, Vec<usize>),
-    ) -> Result<Self, Self::Error>
+
+    fn focus_inplace(&mut self, measure_set: &[usize]) -> Result<(), Self::Error> {
+        self.time.focus_inplace(measure_set)?;
+        self.space.focus_inplace(measure_set)?;
+        Ok(())
+    }
+
+    fn focus(&mut self, measure_set: &[usize]) -> Result<Self, Self::Error>
     where
         Self: Sized,
     {
-        let new_space = self.space.focus(instruction.0)?;
-        let new_time = self.time.focus(instruction)?;
+        let new_time = self.time.focus(measure_set)?;
+        let new_space = self.space.focus(measure_set)?;
         Ok(Self { time: new_time, space: new_space })
     }
 }
 
-impl FocusIterator for Scheduler<'_> {
+impl FocusIterator for Scheduler<'_, Partition<Vec<usize>>> {
     type IterItem = Vec<usize>;
     type LeafItem = usize;
 
@@ -76,7 +90,11 @@ impl FocusIterator for Scheduler<'_> {
     }
 
     fn at_leaf(&self) -> Option<Self::LeafItem> {
-        self.time.finished_path().then_some(self.space.max_memory())
+        self.time
+            .measureable()
+            .set()
+            .is_empty()
+            .then_some(self.space.max_memory())
     }
 }
 
@@ -109,83 +127,114 @@ impl From<AlreadyMeasured> for InstructionError {
     }
 }
 
-tree::impl_into_iterator!(Scheduler with <'l>);
+impl<'l> IntoIterator for Scheduler<'l, Partition<Vec<usize>>> {
+    type Item = <Self::IntoIter as Iterator>::Item;
+    type IntoIter = crate::analyse::schedule::tree::Sweep<Self>;
+    fn into_iter(self) -> Self::IntoIter {
+        Self::IntoIter::new(self, Vec::new())
+    }
+}
 
 #[cfg(test)]
 mod tests {
+    use std::collections::HashMap;
+
     use coverage_helper::test;
 
-    use super::*;
+    use super::{
+        time::LookupBuffer,
+        *,
+    };
     use crate::analyse::schedule::tree::Step;
 
     #[test]
-    fn scheduler() {
-        let (space, time, _) = input();
+    fn simple_paths() {
+        //     1
+        //   /  \
+        // 0     3
+        //   \  /
+        //     2
+        //
+        // 0 --- 3 --- 2
+        //  \
+        //    -- 1
+        let graph = space::tests::example_graph();
+        let ordering = time::tests::example_ordering();
+        let num = 4;
+        let max = 4;
 
-        let num = space.len();
-        // just for playing around, unnecessary in real test; num < nodes_in_time would
-        // definitely panic
-        assert_eq!(num, {
-            // nodes in time
-            let mut len = 0;
-            time.iter().for_each(|e: &Vec<_>| len += e.len());
-            len
-        });
-
-        let mut look = time::LookupBuffer::new(5);
-
+        let mut buffer = LookupBuffer::new(num);
         let scheduler = Scheduler::new(
-            PathGenerator::from_dependency_graph(time, &mut look, None),
-            Graph::new(num, &space, None),
+            PathGenerator::from_dependency_graph(ordering, &mut buffer, None),
+            graph,
         );
 
-        let mut path = Vec::new();
         let mut results = Vec::new();
+        let mut path = Vec::new();
 
-        for step in scheduler {
+        for step in scheduler.clone() {
             match step {
-                Step::Forward(mess) => {
-                    path.push(mess);
-                }
-                Step::Backward(at_end) => {
-                    if let Some(max_memory) = at_end {
-                        println!("{}; {}; {:?}", path.len(), max_memory, path);
-                        results.push(path.clone());
+                Step::Forward(set) => path.push(set),
+                Step::Backward(leaf) => {
+                    if let Some(mem) = leaf {
+                        results.push((path.len(), mem, path.clone()));
                     }
                     path.pop();
                 }
             }
         }
-        println!("result: {:?}", results.len());
-        println!("count: {:?}", unsafe { COUNT });
-    }
 
-    #[test]
-    fn skipper() {
-        let (space, time, num_nodes) = input();
+        assert_eq!(
+            results,
+            vec![
+                (4, 3, vec![vec![0], vec![3], vec![1], vec![2]]),
+                (4, 3, vec![vec![0], vec![3], vec![2], vec![1]]),
+                (3, 3, vec![vec![0], vec![3], vec![1, 2]]),
+                (4, 3, vec![vec![0], vec![1], vec![3], vec![2]]),
+                (3, 3, vec![vec![0], vec![3, 1], vec![2]]),
+            ]
+        );
 
-        let mut predicates = vec![space.len() + 1; num_nodes + 1];
+        let mut optimal_paths: HashMap<usize, (usize, Vec<Vec<usize>>)> =
+            HashMap::new();
+        for (len, mem, path) in results {
+            if let Some(optimal) = optimal_paths.get_mut(&len) {
+                if optimal.0 > mem {
+                    *optimal = (mem, path);
+                }
+            } else {
+                optimal_paths.insert(len, (mem, path));
+            }
+        }
 
-        let mut path = Vec::new();
+        assert_eq!(
+            optimal_paths,
+            HashMap::from_iter(vec![
+                (4, (3, vec![vec![0], vec![3], vec![1], vec![2]])),
+                (3, (3, vec![vec![0], vec![3], vec![1, 2]])),
+            ])
+        );
+
         let mut results = Vec::new();
-
-        let mut look = time::LookupBuffer::new(5);
-        let mut scheduler = Scheduler::new(
-            PathGenerator::from_dependency_graph(time, &mut look, None),
-            Graph::new(space.len(), &space, None),
-        )
-        .into_iter();
+        let mut path = Vec::new();
+        let mut predicates = vec![max + 1; num + 1];
+        let mut scheduler = scheduler.into_iter();
 
         while let Some(step) = scheduler.next() {
             match step {
                 Step::Forward(mess) => {
                     let current = scheduler.current();
-                    let minimum_time = if current.time.finished_path() {
-                        path.len() + 1
+                    let minimum_time = if current.time.at_leaf().is_some() {
+                        path.len() + 1 // plus the current step
+                    } else if current.time.has_unmeasureable() {
+                        // current step; at least one more because there are some
+                        // measureable bits left; at least one more because there
+                        // are some unmeasureable bits left that cannot be measured
+                        // in the next step
+                        path.len() + 3
                     } else {
-                        path.len() + 2
+                        path.len() + 2 // ...
                     };
-                    // unsafe { COUNT += 1 };
                     if current.space.max_memory() >= predicates[minimum_time] {
                         if scheduler.skip_focus().is_err() {
                             break;
@@ -194,63 +243,24 @@ mod tests {
                         path.push(mess);
                     }
                 }
-                Step::Backward(at_end) => {
-                    if let Some(max_memory) = at_end {
-                        predicates[path.len()] = max_memory;
-                        println!("{}; {}; {:?}", path.len(), max_memory, path);
-                        results.push(path.clone());
+                Step::Backward(leaf) => {
+                    if let Some(mem) = leaf {
+                        predicates[path.len()] = mem;
+                        results.push((path.len(), mem, path.clone()));
                     }
                     path.pop();
-                    let current = scheduler.current();
-                    // we are never at an end-node after a backward step, so the set is
-                    // never empty and we can skip the check
-                    // let minimum_time = if current.time.first.set.is_empty() {
-                    //     path.len()
-                    // } else {
-                    //     path.len() + 1
-                    // };
-                    let minimum_time = path.len() + 1;
-                    // unsafe { COUNT += 1 };
-                    if current.space.max_memory() >= predicates[minimum_time] {
-                        path.pop();
-                        if scheduler.skip_focus().is_err() {
-                            break;
-                        }
-                    }
+                    // no sense in skipping here, because if it we could skip, we would
+                    // have done it already in the forward step that led to this focused
+                    // state
                 }
             }
         }
-        println!("result: {:?}", results.len());
-        println!("count: {:?}", unsafe { COUNT });
-    }
 
-    #[allow(clippy::type_complexity)]
-    fn input() -> (Vec<(usize, usize)>, Vec<Vec<(usize, Vec<usize>)>>, usize) {
-        //         2
-        //       /  \
-        // 0 - 1     4
-        //       \  /
-        //         3
-        //
-        //    -------
-        //  /         \
-        // 0 --- 3 --- 4
-        //  \
-        //    -
-        //      \
-        // 2 --- 1
-        let space = vec![(0, 1), (1, 2), (1, 3), (2, 4), (4, 3)];
-        let time = vec![
-            vec![(0, vec![]), (2, vec![])],
-            vec![(3, vec![0]), (1, vec![0, 2])],
-            vec![(4, vec![0, 3])],
-        ];
-        // let time =
-        //     vec![vec![(0, vec![]), (1, vec![]), (2, vec![]), (3, vec![]), (4, vec![])]];
-
-        // let space = [];
-        // let time = vec![vec![(0, vec![])]];
-        // let time = vec![];
-        (space, time, 5)
+        assert_eq!(
+            HashMap::from_iter(
+                results.into_iter().map(|(len, mem, path)| (len, (mem, path)))
+            ),
+            optimal_paths
+        );
     }
 }

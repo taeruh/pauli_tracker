@@ -87,7 +87,14 @@ pub fn coverage() {
 
 pub fn proptest() {
     println!("TEST: PROPTEST");
-    cargo!("test", "--test", "roundtrip", "--all-features", "--", "--ignored");
+    cargo!(
+        "test",
+        "--release",
+        "proptest",
+        "--all-features",
+        "--",
+        "--ignored"
+    );
 }
 // }}
 

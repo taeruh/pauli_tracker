@@ -8,7 +8,7 @@ use itertools::{
 
 #[derive(Debug, Clone)]
 pub struct Partition<T> {
-    pub set: T,
+    pub(crate) set: T,
     iter: Powerset<Range<usize>>,
 }
 

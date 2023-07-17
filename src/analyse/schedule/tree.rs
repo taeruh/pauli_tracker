@@ -12,9 +12,13 @@ use std::{
     mem,
 };
 
-// should be able to error
 pub trait Focus<Instruction> {
     type Error;
+
+    fn focus_inplace(&mut self, instruction: Instruction) -> Result<(), Self::Error>;
+
+    // often just {let mut new = self.clone(); new.focus_inplace(instruction)?; Ok(new)}
+    // but we don't want the Clone bound here
     fn focus(&mut self, instruction: Instruction) -> Result<Self, Self::Error>
     where
         Self: Sized;
@@ -23,9 +27,11 @@ pub trait Focus<Instruction> {
 pub trait FocusIterator {
     type IterItem;
     type LeafItem;
+
     fn next_and_focus(&mut self) -> Option<(Self, Self::IterItem)>
     where
         Self: Sized;
+
     fn at_leaf(&self) -> Option<Self::LeafItem>;
 }
 
@@ -85,29 +91,3 @@ impl<T: FocusIterator> Iterator for Sweep<T> {
         }
     }
 }
-
-// well, now we are not really gaining anything from this macro, compared to
-// implementing it separately -> TODO: make a derive proc-macro
-// actually we are never calling it without the lifetime, but I let it here as it is,
-// because it doesn't hurt
-macro_rules! impl_into_iterator {
-    ($name:ident) => {
-        impl IntoIterator for $name {
-            type Item = <Self::IntoIter as Iterator>::Item;
-            type IntoIter = $crate::analyse::schedule::sweep::Sweep<Self>;
-            fn into_iter(self) -> Self::IntoIter {
-                Self::IntoIter::new(self, Vec::new())
-            }
-        }
-    };
-    ($name:ident with < $lifetime:tt >) => {
-        impl<$lifetime> IntoIterator for $name<$lifetime> {
-            type Item = <Self::IntoIter as Iterator>::Item;
-            type IntoIter = $crate::analyse::schedule::tree::Sweep<Self>;
-            fn into_iter(self) -> Self::IntoIter {
-                Self::IntoIter::new(self, Vec::new())
-            }
-        }
-    };
-}
-pub(crate) use impl_into_iterator;

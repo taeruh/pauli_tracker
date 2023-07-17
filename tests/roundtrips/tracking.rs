@@ -17,7 +17,12 @@ use pauli_tracker::{
         RandomMeasurementCircuit,
         TrackedCircuit,
     },
-    pauli::Pauli,
+    pauli::{
+        Pauli,
+        PAULI_X,
+        PAULI_Y,
+        PAULI_Z,
+    },
     tracker::{
         frames::{
             storage::{
@@ -43,9 +48,9 @@ use proptest::{
 
 // type BoolVec = bitvec::vec::BitVec;
 // type BoolVec = pauli_tracker::boolean_vector::bitvec_simd::SimdBitVec;
-type BoolVec = bit_vec::BitVec;
+pub type BoolVec = bit_vec::BitVec;
 
-type Storage = Map<BoolVec>;
+pub type Storage = Map<BoolVec>;
 // type PauliVec = pauli::PauliVec<BoolVec>;
 
 const MAX_INIT: usize = 100;
@@ -55,6 +60,7 @@ const MAX_OPS: usize = 1000;
 proptest! {
     #![proptest_config(Config {
         // cases: 1,
+        // cases: 10,
         // proptest! just overwrites this (see source code); it doesn't really matter,
         // except that we get a warning but that is ok; we could solve it by manually
         // doing what proptest! does (the basics are straightforward, but it also does
@@ -66,7 +72,7 @@ proptest! {
     })]
     #[test]
     #[ignore = "run proptests explicitly"]
-    fn prop_roundtrip(init in (0..MAX_INIT), ops in vec_operation(MAX_OPS)) {
+    fn proptest(init in (0..MAX_INIT), ops in vec_operation(MAX_OPS)) {
         roundtrip(init, ops);
     }
 }
@@ -88,11 +94,13 @@ fn roundtrip(init: usize, ops: Vec<Operation>) {
     generator.apply(&mut circuit, &mut measurements);
     circuit.tracker.measure_and_store_all(&mut circuit.storage);
 
-    let graph = analyse::create_dependency_graph(
-        <Storage as StackStorage>::iter(&circuit.storage),
-        &measurements.0,
-    );
-    check_graph(&graph, &circuit.storage, &measurements.0).unwrap();
+    if !measurements.0.is_empty() {
+        let graph = analyse::create_dependency_graph(
+            <Storage as StackStorage>::iter(&circuit.storage),
+            &measurements.0,
+        );
+        check_graph(&graph, &circuit.storage, &measurements.0).unwrap();
+    }
 
     // println!("graph: {:?}", graph);
     // println!("graph.len: {}", graph.len());
@@ -206,14 +214,14 @@ fn check_graph(
 
 // a instructor that defines the a tracking circuit based on some operations generated
 // with proptest
-struct Instructor {
+pub struct Instructor {
     used: usize,
     memory: Vec<usize>,
     operations: Vec<Operation>,
 }
 
 impl Instructor {
-    fn new(init: usize, operations: Vec<Operation>) -> Self {
+    pub fn new(init: usize, operations: Vec<Operation>) -> Self {
         Self {
             used: init,
             memory: (0..init).collect(),
@@ -226,14 +234,14 @@ impl Instructor {
         self.memory = (0..init).collect();
     }
 
-    fn apply<C, T, S>(
+    pub fn apply<C, T, S>(
         &mut self,
         circuit: &mut TrackedCircuit<C, T, S>,
         measurements: &mut impl Measurements<TrackedCircuit<C, T, S>>,
     ) where
         C: CliffordCircuit,
         T: Tracker,
-        TrackedCircuit<C, T, S>: ExtendCircuit,
+        TrackedCircuit<C, T, S>: ExtendCircuit<Output = C::Outcome>,
     {
         for op in self.operations.iter() {
             // for small circuits, we loose some ops
@@ -246,25 +254,45 @@ impl Instructor {
                 Operation::X(b) => circuit.x(self.mem_idx(b)),
                 Operation::Y(b) => circuit.y(self.mem_idx(b)),
                 Operation::Z(b) => circuit.z(self.mem_idx(b)),
+                Operation::TeleportedX(a, b) => {
+                    if let Some(pos_in_mem) =
+                        self.pauli_teleportation(a, b, PAULI_X, circuit, measurements)
+                    {
+                        self.memory.swap_remove(pos_in_mem % self.memory.len());
+                    }
+                }
+                Operation::TeleportedY(a, b) => {
+                    if let Some(pos_in_mem) =
+                        self.pauli_teleportation(a, b, PAULI_Y, circuit, measurements)
+                    {
+                        self.memory.swap_remove(pos_in_mem % self.memory.len());
+                    }
+                }
+                Operation::TeleportedZ(a, b) => {
+                    if let Some(pos_in_mem) =
+                        self.pauli_teleportation(a, b, PAULI_Z, circuit, measurements)
+                    {
+                        self.memory.swap_remove(pos_in_mem % self.memory.len());
+                    }
+                }
+
                 Operation::H(b) => circuit.h(self.mem_idx(b)),
                 Operation::S(b) => circuit.s(self.mem_idx(b)),
-                Operation::CX(a, b) => {
-                    match self.double_mem_idx(a, b) {
-                        Some((a, b)) => circuit.cx(a, b),
-                        None => continue,
-                    };
-                }
+                Operation::CX(a, b) => match self.double_mem_idx(a, b) {
+                    Some((a, b)) => circuit.cx(a, b),
+                    None => continue,
+                },
+
                 Operation::CZ(a, b) => match self.double_mem_idx(a, b) {
                     Some((a, b)) => circuit.cz(a, b),
                     None => continue,
                 },
                 Operation::RZ(b) => {
-                    measurements.store(
-                        self.mem_idx(b),
-                        circuit.z_rotation_teleportation(self.mem_idx(b), self.used),
-                    );
-                    let i = self.idx(b);
-                    self.memory[i] = self.used;
+                    let bit = self.mem_idx(b);
+                    measurements
+                        .store(bit, circuit.z_rotation_teleportation(bit, self.used));
+                    let pos_in_mem = self.idx(b);
+                    self.memory[pos_in_mem] = self.used;
                     self.used += 1;
                 }
                 Operation::Measure(b) => {
@@ -277,6 +305,7 @@ impl Instructor {
             }
         }
     }
+
     #[inline(always)]
     fn idx(&self, bit: usize) -> usize {
         bit % self.memory.len()
@@ -299,6 +328,7 @@ impl Instructor {
         }
         Some((self.memory[a], self.memory[b]))
     }
+
     fn new_qubit<C, T, S>(
         memory: &mut Vec<usize>,
         used: &mut usize,
@@ -312,12 +342,31 @@ impl Instructor {
         memory.push(*used);
         *used += 1;
     }
+
+    fn pauli_teleportation<C, T, S>(
+        &self,
+        bit_a: usize,
+        bit_b: usize,
+        pauli: Pauli,
+        circuit: &mut TrackedCircuit<C, T, S>,
+        measurements: &mut impl Measurements<TrackedCircuit<C, T, S>>,
+    ) -> Option<usize>
+    where
+        TrackedCircuit<C, T, S>: ExtendCircuit,
+    {
+        if let Some((a, b)) = self.double_mem_idx(bit_a, bit_b) {
+            measurements.store(a, circuit.pauli_teleportation(a, b, pauli));
+            Some(self.idx(bit_a))
+        } else {
+            None
+        }
+    }
 }
 
-trait Measurements<T: ExtendCircuit> {
+pub trait Measurements<T: ExtendCircuit> {
     fn store(&mut self, bit: usize, result: T::Output);
 }
-struct WhereMeasured(Vec<usize>);
+pub struct WhereMeasured(pub Vec<usize>);
 impl Measurements<TrackedCircuit<DummyCircuit, Frames<Storage>, Storage>>
     for WhereMeasured
 {
@@ -334,10 +383,16 @@ impl Measurements<TrackedCircuit<RandomMeasurementCircuit, LiveVector, ()>>
     }
 }
 
-trait ExtendCircuit {
+pub trait ExtendCircuit {
     type Output;
     fn z_rotation_teleportation(&mut self, origin: usize, new: usize) -> Self::Output;
     fn new_qubit(&mut self, bit: usize);
+    fn pauli_teleportation(
+        &mut self,
+        origin: usize,
+        new: usize,
+        pauli: Pauli,
+    ) -> Self::Output;
 }
 impl ExtendCircuit for TrackedCircuit<DummyCircuit, Frames<Storage>, Storage> {
     type Output = ();
@@ -351,6 +406,15 @@ impl ExtendCircuit for TrackedCircuit<DummyCircuit, Frames<Storage>, Storage> {
     fn new_qubit(&mut self, bit: usize) {
         self.tracker.new_qubit(bit);
     }
+    fn pauli_teleportation(
+        &mut self,
+        origin: usize,
+        new: usize,
+        pauli: Pauli,
+    ) -> Self::Output {
+        self.track_pauli(new, pauli);
+        self.measure_and_store(origin).1.unwrap();
+    }
 }
 impl ExtendCircuit for TrackedCircuit<RandomMeasurementCircuit, LiveVector, ()> {
     type Output = bool;
@@ -358,22 +422,37 @@ impl ExtendCircuit for TrackedCircuit<RandomMeasurementCircuit, LiveVector, ()> 
         self.tracker.new_qubit(new);
         self.cx(origin, new);
         self.move_z_to_z(origin, new);
-        let result = self.circuit.measure(origin);
-        if result {
+        let res = self.circuit.measure(origin);
+        if res {
             self.track_z(new);
         };
-        result
+        res
     }
     fn new_qubit(&mut self, bit: usize) {
         self.tracker.new_qubit(bit);
     }
+    fn pauli_teleportation(
+        &mut self,
+        origin: usize,
+        new: usize,
+        pauli: Pauli,
+    ) -> Self::Output {
+        let res = self.circuit.measure(origin);
+        if res {
+            self.track_pauli(new, pauli);
+        }
+        res
+    }
 }
 
-#[derive(Debug)]
-enum Operation {
+#[derive(Clone, Debug)]
+pub enum Operation {
     X(usize),
     Y(usize),
     Z(usize),
+    TeleportedX(usize, usize),
+    TeleportedY(usize, usize),
+    TeleportedZ(usize, usize),
     H(usize),
     S(usize),
     CX(usize, usize),
@@ -390,25 +469,33 @@ fn operation() -> impl Strategy<Value = Operation> {
         1 => any::<usize>().prop_map(Operation::X),
         1 => any::<usize>().prop_map(Operation::Y),
         1 => any::<usize>().prop_map(Operation::Z),
+        15 => (any::<usize>(), any::<usize>())
+                 .prop_map(|(a, b)| Operation::TeleportedX(a, b)),
+        15 => (any::<usize>(), any::<usize>())
+                 .prop_map(|(a, b)| Operation::TeleportedY(a, b)),
+        15 => (any::<usize>(), any::<usize>())
+                 .prop_map(|(a, b)| Operation::TeleportedZ(a, b)),
         30 => any::<usize>().prop_map(Operation::H),
         30 => any::<usize>().prop_map(Operation::S),
         30 => (any::<usize>(), any::<usize>()).prop_map(|(a, b)| Operation::CX(a, b)),
         30 => (any::<usize>(), any::<usize>()).prop_map(|(a, b)| Operation::CZ(a, b)),
         100 => any::<usize>().prop_map(Operation::RZ),
-        1 => any::<usize>().prop_map(Operation::Measure),
-        1 => any::<usize>().prop_map(Operation::NewQubit),
+        2 => any::<usize>().prop_map(Operation::Measure),
+        2 => any::<usize>().prop_map(Operation::NewQubit),
     ]
 }
 
-fn fixed_vec_operation(mut max: usize) -> impl Strategy<Value = Vec<Operation>> {
+pub fn fixed_num_vec_operation(
+    mut num_operations: usize,
+) -> impl Strategy<Value = Vec<Operation>> {
     let mut res = Vec::new();
-    while max > 0 {
+    while num_operations > 0 {
         res.push(operation());
-        max -= 1;
+        num_operations -= 1;
     }
     res
 }
 
-fn vec_operation(max: usize) -> impl Strategy<Value = Vec<Operation>> {
-    (0..max).prop_flat_map(fixed_vec_operation)
+fn vec_operation(max_num_operations: usize) -> impl Strategy<Value = Vec<Operation>> {
+    (0..max_num_operations).prop_flat_map(fixed_num_vec_operation)
 }

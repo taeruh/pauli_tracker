@@ -10,14 +10,18 @@ provides two pseudo circuit simulators that can be used to test the Pauli tracki
 
 use std::mem;
 
-use crate::tracker::{
-    frames::{
-        storage::StackStorage,
-        Frames,
-        OverwriteStack,
-        StoreError,
+use crate::{
+    pauli::Pauli,
+    tracker::{
+        frames::{
+            storage::StackStorage,
+            Frames,
+            OverwriteStack,
+            StoreError,
+        },
+        PauliString,
+        Tracker,
     },
-    Tracker,
 };
 
 /// The interface into a circuit that can handle Clifford gates and (unspecified)
@@ -227,6 +231,14 @@ impl<C, T, S> TrackedCircuit<C, T, S>
 where
     T: Tracker,
 {
+    /// Append a [Pauli] gate `pauli` to the tracker.
+    pub fn track_pauli(&mut self, bit: usize, pauli: Pauli) {
+        self.tracker.track_pauli(bit, pauli)
+    }
+    /// Append a [PauliString] to the tracker.
+    pub fn track_pauli_string(&mut self, pauli: PauliString) {
+        self.tracker.track_pauli_string(pauli)
+    }
     track_paulis!((track_x, "X"), (track_y, "Y"), (track_z, "Z"),);
     movements!(
         (move_x_to_x, "X", "X"),

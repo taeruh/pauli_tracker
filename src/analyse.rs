@@ -79,6 +79,8 @@ where
     let mut graph: Vec<Vec<(usize, Vec<usize>)>> = vec![Vec::new()];
     let mut remaining: Vec<(usize, Vec<usize>, Vec<usize>)> = Vec::new();
 
+    assert!(!map.is_empty(), "map must not be empty");
+
     // the first loop filters the dependencies and searches for qubits with no
     // dependencies
     for (bit, stack) in storage {
@@ -103,7 +105,11 @@ where
         }
     }
 
-    assert!(!graph[0].is_empty(), "couldn't find any independent qubit");
+    assert!(
+        !graph[0].is_empty(),
+        "couldn't find any independent qubit; maybe the
+            storage was empty?"
+    );
 
     let mut layer_idx = 0;
 

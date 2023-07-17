@@ -76,3 +76,7 @@ members = [
 default-members = [
   "./",
 ]
+
+# [[example]]
+# name = "foo"
+# test = true

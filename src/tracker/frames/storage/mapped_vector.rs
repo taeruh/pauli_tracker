@@ -53,7 +53,7 @@ impl<B> IntoIterator for MappedVector<B> {
     >;
 
     fn into_iter(self) -> Self::IntoIter {
-        self.inverse_position.into_iter().zip(self.frames.into_iter())
+        self.inverse_position.into_iter().zip(self.frames)
     }
 }
 

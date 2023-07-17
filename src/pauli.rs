@@ -3,7 +3,13 @@ Encoding of Pauli operators.
 */
 
 mod single;
-pub use single::Pauli;
+pub use single::{
+    Pauli,
+    PAULI_I,
+    PAULI_X,
+    PAULI_Y,
+    PAULI_Z,
+};
 
 pub mod vec;
 pub use vec::PauliVec;

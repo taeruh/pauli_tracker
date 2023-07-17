@@ -48,6 +48,22 @@ pub struct Pauli {
     storage: u8,
 }
 
+macro_rules! const_pauli {
+    ($(($name:ident, $value:expr, $doc:literal),)*) => {$(
+        /// Encoded Pauli
+        #[doc = $doc]
+        /// .
+        pub const $name: Pauli = Pauli { storage: $value };
+    )*};
+}
+
+const_pauli!(
+    (PAULI_I, 0, "I"),
+    (PAULI_X, 2, "X"),
+    (PAULI_Y, 3, "Y"),
+    (PAULI_Z, 1, "%"),
+);
+
 impl TryFrom<u8> for Pauli {
     type Error = u8;
     fn try_from(value: u8) -> Result<Self, Self::Error> {
