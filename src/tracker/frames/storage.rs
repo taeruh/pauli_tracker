@@ -62,7 +62,7 @@ pub trait StackStorage:
     /// Insert a `pauli` stack for qu`bit`. If the qu`bit` is already present,
     /// its stack is overwritten an the old value, [Some](Some)(\<old stack\>), is
     /// returned.
-    fn insert_pauli(
+    fn insert_pauli_stack(
         &mut self,
         bit: usize,
         pauli: PauliVec<Self::BoolVec>,
@@ -70,7 +70,7 @@ pub trait StackStorage:
 
     /// Remove a qu`bit` and its stack from the storage. If the qubit is present, its
     /// stack is returneddd, otherwise [None].
-    fn remove_pauli(&mut self, bit: usize) -> Option<PauliVec<Self::BoolVec>>;
+    fn remove_pauli_stack(&mut self, bit: usize) -> Option<PauliVec<Self::BoolVec>>;
 
     /// Get a references to qu`bit`s stack, if present, otherwise return [None].
     fn get(&self, bit: usize) -> Option<&PauliVec<Self::BoolVec>>;

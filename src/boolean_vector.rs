@@ -148,12 +148,11 @@ pub trait BooleanVector:
     /// assert_eq!(bools.sum_up(&filter), 0);
     /// # }
     /// ```
-    fn sum_up(&self, filter: &[bool]) -> u8 {
+    fn sum_up(&self, filter: &[bool]) -> bool {
         self.iter_vals()
             .enumerate()
-            .filter_map(|(i, f)| if filter[i] { Some(f as u8) } else { None })
-            .sum::<u8>()
-            % 2
+            .filter_map(|(i, f)| if filter[i] { Some(f) } else { None })
+            .fold(false, |acc, next| acc ^ next)
     }
 }
 

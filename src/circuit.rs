@@ -10,18 +10,15 @@ provides two pseudo circuit simulators that can be used to test the Pauli tracki
 
 use std::mem;
 
-use crate::{
-    pauli::Pauli,
-    tracker::{
-        frames::{
-            storage::StackStorage,
-            Frames,
-            OverwriteStack,
-            StoreError,
-        },
-        PauliString,
-        Tracker,
+use crate::tracker::{
+    frames::{
+        storage::StackStorage,
+        Frames,
+        OverwriteStack,
+        StoreError,
     },
+    PauliString,
+    Tracker,
 };
 
 /// The interface into a circuit that can handle Clifford gates and (unspecified)
@@ -232,11 +229,11 @@ where
     T: Tracker,
 {
     /// Append a [Pauli] gate `pauli` to the tracker.
-    pub fn track_pauli(&mut self, bit: usize, pauli: Pauli) {
+    pub fn track_pauli(&mut self, bit: usize, pauli: T::Pauli) {
         self.tracker.track_pauli(bit, pauli)
     }
     /// Append a [PauliString] to the tracker.
-    pub fn track_pauli_string(&mut self, pauli: PauliString) {
+    pub fn track_pauli_string(&mut self, pauli: PauliString<T::Pauli>) {
         self.tracker.track_pauli_string(pauli)
     }
     track_paulis!((track_x, "X"), (track_y, "Y"), (track_z, "Z"),);
@@ -306,7 +303,7 @@ where
             .into_iter();
         while let Some((bit, pauli)) = storage.next() {
             outcome.push((bit, self.circuit.measure(bit)));
-            if let Some(stack) = self.storage.insert_pauli(bit, pauli) {
+            if let Some(stack) = self.storage.insert_pauli_stack(bit, pauli) {
                 self.tracker = Frames::new(storage.collect(), num_frames);
                 return (outcome, Err(OverwriteStack { bit, stack }));
             }
@@ -327,7 +324,10 @@ mod tests {
             DummyCircuit,
             RandomMeasurementCircuit,
         },
-        pauli::PauliVec,
+        pauli::{
+            PauliDense,
+            PauliVec,
+        },
         tracker::{
             frames::{
                 storage::{
@@ -468,7 +468,7 @@ mod tests {
         trait TTele {
             fn t_tele(&mut self, origin: usize, new: usize) -> bool;
         }
-        impl TTele for TrackedCircuit<RandomMeasurementCircuit, LiveVector, ()> {
+        impl TTele for TrackedCircuit<RandomMeasurementCircuit, LiveVector<PauliDense>, ()> {
             #[cfg_attr(coverage_nightly, no_coverage)]
             fn t_tele(&mut self, origin: usize, new: usize) -> bool {
                 self.cx(origin, new);
@@ -501,7 +501,7 @@ mod tests {
         circ.cx(6, 9);
         circ.h(9);
 
-        let mut check = LiveVector::init(10);
+        let mut check = LiveVector::<PauliDense>::init(10);
         // compare toffoli tests with frame tracker
         // (3, PauliVec::try_from("0000000", "1001110").unwrap()),
         // (6, PauliVec::try_from("0000000", "0101101").unwrap()),

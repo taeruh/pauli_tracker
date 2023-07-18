@@ -30,7 +30,7 @@ use crate::pauli::Pauli;
 /// vector should be mainly used to analyze single Pauli strings.
 ///
 /// [StackStorage]: frames::storage::StackStorage
-pub type PauliString = Vec<(usize, Pauli)>;
+pub type PauliString<T> = Vec<(usize, T)>;
 
 /// The Error when we try to [measure](Tracker::measure) a missing qubit.
 #[derive(Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Default, Debug)]
@@ -94,7 +94,7 @@ macro_rules! track_pauli {
         /// at qu`bit`.
         #[inline]
         fn $name(&mut self, bit: usize) {
-            self.track_pauli(bit, Pauli::$call() );
+            self.track_pauli(bit, Self::Pauli::$call() );
         }
     )*};
 }
@@ -113,6 +113,10 @@ pub trait Tracker {
     /// [PauliVec](crate::pauli::PauliVec) for the [Frames](frames::Frames) tracker.
     type Stack;
 
+    /// The type of Pauli representation use for operations like
+    /// [track_pauli](Self::track_pauli).
+    type Pauli: Pauli;
+
     /// Initialize the tracker with qubits numbered from 0 to `num_bits`-1.
     fn init(num_bits: usize) -> Self;
 
@@ -121,12 +125,12 @@ pub trait Tracker {
     fn new_qubit(&mut self, bit: usize) -> Option<usize>;
 
     /// Track a new frame consisting of the [Pauli] gate `pauli` at qu`bit`.
-    fn track_pauli(&mut self, bit: usize, pauli: Pauli);
+    fn track_pauli(&mut self, bit: usize, pauli: Self::Pauli);
 
     /// Track a new frame including multiple [Pauli] gates, i.e., e [PauliString] to the
     /// Tracker, i.e., do [Tracker::track_pauli] for multiple [Pauli]s but all within
     /// the same frame.
-    fn track_pauli_string(&mut self, string: PauliString);
+    fn track_pauli_string(&mut self, string: PauliString<Self::Pauli>);
 
     track_pauli!((track_x, "X", new_x), (track_y, "Y", new_y), (track_z, "Z", new_z),);
 
@@ -190,7 +194,7 @@ mod test {
     pub mod impl_utils {
         use super::super::*;
         use crate::{
-            pauli::Pauli,
+            pauli::PauliDense,
             tracker::PauliString,
         };
 
@@ -261,8 +265,8 @@ mod test {
         }
 
         #[cfg_attr(coverage_nightly, no_coverage)]
-        pub fn single_init(input: u8) -> PauliString {
-            vec![(0, Pauli::try_from(input).unwrap())]
+        pub fn single_init<T: From<PauliDense>>(input: u8) -> PauliString<T> {
+            vec![(0, PauliDense::try_from(input).unwrap().into())]
         }
 
         // masks to decode p in 0..16 into two paulis and vice versa
@@ -271,20 +275,25 @@ mod test {
         const FIRST_SHIFT: u8 = 2;
 
         #[cfg_attr(coverage_nightly, no_coverage)]
-        pub fn double_init(input: u8) -> PauliString {
+        pub fn double_init<T: From<PauliDense>>(input: u8) -> PauliString<T> {
             vec![
-                (0, Pauli::try_from((input & FIRST) >> FIRST_SHIFT).unwrap()),
-                (1, Pauli::try_from(input & SECOND).unwrap()),
+                (
+                    0,
+                    PauliDense::try_from((input & FIRST) >> FIRST_SHIFT)
+                        .unwrap()
+                        .into(),
+                ),
+                (1, PauliDense::try_from(input & SECOND).unwrap().into()),
             ]
         }
 
         #[cfg_attr(coverage_nightly, no_coverage)]
-        pub fn double_output(
-            frame: impl IntoIterator<Item = (usize, Pauli)>,
+        pub fn double_output<T: Into<PauliDense>>(
+            frame: impl IntoIterator<Item = (usize, T)>,
         ) -> (u8, u8) {
             let mut output = [0, 0];
             for (i, p) in frame {
-                output[i] = p.storage()
+                output[i] = p.into().storage()
             }
             (output[0], output[1])
         }

@@ -30,7 +30,7 @@ impl<B: BooleanVector> StackStorage for Map<B> {
     > where B: 'l;
 
     #[inline]
-    fn insert_pauli(
+    fn insert_pauli_stack(
         &mut self,
         qubit: usize,
         pauli: PauliVec<B>,
@@ -39,7 +39,7 @@ impl<B: BooleanVector> StackStorage for Map<B> {
     }
 
     #[inline]
-    fn remove_pauli(&mut self, qubit: usize) -> Option<PauliVec<B>> {
+    fn remove_pauli_stack(&mut self, qubit: usize) -> Option<PauliVec<B>> {
         self.remove(&qubit)
     }
 

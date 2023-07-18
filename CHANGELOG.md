@@ -16,6 +16,14 @@ possible.
 - **Possible Breaking Change**: Add `impl Default for SimdBitVec`.
 - Add the `pauli::PAULI_*` constants.
 ### Changed
+- **Breaking Change**: Introduce a trait `crate::pauli::Pauli` to represent single
+  Paulis. The former type `crate::pauli::single::Pauli` is replaced by the type
+  `crate::pauli::dense::PauliDense` (which implements `Pauli`). The `Tracker` impl of
+  `Frames` now uses `crate::pauli::tuple::PauliTuple` for methods like `track_Pauli`.
+  `PauliTuple` is another implementor of `Pauli`. `PauliTuple` implements
+  `From<PauliDense>` and vice versa.
+- **Breaking Change**: Rename `StackStorage`s `(insert,remove)_pauli` methods to
+  `(insert,remove)_pauli_stack`.
 - **Breaking Change**: Return u8 `in Pauli::storage` instead of a reference.
 - **Breaking Change**: Change the Debug and Display implementations of `Pauli`. Debug is
   now derived, so we have the standard format, and Display shows "X, Y, Z, I" instead of

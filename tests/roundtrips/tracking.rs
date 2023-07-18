@@ -14,10 +14,13 @@ use pauli_tracker::{
         TrackedCircuit,
     },
     pauli::{
+        tuple::{
+            PauliTuple,
+            PAULI_X,
+            PAULI_Y,
+            PAULI_Z,
+        },
         Pauli,
-        PAULI_X,
-        PAULI_Y,
-        PAULI_Z,
     },
     tracker::{
         frames::{
@@ -118,11 +121,11 @@ fn roundtrip(init: usize, ops: Vec<Operation>) {
     // println!("{:?}", measurements);
     // println!("{:?}", live_circuit.tracker);
 
-    let mut check = vec![Pauli::new_i(); generator.used];
+    let mut check = vec![PauliTuple::new_i(); generator.used];
     for (i, pauli) in circuit.storage.iter() {
-        check[*i].set_storage(pauli.sum_up(&measurements.0).storage());
+        check[*i] = pauli.sum_up(&measurements.0);
     }
-    let check: LiveVector = check.into();
+    let check: LiveVector<PauliTuple> = check.into();
     // println!("{:?}", a);
 
     assert_eq!(check, live_circuit.tracker);
@@ -345,7 +348,7 @@ impl Instructor {
         &self,
         bit_a: usize,
         bit_b: usize,
-        pauli: Pauli,
+        pauli: PauliTuple,
         circuit: &mut TrackedCircuit<C, T, S>,
         measurements: &mut impl Measurements<TrackedCircuit<C, T, S>>,
     ) -> Option<usize>
@@ -373,7 +376,7 @@ impl Measurements<TrackedCircuit<DummyCircuit, Frames<Storage>, Storage>>
     }
 }
 struct ResultMeasured(Vec<bool>);
-impl Measurements<TrackedCircuit<RandomMeasurementCircuit, LiveVector, ()>>
+impl Measurements<TrackedCircuit<RandomMeasurementCircuit, LiveVector<PauliTuple>, ()>>
     for ResultMeasured
 {
     fn store(&mut self, _: usize, result: bool) {
@@ -389,7 +392,7 @@ pub trait ExtendCircuit {
         &mut self,
         origin: usize,
         new: usize,
-        pauli: Pauli,
+        pauli: PauliTuple,
     ) -> Self::Output;
 }
 impl ExtendCircuit for TrackedCircuit<DummyCircuit, Frames<Storage>, Storage> {
@@ -408,13 +411,15 @@ impl ExtendCircuit for TrackedCircuit<DummyCircuit, Frames<Storage>, Storage> {
         &mut self,
         origin: usize,
         new: usize,
-        pauli: Pauli,
+        pauli: PauliTuple,
     ) -> Self::Output {
         self.track_pauli(new, pauli);
         self.measure_and_store(origin).1.unwrap();
     }
 }
-impl ExtendCircuit for TrackedCircuit<RandomMeasurementCircuit, LiveVector, ()> {
+impl ExtendCircuit
+    for TrackedCircuit<RandomMeasurementCircuit, LiveVector<PauliTuple>, ()>
+{
     type Output = bool;
     fn z_rotation_teleportation(&mut self, origin: usize, new: usize) -> bool {
         self.tracker.new_qubit(new);
@@ -433,7 +438,7 @@ impl ExtendCircuit for TrackedCircuit<RandomMeasurementCircuit, LiveVector, ()> 
         &mut self,
         origin: usize,
         new: usize,
-        pauli: Pauli,
+        pauli: PauliTuple,
     ) -> Self::Output {
         let res = self.circuit.measure(origin);
         if res {

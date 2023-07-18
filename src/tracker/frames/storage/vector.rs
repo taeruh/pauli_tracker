@@ -48,7 +48,7 @@ impl<B: BooleanVector> FromIterator<(usize, PauliVec<B>)> for Vector<B> {
     fn from_iter<T: IntoIterator<Item = (usize, PauliVec<B>)>>(iter: T) -> Self {
         let mut res = Vector::init(0);
         for (bit, pauli) in iter {
-            res.insert_pauli(bit, pauli);
+            res.insert_pauli_stack(bit, pauli);
         }
         res
     }
@@ -66,7 +66,7 @@ impl<B: BooleanVector> StackStorage for Vector<B> {
     where
         Self: 'a;
 
-    fn insert_pauli(&mut self, bit: usize, pauli: PauliVec<B>) -> Option<PauliVec<B>> {
+    fn insert_pauli_stack(&mut self, bit: usize, pauli: PauliVec<B>) -> Option<PauliVec<B>> {
         let len = self.frames.len();
         match bit.cmp(&len) {
             Ordering::Less => Some(mem::replace(
@@ -93,7 +93,7 @@ impl<B: BooleanVector> StackStorage for Vector<B> {
         }
     }
 
-    fn remove_pauli(&mut self, bit: usize) -> Option<PauliVec<B>> {
+    fn remove_pauli_stack(&mut self, bit: usize) -> Option<PauliVec<B>> {
         match bit.cmp(&(self.frames.len().checked_sub(1)?)) {
             Ordering::Less => panic!(
                 "this type, Vector, only allows removing elements consecutively from \
@@ -156,31 +156,31 @@ mod tests {
     use coverage_helper::test;
 
     use super::*;
-    use crate::pauli::Pauli;
+    use crate::pauli::{PauliDense, Pauli};
 
     #[test]
     fn remove_and_insert() {
         type B = Vec<bool>;
         let mut pauli = PauliVec::<B>::zeros(2);
-        pauli.push(Pauli::new_x());
+        pauli.push(PauliDense::new_x());
         let mut storage = Vector::<B>::init(1);
-        assert_eq!(storage.insert_pauli(0, pauli.clone()), Some(PauliVec::<B>::new()));
-        assert_eq!(storage.insert_pauli(1, pauli.clone()), None);
-        assert_eq!(storage.insert_pauli(3, pauli.clone()), None);
+        assert_eq!(storage.insert_pauli_stack(0, pauli.clone()), Some(PauliVec::<B>::new()));
+        assert_eq!(storage.insert_pauli_stack(1, pauli.clone()), None);
+        assert_eq!(storage.insert_pauli_stack(3, pauli.clone()), None);
         assert!(
             panic::catch_unwind(|| {
                 let mut storage = storage.clone();
-                storage.remove_pauli(1);
+                storage.remove_pauli_stack(1);
             })
             .is_err()
         );
-        assert_eq!(storage.remove_pauli(3), Some(pauli.clone()));
-        assert_eq!(storage.remove_pauli(3), None);
-        assert_eq!(storage.remove_pauli(2), Some(PauliVec::<B>::zeros(3)));
-        assert_eq!(storage.remove_pauli(2), None);
-        assert_eq!(storage.remove_pauli(1), Some(pauli.clone()));
-        assert_eq!(storage.remove_pauli(1), None);
-        assert_eq!(storage.remove_pauli(0), Some(pauli.clone()));
+        assert_eq!(storage.remove_pauli_stack(3), Some(pauli.clone()));
+        assert_eq!(storage.remove_pauli_stack(3), None);
+        assert_eq!(storage.remove_pauli_stack(2), Some(PauliVec::<B>::zeros(3)));
+        assert_eq!(storage.remove_pauli_stack(2), None);
+        assert_eq!(storage.remove_pauli_stack(1), Some(pauli.clone()));
+        assert_eq!(storage.remove_pauli_stack(1), None);
+        assert_eq!(storage.remove_pauli_stack(0), Some(pauli.clone()));
         assert!(storage.is_empty());
     }
 }

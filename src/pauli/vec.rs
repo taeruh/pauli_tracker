@@ -17,7 +17,11 @@ use serde::{
     Serialize,
 };
 
-use super::single::Pauli;
+use super::{
+    dense::PauliDense,
+    Pauli,
+    PauliTuple,
+};
 use crate::boolean_vector::BooleanVector;
 
 /// Multiple encoded Paulis compressed into two [BooleanVector]s.
@@ -114,7 +118,7 @@ impl<T: BooleanVector> PauliVec<T> {
     ///     }
     /// );
     /// # }
-    pub fn push(&mut self, pauli: Pauli) {
+    pub fn push<P: Pauli>(&mut self, pauli: P) {
         let left = self.left.len();
         let right = self.right.len();
         match left.cmp(&right) {
@@ -141,16 +145,16 @@ impl<T: BooleanVector> PauliVec<T> {
     /// assert_eq!(pauli.pop(), Some(Pauli::new_z()));
     /// assert_eq!(pauli.pop(), None);
     /// # }
-    pub fn pop(&mut self) -> Option<Pauli> {
+    pub fn pop<P: Pauli>(&mut self) -> Option<P> {
         match self.left.len().cmp(&self.right.len()) {
-            Ordering::Less => Some(Pauli::new(
+            Ordering::Less => Some(P::new(
                 false,
                 self.right
                     .pop()
                     .expect("shouldn't be possible since right.len > left.len >= 0"),
             )),
-            Ordering::Equal => Some(Pauli::new(self.left.pop()?, self.right.pop()?)),
-            Ordering::Greater => Some(Pauli::new(
+            Ordering::Equal => Some(P::new(self.left.pop()?, self.right.pop()?)),
+            Ordering::Greater => Some(P::new(
                 self.left
                     .pop()
                     .expect("shouldn't be possible since left.len > right.len >= 0"),
@@ -173,13 +177,13 @@ impl<T: BooleanVector> PauliVec<T> {
     #[inline(always)]
     pub fn y(&self) {}
 
-    /// Apply Hadamard gate.
+    /// Apply the Hadamard gate.
     #[inline]
     pub fn h(&mut self) {
         mem::swap(&mut self.left, &mut self.right);
     }
 
-    /// Apply Phase S gate.
+    /// Apply the Phase S gate.
     #[inline]
     pub fn s(&mut self) {
         // self.right.xor(&self.left);
@@ -187,9 +191,9 @@ impl<T: BooleanVector> PauliVec<T> {
     }
 
     /// Multiply the Paulis, i.e., summing them up mod 2 in the tableau representation,
-    /// with a `filter`, while neglecting any phases. An element `e` is filtered if
-    /// `filter[i] = true` where `i` is `e`'s index in
-    /// [iter_vals](BooleanVector::iter_vals). Compare [BooleanVector::sum_up].
+    /// with a `filter`, neglecting any phases. An element `e` is filtered if `filter[i]
+    /// = true` where `i` is `e`'s index in [iter_vals](BooleanVector::iter_vals).
+    /// Compare [BooleanVector::sum_up].
     ///
     /// # Panics
     /// Panics if `filter.len()` < number of Paulis
@@ -213,18 +217,13 @@ impl<T: BooleanVector> PauliVec<T> {
     /// assert_eq!(paulis.sum_up(&filter), Pauli::new_i());
     /// # }
     /// ```
-    pub fn sum_up(&self, filter: &[bool]) -> Pauli {
-        // Safety: BooleanVector::sum_up returns u8 <= 1
-        unsafe {
-            Pauli::from_unchecked(
-                self.right.sum_up(filter) + self.left.sum_up(filter) * 2,
-            )
-        }
+    pub fn sum_up(&self, filter: &[bool]) -> PauliTuple {
+        PauliTuple::new(self.left.sum_up(filter), self.right.sum_up(filter))
     }
 }
 
-impl<T: BooleanVector> FromIterator<Pauli> for PauliVec<T> {
-    fn from_iter<I: IntoIterator<Item = Pauli>>(iter: I) -> Self {
+impl<T: BooleanVector> FromIterator<PauliDense> for PauliVec<T> {
+    fn from_iter<I: IntoIterator<Item = PauliDense>>(iter: I) -> Self {
         let mut ret = PauliVec::new();
         for pauli in iter {
             ret.push(pauli);

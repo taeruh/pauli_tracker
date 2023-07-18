@@ -1,15 +1,13 @@
-scheduling:
-- make it parallelize compatible; in progress
-- sort the results and introduce break conditions; in progress
-- overwork the api in general
-- test it
-
 - after commit: remove MissingDependent error and use expect
 
 - use hashbrown ...
 - maybe use https://docs.rs/err-derive/latest/err_derive/#
 - lock cargo hack
 - lock msrv
+
+- add some standard test for autotraits like send, sync, ..
+
+- use PauliTuple for actions testing template
 
 - maybe derive macro for sweep::impl_into_iterator
 
@@ -22,20 +20,16 @@ scheduling:
 - maybe: in storage::vector when inserting, do the same as as in livevector if index to
   high, i.e., insert buffer stacks
 
-- add some standard test for autotraits like send, sync, ..
 
 - write a better contributing.md
 
 - write a proper todo.md
 
 before next major bump:
-- put dependency graph into its own module
 - maybe remove deref for storage::Vector
 - panics in create_dependency_graph to return error
-- maybe introduce a Node struct for DependencyGraph
-- maybe put functions in storage.rs into StackStorage as default fns
+- rewrite LiveVector to be generic like Frames
 
 another major bump:
-- rewrite LiveVector to be generic like Frames
 - maybe make Map's and Vector's inner type private (making Map to a newtype) and remove
   Deref(Mut) impls

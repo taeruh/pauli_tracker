@@ -38,6 +38,7 @@ use crate::{
     boolean_vector::BooleanVector,
     pauli::{
         Pauli,
+        PauliTuple,
         PauliVec,
     },
 };
@@ -154,7 +155,7 @@ where
     Storage: StackStorage,
 {
     /// Pop the last tracked Pauli frame.
-    pub fn pop_frame(&mut self) -> Option<PauliString> {
+    pub fn pop_frame(&mut self) -> Option<PauliString<PauliTuple>> {
         if self.storage.is_empty() || self.frames_num == 0 {
             return None;
         }
@@ -175,7 +176,7 @@ where
         bit: usize,
         storage: &mut impl StackStorage<BoolVec = Storage::BoolVec>,
     ) -> Result<(), StoreError<Storage::BoolVec>> {
-        match storage.insert_pauli(bit, self.measure(bit)?) {
+        match storage.insert_pauli_stack(bit, self.measure(bit)?) {
             Some(p) => Err(OverwriteStack { bit, stack: p }.into()),
             None => Ok(()),
         }
@@ -190,7 +191,7 @@ where
         for (bit, pauli) in
             mem::replace(&mut self.storage, Storage::init(0)).into_iter()
         {
-            storage.insert_pauli(bit, pauli);
+            storage.insert_pauli_stack(bit, pauli);
         }
     }
 }
@@ -240,6 +241,7 @@ where
     Storage: StackStorage,
 {
     type Stack = PauliVec<Storage::BoolVec>;
+    type Pauli = PauliTuple;
 
     fn init(num_qubits: usize) -> Self {
         Self {
@@ -250,11 +252,11 @@ where
 
     fn new_qubit(&mut self, qubit: usize) -> Option<usize> {
         self.storage
-            .insert_pauli(qubit, Self::Stack::zeros(self.frames_num))
+            .insert_pauli_stack(qubit, Self::Stack::zeros(self.frames_num))
             .map(|_| qubit)
     }
 
-    fn track_pauli(&mut self, qubit: usize, pauli: Pauli) {
+    fn track_pauli(&mut self, qubit: usize, pauli: Self::Pauli) {
         if self.storage.is_empty() {
             return;
         }
@@ -262,18 +264,18 @@ where
             if i == qubit {
                 p.push(pauli);
             } else {
-                p.push(Pauli::new_i());
+                p.push(Self::Pauli::new_i());
             }
         }
         self.frames_num += 1;
     }
 
-    fn track_pauli_string(&mut self, string: PauliString) {
+    fn track_pauli_string(&mut self, string: PauliString<Self::Pauli>) {
         if self.storage.is_empty() {
             return;
         }
         for (_, p) in self.storage.iter_mut() {
-            p.push(Pauli::new_i());
+            p.push(Self::Pauli::new_i());
         }
         for (i, p) in string {
             match self.storage.get_mut(i) {
@@ -312,7 +314,7 @@ where
         &mut self,
         bit: usize,
     ) -> Result<PauliVec<Storage::BoolVec>, MissingStack> {
-        self.storage.remove_pauli(bit).ok_or(MissingStack { bit })
+        self.storage.remove_pauli_stack(bit).ok_or(MissingStack { bit })
     }
 }
 
@@ -336,14 +338,17 @@ mod tests {
             test,
             *,
         };
-        use crate::tracker::test::impl_utils::{
-            self,
-            DoubleAction,
-            DoubleResults,
-            SingleAction,
-            SingleResults,
-            N_DOUBLES,
-            N_SINGLES,
+        use crate::{
+            pauli::PauliDense,
+            tracker::test::impl_utils::{
+                self,
+                DoubleAction,
+                DoubleResults,
+                SingleAction,
+                SingleResults,
+                N_DOUBLES,
+                N_SINGLES,
+            },
         };
 
         // maybe todo: in the following functions there's a pattern behind how we encode
@@ -364,13 +369,18 @@ mod tests {
             fn runner(action: Action, result: SingleResults) {
                 let mut tracker: ThisTracker = Frames::init(1);
                 for input in (0..4).rev() {
-                    tracker
-                        .track_pauli_string(vec![(0, Pauli::try_from(input).unwrap())]);
+                    tracker.track_pauli_string(vec![(
+                        0,
+                        PauliDense::try_from(input).unwrap().into(),
+                    )]);
                 }
                 (action)(&mut tracker, 0);
                 for (input, check) in (0u8..).zip(result.1) {
                     assert_eq!(
-                        tracker.pop_frame().unwrap().get(0).unwrap().1.storage(),
+                        PauliDense::from(
+                            tracker.pop_frame().unwrap().first().unwrap().1
+                        )
+                        .storage(),
                         check,
                         "{}, {}",
                         result.0,

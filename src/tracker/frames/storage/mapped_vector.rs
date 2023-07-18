@@ -91,7 +91,7 @@ impl<B: BooleanVector> FromIterator<(usize, PauliVec<B>)> for MappedVector<B> {
     fn from_iter<T: IntoIterator<Item = (usize, PauliVec<B>)>>(iter: T) -> Self {
         let mut res = MappedVector::init(0);
         for (bit, pauli) in iter {
-            res.insert_pauli(bit, pauli);
+            res.insert_pauli_stack(bit, pauli);
         }
         res
     }
@@ -102,7 +102,7 @@ impl<B: BooleanVector> StackStorage for MappedVector<B> {
     type IterMut<'l> = <&'l mut Self as IntoIterator>::IntoIter where B: 'l;
     type Iter<'l> = <&'l Self as IntoIterator>::IntoIter where B: 'l;
 
-    fn insert_pauli(&mut self, bit: usize, pauli: PauliVec<B>) -> Option<PauliVec<B>> {
+    fn insert_pauli_stack(&mut self, bit: usize, pauli: PauliVec<B>) -> Option<PauliVec<B>> {
         if let Some(&key) = self.position.get(&bit) {
             let old = mem::replace(self.frames.index_mut(key), pauli);
             return Some(old);
@@ -113,7 +113,7 @@ impl<B: BooleanVector> StackStorage for MappedVector<B> {
         None
     }
 
-    fn remove_pauli(&mut self, bit: usize) -> Option<PauliVec<B>> {
+    fn remove_pauli_stack(&mut self, bit: usize) -> Option<PauliVec<B>> {
         let bit_position = self.position.remove(&bit)?;
         self.inverse_position.swap_remove(bit_position);
         if bit_position != self.inverse_position.len() {
