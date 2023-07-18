@@ -11,6 +11,7 @@ use pauli_tracker::{
         DummyCircuit,
         TrackedCircuit,
     },
+    collection::Collection,
     scheduler::{
         space::Graph,
         time::{
@@ -27,10 +28,7 @@ use pauli_tracker::{
     },
     tracker::{
         frames::{
-            storage::{
-                Map,
-                StackStorage,
-            },
+            dependency_graph,
             Frames,
         },
         Tracker,
@@ -117,7 +115,7 @@ fn roundtrip(ops: Vec<Operation>, edges: Edges, num_nodes: usize) {
     let mut circuit = TrackedCircuit {
         circuit: DummyCircuit {},
         tracker: Frames::<Storage>::init(num_nodes),
-        storage: Map::default(),
+        storage: Storage::default(),
     };
     let mut measurements = WhereMeasured(Vec::new());
     generator.apply(&mut circuit, &mut measurements);
@@ -127,7 +125,10 @@ fn roundtrip(ops: Vec<Operation>, edges: Edges, num_nodes: usize) {
         return;
     }
 
-    let dependency_graph = circuit.storage.create_dependency_graph(&measurements.0);
+    let dependency_graph = dependency_graph::create_dependency_graph(
+        <Storage as Collection>::iter(&circuit.storage),
+        &measurements.0,
+    );
     let _dependency_graph = dependency_graph.clone();
 
     // println!("{:?}", dependency_graph);

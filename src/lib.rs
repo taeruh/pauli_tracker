@@ -516,6 +516,8 @@ pub mod boolean_vector;
 #[cfg_attr(docsrs, doc(cfg(feature = "circuit")))]
 pub mod circuit;
 
+pub mod collection;
+
 // #[cfg(feature = "experimental")]
 // #[cfg_attr(docsrs, doc(cfg(feature = "experimental")))]
 #[allow(missing_docs, missing_debug_implementations)]

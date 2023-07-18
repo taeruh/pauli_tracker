@@ -8,6 +8,8 @@ use crate::{
     pauli::PauliVec,
 };
 
+
+
 /// This trait describes the functionality that a storage of [PauliVec]s must provide to
 /// be used as storage for [Frames](super::Frames).
 // instead of requiring that &T and &mut T implement IntoIterator, we have the iter and

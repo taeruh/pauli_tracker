@@ -1,5 +1,3 @@
-- after commit: remove MissingDependent error and use expect
-
 - use hashbrown ...
 - maybe use https://docs.rs/err-derive/latest/err_derive/#
 - lock cargo hack

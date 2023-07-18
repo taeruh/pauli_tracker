@@ -23,7 +23,7 @@ use super::{
         Sweep,
     },
 };
-use crate::tracker::frames::storage::DependencyGraph;
+use crate::tracker::frames::dependency_graph::DependencyGraph;
 
 type Deps = HashMap<usize, Vec<usize>>;
 type Look = Vec<Vec<usize>>;
@@ -312,6 +312,7 @@ impl<T: Clone> Init<T> for Partition<Vec<T>> {
 #[derive(Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum TimeOrderingViolation {
+    // with the current API, this error can actually never happen
     MissingDependent(usize, usize),
     NotMeasureable(Vec<usize>),
 }

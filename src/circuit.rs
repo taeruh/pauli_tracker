@@ -10,15 +10,19 @@ provides two pseudo circuit simulators that can be used to test the Pauli tracki
 
 use std::mem;
 
-use crate::tracker::{
-    frames::{
-        storage::StackStorage,
-        Frames,
-        OverwriteStack,
-        StoreError,
+use crate::{
+    boolean_vector::BooleanVector,
+    collection::Collection,
+    pauli::PauliVec,
+    tracker::{
+        frames::{
+            Frames,
+            OverwriteStack,
+            StoreError,
+        },
+        PauliString,
+        Tracker,
     },
-    PauliString,
-    Tracker,
 };
 
 /// The interface into a circuit that can handle Clifford gates and (unspecified)
@@ -268,11 +272,13 @@ where
     double_gate!(cz, "Control Z");
 }
 
-impl<C, A, S> TrackedCircuit<C, Frames<A>, S>
+impl<C, A, S, B> TrackedCircuit<C, Frames<A>, S>
 where
     C: CliffordCircuit,
-    A: StackStorage,
-    S: StackStorage<BoolVec = A::BoolVec>,
+    A: Collection<T = PauliVec<B>>,
+    // S: StackStorage<BoolVec = A::BoolVec>,
+    S: Collection<T = PauliVec<B>>,
+    B: BooleanVector,
 {
     /// Perform a **Measurement** and move the according qubit with its Pauli stack from
     /// the tracker into the additional storage. Returns the measurement outcome and
@@ -280,7 +286,7 @@ where
     pub fn measure_and_store(
         &mut self,
         bit: usize,
-    ) -> (C::Outcome, Result<(), StoreError<S::BoolVec>>) {
+    ) -> (C::Outcome, Result<(), StoreError<B>>) {
         let outcome = self.circuit.measure(bit);
         match self.tracker.measure_and_store(bit, &mut self.storage) {
             Ok(_) => (outcome, Ok(())),
@@ -295,7 +301,7 @@ where
     #[allow(clippy::type_complexity)] // cos Result is basically two types
     pub fn measure_and_store_all(
         &mut self,
-    ) -> (Vec<(usize, C::Outcome)>, Result<(), OverwriteStack<S::BoolVec>>) {
+    ) -> (Vec<(usize, C::Outcome)>, Result<(), OverwriteStack<B>>) {
         let mut outcome = Vec::<(usize, C::Outcome)>::new();
         let num_frames = self.tracker.frames_num();
         let mut storage = mem::replace(&mut self.tracker, Frames::<A>::init(0))
@@ -303,7 +309,7 @@ where
             .into_iter();
         while let Some((bit, pauli)) = storage.next() {
             outcome.push((bit, self.circuit.measure(bit)));
-            if let Some(stack) = self.storage.insert_pauli_stack(bit, pauli) {
+            if let Some(stack) = self.storage.insert(bit, pauli) {
                 self.tracker = Frames::new(storage.collect(), num_frames);
                 return (outcome, Err(OverwriteStack { bit, stack }));
             }
@@ -314,6 +320,8 @@ where
 
 #[cfg(test)]
 mod tests {
+    use std::collections::HashMap;
+
     use bitvec::vec::BitVec;
     use coverage_helper::test;
 
@@ -324,19 +332,16 @@ mod tests {
             DummyCircuit,
             RandomMeasurementCircuit,
         },
+        collection::{
+            BufferedVector,
+            MappedVector,
+        },
         pauli::{
             PauliDense,
             PauliVec,
         },
         tracker::{
-            frames::{
-                storage::{
-                    Map,
-                    MappedVector,
-                    Vector,
-                },
-                Frames,
-            },
+            frames::Frames,
             live::LiveVector,
             MissingStack,
         },
@@ -349,8 +354,9 @@ mod tests {
     fn measure_and_store() {
         let mut circ = TrackedCircuit {
             circuit: DummyCircuit {},
-            tracker: Frames::<MappedVector<BitVec>>::init(3),
-            storage: Map::default(),
+            // tracker: Frames::<MappedVector<BitVec>>::init(3),
+            tracker: Frames::<MappedVector<PauliVec<BitVec>>>::init(3),
+            storage: HashMap::default(),
         };
 
         circ.measure_and_store(0).1.unwrap();
@@ -400,7 +406,7 @@ mod tests {
     fn single_rotation_teleportation() {
         let mut circ = TrackedCircuit {
             circuit: DummyCircuit {},
-            tracker: Frames::<MappedVector<BitVec>>::init(2),
+            tracker: Frames::<MappedVector<PauliVec<BitVec>>>::init(2),
             storage: MappedVector::default(),
         };
 
@@ -413,16 +419,16 @@ mod tests {
 
         assert_eq!(
             vec![(1, PauliBitVec::try_from_str("0", "1").unwrap())],
-            circ.tracker.into_storage().into_sorted_by_bit()
+            circ.tracker.into_storage().into_sorted_by_key()
         );
-        assert_eq!(vec![(0, PauliBitVec::new())], circ.storage.into_sorted_by_bit());
+        assert_eq!(vec![(0, PauliBitVec::new())], circ.storage.into_sorted_by_key());
     }
 
     #[test]
     fn control_v_dagger() {
         let mut circ = TrackedCircuit {
             circuit: DummyCircuit {},
-            tracker: Frames::<MappedVector<SimdBitVec>>::init(5),
+            tracker: Frames::<MappedVector<PauliVec<SimdBitVec>>>::init(5),
             storage: MappedVector::default(),
         };
 
@@ -445,7 +451,7 @@ mod tests {
                 (3, PauliSimdBitVec::try_from_str("000", "010").unwrap()),
                 (4, PauliSimdBitVec::try_from_str("011", "000").unwrap())
             ],
-            circ.tracker.into_storage().into_sorted_by_bit()
+            circ.tracker.into_storage().into_sorted_by_key()
         );
         assert_eq!(
             vec![
@@ -453,7 +459,7 @@ mod tests {
                 (1, PauliSimdBitVec::try_from_str("00", "10").unwrap()),
                 (2, PauliSimdBitVec::try_from_str("0", "1").unwrap())
             ],
-            circ.storage.into_sorted_by_bit()
+            circ.storage.into_sorted_by_key()
         );
     }
 
@@ -527,7 +533,7 @@ mod tests {
     fn another_graph_test() {
         let mut circ = TrackedCircuit {
             circuit: DummyCircuit {},
-            tracker: Frames::<Vector<BitVec>>::init(10),
+            tracker: Frames::<BufferedVector<PauliVec<BitVec>>>::init(10),
             storage: (),
         };
 
@@ -536,7 +542,13 @@ mod tests {
         trait TTele {
             fn t_tele(&mut self, origin: usize, new: usize);
         }
-        impl TTele for TrackedCircuit<DummyCircuit, Frames<Vector<BitVec>>, ()> {
+        impl TTele
+            for TrackedCircuit<
+                DummyCircuit,
+                Frames<BufferedVector<PauliVec<BitVec>>>,
+                (),
+            >
+        {
             #[cfg_attr(coverage_nightly, no_coverage)]
             fn t_tele(&mut self, origin: usize, new: usize) {
                 self.cx(origin, new);
@@ -574,7 +586,10 @@ mod tests {
 
         // println!("{:#?}", rest);
 
-        let _graph = rest.create_dependency_graph(&[0, 1, 2, 4, 5, 7, 8]);
+        let _graph = crate::tracker::frames::dependency_graph::create_dependency_graph(
+            &rest,
+            &[0, 1, 2, 4, 5, 7, 8],
+        );
         // println!("{:?}", graph);
         // println!("{:?}", graph.len());
     }

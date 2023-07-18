@@ -40,7 +40,7 @@ macro_rules! inplace {
 ///
 /// [storage]: crate::tracker::frames::storage
 pub trait BooleanVector:
-    Clone + FromIterator<bool> + IntoIterator<Item = bool> + Debug
+    Default + Clone + FromIterator<bool> + IntoIterator<Item = bool> + Debug
 {
     /// An iterator over the [bool]ean values of the vector. It can be created with
     /// [Self::iter_vals].

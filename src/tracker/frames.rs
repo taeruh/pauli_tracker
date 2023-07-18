@@ -28,7 +28,6 @@ use serde::{
     Serialize,
 };
 
-use self::storage::StackStorage;
 use super::{
     MissingStack,
     PauliString,
@@ -36,6 +35,7 @@ use super::{
 };
 use crate::{
     boolean_vector::BooleanVector,
+    collection::Collection,
     pauli::{
         Pauli,
         PauliTuple,
@@ -43,7 +43,8 @@ use crate::{
     },
 };
 
-pub mod storage;
+// pub mod storage;
+pub mod dependency_graph;
 
 /// A container of multiple Pauli frames, using a generic `Storage` type  as internal
 /// storage, that implemenst [Tracker].
@@ -116,14 +117,14 @@ impl<T> From<MissingStack> for StoreError<T> {
     }
 }
 
-impl<Storage> Frames<Storage> {
+impl<S> Frames<S> {
     /// Create a new [Frames] instance.
-    pub fn new(storage: Storage, frames_num: usize) -> Self {
+    pub fn new(storage: S, frames_num: usize) -> Self {
         Self { storage, frames_num }
     }
 
     /// Get the underlining storage.
-    pub fn as_storage(&self) -> &Storage {
+    pub fn as_storage(&self) -> &S {
         &self.storage
     }
 
@@ -133,7 +134,7 @@ impl<Storage> Frames<Storage> {
     }
 
     /// Convert the object into the underlining storage.
-    pub fn into_storage(self) -> Storage {
+    pub fn into_storage(self) -> S {
         self.storage
     }
 
@@ -150,9 +151,10 @@ impl<Storage> Frames<Storage> {
     pub fn y(&self, _: usize) {}
 }
 
-impl<Storage> Frames<Storage>
+impl<S, B> Frames<S>
 where
-    Storage: StackStorage,
+    S: Collection<T = PauliVec<B>>,
+    B: BooleanVector,
 {
     /// Pop the last tracked Pauli frame.
     pub fn pop_frame(&mut self) -> Option<PauliString<PauliTuple>> {
@@ -174,9 +176,9 @@ where
     pub fn measure_and_store(
         &mut self,
         bit: usize,
-        storage: &mut impl StackStorage<BoolVec = Storage::BoolVec>,
-    ) -> Result<(), StoreError<Storage::BoolVec>> {
-        match storage.insert_pauli_stack(bit, self.measure(bit)?) {
+        storage: &mut impl Collection<T = PauliVec<B>>,
+    ) -> Result<(), StoreError<B>> {
+        match storage.insert(bit, self.measure(bit)?) {
             Some(p) => Err(OverwriteStack { bit, stack: p }.into()),
             None => Ok(()),
         }
@@ -186,12 +188,10 @@ where
     /// do [Frames::measure_and_store] for all qubits.
     pub fn measure_and_store_all(
         &mut self,
-        storage: &mut impl StackStorage<BoolVec = Storage::BoolVec>,
+        storage: &mut impl Collection<T = PauliVec<B>>,
     ) {
-        for (bit, pauli) in
-            mem::replace(&mut self.storage, Storage::init(0)).into_iter()
-        {
-            storage.insert_pauli_stack(bit, pauli);
+        for (bit, pauli) in mem::replace(&mut self.storage, S::init(0)).into_iter() {
+            storage.insert(bit, pauli);
         }
     }
 }
@@ -236,23 +236,24 @@ macro_rules! movements {
 
 /// Note that the methods that add or remove memory hold the invariants of Storage's
 /// [StackStorage] implementation.
-impl<Storage> Tracker for Frames<Storage>
+impl<S, B> Tracker for Frames<S>
 where
-    Storage: StackStorage,
+    S: Collection<T = PauliVec<B>>,
+    B: BooleanVector,
 {
-    type Stack = PauliVec<Storage::BoolVec>;
+    type Stack = PauliVec<B>;
     type Pauli = PauliTuple;
 
     fn init(num_qubits: usize) -> Self {
         Self {
-            storage: Storage::init(num_qubits),
+            storage: S::init(num_qubits),
             frames_num: 0,
         }
     }
 
     fn new_qubit(&mut self, qubit: usize) -> Option<usize> {
         self.storage
-            .insert_pauli_stack(qubit, Self::Stack::zeros(self.frames_num))
+            .insert(qubit, Self::Stack::zeros(self.frames_num))
             .map(|_| qubit)
     }
 
@@ -310,11 +311,8 @@ where
         (move_z_to_z, right, right, "Z", "Z")
     );
 
-    fn measure(
-        &mut self,
-        bit: usize,
-    ) -> Result<PauliVec<Storage::BoolVec>, MissingStack> {
-        self.storage.remove_pauli_stack(bit).ok_or(MissingStack { bit })
+    fn measure(&mut self, bit: usize) -> Result<PauliVec<B>, MissingStack> {
+        self.storage.remove(bit).ok_or(MissingStack { bit })
     }
 }
 
@@ -331,14 +329,12 @@ mod tests {
     // #[cfg(feature = "bitvec_simd")]
     mod action_definition_check {
         use super::{
-            super::{
-                storage::*,
-                *,
-            },
+            super::*,
             test,
             *,
         };
         use crate::{
+            collection::BufferedVector,
             pauli::PauliDense,
             tracker::test::impl_utils::{
                 self,
@@ -355,7 +351,7 @@ mod tests {
         // one-qubit and two-qubit actions, it's like a "TwoBitVec"; one could probably
         // implement that in connection with [Pauli]
 
-        type ThisTracker = Frames<Vector<bitvec::vec::BitVec>>;
+        type ThisTracker = Frames<BufferedVector<PauliVec<bitvec::vec::BitVec>>>;
         // type ThisTracker =
         //     Frames<Vector<crate::boolean_vector::bitvec_simd::SimdBitVec>>;
 

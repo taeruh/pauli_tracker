@@ -66,7 +66,11 @@ impl<B: BooleanVector> StackStorage for Vector<B> {
     where
         Self: 'a;
 
-    fn insert_pauli_stack(&mut self, bit: usize, pauli: PauliVec<B>) -> Option<PauliVec<B>> {
+    fn insert_pauli_stack(
+        &mut self,
+        bit: usize,
+        pauli: PauliVec<B>,
+    ) -> Option<PauliVec<B>> {
         let len = self.frames.len();
         match bit.cmp(&len) {
             Ordering::Less => Some(mem::replace(
@@ -84,9 +88,8 @@ impl<B: BooleanVector> StackStorage for Vector<B> {
                 self.frames.try_reserve(diff).unwrap_or_else(|e| {
                     panic!("error when trying to reserve enough memory: {e}")
                 });
-                self.frames.extend(
-                    iter::repeat(PauliVec::<B>::zeros(pauli.left.len())).take(diff),
-                );
+                self.frames
+                    .extend(iter::repeat(PauliVec::<B>::default()).take(diff));
                 self.frames.push(pauli);
                 None
             }
@@ -156,7 +159,10 @@ mod tests {
     use coverage_helper::test;
 
     use super::*;
-    use crate::pauli::{PauliDense, Pauli};
+    use crate::pauli::{
+        Pauli,
+        PauliDense,
+    };
 
     #[test]
     fn remove_and_insert() {
@@ -164,7 +170,10 @@ mod tests {
         let mut pauli = PauliVec::<B>::zeros(2);
         pauli.push(PauliDense::new_x());
         let mut storage = Vector::<B>::init(1);
-        assert_eq!(storage.insert_pauli_stack(0, pauli.clone()), Some(PauliVec::<B>::new()));
+        assert_eq!(
+            storage.insert_pauli_stack(0, pauli.clone()),
+            Some(PauliVec::<B>::new())
+        );
         assert_eq!(storage.insert_pauli_stack(1, pauli.clone()), None);
         assert_eq!(storage.insert_pauli_stack(3, pauli.clone()), None);
         assert!(

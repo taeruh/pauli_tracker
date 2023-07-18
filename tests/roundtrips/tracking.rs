@@ -13,6 +13,7 @@ use pauli_tracker::{
         RandomMeasurementCircuit,
         TrackedCircuit,
     },
+    collection::Collection,
     pauli::{
         tuple::{
             PauliTuple,
@@ -21,13 +22,13 @@ use pauli_tracker::{
             PAULI_Z,
         },
         Pauli,
+        PauliVec,
     },
     tracker::{
         frames::{
-            storage::{
+            dependency_graph::{
+                self,
                 DependencyGraph,
-                Map,
-                StackStorage,
             },
             Frames,
         },
@@ -50,7 +51,7 @@ use proptest::{
 // type BoolVec = pauli_tracker::boolean_vector::bitvec_simd::SimdBitVec;
 pub type BoolVec = bit_vec::BitVec;
 
-pub type Storage = Map<BoolVec>;
+pub type Storage = HashMap<usize, PauliVec<BoolVec>>;
 // type PauliVec = pauli::PauliVec<BoolVec>;
 
 const MAX_INIT: usize = 100;
@@ -88,18 +89,17 @@ fn roundtrip(init: usize, ops: Vec<Operation>) {
     let mut circuit = TrackedCircuit {
         circuit: DummyCircuit {},
         tracker: Frames::<Storage>::init(init),
-        storage: Map::default(),
+        storage: Storage::default(),
     };
     let mut measurements = WhereMeasured(Vec::new());
     generator.apply(&mut circuit, &mut measurements);
     circuit.tracker.measure_and_store_all(&mut circuit.storage);
 
     if !measurements.0.is_empty() {
-        // let graph = analyse::create_dependency_graph(
-        //     <Storage as StackStorage>::iter(&circuit.storage),
-        //     &measurements.0,
-        // );
-        let graph = circuit.storage.create_dependency_graph(&measurements.0);
+        let graph = dependency_graph::create_dependency_graph(
+            <Storage as Collection>::iter(&circuit.storage),
+            &measurements.0,
+        );
         check_graph(&graph, &circuit.storage, &measurements.0).unwrap();
     }
 
