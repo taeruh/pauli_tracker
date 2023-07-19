@@ -69,10 +69,12 @@ pub struct TrackedCircuit<Circuit, Tracker, Storage> {
     /// The underlining circuit (simulator). Should implement [CliffordCircuit]
     pub circuit: Circuit,
     /// The tracker of the Pauli frames. The `ActiveStorage` should implement
-    /// [Collection].
+    /// [Collection] (or at least
+    /// [CollectionRequired](crate::collection::CollectionRequired)).
     pub tracker: Tracker,
-    /// An additional storage which the [Collection]s of the measure qubits. Should
-    /// implement [Collection].
+    /// An additional storage to store measurement results. Should
+    /// implement [Collection] (or at least
+    /// [CollectionRequired](crate::collection::CollectionRequired)).
     pub storage: Storage,
 }
 

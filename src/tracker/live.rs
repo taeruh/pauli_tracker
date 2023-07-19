@@ -18,7 +18,10 @@ use super::{
     Tracker,
 };
 use crate::{
-    collection::Collection,
+    collection::{
+        CollectionRequired,
+        Collection,
+    },
     pauli::Pauli,
 };
 
@@ -55,16 +58,22 @@ impl<S> AsRef<S> for Live<S> {
 
 impl<S, T> Live<S>
 where
+    S: CollectionRequired<T = T>,
+{
+    /// Returns a mutable reference to an element at index. Returns [None] if out of
+    /// bounds.
+    pub fn get_mut(&mut self, bit: usize) -> Option<&mut T> {
+        self.storage.get_mut(bit)
+    }
+}
+
+impl<S, T> Live<S>
+where
     S: Collection<T = T>,
 {
     /// Returns a reference to an element at index. Returns [None] if out of bounds.
     pub fn get(&self, bit: usize) -> Option<&T> {
         self.storage.get(bit)
-    }
-    /// Returns a mutable reference to an element at index. Returns [None] if out of
-    /// bounds.
-    pub fn get_mut(&mut self, bit: usize) -> Option<&mut T> {
-        self.storage.get_mut(bit)
     }
 }
 
@@ -91,7 +100,7 @@ macro_rules! movements {
 /// contain buffer qubits, even though they were not explicitly initialized.
 impl<S, P> Tracker for Live<S>
 where
-    S: Collection<T = P>,
+    S: CollectionRequired<T = P>,
     P: Pauli + Clone,
 {
     type Stack = P;
@@ -139,7 +148,7 @@ where
     }
 
     fn measure(&mut self, bit: usize) -> Result<Self::Stack, MissingStack> {
-        self.get(bit).ok_or(MissingStack { bit }).cloned()
+        self.get_mut(bit).ok_or(MissingStack { bit }).cloned()
     }
 }
 

@@ -6,16 +6,15 @@ use std::{
     iter,
 };
 
-use super::Collection;
+use super::{
+    CollectionRequired,
+    Collection,
+};
 
 pub type Map<T> = HashMap<usize, T>;
 
-impl<T: Default + Clone> Collection for Map<T> {
+impl<T: Default + Clone> CollectionRequired for Map<T> {
     type T = T;
-    type Iter<'l> = iter::Map<
-        hash_map::Iter<'l, usize, T>,
-        fn((&'l usize, &'l T)) -> (usize, &'l T),
-    > where T: 'l;
     type IterMut<'l> = iter::Map<
         hash_map::IterMut<'l, usize, T>,
         fn((&'l usize, &'l mut T)) -> (usize, &'l mut T),
@@ -29,11 +28,6 @@ impl<T: Default + Clone> Collection for Map<T> {
     #[inline]
     fn remove(&mut self, key: usize) -> Option<T> {
         self.remove(&key)
-    }
-
-    #[inline]
-    fn get(&self, key: usize) -> Option<&T> {
-        self.get(&key)
     }
 
     #[inline]
@@ -71,11 +65,6 @@ impl<T: Default + Clone> Collection for Map<T> {
     }
 
     #[inline]
-    fn iter(&self) -> Self::Iter<'_> {
-        self.iter().map(|(&i, p)| (i, p))
-    }
-
-    #[inline]
     fn iter_mut(&mut self) -> Self::IterMut<'_> {
         self.iter_mut().map(|(&i, p)| (i, p))
     }
@@ -86,5 +75,22 @@ impl<T: Default + Clone> Collection for Map<T> {
             ret.insert(i, T::default());
         }
         ret
+    }
+}
+
+impl<T: Default + Clone> Collection for Map<T> {
+    type Iter<'l> = iter::Map<
+        hash_map::Iter<'l, usize, T>,
+        fn((&'l usize, &'l T)) -> (usize, &'l T),
+    > where T: 'l;
+
+    #[inline]
+    fn get(&self, key: usize) -> Option<&T> {
+        self.get(&key)
+    }
+
+    #[inline]
+    fn iter(&self) -> Self::Iter<'_> {
+        self.iter().map(|(&i, p)| (i, p))
     }
 }

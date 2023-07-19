@@ -1,17 +1,11 @@
-pub trait Collection:
-    IntoIterator<Item = (usize, Self::T)> + FromIterator<(usize, Self::T)>
-{
+pub trait CollectionRequired {
     type T: Default + Clone;
-    type Iter<'l>: Iterator<Item = (usize, &'l Self::T)>
-    where
-        Self: 'l;
     type IterMut<'l>: Iterator<Item = (usize, &'l mut Self::T)>
     where
         Self: 'l;
 
     fn insert(&mut self, key: usize, value: Self::T) -> Option<Self::T>;
     fn remove(&mut self, bit: usize) -> Option<Self::T>;
-    fn get(&self, bit: usize) -> Option<&Self::T>;
     fn get_mut(&mut self, bit: usize) -> Option<&mut Self::T>;
     fn get_two_mut(
         &mut self,
@@ -23,16 +17,30 @@ pub trait Collection:
     fn is_empty(&self) -> bool {
         self.len() == 0
     }
-    fn iter(&self) -> Self::Iter<'_>;
     fn iter_mut(&mut self) -> Self::IterMut<'_>;
 
     fn init(num: usize) -> Self;
+}
+
+pub trait Collection:
+    CollectionRequired
+    + IntoIterator<Item = (usize, Self::T)>
+    + FromIterator<(usize, Self::T)>
+{
+    type Iter<'l>: Iterator<Item = (usize, &'l Self::T)>
+    where
+        Self: 'l;
+
+    fn iter(&self) -> Self::Iter<'_>;
+
+    fn get(&self, bit: usize) -> Option<&Self::T>;
 
     fn sort_by_key(&self) -> Vec<(usize, &Self::T)> {
         let mut ret = self.iter().collect::<Vec<(usize, &Self::T)>>();
         ret.sort_by_key(|(i, _)| *i);
         ret
     }
+
     fn into_sorted_by_key(self) -> Vec<(usize, Self::T)>
     where
         Self: Sized,

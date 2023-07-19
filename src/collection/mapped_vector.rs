@@ -19,7 +19,10 @@ use serde::{
     Serialize,
 };
 
-use super::Collection;
+use super::{
+    CollectionRequired,
+    Collection,
+};
 use crate::slice_extension::GetTwoMutSlice;
 
 #[derive(Clone, PartialEq, Eq, Default, Debug)]
@@ -102,9 +105,8 @@ impl<T> IntoIterator for MappedVector<T> {
     }
 }
 
-impl<T: Default + Clone> Collection for MappedVector<T> {
+impl<T: Default + Clone> CollectionRequired for MappedVector<T> {
     type T = T;
-    type Iter<'l> = <&'l Self as IntoIterator>::IntoIter where T: 'l;
     type IterMut<'l> = <&'l mut Self as IntoIterator>::IntoIter where T: 'l;
 
     #[inline]
@@ -130,11 +132,6 @@ impl<T: Default + Clone> Collection for MappedVector<T> {
     }
 
     #[inline]
-    fn get(&self, key: usize) -> Option<&T> {
-        Some(self.frames.index(*self.position.get(&key)?))
-    }
-
-    #[inline]
     fn get_mut(&mut self, key: usize) -> Option<&mut T> {
         Some(self.frames.index_mut(*self.position.get(&key)?))
     }
@@ -155,11 +152,6 @@ impl<T: Default + Clone> Collection for MappedVector<T> {
     }
 
     #[inline]
-    fn iter(&self) -> Self::Iter<'_> {
-        self.into_iter()
-    }
-
-    #[inline]
     fn iter_mut(&mut self) -> Self::IterMut<'_> {
         self.into_iter()
     }
@@ -172,5 +164,19 @@ impl<T: Default + Clone> Collection for MappedVector<T> {
             position,
             inverse_position,
         }
+    }
+}
+
+impl<T: Default + Clone> Collection for MappedVector<T> {
+    type Iter<'l> = <&'l Self as IntoIterator>::IntoIter where T: 'l;
+
+    #[inline]
+    fn get(&self, key: usize) -> Option<&T> {
+        Some(self.frames.index(*self.position.get(&key)?))
+    }
+
+    #[inline]
+    fn iter(&self) -> Self::Iter<'_> {
+        self.into_iter()
     }
 }

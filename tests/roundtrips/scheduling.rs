@@ -294,12 +294,12 @@ fn roundtrip(ops: Vec<Operation>, edges: Edges, num_nodes: usize) {
     }
     assert_eq!(all_results_as_set, merged_results);
 
-    println!("{:?}", _graph);
-    println!("{:?}", _dependency_graph);
-    for r in skipper_results.iter() {
-        println!("{:?}", r);
-    }
-    println!();
+    // println!("{:?}", _graph);
+    // println!("{:?}", _dependency_graph);
+    // for r in skipper_results.iter() {
+    //     println!("{:?}", r);
+    // }
+    // println!();
 
     assert_eq!(
         HashMap::from_iter(

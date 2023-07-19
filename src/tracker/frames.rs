@@ -35,7 +35,10 @@ use super::{
 };
 use crate::{
     boolean_vector::BooleanVector,
-    collection::Collection,
+    collection::{
+        CollectionRequired,
+        Collection,
+    },
     pauli::{
         Pauli,
         PauliStack,
@@ -51,9 +54,12 @@ pub mod dependency_graph;
 ///
 /// The type implements the core functionality to track the Pauli frames through a
 /// Clifford circuit. To be useful, the generic `Storage` type should implement
-/// [Collection]. The explicit storage type should have the [PauliStack]s on it's minor
-/// axis (this is more or less enforced by [Collection]). The module
-/// [collection](crate::collection) provides some compatible storage types.
+/// [Collection] (or at least [CollectionRequired]). The explicit storage type should
+/// have the [PauliStack]s on it's minor axis (this is more or less enforced by
+/// the [collection] traits). The module [collection] provides some
+/// compatible storage types.
+///
+/// [collection]: crate::collection
 #[derive(Clone, Debug, Default)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct Frames<Storage> {
@@ -153,7 +159,7 @@ impl<S> Frames<S> {
 
 impl<S, B> Frames<S>
 where
-    S: Collection<T = PauliStack<B>>,
+    S: CollectionRequired<T = PauliStack<B>>,
     B: BooleanVector,
 {
     /// Pop the last tracked Pauli frame.
@@ -176,19 +182,25 @@ where
     pub fn measure_and_store(
         &mut self,
         bit: usize,
-        storage: &mut impl Collection<T = PauliStack<B>>,
+        storage: &mut impl CollectionRequired<T = PauliStack<B>>,
     ) -> Result<(), StoreError<B>> {
         match storage.insert(bit, self.measure(bit)?) {
             Some(p) => Err(OverwriteStack { bit, stack: p }.into()),
             None => Ok(()),
         }
     }
+}
 
+impl<S, B> Frames<S>
+where
+    S: Collection<T = PauliStack<B>>,
+    B: BooleanVector,
+{
     /// Measure all qubits and put the according stack of Paulis into `storage`, i.e.,
     /// do [Frames::measure_and_store] for all qubits.
     pub fn measure_and_store_all(
         &mut self,
-        storage: &mut impl Collection<T = PauliStack<B>>,
+        storage: &mut impl CollectionRequired<T = PauliStack<B>>,
     ) {
         for (bit, pauli) in mem::replace(&mut self.storage, S::init(0)).into_iter() {
             storage.insert(bit, pauli);
@@ -235,10 +247,10 @@ macro_rules! movements {
 }
 
 /// Note that the methods that add or remove memory hold the invariants of (S)torage's
-/// [Collection] implementation.
+/// [CollectionRequired] implementation.
 impl<S, B> Tracker for Frames<S>
 where
-    S: Collection<T = PauliStack<B>>,
+    S: CollectionRequired<T = PauliStack<B>>,
     B: BooleanVector,
 {
     type Stack = PauliStack<B>;

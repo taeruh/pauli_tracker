@@ -12,7 +12,10 @@ use std::{
     },
 };
 
-use super::Collection;
+use super::{
+    CollectionRequired,
+    Collection,
+};
 use crate::slice_extension::GetTwoMutSlice;
 
 #[derive(Clone, PartialEq, Eq, PartialOrd, Ord, Default, Debug)]
@@ -76,9 +79,8 @@ impl<T> IntoIterator for BufferedVector<T> {
     }
 }
 
-impl<T: Default + Clone> Collection for BufferedVector<T> {
+impl<T: Default + Clone> CollectionRequired for BufferedVector<T> {
     type T = T;
-    type Iter<'l> = <&'l Self as IntoIterator>::IntoIter where T: 'l;
     type IterMut<'l> = <&'l mut Self as IntoIterator>::IntoIter where T: 'l;
 
     fn insert(&mut self, key: usize, value: T) -> Option<T> {
@@ -120,11 +122,6 @@ impl<T: Default + Clone> Collection for BufferedVector<T> {
     }
 
     #[inline(always)]
-    fn get(&self, key: usize) -> Option<&T> {
-        self.0.get(key)
-    }
-
-    #[inline(always)]
     fn get_mut(&mut self, key: usize) -> Option<&mut T> {
         self.0.get_mut(key)
     }
@@ -143,11 +140,6 @@ impl<T: Default + Clone> Collection for BufferedVector<T> {
     }
 
     #[inline(always)]
-    fn iter(&self) -> Self::Iter<'_> {
-        self.into_iter()
-    }
-
-    #[inline(always)]
     fn iter_mut(&mut self) -> Self::IterMut<'_> {
         self.into_iter()
     }
@@ -155,5 +147,19 @@ impl<T: Default + Clone> Collection for BufferedVector<T> {
     #[inline(always)]
     fn init(num_keys: usize) -> Self {
         Self(vec![T::default(); num_keys])
+    }
+}
+
+impl<T: Default + Clone> Collection for BufferedVector<T> {
+    type Iter<'l> = <&'l Self as IntoIterator>::IntoIter where T: 'l;
+
+    #[inline(always)]
+    fn get(&self, key: usize) -> Option<&T> {
+        self.0.get(key)
+    }
+
+    #[inline(always)]
+    fn iter(&self) -> Self::Iter<'_> {
+        self.into_iter()
     }
 }
