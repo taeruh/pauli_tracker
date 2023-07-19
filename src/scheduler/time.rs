@@ -25,7 +25,7 @@ use super::{
 };
 use crate::tracker::frames::dependency_graph::DependencyGraph;
 
-type DepsCounter = HashMap<usize, usize>;
+type DepsCounters = HashMap<usize, usize>;
 type Lookup = Vec<Vec<usize>>;
 
 #[derive(Clone, Debug)]
@@ -48,8 +48,8 @@ pub struct PathGenerator<'l, T /* : Init<I> */> {
     // the set multiple times, therefore we don't want the dependents in there (also it
     // makes the from(DependencyGraph) function and the step function simpler if it is
     // separated)
-    measureable: T,
-    deps: DepsCounter,
+    measurable: T,
+    deps: DepsCounters,
     // it would have been slightly more ergnomic to use use an Rc instead of a reference
     // (no need to keep the actual map in an extra variable), however, this would have
     // been slightly less performant (Rc has an overhead every time it is cloned or
@@ -63,12 +63,16 @@ pub struct PathGenerator<'l, T /* : Init<I> */> {
 }
 
 impl<'l, T> PathGenerator<'l, T> {
-    fn new(measureable: T, deps: DepsCounter, look: &'l Lookup) -> Self {
-        Self { measureable, deps, look }
+    fn new(measureable: T, deps: DepsCounters, look: &'l Lookup) -> Self {
+        Self {
+            measurable: measureable,
+            deps,
+            look,
+        }
     }
 
     pub fn measureable(&self) -> &T {
-        &self.measureable
+        &self.measurable
     }
 
     pub fn has_unmeasureable(&self) -> bool {
@@ -86,8 +90,8 @@ impl<'l, T: Init<usize>> PathGenerator<'l, T> {
 
         if graph.is_empty() {
             return Self {
-                measureable: T::default(),
-                deps: DepsCounter::default(),
+                measurable: T::default(),
+                deps: DepsCounters::default(),
                 look,
             };
         }
@@ -136,98 +140,98 @@ impl<'l, T: Init<usize>> PathGenerator<'l, T> {
         }
 
         let measureable = T::init(measureable);
-        Self { measureable, deps, look }
+        Self {
+            measurable: measureable,
+            deps,
+            look,
+        }
     }
 
-    fn partition(
-        &self,
-        measure_set: &[usize],
-    ) -> Result<Vec<usize>, TimeOrderingViolation> {
-        let mut new_measureable_set =
-            Vec::with_capacity(self.measureable.set().len() - measure_set.len());
+    // check whether the measure_set is really measurable and return the new
+    // measurable set
+    fn partition(&self, measure_set: &[usize]) -> Result<Vec<usize>, NotMeasurable> {
+        let mut new_measurable_set =
+            Vec::with_capacity(self.measurable.set().len() - measure_set.len());
         let mut copy_measure_set = measure_set.to_vec();
-        for e in self.measureable.set().iter() {
+        for e in self.measurable.set().iter() {
             if let Some(p) = copy_measure_set.iter().position(|m| m == e) {
                 copy_measure_set.swap_remove(p);
             } else {
-                new_measureable_set.push(*e);
+                new_measurable_set.push(*e);
             }
         }
         if !copy_measure_set.is_empty() {
-            return Err(TimeOrderingViolation::NotMeasureable(copy_measure_set));
+            return Err(NotMeasurable(copy_measure_set));
         }
-        Ok(new_measureable_set)
+        Ok(new_measurable_set)
     }
 
     // "unchecked" in the sense that it does not check if the measure_set is a subset of
-    // self.measureable and does not overlap with new_measureable_set
+    // self.measurable and does not overlap with new_measurable_set
 
+    // # Panics
+    // Panics if measure_set contains a bit with a dependent that is already resolved.
     fn update_unchecked(
         look: &Lookup, // always self.look; don't use self because of borrow problems
-        deps: &mut DepsCounter, // might be self.deps
+        deps: &mut DepsCounters, // might be self.deps
         measure_set: &[usize],
-        new_measureable_set: &mut Vec<usize>,
-    ) -> Result<(), TimeOrderingViolation> {
+        new_measurable_set: &mut Vec<usize>,
+    ) {
         for measure in measure_set.iter() {
             let dependents = &look[*measure];
             for bit in dependents {
-                let dependency_count = match deps.get_mut(bit) {
-                    Some(s) => s,
-                    None => {
-                        return Err(TimeOrderingViolation::MissingDependent(
-                            *measure, *bit,
-                        ));
-                    }
-                };
+                let dependency_count = deps
+                    .get_mut(bit)
+                    .unwrap_or_else(|| panic!("the {bit} is already resolved"));
                 *dependency_count -= 1;
                 if *dependency_count == 0 {
                     deps.remove(bit)
-                        .expect("bug: we checked it already above with get_mut");
-                    new_measureable_set.push(*bit);
+                        .expect("bug: already checked with the expect above");
+                    new_measurable_set.push(*bit);
                 }
             }
         }
-        Ok(())
     }
 
+    // # Panics
+    // Panics if measure_set is not a subset of self.measureable
     fn focus_unchecked(
         &mut self,
         measure_set: &[usize],
         mut new_measureable_set: Vec<usize>,
-    ) -> Result<Self, TimeOrderingViolation> {
+    ) -> Self {
         let mut deps = self.deps.clone();
         Self::update_unchecked(
             self.look,
             &mut deps,
             measure_set,
             &mut new_measureable_set,
-        )?;
-        Ok(Self::new(T::init(new_measureable_set), deps, self.look))
+        );
+        Self::new(T::init(new_measureable_set), deps, self.look)
     }
 }
 
 impl<T: Init<usize>> Focus<&[usize]> for PathGenerator<'_, T> {
-    type Error = TimeOrderingViolation;
+    type Error = NotMeasurable;
 
-    fn focus(&mut self, measure_set: &[usize]) -> Result<Self, TimeOrderingViolation>
+    fn focus(&mut self, measure_set: &[usize]) -> Result<Self, NotMeasurable>
     where
         Self: Sized,
     {
-        self.focus_unchecked(measure_set, self.partition(measure_set)?)
+        // self.partition already ensures the input is okay
+        Ok(self.focus_unchecked(measure_set, self.partition(measure_set)?))
     }
 
-    fn focus_inplace(
-        &mut self,
-        measure_set: &[usize],
-    ) -> Result<(), TimeOrderingViolation> {
+    fn focus_inplace(&mut self, measure_set: &[usize]) -> Result<(), NotMeasurable> {
         let mut new_measureable_set = self.partition(measure_set)?;
+        // self.partition already catches ensures the input is okay
         Self::update_unchecked(
             self.look,
             &mut self.deps,
             measure_set,
             &mut new_measureable_set,
-        )?;
-        self.measureable = T::init(new_measureable_set);
+        );
+        self.measurable = T::init(new_measureable_set);
         Ok(())
     }
 }
@@ -240,23 +244,17 @@ impl FocusIterator for PathGenerator<'_, Partitioner> {
     where
         Self: Sized,
     {
-        let (measuring, new_measureable_set) = self.measureable.next()?;
+        let (measuring, new_measurable_set) = self.measurable.next()?;
         Some((
-            // we know that the input is fine, because it comes from
-            // self.measureable.next()
-            self.focus_unchecked(&measuring, new_measureable_set).expect(
-                "bug: the only way to change self in the API is through this function \
-                 here (the pointee behind self.look is already through the borrow \
-                 checker system locked since we take a mut ref to when creating a \
-                 TimeOrdering in from_dependency_graph, and additionally through the \
-                 type system ), so we know that all should be fine",
-            ),
+            // we know that the input is fine, because it is a partition of
+            // self.measurable
+            self.focus_unchecked(&measuring, new_measurable_set),
             measuring,
         ))
     }
 
     fn at_leaf(&self) -> Option<Self::LeafItem> {
-        self.measureable.set.is_empty().then_some(())
+        self.measurable.set.is_empty().then_some(())
     }
 }
 
@@ -307,31 +305,15 @@ impl<T: Clone> Init<T> for Partition<Vec<T>> {
 
 #[derive(Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-pub enum TimeOrderingViolation {
-    // with the current API, this error can actually never happen
-    MissingDependent(usize, usize),
-    NotMeasureable(Vec<usize>),
-}
+pub struct NotMeasurable(Vec<usize>);
 
-impl Display for TimeOrderingViolation {
+impl Display for NotMeasurable {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            TimeOrderingViolation::MissingDependent(measure, dependent) => {
-                write!(
-                    f,
-                    "missing dependent ({dependent}) for bit {measure} is missing; \
-                     this likely happended because the bit {measure} is measured \
-                     multiple times",
-                )
-            }
-            TimeOrderingViolation::NotMeasureable(set) => {
-                write!(f, "the bits {set:?} are not in the measureable set",)
-            }
-        }
+        write!(f, "the bits {:?} are not in the measureable set", self.0)
     }
 }
 
-impl Error for TimeOrderingViolation {}
+impl Error for NotMeasurable {}
 
 #[cfg(test)]
 pub(crate) mod tests {
@@ -452,21 +434,18 @@ pub(crate) mod tests {
             Some(&map),
         );
 
-        assert_eq!(
-            time.focus_inplace(&[5]).unwrap_err(),
-            TimeOrderingViolation::NotMeasureable(vec![5])
-        );
+        assert_eq!(time.focus_inplace(&[5]).unwrap_err(), NotMeasurable(vec![5]));
 
         assert_eq!(
             time.focus_inplace(&[map[&8]]).unwrap_err(),
-            TimeOrderingViolation::NotMeasureable(vec![map[&8]])
+            NotMeasurable(vec![map[&8]])
         );
 
         time.focus_inplace(&[map[&5]]).unwrap();
 
         assert_eq!(
             time.focus_inplace(&[map[&5]]).unwrap_err(),
-            TimeOrderingViolation::NotMeasureable(vec![map[&5]])
+            NotMeasurable(vec![map[&5]])
         );
     }
 }

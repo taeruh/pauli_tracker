@@ -16,7 +16,7 @@ use self::{
     time::{
         Init,
         PathGenerator,
-        TimeOrderingViolation,
+        NotMeasurable,
     },
     tree::{
         Focus,
@@ -104,7 +104,7 @@ impl FocusIterator for Scheduler<'_, Partition<Vec<usize>>> {
 
 #[derive(Debug, Clone)]
 pub enum InstructionError {
-    TimeOrderingViolation(TimeOrderingViolation),
+    TimeOrderingViolation(NotMeasurable),
     AlreadyMeasured(AlreadyMeasured),
 }
 impl Display for InstructionError {
@@ -120,8 +120,8 @@ impl Display for InstructionError {
     }
 }
 impl std::error::Error for InstructionError {}
-impl From<TimeOrderingViolation> for InstructionError {
-    fn from(error: TimeOrderingViolation) -> Self {
+impl From<NotMeasurable> for InstructionError {
+    fn from(error: NotMeasurable) -> Self {
         Self::TimeOrderingViolation(error)
     }
 }
