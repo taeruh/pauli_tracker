@@ -72,7 +72,7 @@ requires the [rand](https://crates.io/crates/rand) crate.
 # #[cfg_attr(coverage_nightly, no_coverage)]
 # // "circuit" instead of "rand" because we do not export the "rand" feature, since we
 # // use it as dep:rand
-# #[cfg(feature = "circuit")]
+# #[cfg(feature = "circuit")] // we need it to activate the "rand" dep
 # fn main() {
 # #[rustfmt::skip]
 use pauli_tracker::{
@@ -172,25 +172,24 @@ assert_eq!(**tracker.as_ref(), conditional_summed_frames, "{measurements:?}");
 ### The dependency graph
 This example introduces the
 [create_dependency_graph](tracker::frames::dependency_graph::create_dependency_graph)
-function that can be used to analyse measurement dependencies. The example requires
-the "graph" feature.
+function that can be used to analyse measurement dependencies.
 ```
 # #[cfg_attr(coverage_nightly, no_coverage)]
-# #[cfg(feature = "graph")]
 # fn main() {
 # #[rustfmt::skip]
 use pauli_tracker::{
-    collection::BufferedVector,
+    collection::{BufferedVector, Collection},
     pauli::{self, Pauli},
-    tracker::{Tracker, frames::{Frames, dependency_graph}},
+    tracker::{Tracker, frames::{self, dependency_graph}},
 };
 type BoolVec = Vec<bool>;
-// we want a fixed order in our storage for this test, so we use Vector and not Map
 type PauliStack = pauli::PauliStack<BoolVec>;
+// we want a fixed order in our storage for this test, so we use Vector and not Map
 type Storage = BufferedVector<PauliStack>;
+type Frames = frames::Frames<Storage>;
 
 // let's consider the following tracking pattern
-let mut tracker = Frames::<Storage>::init(6);
+let mut tracker = Frames::init(6);
 
 tracker.track_x(0); // frame (0)
 tracker.cx(0, 1);
@@ -205,9 +204,9 @@ tracker.cz(3, 2);
 
 // check its output
 assert_eq!(
-    tracker.as_storage().into_sorted_by_key(),
+    tracker.as_storage().sort_by_key(),
     vec![
-        // tableau representation:    X      Z    ; the columns are the frames
+        // tableau representation:      X      Z   (the columns are the frames)
         (0, &PauliStack::try_from_str("100", "000").unwrap()),
         (1, &PauliStack::try_from_str("111", "100").unwrap()),
         (2, &PauliStack::try_from_str("010", "110").unwrap()),
@@ -244,9 +243,6 @@ assert_eq!(
     ]
 );
 # }
-# #[cfg_attr(coverage_nightly, no_coverage)]
-# #[cfg(not(feature = "graph"))]
-# fn main() {}
 // - in layer 0, there are no Paulis before the measurements, i.e., we have no
 //   dependecies; the qubits in layer 1 depend only on outcomes of qubits in layer 0;
 //   the qubits in layer 2 depend only on qubits in layer 0, ..., 1; and so on
@@ -265,18 +261,17 @@ Check out this [paper] (specifically Fig. (6) and Fig. (12)) to see how the Toff
 can be decomposed into Clifford + T gates and how T gates can be teleported.
 
 We use the [circuit] module and [bit_vec::BitVec], i.e., the example requires the
-features "circuit", "graph" and "bit-vec", as well as a dependency on the bit_vec crate.
+features "circuit" and "bit-vec", as well as a dependency on the bit_vec crate.
 ```
 # #[cfg_attr(coverage_nightly, no_coverage)]
-# #[cfg(all(feature = "circuit", feature = "graph", feature = "bit-vec"))]
+# #[cfg(all(feature = "circuit", feature = "bit-vec"))]
 # fn main() {
 # #[rustfmt::skip]
 use pauli_tracker::{
-    analyse,
     circuit::{CliffordCircuit, DummyCircuit, TrackedCircuit},
-    collection::{Map, BufferedVector},
+    collection::{Map, BufferedVector, Collection},
     pauli::{self, Pauli},
-    tracker::{Tracker, frames},
+    tracker::{Tracker, frames::{self, dependency_graph}},
 };
 
 type BoolVec = bit_vec::BitVec;
@@ -370,15 +365,15 @@ assert_eq!(
 circ.measure_and_store_all();
 // to make the assert work we need a storage with an determinitic iterator; you probably
 // don't need to do this in a real application
-let storage = Vector {
-    frames: circ.storage.into_sorted_by_key()
+let storage = BufferedVector(
+    circ.storage.into_sorted_by_key()
     .into_iter()
     .map(|(_, stack)| stack)
     .collect()
-};
+);
 // now the graph:
 assert_eq!(
-    analyse::create_dependency_graph(storage.iter(), &map),
+    dependency_graph::create_dependency_graph(storage.iter(), &map),
     vec![
         vec![(0, vec![]), (1, vec![]), (2, vec![])],
         vec![(5, vec![2]), (4, vec![1, 2])],
@@ -389,7 +384,7 @@ assert_eq!(
 );
 # }
 # #[cfg_attr(coverage_nightly, no_coverage)]
-# #[cfg(not(all(feature = "circuit", feature = "graph", feature = "bit-vec")))]
+# #[cfg(not(all(feature = "circuit", feature = "bit-vec")))]
 # fn main() {}
 ```
 As noted in the code above, our teleported T gate is a little bit naive. When looking
