@@ -6,7 +6,6 @@ use std::{
     collections::HashMap,
     error::Error,
     fmt::Display,
-    mem,
 };
 
 #[cfg(feature = "serde")]
@@ -17,8 +16,8 @@ use serde::{
 
 use super::tree::Focus;
 
-type Node = (State, Vec<usize>);
-type Nodes = Vec<Node>;
+type Node<'l> = (State, &'l Vec<usize>);
+type Nodes<'l> = Vec<Node<'l>>;
 
 #[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Default, Debug)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
@@ -29,10 +28,15 @@ pub enum State {
     Measured,
 }
 
+#[derive(Clone, Debug)]
+pub struct GraphBuffer {
+    inner: Vec<Vec<usize>>,
+}
+
 #[derive(Clone, PartialEq, Eq, Default, Debug)]
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-pub struct Graph {
-    nodes: Nodes,
+// #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+pub struct Graph<'l> {
+    nodes: Nodes<'l>,
     current_memory: usize,
     max_memory: usize,
 }
@@ -43,34 +47,89 @@ pub struct Graph {
 // optimizations))?
 
 macro_rules! new_loop {
-    ($nodes:expr, $edges:expr, $bit_mapping:expr, $check:tt) => {
+    ($inner:expr, $edges:expr, $bit_mapping:expr, $check:tt) => {
         if let Some(bit_mapping) = $bit_mapping {
             for (left, right) in $edges.iter() {
                 let left = *update!(left, bit_mapping);
                 let right = *update!(right, bit_mapping);
-                new_body!(left, right, $nodes, $check);
+                new_body!(left, right, $inner, $check);
             }
         } else {
             for (left, right) in $edges.iter() {
-                new_body!(*left, *right, $nodes, $check);
+                new_body!(*left, *right, $inner, $check);
             }
         }
     };
 }
 macro_rules! new_body {
-    ($left:expr, $right:expr, $nodes:expr,checked) => {
+    ($left:expr, $right:expr, $inner:expr,checked) => {
         if $left == $right {
             continue;
         }
-        if $nodes[$left].1.contains(&$right) {
+        if $inner[$left].contains(&$right) {
             continue;
         }
-        new_body!($left, $right, $nodes, unchecked);
+        new_body!($left, $right, $inner, unchecked);
     };
-    ($left:expr, $right:expr, $nodes:expr,unchecked) => {
-        $nodes[$left].1.push($right);
-        $nodes[$right].1.push($left);
+    ($left:expr, $right:expr, $inner:expr,unchecked) => {
+        $inner[$left].push($right);
+        $inner[$right].push($left);
     };
+}
+
+impl GraphBuffer {
+    pub fn new(
+        edges: &[(usize, usize)],
+        num_bits: usize,
+        bit_mapping: Option<&HashMap<usize, usize>>,
+        check_duplicates: bool,
+    ) -> Self {
+        let mut inner = vec![Vec::new(); num_bits];
+        if check_duplicates {
+            new_loop!(inner, edges, bit_mapping, checked);
+        } else {
+            new_loop!(inner, edges, bit_mapping, unchecked);
+        }
+        Self { inner }
+    }
+}
+
+impl<'l> Graph<'l> {
+    pub fn new(graph_buffer: &'l GraphBuffer) -> Self {
+        Self {
+            nodes: graph_buffer
+                .inner
+                .iter()
+                .map(|neighbors| (State::Sleeping, neighbors))
+                .collect(),
+            current_memory: 0,
+            max_memory: 0,
+        }
+    }
+
+    pub fn nodes(&self) -> &[Node] {
+        &self.nodes
+    }
+
+    pub fn current_memory(&self) -> usize {
+        self.current_memory
+    }
+
+    pub fn max_memory(&self) -> usize {
+        self.max_memory
+    }
+
+    #[inline]
+    fn initialize(&mut self, bit: usize) {
+        match &mut self.nodes[bit].0 {
+            state @ State::Sleeping => {
+                *state = State::InMemory;
+                self.current_memory += 1;
+            }
+            State::InMemory => (),
+            State::Measured => {}
+        }
+    }
 }
 
 macro_rules! impl_measure {
@@ -79,7 +138,8 @@ macro_rules! impl_measure {
             let node = &mut self.nodes[bit];
             match node.0 {
                 State::Sleeping => {
-                    self.current_memory += 1; // corrected later on in self.update_memory
+                    // corrected later on in self.update_memory
+                    self.current_memory += 1;
                     node.0 = State::Measured;
                 }
                 State::InMemory => node.0 = State::Measured,
@@ -87,11 +147,9 @@ macro_rules! impl_measure {
                     return return_error!($check, bit);
                 }
             }
-            let neighbors = mem::take(&mut node.1);
-            for neighbor in neighbors.iter() {
+            for neighbor in node.1.iter() {
                 self.initialize(*neighbor);
             }
-            let _ = mem::replace(&mut self.nodes[bit].1, neighbors);
             return_ok!($check)
         }
     };
@@ -121,52 +179,7 @@ macro_rules! return_ok {
     };
 }
 
-impl Graph {
-    pub fn new(
-        num_bits: usize,
-        edges: &[(usize, usize)],
-        bit_mapping: Option<&HashMap<usize, usize>>,
-        check_duplicates: bool,
-    ) -> Self {
-        let mut nodes = vec![Node::default(); num_bits];
-
-        if check_duplicates {
-            new_loop!(nodes, edges, bit_mapping, checked);
-        } else {
-            new_loop!(nodes, edges, bit_mapping, unchecked);
-        }
-
-        Self {
-            nodes,
-            current_memory: 0,
-            max_memory: 0,
-        }
-    }
-
-    pub fn nodes(&self) -> &[Node] {
-        &self.nodes
-    }
-
-    pub fn current_memory(&self) -> usize {
-        self.current_memory
-    }
-
-    pub fn max_memory(&self) -> usize {
-        self.max_memory
-    }
-
-    #[inline]
-    fn initialize(&mut self, bit: usize) {
-        match &mut self.nodes[bit].0 {
-            state @ State::Sleeping => {
-                *state = State::InMemory;
-                self.current_memory += 1;
-            }
-            State::InMemory => (),
-            State::Measured => {}
-        }
-    }
-
+impl<'l> Graph<'l> {
     impl_measure!(measure, checked);
 
     fn update_memory(&mut self, len: usize) {
@@ -177,7 +190,7 @@ impl Graph {
     }
 }
 
-impl Focus<&[usize]> for Graph {
+impl<'l> Focus<&[usize]> for Graph<'l> {
     type Error = AlreadyMeasured;
     fn focus(&mut self, instruction: &[usize]) -> Result<Self, Self::Error>
     where
@@ -197,16 +210,14 @@ impl Focus<&[usize]> for Graph {
 }
 
 #[cfg(any(not(debug_assertions), rust_analyzer))]
-impl Graph {
+impl<'l> Graph<'l> {
     impl_measure!(measure_unchecked, unchecked);
-
     pub(super) fn focus_inplace_unchecked(&mut self, measure_set: &[usize]) {
         for bit in measure_set {
             self.measure_unchecked(*bit);
         }
         self.update_memory(measure_set.len());
     }
-
     pub(super) fn focus_unchecked(&self, measure_set: &[usize]) -> Self {
         let mut new = self.clone();
         new.focus_inplace_unchecked(measure_set);
@@ -243,33 +254,34 @@ pub(crate) mod tests {
     const GMW: [(usize, usize); 6] = [(0, 1), (0, 2), (0, 1), (1, 3), (3, 2), (2, 2)];
 
     #[cfg_attr(coverage_nightly, no_coverage)]
-    pub fn example_graph() -> Graph {
+    pub fn example_graph() -> GraphBuffer {
         //     1
         //   /  \
         // 0     3
         //   \  /
         //     2
-        Graph::new(5, &GM, None, false)
+        GraphBuffer::new(&GM, 5, None, false)
     }
 
     #[test]
     fn creation() {
         let mp = HashMap::from([(8, 0), (5, 2)]);
-        let graph = Graph::new(NUM, &GN, Some(&mp), false);
-        let mapped = Graph::new(NUM, &GM, None, false);
-        let graph_checked = Graph::new(NUM, &GNW, Some(&mp), true);
-        let mapped_checked = Graph::new(NUM, &GMW, None, true);
-        assert_eq!(graph, mapped);
-        assert_eq!(graph, graph_checked);
-        assert_eq!(graph, mapped_checked);
+        let graph_buffer = GraphBuffer::new(&GN, NUM, Some(&mp), false);
+        let mapped_buffer = GraphBuffer::new(&GM, NUM, None, false);
+        let graph_checked_buffer = GraphBuffer::new(&GNW, NUM, Some(&mp), true);
+        let mapped_checked_buffer = GraphBuffer::new(&GMW, NUM, None, true);
+        let graph = Graph::new(&graph_buffer);
+        assert_eq!(graph, Graph::new(&mapped_buffer));
+        assert_eq!(graph, Graph::new(&graph_checked_buffer));
+        assert_eq!(graph, Graph::new(&mapped_checked_buffer));
         assert_eq!(
             graph,
             Graph {
                 nodes: vec![
-                    (Sleeping, vec![1, 2]),
-                    (Sleeping, vec![0, 3]),
-                    (Sleeping, vec![0, 3]),
-                    (Sleeping, vec![1, 2]),
+                    (Sleeping, &vec![1, 2]),
+                    (Sleeping, &vec![0, 3]),
+                    (Sleeping, &vec![0, 3]),
+                    (Sleeping, &vec![1, 2]),
                 ],
                 current_memory: 0,
                 max_memory: 0,
@@ -279,7 +291,8 @@ pub(crate) mod tests {
 
     #[test]
     fn updating() {
-        let init_graph = example_graph();
+        let init_buffer = example_graph();
+        let init_graph = Graph::new(&init_buffer);
         let mut graph = init_graph.clone();
         let new = graph.focus(&[2, 3]).unwrap();
         graph.focus_inplace(&[2, 3]).unwrap();

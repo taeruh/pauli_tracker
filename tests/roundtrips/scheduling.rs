@@ -4,6 +4,7 @@ use std::{
         HashSet,
     },
     mem,
+    thread,
 };
 
 use pauli_tracker::{
@@ -13,7 +14,10 @@ use pauli_tracker::{
     },
     collection::Collection,
     scheduler::{
-        space::Graph,
+        space::{
+            Graph,
+            GraphBuffer,
+        },
         time::{
             LookupBuffer,
             Partitioner,
@@ -140,7 +144,8 @@ fn roundtrip(ops: Vec<Operation>, edges: Edges, num_nodes: usize) {
         &mut buffer,
         None,
     );
-    let graph = Graph::new(num_nodes, &edges, None, true);
+    let graph_buffer = GraphBuffer::new(&edges, num_nodes, None, true);
+    let graph = Graph::new(&graph_buffer);
     #[allow(clippy::redundant_clone)]
     let _graph = graph.clone();
 
@@ -208,9 +213,9 @@ fn roundtrip(ops: Vec<Operation>, edges: Edges, num_nodes: usize) {
 
     let splitted_instructions = split_instructions(path_generator, 4);
 
-    struct InstructedSweep<I: Iterator<Item = TimeStep>> {
-        current: Graph,
-        stack: Vec<Graph>,
+    struct InstructedSweep<'l, I: Iterator<Item = TimeStep>> {
+        current: Graph<'l>,
+        stack: Vec<Graph<'l>>,
         instructions: I,
     }
     fn into_instructed_iterator<T: IntoIterator<Item = TimeStep>>(
@@ -227,7 +232,7 @@ fn roundtrip(ops: Vec<Operation>, edges: Edges, num_nodes: usize) {
         Mess(Vec<usize>),
         Mem(Option<usize>),
     }
-    impl<T: Iterator<Item = TimeStep>> Iterator for InstructedSweep<T> {
+    impl<'l, T: Iterator<Item = TimeStep>> Iterator for InstructedSweep<'l, T> {
         type Item = Next;
         fn next(&mut self) -> Option<Self::Item> {
             match self.instructions.next()? {
@@ -245,37 +250,40 @@ fn roundtrip(ops: Vec<Operation>, edges: Edges, num_nodes: usize) {
         }
     }
 
-    let mut splitted_results = Vec::new();
+    let merged_results = thread::scope(move |s| {
+        let mut splitted_results = Vec::new();
 
-    for split in splitted_instructions {
-        let graph = graph.clone();
-        splitted_results.push(std::thread::spawn(move || {
-            // println!("{:?}", split.len());
-            let mut path = Vec::new();
-            let mut results = Vec::new();
-            for step in into_instructed_iterator(graph, split) {
-                match step {
-                    Next::Mess(mess) => {
-                        path.push(mess);
-                    }
-                    Next::Mem(mem) => {
-                        if let Some(mem) = mem {
-                            results.push((path.len(), mem, path.clone()));
+        for split in splitted_instructions {
+            let graph = graph.clone();
+            splitted_results.push(s.spawn(move || {
+                // println!("{:?}", split.len());
+                let mut path = Vec::new();
+                let mut results = Vec::new();
+                for step in into_instructed_iterator(graph, split) {
+                    match step {
+                        Next::Mess(mess) => {
+                            path.push(mess);
                         }
-                        path.pop();
+                        Next::Mem(mem) => {
+                            if let Some(mem) = mem {
+                                results.push((path.len(), mem, path.clone()));
+                            }
+                            path.pop();
+                        }
                     }
                 }
-            }
-            results
-        }));
-    }
-
-    let mut merged_results = HashSet::new();
-    for result in splitted_results {
-        for r in result.join().unwrap() {
-            assert!(merged_results.insert(r));
+                results
+            }));
         }
-    }
+
+        let mut merged_results = HashSet::new();
+        for result in splitted_results {
+            for r in result.join().unwrap() {
+                assert!(merged_results.insert(r));
+            }
+        }
+        merged_results
+    });
 
     // cannot not directly use a HashSet above, because than the optimal_paths are not
     // deterministic; we don't use HashSet::from_iter, because we want to additionally
@@ -286,12 +294,12 @@ fn roundtrip(ops: Vec<Operation>, edges: Edges, num_nodes: usize) {
     }
     assert_eq!(all_results_as_set, merged_results);
 
-    // println!("{:?}", _graph);
-    // println!("{:?}", _dependency_graph);
-    // for r in skipper_results.iter() {
-    //     println!("{:?}", r);
-    // }
-    // println!();
+    println!("{:?}", _graph);
+    println!("{:?}", _dependency_graph);
+    for r in skipper_results.iter() {
+        println!("{:?}", r);
+    }
+    println!();
 
     assert_eq!(
         HashMap::from_iter(

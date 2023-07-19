@@ -40,11 +40,11 @@ pub mod tree;
 #[derive(Clone, Debug)]
 pub struct Scheduler<'l, T> {
     time: PathGenerator<'l, T>,
-    space: Graph,
+    space: Graph<'l>,
 }
 
 impl<'l, T> Scheduler<'l, T> {
-    pub fn new(time: PathGenerator<'l, T>, space: Graph) -> Self {
+    pub fn new(time: PathGenerator<'l, T>, space: Graph<'l>) -> Self {
         Self { time, space }
     }
 
@@ -174,14 +174,15 @@ mod tests {
         // 0 --- 3 --- 2
         //  \
         //    -- 1
-        let graph = space::tests::example_graph();
+        let graph_buffer = space::tests::example_graph();
         let ordering = time::tests::example_ordering();
         let num = 4;
         let max = 4;
 
-        let mut buffer = LookupBuffer::new(num);
+        let mut lookup_buffer = LookupBuffer::new(num);
+        let graph = Graph::new(&graph_buffer);
         let scheduler = Scheduler::new(
-            PathGenerator::from_dependency_graph(ordering, &mut buffer, None),
+            PathGenerator::from_dependency_graph(ordering, &mut lookup_buffer, None),
             graph,
         );
 

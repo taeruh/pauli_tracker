@@ -83,10 +83,10 @@ impl<'l, T> PathGenerator<'l, T> {
 impl<'l, T: Init<usize>> PathGenerator<'l, T> {
     pub fn from_dependency_graph(
         mut graph: DependencyGraph,
-        look: &'l mut LookupBuffer,
+        lookup: &'l mut LookupBuffer,
         bit_mapping: Option<&HashMap<usize, usize>>,
     ) -> Self {
-        let look = &mut look.look;
+        let look = &mut lookup.look;
 
         if graph.is_empty() {
             return Self {
