@@ -1,7 +1,7 @@
 // lints and similar
 #![deny(unsafe_op_in_unsafe_fn)]
-#![warn(missing_docs)]
-#![warn(missing_debug_implementations)]
+// #![warn(missing_docs)]
+// #![warn(missing_debug_implementations)]
 //
 // (nightly) features, only for development
 #![cfg_attr(docsrs, feature(doc_cfg))]
@@ -171,7 +171,7 @@ assert_eq!(**tracker.as_ref(), conditional_summed_frames, "{measurements:?}");
 
 ### The dependency graph
 This example introduces the
-[create_dependency_graph](tracker::frames::storage::StackStorage::create_dependency_graph)
+[create_dependency_graph](tracker::frames::dependency_graph::create_dependency_graph)
 function that can be used to analyse measurement dependencies. The example requires
 the "graph" feature.
 ```
@@ -523,7 +523,6 @@ pub mod collection;
 
 // #[cfg(feature = "experimental")]
 // #[cfg_attr(docsrs, doc(cfg(feature = "experimental")))]
-#[allow(missing_docs, missing_debug_implementations)]
 #[cfg(feature = "scheduler")]
 #[cfg_attr(docsrs, doc(cfg(feature = "scheduler")))]
 pub mod scheduler;

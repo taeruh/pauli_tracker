@@ -1,6 +1,7 @@
 /*!
 This module defines a common interface [BooleanVector] over boolean storage types that
-we use in [frames](crate::tracker::frames) and for [PauliVec](crate::pauli::PauliVec).
+we use in [frames](crate::tracker::frames) and for
+[PauliStack](crate::pauli::PauliStack).
 
 We provide optional implementations for the foreign types
 [bitvec::vec::BitVec](https://docs.rs/bitvec/latest/bitvec/vec/struct.BitVec.html),
@@ -29,16 +30,12 @@ macro_rules! inplace {
     )*}
 }
 
-/// This trait defines the interface that we require for storage types of boolean
-/// values in [storage].
+/// This trait defines the interface that we effectively require for the inner types of
+/// [PauliStack](crate::pauli::PauliStack).
 ///
 /// It is basically an interface that can be easily fullfilled by types like
-/// [Vec]<[bool]>, "bit-vectors" or similar structures. Types that implement the trait,
-/// can be used as generic parameter for the provided storage types in [storage].
-/// Depending on the context, we use true/false or 1/0 to when talking about the
-/// elements of the vector.
-///
-/// [storage]: crate::tracker::frames::storage
+/// [Vec]<[bool]>, "bit-vectors" or similar structures. Depending on the context, we use
+/// true/false or 1/0 to when talking about the elements of the vector.
 pub trait BooleanVector:
     Default + Clone + FromIterator<bool> + IntoIterator<Item = bool> + Debug
 {

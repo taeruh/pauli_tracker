@@ -38,8 +38,8 @@ use crate::{
     collection::Collection,
     pauli::{
         Pauli,
-        PauliTuple,
         PauliStack,
+        PauliTuple,
     },
 };
 
@@ -47,13 +47,13 @@ use crate::{
 pub mod dependency_graph;
 
 /// A container of multiple Pauli frames, using a generic `Storage` type  as internal
-/// storage, that implemenst [Tracker].
+/// storage, that implements [Tracker].
 ///
 /// The type implements the core functionality to track the Pauli frames through a
 /// Clifford circuit. To be useful, the generic `Storage` type should implement
-/// [StackStorage]. The explicit storage type should have the [PauliVec]s on it's minor
-/// axis (this is more or less enforced by [StackStorage]). The module [storage]
-/// provides some compatible storage types.
+/// [Collection]. The explicit storage type should have the [PauliStack]s on it's minor
+/// axis (this is more or less enforced by [Collection]). The module
+/// [collection](crate::collection) provides some compatible storage types.
 #[derive(Clone, Debug, Default)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct Frames<Storage> {
@@ -234,8 +234,8 @@ macro_rules! movements {
     )*}
 }
 
-/// Note that the methods that add or remove memory hold the invariants of Storage's
-/// [StackStorage] implementation.
+/// Note that the methods that add or remove memory hold the invariants of (S)torage's
+/// [Collection] implementation.
 impl<S, B> Tracker for Frames<S>
 where
     S: Collection<T = PauliStack<B>>,

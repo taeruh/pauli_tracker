@@ -31,7 +31,6 @@ macro_rules! plus {
     )*};
 }
 
-#[allow(missing_docs)]
 pub trait Pauli {
     const_pauli!(I, X, Y, Z,);
 

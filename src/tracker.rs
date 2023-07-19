@@ -25,11 +25,9 @@ use crate::pauli::Pauli;
 ///
 /// The `usize` element is the qubit index of the `Pauli` However, importantly note,
 /// that it is not optimal to build arrays with PauliStrings on the minor access. The
-/// library is build to use implementors of [StackStorage], which should have
-/// [PauliVec](crate::pauli::PauliVec)s on the minor array axis, as workhorses. This
-/// vector should be mainly used to analyze single Pauli strings.
-///
-/// [StackStorage]: frames::storage::StackStorage
+/// library is build to use implementors of [Collection](crate::collection::Collection),
+/// which should have [PauliStack](crate::pauli::PauliStack)s on the minor array axis,
+/// as workhorses. This vector should be mainly used to analyze single Pauli strings.
 pub type PauliString<T> = Vec<(usize, T)>;
 
 /// The Error when we try to [measure](Tracker::measure) a missing qubit.

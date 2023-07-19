@@ -1,3 +1,8 @@
+/*!
+The main content of this module is the [create_dependency_graph] function that can be
+used to define a time ordering induced by the tracked frames.
+*/
+
 use crate::{
     boolean_vector::BooleanVector,
     pauli::PauliStack,
@@ -9,10 +14,10 @@ use crate::{
 /// qubit depends.
 pub type DependencyGraph = Vec<Vec<(usize, Vec<usize>)>>;
 
-/// Sort the `storage` according to the induced dependencies by the frames (row through
-/// the PauliVecs). Each frame in `storage` maps to a qubit number in `map`; frame (i)
-/// -> `map`\[i\]. If a qubit's Pauli stack has non-zero elements in a frame (i), the
-/// qubit is assumed to depend on `map`\[i\]
+/// Sort the `storage`'s qubits according to the induced dependencies by the frames (row
+/// through the PauliStacks). Each frame in `storage` maps to a qubit number in `map`;
+/// frame (i) -> `map`\[i\]. If a qubit's Pauli stack has non-zero elements in a frame
+/// (i), the qubit is assumed to depend on `map`\[i\]
 ///
 /// Dependencies that are already covered by later dependencies, i.e., dependencies that
 /// are in a higher layer, are removed. For example if 0 depends on 1 and 2 but 1 also
@@ -34,14 +39,12 @@ pub type DependencyGraph = Vec<Vec<(usize, Vec<usize>)>>;
 ///     pauli::PauliStack,
 ///     tracker::frames::dependency_graph::create_dependency_graph,
 /// };
-/// let storage = BufferedVector(
-///     vec![
-///         PauliStack::<Vec<bool>>::try_from_str("", "").unwrap(),
-///         PauliStack::<Vec<bool>>::try_from_str("10", "00").unwrap(),
-///         PauliStack::<Vec<bool>>::try_from_str("01", "10").unwrap(),
-///         PauliStack::<Vec<bool>>::try_from_str("1", "0").unwrap(),
-///     ],
-/// );
+/// let storage = BufferedVector(vec![
+///     PauliStack::<Vec<bool>>::try_from_str("", "").unwrap(),
+///     PauliStack::<Vec<bool>>::try_from_str("10", "00").unwrap(),
+///     PauliStack::<Vec<bool>>::try_from_str("01", "10").unwrap(),
+///     PauliStack::<Vec<bool>>::try_from_str("1", "0").unwrap(),
+/// ]);
 /// let map = vec![0, 3];
 /// assert_eq!(
 ///     create_dependency_graph(&storage, &map),
@@ -53,7 +56,6 @@ pub type DependencyGraph = Vec<Vec<(usize, Vec<usize>)>>;
 /// );
 /// # }
 /// ```
-// fn create_dependency_graph(&self, map: &[usize]) -> DependencyGraph {
 pub fn create_dependency_graph<'l, I, B>(frames: I, map: &[usize]) -> DependencyGraph
 where
     I: IntoIterator<Item = (usize, &'l PauliStack<B>)>,

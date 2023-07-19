@@ -4,12 +4,6 @@ with the major difference that there's effectively only one frames, which adds u
 multiple tracked Paulis.
 */
 
-use std::{
-    self,
-    cmp::Ordering,
-    iter,
-};
-
 #[cfg(feature = "serde")]
 use serde::{
     Deserialize,
@@ -26,7 +20,6 @@ use super::{
 use crate::{
     collection::Collection,
     pauli::Pauli,
-    slice_extension::GetTwoMutSlice,
 };
 
 // todo: make it generic and also do it with a hashmap

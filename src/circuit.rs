@@ -69,10 +69,10 @@ pub struct TrackedCircuit<Circuit, Tracker, Storage> {
     /// The underlining circuit (simulator). Should implement [CliffordCircuit]
     pub circuit: Circuit,
     /// The tracker of the Pauli frames. The `ActiveStorage` should implement
-    /// [StackStorage].
+    /// [Collection].
     pub tracker: Tracker,
-    /// An additional storage which the [StackStorage]s of the measure qubits. Should
-    /// implement [StackStorage].
+    /// An additional storage which the [Collection]s of the measure qubits. Should
+    /// implement [Collection].
     pub storage: Storage,
 }
 
@@ -232,7 +232,7 @@ impl<C, T, S> TrackedCircuit<C, T, S>
 where
     T: Tracker,
 {
-    /// Append a [Pauli] gate `pauli` to the tracker.
+    /// Append a [Pauli](crate::pauli::Pauli) gate `pauli` to the tracker.
     pub fn track_pauli(&mut self, bit: usize, pauli: T::Pauli) {
         self.tracker.track_pauli(bit, pauli)
     }
@@ -276,7 +276,6 @@ impl<C, A, S, B> TrackedCircuit<C, Frames<A>, S>
 where
     C: CliffordCircuit,
     A: Collection<T = PauliStack<B>>,
-    // S: StackStorage<BoolVec = A::BoolVec>,
     S: Collection<T = PauliStack<B>>,
     B: BooleanVector,
 {
