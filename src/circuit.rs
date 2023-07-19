@@ -13,7 +13,7 @@ use std::mem;
 use crate::{
     boolean_vector::BooleanVector,
     collection::Collection,
-    pauli::PauliVec,
+    pauli::PauliStack,
     tracker::{
         frames::{
             Frames,
@@ -275,9 +275,9 @@ where
 impl<C, A, S, B> TrackedCircuit<C, Frames<A>, S>
 where
     C: CliffordCircuit,
-    A: Collection<T = PauliVec<B>>,
+    A: Collection<T = PauliStack<B>>,
     // S: StackStorage<BoolVec = A::BoolVec>,
-    S: Collection<T = PauliVec<B>>,
+    S: Collection<T = PauliStack<B>>,
     B: BooleanVector,
 {
     /// Perform a **Measurement** and move the according qubit with its Pauli stack from
@@ -338,24 +338,26 @@ mod tests {
         },
         pauli::{
             PauliDense,
-            PauliVec,
+            PauliStack,
         },
         tracker::{
             frames::Frames,
-            live::LiveVector,
+            live,
             MissingStack,
         },
     };
 
-    type PauliBitVec = PauliVec<BitVec>;
-    type PauliSimdBitVec = PauliVec<SimdBitVec>;
+    type PauliBitVec = PauliStack<BitVec>;
+    type PauliSimdBitVec = PauliStack<SimdBitVec>;
+    // type Live<P> = live::Live<BufferedVector<P>>;
+    type Live<P> = live::Live<crate::collection::MappedVector<P>>;
 
     #[test]
     fn measure_and_store() {
         let mut circ = TrackedCircuit {
             circuit: DummyCircuit {},
             // tracker: Frames::<MappedVector<BitVec>>::init(3),
-            tracker: Frames::<MappedVector<PauliVec<BitVec>>>::init(3),
+            tracker: Frames::<MappedVector<PauliStack<BitVec>>>::init(3),
             storage: HashMap::default(),
         };
 
@@ -406,7 +408,7 @@ mod tests {
     fn single_rotation_teleportation() {
         let mut circ = TrackedCircuit {
             circuit: DummyCircuit {},
-            tracker: Frames::<MappedVector<PauliVec<BitVec>>>::init(2),
+            tracker: Frames::<MappedVector<PauliStack<BitVec>>>::init(2),
             storage: MappedVector::default(),
         };
 
@@ -428,7 +430,7 @@ mod tests {
     fn control_v_dagger() {
         let mut circ = TrackedCircuit {
             circuit: DummyCircuit {},
-            tracker: Frames::<MappedVector<PauliVec<SimdBitVec>>>::init(5),
+            tracker: Frames::<MappedVector<PauliStack<SimdBitVec>>>::init(5),
             storage: MappedVector::default(),
         };
 
@@ -467,14 +469,14 @@ mod tests {
     fn toffoli_live() {
         let mut circ = TrackedCircuit {
             circuit: RandomMeasurementCircuit {},
-            tracker: LiveVector::init(10),
+            tracker: Live::init(10),
             storage: (),
         };
 
         trait TTele {
             fn t_tele(&mut self, origin: usize, new: usize) -> bool;
         }
-        impl TTele for TrackedCircuit<RandomMeasurementCircuit, LiveVector<PauliDense>, ()> {
+        impl TTele for TrackedCircuit<RandomMeasurementCircuit, Live<PauliDense>, ()> {
             #[cfg_attr(coverage_nightly, no_coverage)]
             fn t_tele(&mut self, origin: usize, new: usize) -> bool {
                 self.cx(origin, new);
@@ -507,7 +509,7 @@ mod tests {
         circ.cx(6, 9);
         circ.h(9);
 
-        let mut check = LiveVector::<PauliDense>::init(10);
+        let mut check = Live::<PauliDense>::init(10);
         // compare toffoli tests with frame tracker
         // (3, PauliVec::try_from("0000000", "1001110").unwrap()),
         // (6, PauliVec::try_from("0000000", "0101101").unwrap()),
@@ -533,7 +535,7 @@ mod tests {
     fn another_graph_test() {
         let mut circ = TrackedCircuit {
             circuit: DummyCircuit {},
-            tracker: Frames::<BufferedVector<PauliVec<BitVec>>>::init(10),
+            tracker: Frames::<BufferedVector<PauliStack<BitVec>>>::init(10),
             storage: (),
         };
 
@@ -545,7 +547,7 @@ mod tests {
         impl TTele
             for TrackedCircuit<
                 DummyCircuit,
-                Frames<BufferedVector<PauliVec<BitVec>>>,
+                Frames<BufferedVector<PauliStack<BitVec>>>,
                 (),
             >
         {

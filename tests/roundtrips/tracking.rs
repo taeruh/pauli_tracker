@@ -13,16 +13,14 @@ use pauli_tracker::{
         RandomMeasurementCircuit,
         TrackedCircuit,
     },
-    collection::Collection,
+    collection::{
+        BufferedVector,
+        Collection,
+    },
     pauli::{
-        tuple::{
-            PauliTuple,
-            PAULI_X,
-            PAULI_Y,
-            PAULI_Z,
-        },
+        tuple::PauliTuple,
         Pauli,
-        PauliVec,
+        PauliStack,
     },
     tracker::{
         frames::{
@@ -32,7 +30,7 @@ use pauli_tracker::{
             },
             Frames,
         },
-        live::LiveVector,
+        live,
         Tracker,
     },
 };
@@ -51,8 +49,9 @@ use proptest::{
 // type BoolVec = pauli_tracker::boolean_vector::bitvec_simd::SimdBitVec;
 pub type BoolVec = bit_vec::BitVec;
 
-pub type Storage = HashMap<usize, PauliVec<BoolVec>>;
+pub type Storage = HashMap<usize, PauliStack<BoolVec>>;
 // type PauliVec = pauli::PauliVec<BoolVec>;
+type Live<P> = live::Live<BufferedVector<P>>;
 
 const MAX_INIT: usize = 100;
 const MAX_OPS: usize = 1000;
@@ -113,7 +112,7 @@ fn roundtrip(init: usize, ops: Vec<Operation>) {
     generator.reinit(init);
     let mut live_circuit = TrackedCircuit {
         circuit: RandomMeasurementCircuit {},
-        tracker: LiveVector::init(init),
+        tracker: Live::init(init),
         storage: (),
     };
     let mut measurements = ResultMeasured(Vec::new());
@@ -125,7 +124,7 @@ fn roundtrip(init: usize, ops: Vec<Operation>) {
     for (i, pauli) in circuit.storage.iter() {
         check[*i] = pauli.sum_up(&measurements.0);
     }
-    let check: LiveVector<PauliTuple> = check.into();
+    let check: Live<PauliTuple> = BufferedVector::from(check).into();
     // println!("{:?}", a);
 
     assert_eq!(check, live_circuit.tracker);
@@ -256,23 +255,35 @@ impl Instructor {
                 Operation::Y(b) => circuit.y(self.mem_idx(b)),
                 Operation::Z(b) => circuit.z(self.mem_idx(b)),
                 Operation::TeleportedX(a, b) => {
-                    if let Some(pos_in_mem) =
-                        self.pauli_teleportation(a, b, PAULI_X, circuit, measurements)
-                    {
+                    if let Some(pos_in_mem) = self.pauli_teleportation(
+                        a,
+                        b,
+                        PauliTuple::X,
+                        circuit,
+                        measurements,
+                    ) {
                         self.memory.swap_remove(pos_in_mem % self.memory.len());
                     }
                 }
                 Operation::TeleportedY(a, b) => {
-                    if let Some(pos_in_mem) =
-                        self.pauli_teleportation(a, b, PAULI_Y, circuit, measurements)
-                    {
+                    if let Some(pos_in_mem) = self.pauli_teleportation(
+                        a,
+                        b,
+                        PauliTuple::Y,
+                        circuit,
+                        measurements,
+                    ) {
                         self.memory.swap_remove(pos_in_mem % self.memory.len());
                     }
                 }
                 Operation::TeleportedZ(a, b) => {
-                    if let Some(pos_in_mem) =
-                        self.pauli_teleportation(a, b, PAULI_Z, circuit, measurements)
-                    {
+                    if let Some(pos_in_mem) = self.pauli_teleportation(
+                        a,
+                        b,
+                        PauliTuple::Z,
+                        circuit,
+                        measurements,
+                    ) {
                         self.memory.swap_remove(pos_in_mem % self.memory.len());
                     }
                 }
@@ -376,7 +387,7 @@ impl Measurements<TrackedCircuit<DummyCircuit, Frames<Storage>, Storage>>
     }
 }
 struct ResultMeasured(Vec<bool>);
-impl Measurements<TrackedCircuit<RandomMeasurementCircuit, LiveVector<PauliTuple>, ()>>
+impl Measurements<TrackedCircuit<RandomMeasurementCircuit, Live<PauliTuple>, ()>>
     for ResultMeasured
 {
     fn store(&mut self, _: usize, result: bool) {
@@ -417,9 +428,7 @@ impl ExtendCircuit for TrackedCircuit<DummyCircuit, Frames<Storage>, Storage> {
         self.measure_and_store(origin).1.unwrap();
     }
 }
-impl ExtendCircuit
-    for TrackedCircuit<RandomMeasurementCircuit, LiveVector<PauliTuple>, ()>
-{
+impl ExtendCircuit for TrackedCircuit<RandomMeasurementCircuit, Live<PauliTuple>, ()> {
     type Output = bool;
     fn z_rotation_teleportation(&mut self, origin: usize, new: usize) -> bool {
         self.tracker.new_qubit(new);

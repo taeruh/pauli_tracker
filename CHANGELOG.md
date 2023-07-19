@@ -14,8 +14,10 @@ possible.
 - Add a new `scheduler` module, activated by the "scheduler" feature.
 - **Possible Breaking Change**: Add `Frames::new`.
 - **Possible Breaking Change**: Add `impl Default for SimdBitVec`.
-- Add the `pauli::PAULI_*` constants.
 ### Changed
+- **Breaking Change**: `Tracker::new_qubit` now overwrites the old value, and returns
+  it.
+- **Breaking Change**: Rename `PauliVec` to `PauliStack`.
 - **Breaking Change**: Introduce a trait `crate::pauli::Pauli` to represent single
   Paulis. The former type `crate::pauli::single::Pauli` is replaced by the type
   `crate::pauli::dense::PauliDense` (which implements `Pauli`). The `Tracker` impl of
@@ -33,8 +35,10 @@ possible.
 - **Breaking Change**: Return the measurement outcomes in in
   `circuit::measure_and_store(_all)` and error if one would overwrite something in the
   additional storage.
-- **Breaking Change**: Move `create_dependency_graph`, `sort_by_bit` and
-  `into_sorted_by_bit` into the `StackStorage` trait.
+- **Breaking Change**: Move `create_dependency_graph` and related functions into
+  `frames::dependency_graph`
+- **Breaking Change**: Move `sort_by_bit` and `into_sorted_by_bit` into the
+  `Collection` trait, replacing "bit" by "key".
 - **Possible Breaking Change**: Implement Clone, PartialEq, Debug for
   `bitvec_simd::Iter*`; Implement Debug for TrackedCircuit.
 - For the "fixed" `Vector`, it wasn't allowed to `insert_pauli`s at qubits which have a

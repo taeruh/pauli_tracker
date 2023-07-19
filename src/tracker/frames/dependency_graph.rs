@@ -1,6 +1,6 @@
 use crate::{
     boolean_vector::BooleanVector,
-    pauli::PauliVec,
+    pauli::PauliStack,
 };
 
 /// A layered graph, describing the how the qubits depend on each other. Each layer l =
@@ -30,23 +30,21 @@ pub type DependencyGraph = Vec<Vec<(usize, Vec<usize>)>>;
 /// # #[cfg_attr(coverage_nightly, no_coverage)]
 /// # fn main() {
 /// use pauli_tracker::{
-///     pauli::PauliVec,
-///     tracker::frames::storage::{
-///         StackStorage,
-///         Vector,
-///     },
+///     collection::BufferedVector,
+///     pauli::PauliStack,
+///     tracker::frames::dependency_graph::create_dependency_graph,
 /// };
-/// let storage = Vector {
-///     frames: vec![
-///         PauliVec::<Vec<bool>>::try_from_str("", "").unwrap(),
-///         PauliVec::<Vec<bool>>::try_from_str("10", "00").unwrap(),
-///         PauliVec::<Vec<bool>>::try_from_str("01", "10").unwrap(),
-///         PauliVec::<Vec<bool>>::try_from_str("1", "0").unwrap(),
+/// let storage = BufferedVector(
+///     vec![
+///         PauliStack::<Vec<bool>>::try_from_str("", "").unwrap(),
+///         PauliStack::<Vec<bool>>::try_from_str("10", "00").unwrap(),
+///         PauliStack::<Vec<bool>>::try_from_str("01", "10").unwrap(),
+///         PauliStack::<Vec<bool>>::try_from_str("1", "0").unwrap(),
 ///     ],
-/// };
+/// );
 /// let map = vec![0, 3];
 /// assert_eq!(
-///     storage.create_dependency_graph(&map),
+///     create_dependency_graph(&storage, &map),
 ///     vec![
 ///         vec![(0, vec![])],
 ///         vec![(3, vec![0]), (1, vec![0])],
@@ -58,7 +56,7 @@ pub type DependencyGraph = Vec<Vec<(usize, Vec<usize>)>>;
 // fn create_dependency_graph(&self, map: &[usize]) -> DependencyGraph {
 pub fn create_dependency_graph<'l, I, B>(frames: I, map: &[usize]) -> DependencyGraph
 where
-    I: IntoIterator<Item = (usize, &'l PauliVec<B>)>,
+    I: IntoIterator<Item = (usize, &'l PauliStack<B>)>,
     B: BooleanVector + 'l,
 {
     let mut graph: Vec<Vec<(usize, Vec<usize>)>> = vec![Vec::new()];
@@ -149,7 +147,7 @@ where
 /// ```
 /// # #[cfg_attr(coverage_nightly, no_coverage)]
 /// # fn main() {
-/// # use pauli_tracker::tracker::frames::storage::sort_layers_by_bits;
+/// # use pauli_tracker::tracker::frames::dependency_graph::sort_layers_by_bits;
 /// let mut graph = vec![vec![(0, vec![])], vec![(3, vec![0]), (1, vec![0])]];
 /// sort_layers_by_bits(&mut graph);
 ///

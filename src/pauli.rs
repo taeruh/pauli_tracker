@@ -2,6 +2,15 @@
 Encoding of Pauli operators.
 */
 
+macro_rules! const_pauli {
+    ($($name:ident,)*) => {$(
+        /// Pauli
+        #[doc = stringify!($name)]
+        /// .
+        const $name: Self;
+    )*};
+}
+
 macro_rules! new {
     ($(($name:ident, $gate:ident),)*) => {$(
         /// Create a new
@@ -24,6 +33,8 @@ macro_rules! plus {
 
 #[allow(missing_docs)]
 pub trait Pauli {
+    const_pauli!(I, X, Y, Z,);
+
     /// Create a the new Pauli (X if x) * (Z if z), neglecting phases.
     ///
     /// # Examples
@@ -102,24 +113,19 @@ pub trait Pauli {
 }
 
 macro_rules! new_helper {
-    ($(($name:ident, $gate:ident, $const:ident),)*) => {$(
+    ($(($name:ident, $const:ident),)*) => {$(
         /// Create a new
-        #[doc = stringify!($gate)]
+        #[doc = stringify!($const)]
         /// Pauli.
         #[inline]
         fn $name() -> Self {
-            $const
+            Self::$const
         }
     )*};
 }
 macro_rules! new_impl {
     () => {
-        new_helper!(
-            (new_i, I, PAULI_I),
-            (new_x, X, PAULI_X),
-            (new_y, Y, PAULI_Y),
-            (new_z, Z, PAULI_Z),
-        );
+        new_helper!((new_i, I), (new_x, X), (new_y, Y), (new_z, Z),);
     };
 }
 
@@ -140,17 +146,5 @@ impl From<PauliTuple> for PauliDense {
     }
 }
 
-pub mod vec;
-pub use vec::PauliVec;
-
-/// Pauli encoding into two bits.
-pub mod encoding {
-    /// Code for the identity.
-    pub const I: u8 = 0;
-    /// Code for the Pauli X gate.
-    pub const X: u8 = 2;
-    /// Code for the Pauli Y gate.
-    pub const Y: u8 = 3;
-    /// Code for the Pauli Z gate.
-    pub const Z: u8 = 1;
-}
+pub mod stack;
+pub use stack::PauliStack;

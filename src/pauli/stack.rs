@@ -1,5 +1,5 @@
 /*!
-  This module provides the [PauliVec] type, which stores multiple encoded Paulis.
+  This module provides the [PauliStack] type, which stores multiple encoded Paulis.
 */
 
 use std::{
@@ -28,10 +28,10 @@ use crate::boolean_vector::BooleanVector;
 ///
 /// Instead of having a vector over [Pauli]s, we separate the X and Z parts into two
 /// vectors (cf. [Pauli] for encoding). This enables us to efficiently perform
-/// (Clifford) operations on those [PauliVec]s.
+/// (Clifford) operations on those [PauliStack]s.
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Default)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-pub struct PauliVec<T /* : BooleanVector */> {
+pub struct PauliStack<T /* : BooleanVector */> {
     /// The bits representing the left qubit on the left-hand side in the tableau
     /// representation, i.e., X
     pub left: T,
@@ -54,14 +54,14 @@ impl Display for BitCharError {
 }
 impl std::error::Error for BitCharError {}
 
-impl<T: BooleanVector> PauliVec<T> {
-    /// Create a new empty [PauliVec].
+impl<T: BooleanVector> PauliStack<T> {
+    /// Create a new empty [PauliStack].
     pub fn new() -> Self {
         Self { left: T::new(), right: T::new() }
     }
 
-    /// Create a [PauliVec] from two strings. `left` (`right`) corresponds to
-    /// [PauliVec]s `left` (`right`) field.
+    /// Create a [PauliStack] from two strings. `left` (`right`) corresponds to
+    /// [PauliStack]s `left` (`right`) field.
     ///
     /// Errors if the strings do not consist only of '0' and '1' characters.
     ///
@@ -69,10 +69,10 @@ impl<T: BooleanVector> PauliVec<T> {
     /// ```
     /// # #[cfg_attr(coverage_nightly, no_coverage)]
     /// # fn main() {
-    /// # use pauli_tracker::pauli::PauliVec;
+    /// # use pauli_tracker::pauli::PauliStack;
     /// assert_eq!(
-    ///     PauliVec::<Vec<bool>>::try_from_str("01", "10"),
-    ///     Ok(PauliVec::<Vec<bool>> {
+    ///     PauliStack::<Vec<bool>>::try_from_str("01", "10"),
+    ///     Ok(PauliStack::<Vec<bool>> {
     ///         left: vec![false, true],
     ///         right: vec![true, false]
     ///     })
@@ -92,7 +92,7 @@ impl<T: BooleanVector> PauliVec<T> {
         })
     }
 
-    /// Create a new [PauliVec] with both sides `left` and `right` initialized with
+    /// Create a new [PauliStack] with both sides `left` and `right` initialized with
     /// `len` 0/false elements.
     pub fn zeros(len: usize) -> Self {
         let zero = T::zeros(len);
@@ -107,12 +107,12 @@ impl<T: BooleanVector> PauliVec<T> {
     /// ```
     /// # #[cfg_attr(coverage_nightly, no_coverage)]
     /// # fn main() {
-    /// # use pauli_tracker::pauli::{Pauli, PauliVec};
-    /// let mut pauli = PauliVec::try_from_str("1", "").unwrap();
-    /// pauli.push(Pauli::new_z());
+    /// # use pauli_tracker::pauli::{Pauli, PauliTuple, PauliStack};
+    /// let mut pauli = PauliStack::try_from_str("1", "").unwrap();
+    /// pauli.push::<PauliTuple>(Pauli::new_z());
     /// assert_eq!(
     ///     pauli,
-    ///     PauliVec::<Vec<bool>> {
+    ///     PauliStack::<Vec<bool>> {
     ///         left: vec![true, false],
     ///         right: vec![false, true]
     ///     }
@@ -139,11 +139,11 @@ impl<T: BooleanVector> PauliVec<T> {
     /// ```
     /// # #[cfg_attr(coverage_nightly, no_coverage)]
     /// # fn main() {
-    /// # use pauli_tracker::pauli::{Pauli, PauliVec};
-    /// let mut pauli = PauliVec::<Vec<bool>>::try_from_str("01", "1").unwrap();
-    /// assert_eq!(pauli.pop(), Some(Pauli::new_x()));
-    /// assert_eq!(pauli.pop(), Some(Pauli::new_z()));
-    /// assert_eq!(pauli.pop(), None);
+    /// # use pauli_tracker::pauli::{Pauli, PauliTuple, PauliStack};
+    /// let mut pauli = PauliStack::<Vec<bool>>::try_from_str("01", "1").unwrap();
+    /// assert_eq!(pauli.pop(), Some(PauliTuple::X));
+    /// assert_eq!(pauli.pop(), Some(PauliTuple::Z));
+    /// assert_eq!(pauli.pop::<PauliTuple>(), None);
     /// # }
     pub fn pop<P: Pauli>(&mut self) -> Option<P> {
         match self.left.len().cmp(&self.right.len()) {
@@ -202,7 +202,7 @@ impl<T: BooleanVector> PauliVec<T> {
     /// ```
     /// # #[cfg_attr(coverage_nightly, no_coverage)]
     /// # fn main() {
-    /// # use pauli_tracker::{pauli::{Pauli, PauliVec}, boolean_vector::BooleanVector};
+    /// # use pauli_tracker::{pauli::{Pauli, PauliStack}, boolean_vector::BooleanVector};
     /// let paulis = [
     ///     Pauli::new_x(),
     ///     Pauli::new_y(),
@@ -212,7 +212,7 @@ impl<T: BooleanVector> PauliVec<T> {
     ///     Pauli::new_z(),
     /// ]
     /// .into_iter()
-    /// .collect::<PauliVec<Vec<bool>>>();
+    /// .collect::<PauliStack<Vec<bool>>>();
     /// let filter = [true, true, true, false, false, false];
     /// assert_eq!(paulis.sum_up(&filter), Pauli::new_i());
     /// # }
@@ -222,9 +222,9 @@ impl<T: BooleanVector> PauliVec<T> {
     }
 }
 
-impl<T: BooleanVector> FromIterator<PauliDense> for PauliVec<T> {
+impl<T: BooleanVector> FromIterator<PauliDense> for PauliStack<T> {
     fn from_iter<I: IntoIterator<Item = PauliDense>>(iter: I) -> Self {
-        let mut ret = PauliVec::new();
+        let mut ret = PauliStack::new();
         for pauli in iter {
             ret.push(pauli);
         }

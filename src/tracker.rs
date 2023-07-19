@@ -110,7 +110,8 @@ macro_rules! track_pauli {
 /// time*
 pub trait Tracker {
     /// The storage type used to store the tracked Paulis for each qubit, e.g.,
-    /// [PauliVec](crate::pauli::PauliVec) for the [Frames](frames::Frames) tracker.
+    /// [PauliStack](crate::pauli::PauliStack) for the [Frames](frames::Frames) tracker or
+    /// just a simple [Pauli] for the [Live](live::Live) tracker.
     type Stack;
 
     /// The type of Pauli representation use for operations like
@@ -120,9 +121,9 @@ pub trait Tracker {
     /// Initialize the tracker with qubits numbered from 0 to `num_bits`-1.
     fn init(num_bits: usize) -> Self;
 
-    /// Insert a new qu`bit` into the tracker. If the qu`bit` is already present
-    /// [Some](Some)(`bit`) is returned, otherwise [None]
-    fn new_qubit(&mut self, bit: usize) -> Option<usize>;
+    /// Insert a new qu`bit` into the tracker. If the qu`bit`, the old value is
+    /// overwritten and returned.
+    fn new_qubit(&mut self, bit: usize) -> Option<Self::Stack>;
 
     /// Track a new frame consisting of the [Pauli] gate `pauli` at qu`bit`.
     fn track_pauli(&mut self, bit: usize, pauli: Self::Pauli);

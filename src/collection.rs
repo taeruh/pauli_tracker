@@ -48,4 +48,5 @@ mod hash_map;
 mod mapped_vector;
 
 pub use buffered_vector::BufferedVector;
+pub use hash_map::Map;
 pub use mapped_vector::MappedVector;

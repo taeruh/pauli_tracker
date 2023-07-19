@@ -145,7 +145,7 @@ pub trait BooleanVector:
     /// # use pauli_tracker::boolean_vector::BooleanVector;
     /// let bools = vec![true, false, true, false, true, false];
     /// let filter = [true, true, true, false, false, false];
-    /// assert_eq!(bools.sum_up(&filter), 0);
+    /// assert_eq!(bools.sum_up(&filter), false);
     /// # }
     /// ```
     fn sum_up(&self, filter: &[bool]) -> bool {

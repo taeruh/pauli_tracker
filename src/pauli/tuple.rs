@@ -2,26 +2,25 @@ use std::mem;
 
 use super::Pauli;
 
-pub type PauliTuple = (bool, bool);
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Default, Debug)]
+pub struct PauliTuple(bool, bool);
 
 macro_rules! const_pauli {
-    ($(($name:ident, $value:expr, $doc:literal),)*) => {$(
-        /// Tuple Pauli
-        #[doc = $doc]
-        /// .
-        pub const $name: PauliTuple = $value;
+    ($(($name:ident, $x:literal, $z:literal),)*) => {$(
+        const $name: Self = Self ($x, $z);
     )*};
 }
-const_pauli!(
-    (PAULI_I, (false, false), "I"),
-    (PAULI_X, (true, false), "X"),
-    (PAULI_Y, (true, true), "Y"),
-    (PAULI_Z, (false, true), "Z"),
-);
 
 impl Pauli for PauliTuple {
+    const_pauli!(
+        (I, false, false),
+        (X, true, false),
+        (Y, true, true),
+        (Z, false, true),
+    );
+
     fn new(x: bool, z: bool) -> Self {
-        (x, z)
+        Self(x, z)
     }
 
     new_impl!();

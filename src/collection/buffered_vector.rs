@@ -15,7 +15,7 @@ use std::{
 use super::Collection;
 use crate::slice_extension::GetTwoMutSlice;
 
-#[derive(Debug, Default, Clone)]
+#[derive(Clone, PartialEq, Eq, PartialOrd, Ord, Default, Debug)]
 pub struct BufferedVector<T>(pub Vec<T>);
 
 impl<T> BufferedVector<T> {
@@ -33,6 +33,12 @@ impl<T> Deref for BufferedVector<T> {
 impl<T> DerefMut for BufferedVector<T> {
     fn deref_mut(&mut self) -> &mut Self::Target {
         &mut self.0
+    }
+}
+
+impl<T> From<Vec<T>> for BufferedVector<T> {
+    fn from(vec: Vec<T>) -> Self {
+        Self(vec)
     }
 }
 

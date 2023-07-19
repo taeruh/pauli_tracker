@@ -39,7 +39,7 @@ use crate::{
     pauli::{
         Pauli,
         PauliTuple,
-        PauliVec,
+        PauliStack,
     },
 };
 
@@ -68,7 +68,7 @@ pub struct OverwriteStack<T> {
     /// The qubit.
     pub bit: usize,
     /// The stack we have overwritten.
-    pub stack: PauliVec<T>,
+    pub stack: PauliStack<T>,
 }
 impl<T> Display for OverwriteStack<T> {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
@@ -153,11 +153,11 @@ impl<S> Frames<S> {
 
 impl<S, B> Frames<S>
 where
-    S: Collection<T = PauliVec<B>>,
+    S: Collection<T = PauliStack<B>>,
     B: BooleanVector,
 {
     /// Pop the last tracked Pauli frame.
-    pub fn pop_frame(&mut self) -> Option<PauliString<PauliTuple>> {
+    pub fn pop_frame<P: Pauli>(&mut self) -> Option<PauliString<P>> {
         if self.storage.is_empty() || self.frames_num == 0 {
             return None;
         }
@@ -176,7 +176,7 @@ where
     pub fn measure_and_store(
         &mut self,
         bit: usize,
-        storage: &mut impl Collection<T = PauliVec<B>>,
+        storage: &mut impl Collection<T = PauliStack<B>>,
     ) -> Result<(), StoreError<B>> {
         match storage.insert(bit, self.measure(bit)?) {
             Some(p) => Err(OverwriteStack { bit, stack: p }.into()),
@@ -188,7 +188,7 @@ where
     /// do [Frames::measure_and_store] for all qubits.
     pub fn measure_and_store_all(
         &mut self,
-        storage: &mut impl Collection<T = PauliVec<B>>,
+        storage: &mut impl Collection<T = PauliStack<B>>,
     ) {
         for (bit, pauli) in mem::replace(&mut self.storage, S::init(0)).into_iter() {
             storage.insert(bit, pauli);
@@ -238,10 +238,10 @@ macro_rules! movements {
 /// [StackStorage] implementation.
 impl<S, B> Tracker for Frames<S>
 where
-    S: Collection<T = PauliVec<B>>,
+    S: Collection<T = PauliStack<B>>,
     B: BooleanVector,
 {
-    type Stack = PauliVec<B>;
+    type Stack = PauliStack<B>;
     type Pauli = PauliTuple;
 
     fn init(num_qubits: usize) -> Self {
@@ -251,10 +251,8 @@ where
         }
     }
 
-    fn new_qubit(&mut self, qubit: usize) -> Option<usize> {
-        self.storage
-            .insert(qubit, Self::Stack::zeros(self.frames_num))
-            .map(|_| qubit)
+    fn new_qubit(&mut self, qubit: usize) -> Option<Self::Stack> {
+        self.storage.insert(qubit, Self::Stack::zeros(self.frames_num))
     }
 
     fn track_pauli(&mut self, qubit: usize, pauli: Self::Pauli) {
@@ -311,7 +309,7 @@ where
         (move_z_to_z, right, right, "Z", "Z")
     );
 
-    fn measure(&mut self, bit: usize) -> Result<PauliVec<B>, MissingStack> {
+    fn measure(&mut self, bit: usize) -> Result<PauliStack<B>, MissingStack> {
         self.storage.remove(bit).ok_or(MissingStack { bit })
     }
 }
@@ -351,7 +349,7 @@ mod tests {
         // one-qubit and two-qubit actions, it's like a "TwoBitVec"; one could probably
         // implement that in connection with [Pauli]
 
-        type ThisTracker = Frames<BufferedVector<PauliVec<bitvec::vec::BitVec>>>;
+        type ThisTracker = Frames<BufferedVector<PauliStack<bitvec::vec::BitVec>>>;
         // type ThisTracker =
         //     Frames<Vector<crate::boolean_vector::bitvec_simd::SimdBitVec>>;
 
@@ -373,10 +371,13 @@ mod tests {
                 (action)(&mut tracker, 0);
                 for (input, check) in (0u8..).zip(result.1) {
                     assert_eq!(
-                        PauliDense::from(
-                            tracker.pop_frame().unwrap().first().unwrap().1
-                        )
-                        .storage(),
+                        tracker
+                            .pop_frame::<PauliDense>()
+                            .unwrap()
+                            .first()
+                            .unwrap()
+                            .1
+                            .storage(),
                         check,
                         "{}, {}",
                         result.0,
@@ -409,8 +410,9 @@ mod tests {
                 }
                 (action)(&mut tracker, 0, 1);
                 for (input, check) in (0u8..).zip(result.1) {
-                    let output =
-                        impl_utils::double_output(tracker.pop_frame().unwrap());
+                    let output = impl_utils::double_output(
+                        tracker.pop_frame::<PauliDense>().unwrap(),
+                    );
                     assert_eq!(output, check, "{}, {}", result.0, input);
                 }
             }

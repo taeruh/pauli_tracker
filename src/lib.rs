@@ -76,22 +76,22 @@ requires the [rand](https://crates.io/crates/rand) crate.
 # fn main() {
 # #[rustfmt::skip]
 use pauli_tracker::{
-    tracker::{
-        Tracker, live::LiveVector,
-        frames::{Frames, storage::{self, StackStorage, Map}}
-    },
-    pauli::{self, Pauli},
+    collection::{Map, BufferedVector, Collection},
+    pauli::{self, Pauli, PauliTuple},
+    tracker::{Tracker, live, frames},
 };
 // first, we will use the Frames tracker to fully track all Pauli frames
 
-// the Frames tracker is generic over its storage types, which themselves are generic;
-// it's almost always sensible to specific define types
+// some types in this library are pretty generic; it's almost always a good idea to
+// define some type aliases
 type BoolVec = Vec<bool>; // you might want to use a "bit-vector"; cf. features
-type Storage = Map<BoolVec>;
-type PauliVec = pauli::PauliVec<BoolVec>;
+type PauliStack = pauli::PauliStack<BoolVec>;
+type Storage = Map<PauliStack>;
+type Frames = frames::Frames<Storage>;
+type Live = live::Live<BufferedVector<PauliTuple>>;
 
 // initialize the tracker with three qubits
-let mut tracker = Frames::<Storage>::init(3);
+let mut tracker = Frames::init(3);
 
 // track Paulis through an (imaginary) circuit
 // X(0), CX(0, 1), S(1), Z(2), CZ(1, 2), H(0)
@@ -103,22 +103,22 @@ tracker.cz(1, 2); // conjugate with a Control Z gate
 tracker.h(0); // conjugate with an H gate
 
 // let's get the frames (sorted into a Vec for convenience)
-let frames = tracker.into_storage().into_sorted_by_bit();
+let frames = tracker.into_storage().into_sorted_by_key();
 
 // what would we expect (calculate it by hand)?
 let mut expected =
-    vec![(0, PauliVec::new()), (1, PauliVec::new()), (2, PauliVec::new())];
+    vec![(0, PauliStack::new()), (1, PauliStack::new()), (2, PauliStack::new())];
 // {{ frame (0)
-expected[0].1.push(Pauli::new_z());
-expected[1].1.push(Pauli::new_y());
-expected[2].1.push(Pauli::new_z());
+expected[0].1.push(PauliTuple::new_z());
+expected[1].1.push(PauliTuple::new_y());
+expected[2].1.push(PauliTuple::new_z());
 // }}
 // {{ frame (1)
-expected[0].1.push(Pauli::new_i());
-expected[1].1.push(Pauli::new_z());
-expected[2].1.push(Pauli::new_y());
+expected[0].1.push(PauliTuple::new_i());
+expected[1].1.push(PauliTuple::new_z());
+expected[2].1.push(PauliTuple::new_y());
 // }}
-// (creating `expected` can be faster achieved with PauliVec::try_from_str, e.g., as in
+// (creating `expected` can be faster achieved with PauliStack::try_from_str, e.g., as in
 // the example "The dependency graph")
 
 // let's check it
@@ -130,12 +130,12 @@ assert_eq!(frames, expected);
 // the frames in `frames` from above, however, we can also do it directly with the
 // LiveTracker:
 
-let mut tracker = LiveVector::init(3); // initialize the tracker with three qubits
+let mut tracker = Live::init(3); // initialize the tracker with three qubits
 
 // a small helper to track Paulis conditioned on measurements (the circuit module
 // provides similar helpers)
 let mut measurements = Vec::<bool>::new();
-let mut correct = |tracker: &mut LiveVector, bit, pauli| {
+let mut correct = |tracker: &mut Live, bit, pauli| {
     // "measurement"; in a real use case this would be, for example, a quantum
     // measurement
     let outcome = rand::random::<bool>();
@@ -162,7 +162,7 @@ let conditional_summed_frames: Vec<_> = frames
     .into_iter()
     .map(|(_, pauli_stack)| pauli_stack.sum_up(&measurements))
     .collect();
-assert_eq!(*tracker.as_ref(), conditional_summed_frames, "{measurements:?}");
+assert_eq!(**tracker.as_ref(), conditional_summed_frames, "{measurements:?}");
 # }
 # #[cfg_attr(coverage_nightly, no_coverage)]
 # #[cfg(not(feature = "circuit"))]
@@ -180,14 +180,14 @@ the "graph" feature.
 # fn main() {
 # #[rustfmt::skip]
 use pauli_tracker::{
-    tracker::{Tracker, frames::{Frames, storage::{self, StackStorage, Vector}}},
+    collection::BufferedVector,
     pauli::{self, Pauli},
-    analyse,
+    tracker::{Tracker, frames::{Frames, dependency_graph}},
 };
 type BoolVec = Vec<bool>;
 // we want a fixed order in our storage for this test, so we use Vector and not Map
-type Storage = Vector<BoolVec>;
-type PauliVec = pauli::PauliVec<BoolVec>;
+type PauliStack = pauli::PauliStack<BoolVec>;
+type Storage = BufferedVector<PauliStack>;
 
 // let's consider the following tracking pattern
 let mut tracker = Frames::<Storage>::init(6);
@@ -205,15 +205,15 @@ tracker.cz(3, 2);
 
 // check its output
 assert_eq!(
-    tracker.as_storage().into_sorted_by_bit(),
+    tracker.as_storage().into_sorted_by_key(),
     vec![
         // tableau representation:    X      Z    ; the columns are the frames
-        (0, &PauliVec::try_from_str("100", "000").unwrap()),
-        (1, &PauliVec::try_from_str("111", "100").unwrap()),
-        (2, &PauliVec::try_from_str("010", "110").unwrap()),
-        (3, &PauliVec::try_from_str("000", "000").unwrap()),
-        (4, &PauliVec::try_from_str("000", "000").unwrap()),
-        (5, &PauliVec::try_from_str("000", "000").unwrap()),
+        (0, &PauliStack::try_from_str("100", "000").unwrap()),
+        (1, &PauliStack::try_from_str("111", "100").unwrap()),
+        (2, &PauliStack::try_from_str("010", "110").unwrap()),
+        (3, &PauliStack::try_from_str("000", "000").unwrap()),
+        (4, &PauliStack::try_from_str("000", "000").unwrap()),
+        (5, &PauliStack::try_from_str("000", "000").unwrap()),
     ]
 );
 
@@ -228,10 +228,10 @@ let map = [
 
 // we are interested in how many steps of parallel measurement we need to measure qubits
 // "0" to "4"; this can be figured out with the dependency graph:
-let graph = analyse::create_dependency_graph(tracker.as_storage().iter(), &map);
+let graph = dependency_graph::create_dependency_graph(tracker.as_storage().iter(), &map);
 
 // in this case the graph is already sorted according to the node numbers, but that is
-// not always true, if not one can use storage::sort_layers_by_bits to sort it, if
+// not always true, if not one can use storage::sort_layers_by_key to sort it, if
 // needed
 
 assert_eq!(
@@ -272,15 +272,17 @@ features "circuit", "graph" and "bit-vec", as well as a dependency on the bit_ve
 # fn main() {
 # #[rustfmt::skip]
 use pauli_tracker::{
-    circuit::{CliffordCircuit, DummyCircuit, TrackedCircuit},
-    tracker::{Tracker, frames::{Frames, storage::{self, StackStorage, Map, Vector}}},
-    pauli::{self, Pauli},
     analyse,
+    circuit::{CliffordCircuit, DummyCircuit, TrackedCircuit},
+    collection::{Map, BufferedVector},
+    pauli::{self, Pauli},
+    tracker::{Tracker, frames},
 };
 
 type BoolVec = bit_vec::BitVec;
-type Storage = Map<BoolVec>;
-type PauliVec = pauli::PauliVec<BoolVec>;
+type PauliStack = pauli::PauliStack<BoolVec>;
+type Storage = Map<PauliStack>;
+type Frames = frames::Frames<Storage>;
 
 // a wrapper around (pseude) circuit (simulator), a tracker and an additional storage
 // for the tracker; the wrapper doesn't do much except of providing methods wrapping
@@ -291,7 +293,7 @@ let mut circ = TrackedCircuit {
     // up the circuit
     circuit: DummyCircuit {},
     // our tracker
-    tracker: Frames::<Storage>::init(3),
+    tracker: Frames::init(3),
     // an additional storage to store the Pauli stacks from measured qubits; here we
     // choose a simple Map, but it could be, for example a storage that puts the data
     // onto files
@@ -302,7 +304,7 @@ let mut circ = TrackedCircuit {
 trait ExtendTrackedCircuit {
     fn teleported_t(&mut self, origin: usize, new: usize);
 }
-impl ExtendTrackedCircuit for TrackedCircuit<DummyCircuit, Frames<Storage>, Storage> {
+impl ExtendTrackedCircuit for TrackedCircuit<DummyCircuit, Frames, Storage> {
     #[cfg_attr(coverage_nightly, no_coverage)]
     fn teleported_t(&mut self, origin: usize, new: usize) {
         // this is from the linked paper, naively implement, assuming that we don't know
@@ -341,26 +343,26 @@ let map = [0, 1, 2, 4, 5, 7, 8];
 // these are the three output qubits
 assert_eq!(
     vec![
-        (3, &PauliVec::try_from_str("0000000", "1101010").unwrap()),
-        (6, &PauliVec::try_from_str("0000000", "0001111").unwrap()),
-        (9, &PauliVec::try_from_str("0000001", "0000000").unwrap()),
+        (3, &PauliStack::try_from_str("0000000", "1101010").unwrap()),
+        (6, &PauliStack::try_from_str("0000000", "0001111").unwrap()),
+        (9, &PauliStack::try_from_str("0000001", "0000000").unwrap()),
     ],
-    circ.tracker.as_storage().sort_by_bit()
+    circ.tracker.as_storage().sort_by_key()
 );
 // and these are the other qubits, which have been put into the additional storage, as
 // soon as they have been measured; putting them into the additional storage saves
 // unnecessary zeros in their Pauli stacks
 assert_eq!(
     vec![
-        (0, &PauliVec::try_from_str("", "").unwrap()),
-        (1, &PauliVec::try_from_str("0", "0").unwrap()),
-        (2, &PauliVec::try_from_str("00", "00").unwrap()),
-        (4, &PauliVec::try_from_str("000", "011").unwrap()),
-        (5, &PauliVec::try_from_str("0000", "0010").unwrap()),
-        (7, &PauliVec::try_from_str("00000", "00001").unwrap()),
-        (8, &PauliVec::try_from_str("000000", "000001").unwrap())
+        (0, &PauliStack::try_from_str("", "").unwrap()),
+        (1, &PauliStack::try_from_str("0", "0").unwrap()),
+        (2, &PauliStack::try_from_str("00", "00").unwrap()),
+        (4, &PauliStack::try_from_str("000", "011").unwrap()),
+        (5, &PauliStack::try_from_str("0000", "0010").unwrap()),
+        (7, &PauliStack::try_from_str("00000", "00001").unwrap()),
+        (8, &PauliStack::try_from_str("000000", "000001").unwrap())
     ],
-    circ.storage.sort_by_bit()
+    circ.storage.sort_by_key()
 );
 
 // let's view the dependency graph: we need to do some prework
@@ -369,7 +371,7 @@ circ.measure_and_store_all();
 // to make the assert work we need a storage with an determinitic iterator; you probably
 // don't need to do this in a real application
 let storage = Vector {
-    frames: circ.storage.into_sorted_by_bit()
+    frames: circ.storage.into_sorted_by_key()
     .into_iter()
     .map(|(_, stack)| stack)
     .collect()
@@ -407,13 +409,14 @@ with [Tracker::move_z_to_z](tracker::Tracker::move_z_to_z):
 # #[cfg(all(feature = "circuit", feature = "bit-vec"))]
 # fn main() {
 # use pauli_tracker::{
-#     circuit::{CliffordCircuit, DummyCircuit, TrackedCircuit},
-#     tracker::{Tracker, frames::{Frames, storage::{self, StackStorage, Map, Vector}}},
 #     pauli::{self, Pauli},
+#     circuit::{CliffordCircuit, DummyCircuit, TrackedCircuit},
+#     collection::{Map, BufferedVector, Collection},
+#     tracker::{Tracker, frames::{Frames, dependency_graph}},
 # };
 # type BoolVec = bit_vec::BitVec;
-# type Storage = Map<BoolVec>;
-# type PauliVec = pauli::PauliVec<BoolVec>;
+# type PauliStack = pauli::PauliStack<BoolVec>;
+# type Storage = Map<PauliStack>;
 # let mut circ = TrackedCircuit {
 #     circuit: DummyCircuit {},
 #     tracker: Frames::<Storage>::init(3),
@@ -460,37 +463,37 @@ impl ExtendTrackedCircuit for TrackedCircuit<DummyCircuit, Frames<Storage>, Stor
 // the output qubits
 assert_eq!(
     vec![
-        (3, &PauliVec::try_from_str("0000000", "1001110").unwrap()),
-        (6, &PauliVec::try_from_str("0000000", "0101101").unwrap()),
-        (9, &PauliVec::try_from_str("0010111", "0000000").unwrap()),
+        (3, &PauliStack::try_from_str("0000000", "1001110").unwrap()),
+        (6, &PauliStack::try_from_str("0000000", "0101101").unwrap()),
+        (9, &PauliStack::try_from_str("0010111", "0000000").unwrap()),
     ],
-    circ.tracker.as_storage().sort_by_bit()
+    circ.tracker.as_storage().sort_by_key()
 );
 // the other qubits; moving the Z corrections literally removed them from memory
 assert_eq!(
     vec![
-        (0, &PauliVec::try_from_str("", "").unwrap()),
-        (1, &PauliVec::try_from_str("0", "").unwrap()),
-        (2, &PauliVec::try_from_str("00", "").unwrap()),
-        (4, &PauliVec::try_from_str("000", "").unwrap()),
-        (5, &PauliVec::try_from_str("0000", "").unwrap()),
-        (7, &PauliVec::try_from_str("00000", "").unwrap()),
-        (8, &PauliVec::try_from_str("000000", "").unwrap())
+        (0, &PauliStack::try_from_str("", "").unwrap()),
+        (1, &PauliStack::try_from_str("0", "").unwrap()),
+        (2, &PauliStack::try_from_str("00", "").unwrap()),
+        (4, &PauliStack::try_from_str("000", "").unwrap()),
+        (5, &PauliStack::try_from_str("0000", "").unwrap()),
+        (7, &PauliStack::try_from_str("00000", "").unwrap()),
+        (8, &PauliStack::try_from_str("000000", "").unwrap())
     ],
-    circ.storage.sort_by_bit()
+    circ.storage.sort_by_key()
 );
 
 # circ.measure_and_store_all();
-# let storage = Vector {
-#     frames: circ.storage.into_sorted_by_bit()
-#     .into_iter()
-#     .map(|(_, stack)| stack)
-#     .collect()
-# };
+# let storage = BufferedVector(
+#     circ.storage.into_sorted_by_key()
+#       .into_iter()
+#       .map(|(_, stack)| stack)
+#       .collect()
+# );
 // ...
 
 assert_eq!(
-    storage.create_dependency_graph(&map),
+    dependency_graph::create_dependency_graph(&storage, &map),
     vec![
         vec![
             (0, vec![]), (1, vec![]), (2, vec![]),

@@ -12,24 +12,6 @@ use serde::{
 
 use super::Pauli;
 
-// just to effectively have an impl bool to make things more convenient here; the
-// disadvantage is that we cannot define the methods to be const but we don't need that
-trait ResolvePauli {
-    fn left(self) -> u8;
-    fn right(self) -> u8;
-}
-
-impl ResolvePauli for bool {
-    #[inline(always)]
-    fn left(self) -> u8 {
-        (self as u8) << 1
-    }
-    #[inline(always)]
-    fn right(self) -> u8 {
-        self as u8
-    }
-}
-
 /// Pauli encoding into two bits. It is basically an "u2", in terms of a single Pauli
 /// operator (without phases).
 ///
@@ -51,19 +33,10 @@ pub struct PauliDense {
 }
 
 macro_rules! const_pauli {
-    ($(($name:ident, $value:expr, $doc:literal),)*) => {$(
-        /// Encoded Pauli
-        #[doc = $doc]
-        /// .
-        pub const $name: PauliDense = PauliDense { storage: $value };
+    ($($name:ident,)*) => {$(
+        const $name: Self = Self { storage: encoding::$name };
     )*};
 }
-const_pauli!(
-    (PAULI_I, 0, "I"),
-    (PAULI_X, 2, "X"),
-    (PAULI_Y, 3, "Y"),
-    (PAULI_Z, 1, "Z"),
-);
 
 impl TryFrom<u8> for PauliDense {
     type Error = u8;
@@ -97,8 +70,8 @@ impl PauliDense {
     /// ```
     /// # #[cfg_attr(coverage_nightly, no_coverage)]
     /// # fn main() {
-    /// # use pauli_tracker::pauli::Pauli;
-    /// assert_eq!(Pauli::new_x().storage(), 2);
+    /// # use pauli_tracker::pauli::{Pauli, PauliDense};
+    /// assert_eq!(PauliDense::new_x().storage(), 2);
     /// # }
     pub fn storage(&self) -> u8 {
         self.storage
@@ -122,10 +95,10 @@ impl PauliDense {
     /// ```
     /// # #[cfg_attr(coverage_nightly, no_coverage)]
     /// # fn main() {
-    /// # use pauli_tracker::pauli::Pauli;
-    /// let mut pauli = Pauli::new_i();
+    /// # use pauli_tracker::pauli::{Pauli, PauliDense};
+    /// let mut pauli = PauliDense::I;
     /// pauli.set_storage(1);
-    /// assert_eq!(pauli, Pauli::new_z());
+    /// assert_eq!(pauli, Pauli::Z);
     /// # }
     pub fn set_storage(&mut self, storage: u8) {
         assert!(storage <= 3);
@@ -139,9 +112,9 @@ impl PauliDense {
     /// ```
     /// # #[cfg_attr(coverage_nightly, no_coverage)]
     /// # fn main() {
-    /// # use pauli_tracker::pauli::Pauli;
-    /// assert_eq!(2, Pauli::new_x().xmask());
-    /// assert_eq!(0, Pauli::new_z().xmask());
+    /// # use pauli_tracker::pauli::{Pauli, PauliDense};
+    /// assert_eq!(2, PauliDense::new_x().xmask());
+    /// assert_eq!(0, PauliDense::new_z().xmask());
     /// # }
     /// ```
     pub fn xmask(&self) -> u8 {
@@ -153,9 +126,9 @@ impl PauliDense {
     /// ```
     /// # #[cfg_attr(coverage_nightly, no_coverage)]
     /// # fn main() {
-    /// # use pauli_tracker::pauli::Pauli;
-    /// assert_eq!(0, Pauli::new_x().zmask());
-    /// assert_eq!(1, Pauli::new_z().zmask());
+    /// # use pauli_tracker::pauli::{Pauli, PauliDense};
+    /// assert_eq!(0, PauliDense::new_x().zmask());
+    /// assert_eq!(1, PauliDense::new_z().zmask());
     /// # }
     /// ```
     pub fn zmask(&self) -> u8 {
@@ -188,6 +161,8 @@ impl Display for PauliDense {
 }
 
 impl Pauli for PauliDense {
+    const_pauli!(I, X, Y, Z,);
+
     fn new(x: bool, z: bool) -> Self {
         Self { storage: x.left() ^ z.right() }
     }
@@ -248,6 +223,35 @@ impl Pauli for PauliDense {
     fn set_z(&mut self, z: bool) {
         self.storage &= z.right() | 2;
         self.storage |= z.right();
+    }
+}
+
+/// Pauli encoding into two bits.
+pub mod encoding {
+    /// Code for the identity.
+    pub const I: u8 = 0;
+    /// Code for the Pauli X gate.
+    pub const X: u8 = 2;
+    /// Code for the Pauli Y gate.
+    pub const Y: u8 = 3;
+    /// Code for the Pauli Z gate.
+    pub const Z: u8 = 1;
+}
+
+// just to effectively have an impl bool to make things more convenient here; the
+// disadvantage is that we cannot define the methods to be const but we don't need that
+trait ResolvePauli {
+    fn left(self) -> u8;
+    fn right(self) -> u8;
+}
+impl ResolvePauli for bool {
+    #[inline(always)]
+    fn left(self) -> u8 {
+        (self as u8) << 1
+    }
+    #[inline(always)]
+    fn right(self) -> u8 {
+        self as u8
     }
 }
 
