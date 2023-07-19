@@ -25,12 +25,12 @@ use super::{
 };
 use crate::tracker::frames::dependency_graph::DependencyGraph;
 
-type Deps = HashMap<usize, Vec<usize>>;
-type Look = Vec<Vec<usize>>;
+type DepsCounter = HashMap<usize, usize>;
+type Lookup = Vec<Vec<usize>>;
 
 #[derive(Clone, Debug)]
 pub struct LookupBuffer {
-    look: Look,
+    look: Lookup,
 }
 
 impl LookupBuffer {
@@ -44,26 +44,26 @@ pub type Partitioner = Partition<Set>;
 #[derive(Debug, Clone)]
 pub struct PathGenerator<'l, T /* : Init<I> */> {
     // one could also put the dependents with the bit into the partition set and in deps
-    // have vaules of the form (dependents, dependencies), however, the Partition clones
+    // have values of the form (dependents, dependencies), however, the Partition clones
     // the set multiple times, therefore we don't want the dependents in there (also it
     // makes the from(DependencyGraph) function and the step function simpler if it is
     // separated)
     measureable: T,
-    deps: Deps,
-    // it would have been slighty more ergnomic to use use an Rc instead of a reference
+    deps: DepsCounter,
+    // it would have been slightly more ergnomic to use use an Rc instead of a reference
     // (no need to keep the actual map in an extra variable), however, this would have
-    // been slyghtly less performant (Rc has an overhead every time it is cloned or
+    // been slightly less performant (Rc has an overhead every time it is cloned or
     // dropped, which happens rather often when sweeping); alternatively one could own
     // the map and always clone it, this would have the benefit that we could remove
     // elements from the map in the step function, however, since we are using a
     // HashMap, this does not really change the lookup time, rather the removing might
     // cause a slight overhead, and also we have the additional time and space overhead
     // when cloning it
-    look: &'l Look,
+    look: &'l Lookup,
 }
 
 impl<'l, T> PathGenerator<'l, T> {
-    fn new(measureable: T, deps: Deps, look: &'l Look) -> Self {
+    fn new(measureable: T, deps: DepsCounter, look: &'l Lookup) -> Self {
         Self { measureable, deps, look }
     }
 
@@ -87,7 +87,7 @@ impl<'l, T: Init<usize>> PathGenerator<'l, T> {
         if graph.is_empty() {
             return Self {
                 measureable: T::default(),
-                deps: Deps::default(),
+                deps: DepsCounter::default(),
                 look,
             };
         }
@@ -103,7 +103,7 @@ impl<'l, T: Init<usize>> PathGenerator<'l, T> {
             }
         }
 
-        fn resolve(bit: usize, rest: &[Vec<(usize, Vec<usize>)>], look: &mut Look) {
+        fn resolve(bit: usize, rest: &[Vec<(usize, Vec<usize>)>], look: &mut Lookup) {
             let mut dependents = Vec::new();
             for layer in rest {
                 for (dep, deps) in layer {
@@ -131,7 +131,7 @@ impl<'l, T: Init<usize>> PathGenerator<'l, T> {
             let rest = graph_iter.as_ref();
             for (bit, dependency) in layer {
                 resolve(bit, rest, look);
-                deps.insert(bit, dependency);
+                deps.insert(bit, dependency.len());
             }
         }
 
@@ -163,15 +163,15 @@ impl<'l, T: Init<usize>> PathGenerator<'l, T> {
     // self.measureable and does not overlap with new_measureable_set
 
     fn update_unchecked(
-        look: &Look, // always self.look; don't use self because of borrow problems
-        deps: &mut Deps, // might be self.deps
+        look: &Lookup, // always self.look; don't use self because of borrow problems
+        deps: &mut DepsCounter, // might be self.deps
         measure_set: &[usize],
         new_measureable_set: &mut Vec<usize>,
     ) -> Result<(), TimeOrderingViolation> {
         for measure in measure_set.iter() {
             let dependents = &look[*measure];
             for bit in dependents {
-                let dependencies = match deps.get_mut(bit) {
+                let dependency_count = match deps.get_mut(bit) {
                     Some(s) => s,
                     None => {
                         return Err(TimeOrderingViolation::MissingDependent(
@@ -179,12 +179,8 @@ impl<'l, T: Init<usize>> PathGenerator<'l, T> {
                         ));
                     }
                 };
-                let pos = dependencies.iter().position(|e| e == measure).expect(
-                    "bug: the creation of self via from_dependency_graph guarantees \
-                     that the measureable bit is in dependencies",
-                );
-                dependencies.swap_remove(pos);
-                if dependencies.is_empty() {
+                *dependency_count -= 1;
+                if *dependency_count == 0 {
                     deps.remove(bit)
                         .expect("bug: we checked it already above with get_mut");
                     new_measureable_set.push(*bit);
