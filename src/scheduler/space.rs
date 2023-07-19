@@ -37,6 +37,11 @@ pub struct Graph {
     max_memory: usize,
 }
 
+// not sure how idiomatic it is to do this macro stuff here; a proc macro might be
+// cleaner, but it is not necessary and probably wouldn't lead to less code; someone
+// knows a better way (without copy paste or more runtime operations (ignoring
+// optimizations))?
+
 macro_rules! new_loop {
     ($nodes:expr, $edges:expr, $bit_mapping:expr, $check:tt) => {
         if let Some(bit_mapping) = $bit_mapping {
@@ -52,7 +57,6 @@ macro_rules! new_loop {
         }
     };
 }
-
 macro_rules! new_body {
     ($left:expr, $right:expr, $nodes:expr,checked) => {
         if $left == $right {
@@ -66,6 +70,54 @@ macro_rules! new_body {
     ($left:expr, $right:expr, $nodes:expr,unchecked) => {
         $nodes[$left].1.push($right);
         $nodes[$right].1.push($left);
+    };
+}
+
+macro_rules! impl_measure {
+    ($name:ident, $check:tt) => {
+        fn $name(&mut self, bit: usize) -> return_type!($check) {
+            let node = &mut self.nodes[bit];
+            match node.0 {
+                State::Sleeping => {
+                    self.current_memory += 1; // corrected later on in self.update_memory
+                    node.0 = State::Measured;
+                }
+                State::InMemory => node.0 = State::Measured,
+                State::Measured => {
+                    return return_error!($check, bit);
+                }
+            }
+            let neighbors = mem::take(&mut node.1);
+            for neighbor in neighbors.iter() {
+                self.initialize(*neighbor);
+            }
+            let _ = mem::replace(&mut self.nodes[bit].1, neighbors);
+            return_ok!($check)
+        }
+    };
+}
+macro_rules! return_type {
+    (checked) => {
+        Result<(), AlreadyMeasured>
+    };
+    (unchecked) => {
+        ()
+    };
+}
+macro_rules! return_error {
+    (checked, $bit:expr) => {
+        Err(AlreadyMeasured { bit: $bit })
+    };
+    (unchecked, $bit:expr) => {
+        ()
+    };
+}
+macro_rules! return_ok {
+    (checked) => {
+        Ok(())
+    };
+    (unchecked) => {
+        ()
     };
 }
 
@@ -103,44 +155,25 @@ impl Graph {
         self.max_memory
     }
 
-    fn initialize(&mut self, bit: usize) -> Result<(), AlreadyMeasured> {
+    #[inline]
+    fn initialize(&mut self, bit: usize) {
         match &mut self.nodes[bit].0 {
             state @ State::Sleeping => {
                 *state = State::InMemory;
                 self.current_memory += 1;
             }
             State::InMemory => (),
-            State::Measured => {
-                return Err(AlreadyMeasured {
-                    bit,
-                    operation: Operation::Initialize,
-                });
-            }
+            State::Measured => {}
         }
-        Ok(())
     }
 
-    fn measure(&mut self, bit: usize) -> Result<(), AlreadyMeasured> {
-        let neighbors = mem::take(&mut self.nodes[bit].1);
-        for neighbor in neighbors.iter() {
-            let _ = self.initialize(*neighbor); // Err is okay
+    impl_measure!(measure, checked);
+
+    fn update_memory(&mut self, len: usize) {
+        if self.current_memory > self.max_memory {
+            self.max_memory = self.current_memory;
         }
-        let node = &mut self.nodes[bit];
-        let _ = mem::replace(&mut node.1, neighbors);
-        match node.0 {
-            State::Sleeping => {
-                self.current_memory += 1;
-                node.0 = State::Measured;
-            }
-            State::InMemory => node.0 = State::Measured,
-            State::Measured => {
-                return Err(AlreadyMeasured {
-                    bit,
-                    operation: Operation::Measure,
-                });
-            }
-        }
-        Ok(())
+        self.current_memory -= len; // correct ...
     }
 }
 
@@ -158,35 +191,36 @@ impl Focus<&[usize]> for Graph {
         for bit in measure_set {
             self.measure(*bit)?;
         }
-        if self.current_memory > self.max_memory {
-            self.max_memory = self.current_memory;
-        }
-        self.current_memory -= measure_set.len();
+        self.update_memory(measure_set.len());
         Ok(())
+    }
+}
+
+#[cfg(any(not(debug_assertions), rust_analyzer))]
+impl Graph {
+    impl_measure!(measure_unchecked, unchecked);
+
+    pub(super) fn focus_inplace_unchecked(&mut self, measure_set: &[usize]) {
+        for bit in measure_set {
+            self.measure_unchecked(*bit);
+        }
+        self.update_memory(measure_set.len());
+    }
+
+    pub(super) fn focus_unchecked(&self, measure_set: &[usize]) -> Self {
+        let mut new = self.clone();
+        new.focus_inplace_unchecked(measure_set);
+        new
     }
 }
 
 #[derive(Debug, Clone)]
 pub struct AlreadyMeasured {
     bit: usize,
-    operation: Operation,
-}
-#[derive(Debug, Clone)]
-pub enum Operation {
-    Initialize,
-    Measure,
 }
 impl Display for AlreadyMeasured {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(
-            f,
-            "cannot perform operation \"{}\" on already measured bit {}",
-            match self.operation {
-                Operation::Initialize => "initialize",
-                Operation::Measure => "measure",
-            },
-            self.bit
-        )
+        write!(f, "cannot measure bit \"{}\" as it is already measured", self.bit)
     }
 }
 impl Error for AlreadyMeasured {}
