@@ -96,6 +96,8 @@ impl<'l, T: Init<usize>> PathGenerator<'l, T> {
             };
         }
 
+        // one could/should? do some similar macro stuff as in super::space to get rid
+        // of one loop run ...
         if let Some(bit_mapping) = bit_mapping {
             for layer in graph.iter_mut() {
                 for (bit, deps) in layer {

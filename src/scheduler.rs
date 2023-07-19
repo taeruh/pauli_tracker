@@ -65,10 +65,9 @@ impl<T: Init<usize>> Focus<&[usize]> for Scheduler<'_, T> {
 
     fn focus_inplace(&mut self, measure_set: &[usize]) -> Result<(), Self::Error> {
         self.time.focus_inplace(measure_set)?;
-        #[allow(unused_variables)]
         #[cfg(debug_assertions)]
         self.space.focus_inplace(measure_set)?;
-        #[cfg(any(not(debug_assertions), rust_analyzer))]
+        #[cfg(not(debug_assertions))]
         self.space.focus_inplace_unchecked(measure_set);
         Ok(())
     }
@@ -78,10 +77,9 @@ impl<T: Init<usize>> Focus<&[usize]> for Scheduler<'_, T> {
         Self: Sized,
     {
         let new_time = self.time.focus(measure_set)?;
-        #[allow(unused_variables)]
         #[cfg(debug_assertions)]
         let new_space = self.space.focus(measure_set)?;
-        #[cfg(any(not(debug_assertions), rust_analyzer))]
+        #[cfg(not(debug_assertions))]
         let new_space = self.space.focus_unchecked(measure_set);
         Ok(Self { time: new_time, space: new_space })
     }
@@ -97,10 +95,9 @@ impl FocusIterator for Scheduler<'_, Partition<Vec<usize>>> {
     {
         let (new_time, mess) = self.time.next_and_focus()?;
         unsafe { COUNT += 1 };
-        #[allow(unused_variables)]
         #[cfg(debug_assertions)]
         let new_space = self.space.focus(&mess).unwrap();
-        #[cfg(any(not(debug_assertions), rust_analyzer))]
+        #[cfg(not(debug_assertions))]
         let new_space = self.space.focus_unchecked(&mess);
         Some((Self { time: new_time, space: new_space }, mess))
     }
@@ -180,7 +177,7 @@ mod tests {
         let max = 4;
 
         let mut lookup_buffer = LookupBuffer::new(num);
-        let graph = Graph::new(&graph_buffer);
+        let graph = Graph::from_graph_buffer(&graph_buffer);
         let scheduler = Scheduler::new(
             PathGenerator::from_dependency_graph(ordering, &mut lookup_buffer, None),
             graph,
