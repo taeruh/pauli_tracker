@@ -19,8 +19,8 @@ use super::{
 };
 use crate::{
     collection::{
-        CollectionRequired,
         Collection,
+        CollectionRequired,
     },
     pauli::Pauli,
 };
@@ -32,7 +32,7 @@ use crate::{
 /// 2).
 // I'm not sure what the most efficient inner type would be here, Vec<bool>, Vec<Pauli>,
 // BitVec, ...
-#[derive(Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Default, Debug)]
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, PartialOrd, Ord, Hash)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct Live<S> {
     storage: S,

@@ -27,7 +27,7 @@ use crate::{
 /// A newtype vector of [PauliVec]s. Restricted, since we don't have the flexibility of
 /// a hashmap, but if that is no problem, and the type is used correctly, it is more
 /// efficient than [Map](super::map::Map).
-#[derive(Clone, PartialEq, Eq, PartialOrd, Ord, Default, Debug)]
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, PartialOrd, Ord, Hash)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct Vector<B> {
     /// The inner storage.

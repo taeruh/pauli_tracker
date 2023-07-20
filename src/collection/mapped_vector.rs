@@ -20,12 +20,12 @@ use serde::{
 };
 
 use super::{
-    CollectionRequired,
     Collection,
+    CollectionRequired,
 };
 use crate::slice_extension::GetTwoMutSlice;
 
-#[derive(Clone, PartialEq, Eq, Default, Debug)]
+#[derive(Debug, Clone, Default, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct MappedVector<T> {
     frames: Vec<T>,

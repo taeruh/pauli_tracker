@@ -36,8 +36,8 @@ use super::{
 use crate::{
     boolean_vector::BooleanVector,
     collection::{
-        CollectionRequired,
         Collection,
+        CollectionRequired,
     },
     pauli::{
         Pauli,
@@ -60,7 +60,7 @@ pub mod dependency_graph;
 /// compatible storage types.
 ///
 /// [collection]: crate::collection
-#[derive(Clone, Debug, Default)]
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, PartialOrd, Ord, Hash)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct Frames<Storage> {
     storage: Storage,
@@ -68,8 +68,7 @@ pub struct Frames<Storage> {
 }
 
 /// The Error when we overwrite a qubit's Pauli stack.
-#[derive(Clone, PartialEq, Eq, PartialOrd, Ord, Default, Debug)]
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct OverwriteStack<T> {
     /// The qubit.
     pub bit: usize,
@@ -94,8 +93,7 @@ impl<Storage> AsRef<Storage> for Frames<Storage> {
 ///
 /// It can be either a [MissingStack] error, if the qubit is missing, or an
 /// [OverwriteStack] error if the qubit was already present in the other storage.
-#[derive(Clone, PartialEq, Eq, PartialOrd, Ord, Debug)]
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum StoreError<T> {
     /// If one would overwrite the stack in the other storage.
     OverwriteStack(OverwriteStack<T>),

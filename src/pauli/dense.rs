@@ -25,16 +25,10 @@ use super::Pauli;
 /// Unsafe code might rely on that invariant (e.g., via accessing the storage with
 /// [Self::storage] and using it to index a pointer), therefore, functions that make it
 /// possible to circumvent the invariant are unsafe.
-#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Default, Debug)]
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, PartialOrd, Ord, Hash)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct PauliDense {
     storage: u8,
-}
-
-macro_rules! const_pauli {
-    ($($name:ident,)*) => {$(
-        const $name: Self = Self { storage: encoding::$name };
-    )*};
 }
 
 impl TryFrom<u8> for PauliDense {
@@ -159,6 +153,12 @@ impl Display for PauliDense {
     }
 }
 
+macro_rules! const_pauli {
+    ($($name:ident,)*) => {$(
+        const $name: Self = Self { storage: encoding::$name };
+    )*};
+}
+
 impl Pauli for PauliDense {
     const_pauli!(I, X, Y, Z,);
 
@@ -225,7 +225,7 @@ impl Pauli for PauliDense {
     }
 }
 
-/// Pauli encoding into two bits.
+/// Pauli encoding into two bits (ignoring phases).
 pub mod encoding {
     /// Code for the identity.
     pub const I: u8 = 0;

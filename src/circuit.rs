@@ -64,7 +64,8 @@ pub use random_measurement::RandomMeasurementCircuit;
 /// The type can be used to build up the underlining circuit, while keeping track of the
 /// Pauli gates that shall be extracted from the (quantum) simulation, e.g., the Pauli
 /// corrections in [MBQC](https://doi.org/10.48550/arXiv.0910.1116).
-#[derive(Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Default, Debug)]
+// #[derive(Debug, Clone, Copy, Default, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct TrackedCircuit<Circuit, Tracker, Storage> {
     /// The underlining circuit (simulator). Should implement [CliffordCircuit]
     pub circuit: Circuit,

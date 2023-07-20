@@ -28,11 +28,11 @@ use crate::{
     slice_extension::GetTwoMutSlice,
 };
 
-#[derive(Debug, Default)]
 // this is basically a HashMap<key=usize, value=PauliVec> splitted into
 // HashMap<key=usize, position_in_vec_=usize> and Vec<value=PauliVec>; we do this
 // because it is more memory-efficient for many PauliVec(s) since HashMaps kinda need
 // the memory even if there's no key
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, PartialOrd, Ord, Hash)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct MappedVector<B> {
     // note that we are effectively using an array of array; this wouldn't be optimal

@@ -3,12 +3,18 @@ A [BooleanVector] impl for a SIMD vector.
 */
 
 use bitvec_simd::BitVec;
+#[cfg(feature = "serde")]
+use serde::{
+    Deserialize,
+    Serialize,
+};
 
 use super::BooleanVector;
 
 /// A transparent newtype wrapper around
 /// [bitvec_simd::BitVec](https://docs.rs/bitvec_simd/latest/bitvec_simd/type.BitVec.html).
-#[derive(Clone, PartialEq, Debug)]
+#[derive(Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct SimdBitVec(pub BitVec);
 
 impl FromIterator<bool> for SimdBitVec {
@@ -29,7 +35,7 @@ impl Default for SimdBitVec {
 }
 
 /// An [Iterator] over [SimdBitVec]. Create with [IntoIterator].
-#[derive(Clone, PartialEq, Debug)]
+#[derive(Debug, Clone, Default, PartialEq)]
 pub struct Iter {
     vec: SimdBitVec,
     current: usize,
@@ -43,7 +49,7 @@ impl Iterator for Iter {
 }
 
 /// An [Iterator] over &[SimdBitVec]. Created with [BooleanVector::iter_vals].
-#[derive(Copy, Clone, PartialEq, Debug)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub struct IterFromRef<'l> {
     vec: &'l SimdBitVec,
     current: usize,

@@ -37,7 +37,7 @@ pub mod space;
 pub mod time;
 pub mod tree;
 
-#[derive(Clone, Debug)]
+#[derive(Debug, Clone)]
 pub struct Scheduler<'l, T> {
     time: PathGenerator<'l, T>,
     space: Graph<'l>,
@@ -111,7 +111,7 @@ impl FocusIterator for Scheduler<'_, Partition<Vec<usize>>> {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum InstructionError {
     TimeOrderingViolation(NotMeasurable),
     AlreadyMeasured(AlreadyMeasured),

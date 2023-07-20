@@ -1,23 +1,22 @@
 use std::mem;
 
+#[cfg(feature = "serde")]
+use serde::{
+    Deserialize,
+    Serialize,
+};
+
 use super::Pauli;
 
-#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Default, Debug)]
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct PauliTuple(bool, bool);
 
-macro_rules! const_pauli {
-    ($(($name:ident, $x:literal, $z:literal),)*) => {$(
-        const $name: Self = Self ($x, $z);
-    )*};
-}
-
 impl Pauli for PauliTuple {
-    const_pauli!(
-        (I, false, false),
-        (X, true, false),
-        (Y, true, true),
-        (Z, false, true),
-    );
+    const I: Self = Self(false, false);
+    const X: Self = Self(true, false);
+    const Y: Self = Self(true, true);
+    const Z: Self = Self(false, true);
 
     fn new(x: bool, z: bool) -> Self {
         Self(x, z)
@@ -31,6 +30,7 @@ impl Pauli for PauliTuple {
         self.1 ^= other.1;
     }
 
+    #[inline]
     fn h(&mut self) {
         mem::swap(&mut self.0, &mut self.1);
     }

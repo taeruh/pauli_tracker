@@ -1,7 +1,7 @@
 // lints and similar
 #![deny(unsafe_op_in_unsafe_fn)]
-// #![warn(missing_docs)]
-// #![warn(missing_debug_implementations)]
+#![warn(missing_docs)]
+#![warn(missing_debug_implementations)]
 //
 // (nightly) features, only for development
 #![cfg_attr(docsrs, feature(doc_cfg))]
@@ -11,6 +11,13 @@
 #![cfg_attr(coverage_nightly, doc(test(attr(feature(no_coverage)))))]
 //
 // some guidelines (should do a better contributing file ...):
+//
+// If possible all structs and enums should derive
+// #[derive(Debug, Clone, Copy, Default, PartialEq, Eq, PartialOrd, Ord, Hash)]
+// in this order! The fixed order, so that it is easier to see if something is missing.
+// If a trait cannot be derived and it makes sense to implement it, or we need some
+// custom implementation, do it manually. The same thing is valid for Serialize and
+// Deserialized, conditioned by a cfg(_attr)(feature = "serde"(, ...)).
 //
 // set up all feature code as follows for proper feature documentation:
 // #[cfg(feature = "<feature>")]
@@ -38,7 +45,7 @@ general brief introduction to Pauli tracking is given in the repository's
 # Crate features
 
 * **serde**
-  Support [serde](https://docs.rs/serde/latest/serde/) for custom types.
+  Support [serde](https://docs.rs/serde/latest/serde/) the main data types.
 * **circuit**
   Includes the [circuit] module which contains tools to combine the Pauli tracking
   mechanism with a circuit simulator/description.

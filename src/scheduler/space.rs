@@ -8,19 +8,12 @@ use std::{
     fmt::Display,
 };
 
-#[cfg(feature = "serde")]
-use serde::{
-    Deserialize,
-    Serialize,
-};
-
 use super::tree::Focus;
 
 type Node<'l> = (State, &'l Vec<usize>);
 type Nodes<'l> = Vec<Node<'l>>;
 
-#[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Default, Debug)]
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum State {
     #[default]
     Sleeping,
@@ -28,13 +21,12 @@ pub enum State {
     Measured,
 }
 
-#[derive(Clone, Debug)]
+#[derive(Debug, Clone, Default, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct GraphBuffer {
     inner: Vec<Vec<usize>>,
 }
 
-#[derive(Clone, PartialEq, Eq, Default, Debug)]
-// #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[derive(Debug, Clone, Default, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct Graph<'l> {
     nodes: Nodes<'l>,
     current_memory: usize,
@@ -233,7 +225,7 @@ impl<'l> Graph<'l> {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct AlreadyMeasured {
     bit: usize,
 }

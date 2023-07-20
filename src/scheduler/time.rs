@@ -9,12 +9,6 @@ use std::{
     // mem,
 };
 
-#[cfg(feature = "serde")]
-use serde::{
-    Deserialize,
-    Serialize,
-};
-
 use super::{
     combinatoric::Partition,
     tree::{
@@ -28,7 +22,7 @@ use crate::tracker::frames::dependency_graph::DependencyGraph;
 type DepsCounters = HashMap<usize, usize>;
 type Lookup = Vec<Vec<usize>>;
 
-#[derive(Clone, Debug)]
+#[derive(Debug, Clone, Default, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct LookupBuffer {
     look: Lookup,
 }
@@ -41,7 +35,7 @@ impl LookupBuffer {
 
 pub type Set = Vec<usize>;
 pub type Partitioner = Partition<Set>;
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct PathGenerator<'l, T /* : Init<I> */> {
     // one could also put the dependents with the bit into the partition set and in deps
     // have values of the form (dependents, dependencies), however, the Partition clones
@@ -305,16 +299,13 @@ impl<T: Clone> Init<T> for Partition<Vec<T>> {
     }
 }
 
-#[derive(Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[derive(Debug, Clone, Default, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct NotMeasurable(Vec<usize>);
-
 impl Display for NotMeasurable {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "the bits {:?} are not in the measureable set", self.0)
     }
 }
-
 impl Error for NotMeasurable {}
 
 #[cfg(test)]

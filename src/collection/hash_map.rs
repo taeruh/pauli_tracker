@@ -7,8 +7,8 @@ use std::{
 };
 
 use super::{
-    CollectionRequired,
     Collection,
+    CollectionRequired,
 };
 
 pub type Map<T> = HashMap<usize, T>;

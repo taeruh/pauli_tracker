@@ -29,7 +29,7 @@ use crate::boolean_vector::BooleanVector;
 /// Instead of having a vector over [Pauli]s, we separate the X and Z parts into two
 /// vectors (cf. [Pauli] for encoding). This enables us to efficiently perform
 /// (Clifford) operations on those [PauliStack]s.
-#[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Default)]
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, PartialOrd, Ord, Hash)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct PauliStack<T /* : BooleanVector */> {
     /// The bits representing the left qubit on the left-hand side in the tableau
@@ -41,8 +41,7 @@ pub struct PauliStack<T /* : BooleanVector */> {
 }
 
 /// The Error when one tries to parse a char into a bool.
-#[derive(Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Default, Debug)]
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[derive(Debug, Clone, Default, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct BitCharError {
     /// The invalid char.
     pub string: String,

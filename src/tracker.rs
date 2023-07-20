@@ -12,12 +12,6 @@ use std::{
     },
 };
 
-#[cfg(feature = "serde")]
-use serde::{
-    Deserialize,
-    Serialize,
-};
-
 use crate::pauli::Pauli;
 
 /// A vector describing an encoded Pauli string, for example, one frame of
@@ -32,8 +26,7 @@ use crate::pauli::Pauli;
 pub type PauliString<T> = Vec<(usize, T)>;
 
 /// The Error when we try to [measure](Tracker::measure) a missing qubit.
-#[derive(Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Default, Debug)]
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct MissingStack {
     /// The missing qubit.
     pub bit: usize,
@@ -87,13 +80,13 @@ macro_rules! movements {
 }
 
 macro_rules! track_pauli {
-    ($(($name:ident, $gate:literal, $call:ident),)*) => {$(
+    ($(($name:ident, $gate:ident),)*) => {$(
         /// Track a new frame consisting of the [Pauli]
-        #[doc = $gate]
+        #[doc = stringify!($gate)]
         /// at qu`bit`.
         #[inline]
         fn $name(&mut self, bit: usize) {
-            self.track_pauli(bit, Self::Pauli::$call() );
+            self.track_pauli(bit, Self::Pauli::$gate );
         }
     )*};
 }
@@ -132,7 +125,7 @@ pub trait Tracker {
     /// the same frame.
     fn track_pauli_string(&mut self, string: PauliString<Self::Pauli>);
 
-    track_pauli!((track_x, "X", new_x), (track_y, "Y", new_y), (track_z, "Z", new_z),);
+    track_pauli!((track_x, X), (track_y, Y), (track_z, Z),);
 
     single!((h, "Hadamard"), (s, "S"),);
 

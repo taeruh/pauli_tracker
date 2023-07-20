@@ -12,13 +12,20 @@ use std::{
     },
 };
 
+#[cfg(feature = "serde")]
+use serde::{
+    Deserialize,
+    Serialize,
+};
+
 use super::{
-    CollectionRequired,
     Collection,
+    CollectionRequired,
 };
 use crate::slice_extension::GetTwoMutSlice;
 
-#[derive(Clone, PartialEq, Eq, PartialOrd, Ord, Default, Debug)]
+#[derive(Debug, Clone, Default, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct BufferedVector<T>(pub Vec<T>);
 
 impl<T> BufferedVector<T> {

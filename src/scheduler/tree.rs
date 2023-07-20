@@ -12,6 +12,12 @@ use std::{
     mem,
 };
 
+#[cfg(feature = "serde")]
+use serde::{
+    Deserialize,
+    Serialize,
+};
+
 pub trait Focus<Instruction> {
     type Error;
 
@@ -35,18 +41,20 @@ pub trait FocusIterator {
     fn at_leaf(&self) -> Option<Self::LeafItem>;
 }
 
-#[derive(Clone, Debug)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum Step<F, B> {
     Forward(F),
     Backward(B),
 }
 
+#[derive(Debug, Clone, Default, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct Sweep<T> {
     current: T,
     stack: Vec<T>,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct EmptyStackError;
 impl Display for EmptyStackError {
     fn fmt(&self, f: &mut Formatter) -> fmt::Result {
