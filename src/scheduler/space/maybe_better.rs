@@ -24,7 +24,7 @@ pub struct Node {
     neighbors: Vec<usize>,
 }
 
-#[derive(Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Default, Debug)]
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct Graph {
     nodes: Vec<Node>,
     current: usize,

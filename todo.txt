@@ -1,3 +1,5 @@
+- maybe use lint missing_copy_implementation
+- ergonomic trait implementations
 - use hashbrown ...
 - maybe use https://docs.rs/err-derive/latest/err_derive/#
 - lock cargo hack
@@ -20,6 +22,8 @@
 
 
 - write a better contributing.md
+
+- maybe make a proc create for all the macros that are not so good
 
 - write a proper todo.md
 

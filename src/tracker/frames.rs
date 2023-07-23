@@ -36,8 +36,9 @@ use super::{
 use crate::{
     boolean_vector::BooleanVector,
     collection::{
-        Collection,
-        CollectionRequired,
+        Base,
+        Full,
+        Iterable,
     },
     pauli::{
         Pauli,
@@ -120,6 +121,12 @@ impl<T> From<MissingStack> for StoreError<T> {
         StoreError::MissingStack(value)
     }
 }
+#[doc = non_semantic_default!()]
+impl<T: Default> Default for StoreError<T> {
+    fn default() -> Self {
+        Self::MissingStack(MissingStack::default())
+    }
+}
 
 impl<S> Frames<S> {
     /// Create a new [Frames] instance.
@@ -157,7 +164,7 @@ impl<S> Frames<S> {
 
 impl<S, B> Frames<S>
 where
-    S: CollectionRequired<T = PauliStack<B>>,
+    S: Iterable<T = PauliStack<B>>,
     B: BooleanVector,
 {
     /// Pop the last tracked Pauli frame.
@@ -180,7 +187,7 @@ where
     pub fn measure_and_store(
         &mut self,
         bit: usize,
-        storage: &mut impl CollectionRequired<T = PauliStack<B>>,
+        storage: &mut impl Base<T = PauliStack<B>>,
     ) -> Result<(), StoreError<B>> {
         match storage.insert(bit, self.measure(bit)?) {
             Some(p) => Err(OverwriteStack { bit, stack: p }.into()),
@@ -191,16 +198,19 @@ where
 
 impl<S, B> Frames<S>
 where
-    S: Collection<T = PauliStack<B>>,
+    S: Full<T = PauliStack<B>>,
     B: BooleanVector,
 {
     /// Measure all qubits and put the according stack of Paulis into `storage`, i.e.,
     /// do [Frames::measure_and_store] for all qubits.
     pub fn measure_and_store_all(
         &mut self,
-        storage: &mut impl CollectionRequired<T = PauliStack<B>>,
+        storage: &mut impl Base<T = PauliStack<B>>,
     ) {
-        for (bit, pauli) in mem::replace(&mut self.storage, S::init(0)).into_iter() {
+        for (bit, pauli) in
+            mem::replace(&mut self.storage, S::init(0, PauliStack::default()))
+                .into_iter()
+        {
             storage.insert(bit, pauli);
         }
     }
@@ -248,7 +258,7 @@ macro_rules! movements {
 /// [CollectionRequired] implementation.
 impl<S, B> Tracker for Frames<S>
 where
-    S: CollectionRequired<T = PauliStack<B>>,
+    S: Iterable<T = PauliStack<B>>,
     B: BooleanVector,
 {
     type Stack = PauliStack<B>;
@@ -256,7 +266,7 @@ where
 
     fn init(num_qubits: usize) -> Self {
         Self {
-            storage: S::init(num_qubits),
+            storage: S::init(num_qubits, PauliStack::default()),
             frames_num: 0,
         }
     }

@@ -1,4 +1,8 @@
-use std::mem;
+use core::fmt;
+use std::{
+    fmt::Display,
+    mem,
+};
 
 #[cfg(feature = "serde")]
 use serde::{
@@ -11,6 +15,17 @@ use super::Pauli;
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq, PartialOrd, Ord, Hash)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct PauliTuple(bool, bool);
+
+impl Display for PauliTuple {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match *self {
+            Self::I => write!(f, "I"),
+            Self::Z => write!(f, "Z"),
+            Self::X => write!(f, "X"),
+            Self::Y => write!(f, "Y"),
+        }
+    }
+}
 
 impl Pauli for PauliTuple {
     const I: Self = Self(false, false);

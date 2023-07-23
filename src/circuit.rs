@@ -12,7 +12,10 @@ use std::mem;
 
 use crate::{
     boolean_vector::BooleanVector,
-    collection::Collection,
+    collection::{
+        Full,
+        Iterable,
+    },
     pauli::PauliStack,
     tracker::{
         frames::{
@@ -278,8 +281,8 @@ where
 impl<C, A, S, B> TrackedCircuit<C, Frames<A>, S>
 where
     C: CliffordCircuit,
-    A: Collection<T = PauliStack<B>>,
-    S: Collection<T = PauliStack<B>>,
+    A: Full<T = PauliStack<B>>,
+    S: Iterable<T = PauliStack<B>>,
     B: BooleanVector,
 {
     /// Perform a **Measurement** and move the according qubit with its Pauli stack from

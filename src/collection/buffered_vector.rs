@@ -19,8 +19,9 @@ use serde::{
 };
 
 use super::{
-    Collection,
-    CollectionRequired,
+    Base,
+    Full,
+    Iterable,
 };
 use crate::slice_extension::GetTwoMutSlice;
 
@@ -86,10 +87,8 @@ impl<T> IntoIterator for BufferedVector<T> {
     }
 }
 
-impl<T: Default + Clone> CollectionRequired for BufferedVector<T> {
+impl<T: Clone + Default> Base for BufferedVector<T> {
     type T = T;
-    type IterMut<'l> = <&'l mut Self as IntoIterator>::IntoIter where T: 'l;
-
     fn insert(&mut self, key: usize, value: T) -> Option<T> {
         let len = self.len();
         match key.cmp(&len) {
@@ -129,6 +128,11 @@ impl<T: Default + Clone> CollectionRequired for BufferedVector<T> {
     }
 
     #[inline(always)]
+    fn get(&self, key: usize) -> Option<&T> {
+        self.0.get(key)
+    }
+
+    #[inline(always)]
     fn get_mut(&mut self, key: usize) -> Option<&mut T> {
         self.0.get_mut(key)
     }
@@ -147,26 +151,24 @@ impl<T: Default + Clone> CollectionRequired for BufferedVector<T> {
     }
 
     #[inline(always)]
-    fn iter_mut(&mut self) -> Self::IterMut<'_> {
-        self.into_iter()
-    }
-
-    #[inline(always)]
-    fn init(num_keys: usize) -> Self {
-        Self(vec![T::default(); num_keys])
+    fn init(num_keys: usize, init_val: T) -> Self {
+        Self(vec![init_val; num_keys])
     }
 }
 
-impl<T: Default + Clone> Collection for BufferedVector<T> {
+impl<T: Default + Clone> Iterable for BufferedVector<T> {
     type Iter<'l> = <&'l Self as IntoIterator>::IntoIter where T: 'l;
-
-    #[inline(always)]
-    fn get(&self, key: usize) -> Option<&T> {
-        self.0.get(key)
-    }
+    type IterMut<'l> = <&'l mut Self as IntoIterator>::IntoIter where T: 'l;
 
     #[inline(always)]
     fn iter(&self) -> Self::Iter<'_> {
         self.into_iter()
     }
+
+    #[inline(always)]
+    fn iter_mut(&mut self) -> Self::IterMut<'_> {
+        self.into_iter()
+    }
 }
+
+impl<T: Default + Clone> Full for BufferedVector<T> {}

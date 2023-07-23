@@ -7,18 +7,15 @@ use std::{
 };
 
 use super::{
-    Collection,
-    CollectionRequired,
+    Base,
+    Full,
+    Iterable,
 };
 
 pub type Map<T> = HashMap<usize, T>;
 
-impl<T: Default + Clone> CollectionRequired for Map<T> {
+impl<T: Clone> Base for Map<T> {
     type T = T;
-    type IterMut<'l> = iter::Map<
-        hash_map::IterMut<'l, usize, T>,
-        fn((&'l usize, &'l mut T)) -> (usize, &'l mut T),
-    > where T: 'l;
 
     #[inline]
     fn insert(&mut self, key: usize, value: T) -> Option<T> {
@@ -28,6 +25,11 @@ impl<T: Default + Clone> CollectionRequired for Map<T> {
     #[inline]
     fn remove(&mut self, key: usize) -> Option<T> {
         self.remove(&key)
+    }
+
+    #[inline]
+    fn get(&self, key: usize) -> Option<&T> {
+        self.get(&key)
     }
 
     #[inline]
@@ -64,33 +66,35 @@ impl<T: Default + Clone> CollectionRequired for Map<T> {
         self.is_empty()
     }
 
-    #[inline]
-    fn iter_mut(&mut self) -> Self::IterMut<'_> {
-        self.iter_mut().map(|(&i, p)| (i, p))
-    }
-
-    fn init(num_keys: usize) -> Self {
+    fn init(num_keys: usize, init_val: T) -> Self {
         let mut ret = HashMap::with_capacity(num_keys);
         for i in 0..num_keys {
-            ret.insert(i, T::default());
+            ret.insert(i, init_val.clone());
         }
         ret
     }
 }
 
-impl<T: Default + Clone> Collection for Map<T> {
+impl<T: Clone> Iterable for Map<T> {
     type Iter<'l> = iter::Map<
         hash_map::Iter<'l, usize, T>,
         fn((&'l usize, &'l T)) -> (usize, &'l T),
     > where T: 'l;
 
-    #[inline]
-    fn get(&self, key: usize) -> Option<&T> {
-        self.get(&key)
-    }
+    type IterMut<'l> = iter::Map<
+        hash_map::IterMut<'l, usize, T>,
+        fn((&'l usize, &'l mut T)) -> (usize, &'l mut T),
+    > where T: 'l;
 
     #[inline]
     fn iter(&self) -> Self::Iter<'_> {
         self.iter().map(|(&i, p)| (i, p))
     }
+
+    #[inline]
+    fn iter_mut(&mut self) -> Self::IterMut<'_> {
+        self.iter_mut().map(|(&i, p)| (i, p))
+    }
 }
+
+impl<T: Clone> Full for Map<T> {}

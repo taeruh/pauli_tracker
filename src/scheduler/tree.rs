@@ -47,6 +47,13 @@ pub enum Step<F, B> {
     Backward(B),
 }
 
+#[doc = non_semantic_default!()]
+impl<F: Default, B> Default for Step<F, B> {
+    fn default() -> Self {
+        Step::Forward(F::default())
+    }
+}
+
 #[derive(Debug, Clone, Default, PartialEq, Eq, PartialOrd, Ord, Hash)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct Sweep<T> {

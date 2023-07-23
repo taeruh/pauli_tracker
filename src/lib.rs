@@ -2,6 +2,10 @@
 #![deny(unsafe_op_in_unsafe_fn)]
 #![warn(missing_docs)]
 #![warn(missing_debug_implementations)]
+// opting out is the exception
+#![warn(missing_copy_implementations)]
+// semantically wrong; but useful for init stuff, cf. comments below
+// imagine #![warn(missing_default_implementations)]
 //
 // (nightly) features, only for development
 #![cfg_attr(docsrs, feature(doc_cfg))]
@@ -10,30 +14,36 @@
 // thought doc-test should capture the normal #! attributes?)
 #![cfg_attr(coverage_nightly, doc(test(attr(feature(no_coverage)))))]
 //
+
 // some guidelines (should do a better contributing file ...):
 //
-// If possible all structs and enums should derive
-// #[derive(Debug, Clone, Copy, Default, PartialEq, Eq, PartialOrd, Ord, Hash)]
-// in this order! The fixed order, so that it is easier to see if something is missing.
-// If a trait cannot be derived and it makes sense to implement it, or we need some
-// custom implementation, do it manually. The same thing is valid for Serialize and
-// Deserialized, conditioned by a cfg(_attr)(feature = "serde"(, ...)).
+// If possible all structs and enums should derive #[derive(Debug, Clone, Copy, Default,
+// PartialEq, Eq, PartialOrd, Ord, Hash)] in this order! The fixed order, so that it is
+// easier to see if something is missing. If a trait cannot be derived and it makes
+// sense to implement it, or we need some custom implementation, do it manually. The
+// same thing is valid for Serialize and Deserialized, conditioned by a
+// cfg(_attr)(feature = "serde"(, ...)).
 //
-// set up all feature code as follows for proper feature documentation:
-// #[cfg(feature = "<feature>")]
-// #[cfg_attr(docsrs, doc(cfg(feature = "<feature>")))]
-// --cfg docsrs is set when the documentation is build
+// Debug, Clone and Default have to be implemented, except if it is possible (e.g.,
+// Default is not really possible if the type contains references). Default is
+// debatable, because it doesn't make always sense, semantically, but it is useful for
+// initialization; annotate such cases with with #[doc = non_semantic_default!()].
+//
+// All types must implement Copy, except if they are really not Copy
+//
+// set up all feature code as follows for proper feature documentation: #[cfg(feature =
+// "<feature>")] #[cfg_attr(docsrs, doc(cfg(feature = "<feature>")))] --cfg docsrs is
+// set when the documentation is build
 //
 // the lines of the tests should not be included in the coverage, therefore, put
-// #[cfg_attr(coverage_nightly, no_coverage)]
-// on every test function (except if the test is ignore, e.g., proptest); also on
-// closures (except if we are in a doc-test and it is is a oneline closure in, for
-// example, iter::map, and adding the annotation would change the formatting) and
-// functions that are exclusively used in the test (except we really want coverage for
-// them); this attribute does sadly not work with modules; to make things easier one can
-// `use coverage_helper::test` in the test modules and just use the (modified) #[test]
-// attribute; in doc-tests we always need to specify the main function explicitly and
-// put the ...no_coverage... attribute on it
+// #[cfg_attr(coverage_nightly, no_coverage)] on every test function (except if the test
+// is ignore, e.g., proptest); also on closures (except if we are in a doc-test and it
+// is is a oneline closure in, for example, iter::map, and adding the annotation would
+// change the formatting) and functions that are exclusively used in the test (except we
+// really want coverage for them); this attribute does sadly not work with modules; to
+// make things easier one can `use coverage_helper::test` in the test modules and just
+// use the (modified) #[test] attribute; in doc-tests we always need to specify the main
+// function explicitly and put the ...no_coverage... attribute on it
 //
 // annotate tests with cfg-feature attributes if they use them
 
@@ -514,6 +524,13 @@ assert_eq!(
 [bit_vec::BitVec]: https://docs.rs/bit-vec/latest/bit_vec/struct.BitVec.html
 [paper]: https://arxiv.org/abs/2209.07345v2
 */
+
+macro_rules! non_semantic_default {
+    () => {
+        "Note, that semantically, this impl makes not much sense. It is rather useful \
+         for initialization."
+    };
+}
 
 pub mod boolean_vector;
 

@@ -139,6 +139,12 @@ impl From<AlreadyMeasured> for InstructionError {
         Self::AlreadyMeasured(error)
     }
 }
+#[doc = non_semantic_default!()]
+impl Default for InstructionError {
+    fn default() -> Self {
+        Self::TimeOrderingViolation(NotMeasurable::default())
+    }
+}
 
 impl<'l> IntoIterator for Scheduler<'l, Partition<Vec<usize>>> {
     type Item = <Self::IntoIter as Iterator>::Item;

@@ -15,7 +15,7 @@ use pauli_tracker::{
     },
     collection::{
         BufferedVector,
-        Collection,
+        Iterable,
     },
     pauli::{
         tuple::PauliTuple,
@@ -96,7 +96,7 @@ fn roundtrip(init: usize, ops: Vec<Operation>) {
 
     if !measurements.0.is_empty() {
         let graph = dependency_graph::create_dependency_graph(
-            <Storage as Collection>::iter(&circuit.storage),
+            <Storage as Iterable>::iter(&circuit.storage),
             &measurements.0,
         );
         check_graph(&graph, &circuit.storage, &measurements.0).unwrap();

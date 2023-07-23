@@ -37,7 +37,7 @@ macro_rules! inplace {
 /// [Vec]<[bool]>, "bit-vectors" or similar structures. Depending on the context, we use
 /// true/false or 1/0 to when talking about the elements of the vector.
 pub trait BooleanVector:
-    Default + Clone + FromIterator<bool> + IntoIterator<Item = bool> + Debug
+    Debug + Clone + Default + FromIterator<bool> + IntoIterator<Item = bool>
 {
     /// An iterator over the [bool]ean values of the vector. It can be created with
     /// [Self::iter_vals].

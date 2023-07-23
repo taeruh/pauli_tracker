@@ -20,8 +20,9 @@ use serde::{
 };
 
 use super::{
-    Collection,
-    CollectionRequired,
+    Base,
+    Full,
+    Iterable,
 };
 use crate::slice_extension::GetTwoMutSlice;
 
@@ -105,10 +106,8 @@ impl<T> IntoIterator for MappedVector<T> {
     }
 }
 
-impl<T: Default + Clone> CollectionRequired for MappedVector<T> {
+impl<T: Clone> Base for MappedVector<T> {
     type T = T;
-    type IterMut<'l> = <&'l mut Self as IntoIterator>::IntoIter where T: 'l;
-
     #[inline]
     fn insert(&mut self, key: usize, value: T) -> Option<T> {
         self.insert(key, value)
@@ -132,6 +131,11 @@ impl<T: Default + Clone> CollectionRequired for MappedVector<T> {
     }
 
     #[inline]
+    fn get(&self, key: usize) -> Option<&T> {
+        Some(self.frames.index(*self.position.get(&key)?))
+    }
+
+    #[inline]
     fn get_mut(&mut self, key: usize) -> Option<&mut T> {
         Some(self.frames.index_mut(*self.position.get(&key)?))
     }
@@ -151,14 +155,9 @@ impl<T: Default + Clone> CollectionRequired for MappedVector<T> {
         self.frames.is_empty()
     }
 
-    #[inline]
-    fn iter_mut(&mut self) -> Self::IterMut<'_> {
-        self.into_iter()
-    }
-
-    fn init(num_keys: usize) -> Self {
+    fn init(num_keys: usize, init_val: T) -> Self {
         let (frames, position, inverse_position) =
-            (0..num_keys).map(|i| (T::default(), (i, i), i)).multiunzip();
+            (0..num_keys).map(|i| (init_val.clone(), (i, i), i)).multiunzip();
         Self {
             frames,
             position,
@@ -167,16 +166,19 @@ impl<T: Default + Clone> CollectionRequired for MappedVector<T> {
     }
 }
 
-impl<T: Default + Clone> Collection for MappedVector<T> {
+impl<T: Clone> Iterable for MappedVector<T> {
     type Iter<'l> = <&'l Self as IntoIterator>::IntoIter where T: 'l;
-
-    #[inline]
-    fn get(&self, key: usize) -> Option<&T> {
-        Some(self.frames.index(*self.position.get(&key)?))
-    }
+    type IterMut<'l> = <&'l mut Self as IntoIterator>::IntoIter where T: 'l;
 
     #[inline]
     fn iter(&self) -> Self::Iter<'_> {
         self.into_iter()
     }
+
+    #[inline]
+    fn iter_mut(&mut self) -> Self::IterMut<'_> {
+        self.into_iter()
+    }
 }
+
+impl<T: Clone> Full for MappedVector<T> {}

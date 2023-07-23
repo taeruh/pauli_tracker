@@ -12,7 +12,7 @@ use pauli_tracker::{
         DummyCircuit,
         TrackedCircuit,
     },
-    collection::Collection,
+    collection::Iterable,
     scheduler::{
         space::{
             Graph,
@@ -130,7 +130,7 @@ fn roundtrip(ops: Vec<Operation>, edges: Edges, num_nodes: usize) {
     }
 
     let dependency_graph = dependency_graph::create_dependency_graph(
-        <Storage as Collection>::iter(&circuit.storage),
+        <Storage as Iterable>::iter(&circuit.storage),
         &measurements.0,
     );
     let _dependency_graph = dependency_graph.clone();

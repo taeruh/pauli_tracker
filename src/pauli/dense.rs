@@ -144,10 +144,10 @@ impl PauliDense {
 impl Display for PauliDense {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self.storage {
-            0 => write!(f, "I"),
-            1 => write!(f, "Z"),
-            2 => write!(f, "X"),
-            3 => write!(f, "Y"),
+            encoding::I => write!(f, "I"),
+            encoding::Z => write!(f, "Z"),
+            encoding::X => write!(f, "X"),
+            encoding::Y => write!(f, "Y"),
             _ => panic!("unvalid {self:?}"),
         }
     }
