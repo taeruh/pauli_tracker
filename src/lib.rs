@@ -93,7 +93,7 @@ requires the [rand](https://crates.io/crates/rand) crate.
 # fn main() {
 # #[rustfmt::skip]
 use pauli_tracker::{
-    collection::{Map, BufferedVector, Collection},
+    collection::{Map, BufferedVector, Full},
     pauli::{self, Pauli, PauliTuple},
     tracker::{Tracker, live, frames},
 };
@@ -195,7 +195,7 @@ function that can be used to analyse measurement dependencies.
 # fn main() {
 # #[rustfmt::skip]
 use pauli_tracker::{
-    collection::{BufferedVector, Collection},
+    collection::{BufferedVector, Iterable},
     pauli::{self, Pauli},
     tracker::{Tracker, frames::{self, dependency_graph}},
 };
@@ -244,7 +244,8 @@ let map = [
 
 // we are interested in how many steps of parallel measurement we need to measure qubits
 // "0" to "4"; this can be figured out with the dependency graph:
-let graph = dependency_graph::create_dependency_graph(tracker.as_storage().iter(), &map);
+let graph = dependency_graph::create_dependency_graph(
+    Iterable::iter(tracker.as_storage()), &map);
 
 // in this case the graph is already sorted according to the node numbers, but that is
 // not always true, if not one can use storage::sort_layers_by_key to sort it, if
@@ -286,7 +287,7 @@ features "circuit" and "bit-vec", as well as a dependency on the bit_vec crate.
 # #[rustfmt::skip]
 use pauli_tracker::{
     circuit::{CliffordCircuit, DummyCircuit, TrackedCircuit},
-    collection::{Map, BufferedVector, Collection},
+    collection::{Map, BufferedVector, Iterable, Full},
     pauli::{self, Pauli},
     tracker::{Tracker, frames::{self, dependency_graph}},
 };
@@ -390,7 +391,7 @@ let storage = BufferedVector(
 );
 // now the graph:
 assert_eq!(
-    dependency_graph::create_dependency_graph(storage.iter(), &map),
+    dependency_graph::create_dependency_graph(Iterable::iter(&storage), &map),
     vec![
         vec![(0, vec![]), (1, vec![]), (2, vec![])],
         vec![(5, vec![2]), (4, vec![1, 2])],
@@ -423,7 +424,7 @@ with [Tracker::move_z_to_z](tracker::Tracker::move_z_to_z):
 # use pauli_tracker::{
 #     pauli::{self, Pauli},
 #     circuit::{CliffordCircuit, DummyCircuit, TrackedCircuit},
-#     collection::{Map, BufferedVector, Collection},
+#     collection::{Map, BufferedVector, Iterable, Full},
 #     tracker::{Tracker, frames::{Frames, dependency_graph}},
 # };
 # type BoolVec = bit_vec::BitVec;
