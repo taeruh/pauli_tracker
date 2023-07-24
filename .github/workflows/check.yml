@@ -45,7 +45,7 @@ jobs:
       - name: Generate the lockfile with the specified minimal versions
         run: cargo +nightly update -Zdirect-minimal-versions
       - name: cargo +$msrv check
-        run: cargo check --locked --all--features
+        run: cargo check --locked --all-features
 
   clippy:
     name: ${{ matrix.toolchain }} / clippy

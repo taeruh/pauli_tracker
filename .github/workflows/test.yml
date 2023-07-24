@@ -46,7 +46,7 @@ jobs:
         run: cargo test --all-features --doc
 
   os-check:
-    name: ${{ matrix.os }} / locked
+    name: ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -92,7 +92,7 @@ jobs:
   proptests:
     name: proptest
     runs-on: ubuntu-latest
-    needs: locked
+    needs: standard
     steps:
       - uses: actions/checkout@v3
         with:
