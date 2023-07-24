@@ -1,4 +1,5 @@
 use std::{
+    hash::BuildHasherDefault,
     mem,
     thread,
 };
@@ -46,6 +47,7 @@ use proptest::{
         FileFailurePersistence,
     },
 };
+use rustc_hash::FxHasher;
 
 use super::tracking::{
     self,
@@ -273,7 +275,8 @@ fn roundtrip(ops: Vec<Operation>, edges: Edges, num_nodes: usize) {
             }));
         }
 
-        let mut merged_results = HashSet::new();
+        let mut merged_results =
+            HashSet::with_hasher(BuildHasherDefault::<FxHasher>::default());
         for result in splitted_results {
             for r in result.join().unwrap() {
                 assert!(merged_results.insert(r));
@@ -285,7 +288,8 @@ fn roundtrip(ops: Vec<Operation>, edges: Edges, num_nodes: usize) {
     // cannot not directly use a HashSet above, because than the optimal_paths are not
     // deterministic; we don't use HashSet::from_iter, because we want to additionally
     // check that there are no duplicate paths
-    let mut all_results_as_set = HashSet::new();
+    let mut all_results_as_set =
+        HashSet::with_hasher(BuildHasherDefault::<FxHasher>::default());
     for r in all_results {
         assert!(all_results_as_set.insert(r));
     }

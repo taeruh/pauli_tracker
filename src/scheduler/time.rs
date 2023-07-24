@@ -5,10 +5,12 @@
 use std::{
     error::Error,
     fmt::Display,
+    hash::BuildHasherDefault,
     // mem,
 };
 
 use hashbrown::HashMap;
+use rustc_hash::FxHasher;
 
 use super::{
     combinatoric::Partition,
@@ -20,7 +22,7 @@ use super::{
 };
 use crate::tracker::frames::dependency_graph::DependencyGraph;
 
-type DepsCounters = HashMap<usize, usize>;
+type DepsCounters = HashMap<usize, usize, BuildHasherDefault<FxHasher>>;
 type Lookup = Vec<Vec<usize>>;
 
 #[derive(Debug, Clone, Default, PartialEq, Eq, PartialOrd, Ord, Hash)]
@@ -117,7 +119,7 @@ impl<'l, T: Init<usize>> PathGenerator<'l, T> {
         }
 
         let mut measureable = Vec::new();
-        let mut deps = HashMap::new();
+        let mut deps = HashMap::default();
 
         let mut graph_iter = graph.into_iter();
 
