@@ -33,8 +33,6 @@ impl<T> GetTwoMutSlice for [T] {
         one: usize,
         two: usize,
     ) -> Option<(&mut Self::SliceType, &mut Self::SliceType)> {
-        // doing something like for the HashMap triggers miri stacked-borrow errors;
-        // doing it with the pointers directly is cleaner anyway
         let ptr: *mut T = self.as_mut_ptr();
         let a = unsafe { &mut *ptr.add(one) };
         let b = unsafe { &mut *ptr.add(two) };

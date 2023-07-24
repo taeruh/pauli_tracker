@@ -1,4 +1,3 @@
-- add some standard test for autotraits like send, sync, ..
 - docs
 
 ---------- release new major

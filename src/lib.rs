@@ -48,6 +48,10 @@
 // tests are always run with --all--features; however, doc-tests should be under
 // cfg-features conditions if they use them (and this should also be documented) and
 // should be tested with only those features enabled
+//
+// When defining a new type, add it to the marker test at the end of this file (with a
+// customized check function if required). If this test fails in the future, it would be
+// a breaking change!
 
 /*!
 A library to track Pauli frames through a Clifford circuit with measurements. A
@@ -599,5 +603,44 @@ mod tests {
         } else if is_x86_feature_detected!("sse2") {
             assert_eq!("sse2", enabled_simd_target_feature());
         }
+    }
+
+    #[cfg_attr(coverage_nightly, no_coverage)]
+    fn normal<T: Sized + Send + Sync + Unpin>() {}
+
+    #[test]
+    fn marker() {
+        // cf. "List of all items" in docs
+        // Structs
+        normal::<boolean_vector::bitvec_simd::Iter>();
+        normal::<boolean_vector::bitvec_simd::IterFromRef>();
+        normal::<boolean_vector::bitvec_simd::SimdBitVec>();
+        normal::<circuit::DummyCircuit>();
+        normal::<circuit::RandomMeasurementCircuit>();
+        normal::<circuit::TrackedCircuit<(), (), ()>>();
+        normal::<collection::BufferedVector<()>>();
+        normal::<collection::MappedVector<()>>();
+        normal::<pauli::dense::PauliDense>();
+        normal::<pauli::stack::BitCharError>();
+        normal::<pauli::stack::PauliStack<()>>();
+        normal::<pauli::tuple::PauliTuple>();
+        normal::<scheduler::Scheduler<()>>();
+        normal::<scheduler::space::AlreadyMeasured>();
+        normal::<scheduler::space::Graph>();
+        normal::<scheduler::space::GraphBuffer>();
+        normal::<scheduler::time::LookupBuffer>();
+        normal::<scheduler::time::NotMeasurable>();
+        normal::<scheduler::time::PathGenerator<()>>();
+        normal::<scheduler::tree::EmptyStackError>();
+        normal::<scheduler::tree::Sweep<()>>();
+        normal::<tracker::MissingStack>();
+        normal::<tracker::frames::Frames<()>>();
+        normal::<tracker::frames::OverwriteStack<()>>();
+        normal::<tracker::live::Live<()>>();
+        // Enums
+        normal::<scheduler::InstructionError>();
+        normal::<scheduler::space::State>();
+        normal::<scheduler::tree::Step<(), ()>>();
+        normal::<tracker::frames::StoreError<()>>();
     }
 }
