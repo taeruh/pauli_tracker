@@ -34,9 +34,15 @@ use crate::slice_extension::GetTwoMutSlice;
 
 #[derive(Debug, Clone, Default)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-#[serde(bound(serialize = "S: BuildHasher + Serialize, T: Serialize"))]
-#[serde(bound(deserialize = "S: Default + BuildHasher + for<'a> Deserialize<'a>, \
-                             T: for<'a> Deserialize<'a>"))]
+#[cfg_attr(
+    feature = "serde",
+    serde(bound(serialize = "S: BuildHasher + Serialize, T: Serialize"))
+)]
+#[cfg_attr(
+    feature = "serde",
+    serde(bound(deserialize = "S: Default + BuildHasher + for<'a>  \
+                               Deserialize<'a>, T: for<'a> Deserialize<'a>"))
+)]
 pub struct MappedVector<T, S = DefaultHashBuilder> {
     frames: Vec<T>,
     position: HashMap<usize, usize, S>,
