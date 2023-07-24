@@ -41,19 +41,28 @@ impl<T: Clone> Base for Map<T> {
         if key_a == key_b {
             return None;
         }
-        // Safety: we checked above that the keys are different, so it is impossible
-        // that we create two mutable references to the same object (except if there is
-        // a bug in the bucket assigment of the HashMap)
+        // Safety: We checked above that the keys are different, so it is impossible
+        // that we create two mutable references to the same object (except if the
+        // hashing is broken). Regarding temporary aliasing: If we would do exactly the
+        // same with, let's say, a Vec, we would get some Stack-borrow errors from Miri.
+        // This is an example where the Stacked-borrow rules are too strict. It would be
+        // okay under the Tree-borrow rules. The question here is: why do we not get any
+        // Stacked-borrow errors (Tree-borrow is fine)? The answer is that the HashMap
+        // does not access values through a single pointer with offsets, but through
+        // multiple pointers, one for each value. This means when we have pointer to a
+        // value, it will not be invalidated by getting a pointer to another reference,
+        // because they are not accessed through the same pointer (This is actually an
+        // implementation detail of the hashbrown::HashMap and instead of relying on it
+        // we should rather use the hashbrown::HashMap directly and its get_many_mut
+        // method).
         //
-        // I do not know why this isn't triggering an stack-borrow error in miri; doing
-        // the same with Vec/slice does trigger an error. In general it would be cleaner
-        // to go over pointers as I do it for the MappedVector but a HashMap is more
-        // complicated and the tools for that are not stable yet
-        let a = unsafe { &mut *(self.get_mut(&key_a)? as *mut T) };
-        let b = unsafe { &mut *(self.get_mut(&key_b)? as *mut T) };
-        // that would catch a bug in the bucket assignment
-        // assert!(!std::ptr::eq(a, b));
-        Some((a, b))
+        // not creating the &mut directly ensures that we at least fulfill the
+        // Tree-borrow rules if the implementation of HashMap changes (if it changes too
+        // drastically, this might not be true anymore)
+        let a = self.get_mut(&key_a)? as *mut T;
+        let b = self.get_mut(&key_b)? as *mut T;
+        debug_assert!(!std::ptr::eq(a, b));
+        unsafe { Some((&mut *a, &mut *b)) }
     }
 
     #[inline]

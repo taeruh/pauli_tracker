@@ -1,11 +1,12 @@
-- maybe use lint missing_copy_implementation
-- ergonomic trait implementations
 - use hashbrown ...
-- maybe use https://docs.rs/err-derive/latest/err_derive/#
+- use faster hashing algorithm
+- ergonomic trait implementations
 - lock cargo hack
 - lock msrv
-
 - add some standard test for autotraits like send, sync, ..
+
+- maybe use https://docs.rs/err-derive/latest/err_derive/#
+
 
 - use PauliTuple for actions testing template
 

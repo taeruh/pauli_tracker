@@ -45,7 +45,9 @@
 // use the (modified) #[test] attribute; in doc-tests we always need to specify the main
 // function explicitly and put the ...no_coverage... attribute on it
 //
-// annotate tests with cfg-feature attributes if they use them
+// tests are always run with --all--features; however, doc-tests should be under
+// cfg-features conditions if they use them (and this should also be documented) and
+// should be tested with only those features enabled
 
 /*!
 A library to track Pauli frames through a Clifford circuit with measurements. A
@@ -541,8 +543,6 @@ pub mod circuit;
 
 pub mod collection;
 
-// #[cfg(feature = "experimental")]
-// #[cfg_attr(docsrs, doc(cfg(feature = "experimental")))]
 #[cfg(feature = "scheduler")]
 #[cfg_attr(docsrs, doc(cfg(feature = "scheduler")))]
 pub mod scheduler;
