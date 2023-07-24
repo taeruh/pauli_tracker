@@ -1,10 +1,8 @@
 #![cfg(feature = "circuit")]
 
-use std::{
-    collections::HashMap,
-    fmt::Debug,
-};
+use std::fmt::Debug;
 
+use hashbrown::HashMap;
 use pauli_tracker::{
     boolean_vector::BooleanVector,
     circuit::{

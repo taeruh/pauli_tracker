@@ -1,12 +1,13 @@
 use std::{
-    collections::{
-        HashMap,
-        HashSet,
-    },
     mem,
     thread,
 };
 
+use hashbrown::{
+    hash_map,
+    HashMap,
+    HashSet,
+};
 use pauli_tracker::{
     circuit::{
         DummyCircuit,

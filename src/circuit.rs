@@ -325,10 +325,9 @@ where
 
 #[cfg(test)]
 mod tests {
-    use std::collections::HashMap;
-
     use bitvec::vec::BitVec;
     use coverage_helper::test;
+    use hashbrown::HashMap;
 
     use super::*;
     use crate::{

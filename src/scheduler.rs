@@ -156,9 +156,8 @@ impl<'l> IntoIterator for Scheduler<'l, Partition<Vec<usize>>> {
 
 #[cfg(test)]
 mod tests {
-    use std::collections::HashMap;
-
     use coverage_helper::test;
+    use hashbrown::HashMap;
 
     use super::{
         time::LookupBuffer,

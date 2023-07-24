@@ -1,9 +1,8 @@
-use std::{
-    collections::{
-        hash_map,
-        HashMap,
-    },
-    iter,
+use std::iter;
+
+use hashbrown::{
+    hash_map,
+    HashMap,
 };
 
 use super::{

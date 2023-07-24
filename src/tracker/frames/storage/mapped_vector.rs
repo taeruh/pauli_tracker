@@ -1,5 +1,4 @@
 use std::{
-    collections::HashMap,
     iter::{
         Map,
         Zip,
@@ -12,6 +11,7 @@ use std::{
     slice,
 };
 
+use hashbrown::HashMap;
 use itertools::Itertools;
 #[cfg(feature = "serde")]
 use serde::{
@@ -102,7 +102,11 @@ impl<B: BooleanVector> StackStorage for MappedVector<B> {
     type IterMut<'l> = <&'l mut Self as IntoIterator>::IntoIter where B: 'l;
     type Iter<'l> = <&'l Self as IntoIterator>::IntoIter where B: 'l;
 
-    fn insert_pauli_stack(&mut self, bit: usize, pauli: PauliVec<B>) -> Option<PauliVec<B>> {
+    fn insert_pauli_stack(
+        &mut self,
+        bit: usize,
+        pauli: PauliVec<B>,
+    ) -> Option<PauliVec<B>> {
         if let Some(&key) = self.position.get(&bit) {
             let old = mem::replace(self.frames.index_mut(key), pauli);
             return Some(old);

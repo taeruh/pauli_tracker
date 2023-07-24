@@ -3,11 +3,12 @@
 */
 
 use std::{
-    collections::HashMap,
     error::Error,
     fmt::Display,
     // mem,
 };
+
+use hashbrown::HashMap;
 
 use super::{
     combinatoric::Partition,

@@ -3,10 +3,11 @@
 */
 
 use std::{
-    collections::HashMap,
     error::Error,
     fmt::Display,
 };
+
+use hashbrown::HashMap;
 
 use super::tree::Focus;
 

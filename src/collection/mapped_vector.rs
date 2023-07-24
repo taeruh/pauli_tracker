@@ -1,5 +1,4 @@
 use std::{
-    collections::HashMap,
     iter::{
         Map,
         Zip,
@@ -12,6 +11,7 @@ use std::{
     slice,
 };
 
+use hashbrown::HashMap;
 use itertools::Itertools;
 #[cfg(feature = "serde")]
 use serde::{

@@ -20,7 +20,9 @@ crate-type = ["lib"]
 scheduler = []
 circuit = ["dep:rand"]
 experimental = []
-serde = ["dep:serde", "bitvec?/serde", "bitvec_simd?/use_serde", "bit-vec?/serde"]
+serde = ["dep:serde",
+  "hashbrown/serde", "bitvec?/serde", "bitvec_simd?/use_serde", "bit-vec?/serde"
+]
 
 # about the specified dependency version:
 # - we use the newest major version if possible: if we expose an item from a dependency,
@@ -50,6 +52,7 @@ serde = ["dep:serde", "bitvec?/serde", "bitvec_simd?/use_serde", "bit-vec?/serde
 
 [dependencies]
 itertools = "0.11.0"
+hashbrown = "0.14.0"
 bitvec = { version = "1.0.1", optional = true }
 bitvec_simd = { version = "0.20.0", optional = true }
 bit-vec = { version = "0.6.2", optional = true }
