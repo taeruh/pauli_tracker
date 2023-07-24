@@ -220,7 +220,7 @@ mod tests {
                 let mut tracker = Live::init(2);
                 tracker.track_pauli_string(impl_utils::double_init(input));
                 (action)(&mut tracker, 0, 1);
-                let output = impl_utils::double_output(tracker.storage.into_iter());
+                let output = impl_utils::double_output(tracker.storage);
                 assert_eq!(output, check, "{}, {}", result.0, input);
             }
         }
@@ -267,7 +267,7 @@ mod tests {
         assert_eq!(tracker.new_qubit(0), Some(PauliTuple::X));
         assert_eq!(tracker.new_qubit(1), None);
         tracker.track_y(0);
-        assert_eq!(**tracker.as_ref(), vec![PauliTuple::Y, PauliTuple::I]);
+        assert_eq!(tracker.as_ref().n, vec![PauliTuple::Y, PauliTuple::I]);
         assert_eq!(tracker.measure(0), Ok(PauliTuple::Y));
         assert_eq!(tracker.new_qubit(3), None);
         // assert_eq!(

@@ -72,13 +72,9 @@ pub use random_measurement::RandomMeasurementCircuit;
 pub struct TrackedCircuit<Circuit, Tracker, Storage> {
     /// The underlining circuit (simulator). Should implement [CliffordCircuit]
     pub circuit: Circuit,
-    /// The tracker of the Pauli frames. The `ActiveStorage` should implement
-    /// [Collection] (or at least
-    /// [CollectionRequired](crate::collection::CollectionRequired)).
+    /// The tracker of the Pauli frames.
     pub tracker: Tracker,
-    /// An additional storage to store measurement results. Should
-    /// implement [Collection] (or at least
-    /// [CollectionRequired](crate::collection::CollectionRequired)).
+    /// An additional storage to store measurement results.
     pub storage: Storage,
 }
 

@@ -1,37 +1,25 @@
-- use hashbrown ...
-- use faster hashing algorithm
-- ergonomic trait implementations
-- lock cargo hack
-- lock msrv
 - add some standard test for autotraits like send, sync, ..
+- docs
 
-- maybe use https://docs.rs/err-derive/latest/err_derive/#
-
+---------- release new major
 
 - use PauliTuple for actions testing template
+- implement more gates
 
-- maybe derive macro for sweep::impl_into_iterator
-
-- implement a file streaming storage
-- more tests
+- maybe use https://docs.rs/err-derive/latest/err_derive/#
 - maybe try to depend only on proptest when we really run proptest (for less
   dependencies in ci)
 
-- more clifford gates
-- maybe: in storage::vector when inserting, do the same as as in livevector if index to
-  high, i.e., insert buffer stacks
-
-
 - write a better contributing.md
-
-- maybe make a proc create for all the macros that are not so good
-
 - write a proper todo.md
 
-before next major bump:
-- maybe remove deref for storage::Vector
-- panics in create_dependency_graph to return error
-- rewrite LiveVector to be generic like Frames
+- implement a file streaming storage
+- more tests
+
+
+- maybe make a proc crate for all the macros that are not so good
+- ergonomic trait implementations
+
 
 another major bump:
 - maybe make Map's and Vector's inner type private (making Map to a newtype) and remove

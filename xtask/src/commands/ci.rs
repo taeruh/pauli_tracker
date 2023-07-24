@@ -19,7 +19,7 @@ enum Test {
     ClippyBeta,
     Docs,
     Fmt,
-    Locked,
+    Standard,
     Beta,
     OsCheck,
     Coverage,

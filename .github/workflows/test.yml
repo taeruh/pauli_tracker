@@ -11,8 +11,8 @@ concurrency:
 
 jobs:
 
-  locked:
-    name: locked
+  standard:
+    name: standard
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -99,5 +99,11 @@ jobs:
           submodules: true
       - name: Install stable
         uses: dtolnay/rust-toolchain@stable
+      - name: Install nightly for -Zdirect-minimal-versions
+        uses: dtolnay/rust-toolchain@nightly
+      - name: Set default to stable
+        run: rustup default stable
+      - name: Generate the lockfile with the specified minimal versions
+        run: cargo +nightly update -Zdirect-minimal-versions
       - name: test proptests
-        run: cargo test --release proptest --all-features -- --ignored
+        run: cargo test --locked --release proptest --all-features -- --ignored

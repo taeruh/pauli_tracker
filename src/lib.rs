@@ -181,7 +181,7 @@ let conditional_summed_frames: Vec<_> = frames
     .into_iter()
     .map(|(_, pauli_stack)| pauli_stack.sum_up(&measurements))
     .collect();
-assert_eq!(**tracker.as_ref(), conditional_summed_frames, "{measurements:?}");
+assert_eq!(tracker.as_ref().n, conditional_summed_frames, "{measurements:?}");
 # }
 # #[cfg_attr(coverage_nightly, no_coverage)]
 # #[cfg(not(feature = "circuit"))]
@@ -386,7 +386,7 @@ assert_eq!(
 circ.measure_and_store_all();
 // to make the assert work we need a storage with an determinitic iterator; you probably
 // don't need to do this in a real application
-let storage = BufferedVector(
+let storage = BufferedVector::wrap(
     circ.storage.into_sorted_by_key()
     .into_iter()
     .map(|(_, stack)| stack)
@@ -500,7 +500,7 @@ assert_eq!(
 );
 
 # circ.measure_and_store_all();
-# let storage = BufferedVector(
+# let storage = BufferedVector::wrap(
 #     circ.storage.into_sorted_by_key()
 #       .into_iter()
 #       .map(|(_, stack)| stack)

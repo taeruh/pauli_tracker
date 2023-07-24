@@ -14,21 +14,24 @@ use crate::{
 /// qubit depends.
 pub type DependencyGraph = Vec<Vec<(usize, Vec<usize>)>>;
 
-/// Sort the `storage`'s qubits according to the induced dependencies by the frames (row
-/// through the PauliStacks). Each frame in `storage` maps to a qubit number in `map`;
-/// frame (i) -> `map`\[i\]. If a qubit's Pauli stack has non-zero elements in a frame
-/// (i), the qubit is assumed to depend on `map`\[i\]
+/// Sort the `frames`' qubits according to the induced dependencies by the frames (row
+/// through the PauliStacks). Each frame in `frames` maps to a qubit number in `map`;
+/// frame(i) -> `map`\[i\]. If a qubit's Pauli stack has non-zero elements in a
+/// frame(i), the qubit is assumed to depend on `map`\[i\].
 ///
 /// Dependencies that are already covered by later dependencies, i.e., dependencies that
 /// are in a higher layer, are removed. For example if 0 depends on 1 and 2 but 1 also
 /// depends on 2, then 2 is not listed in the dependencies of 0.
 ///
-/// Note that while the sorting is deterministic, up to `storage`'s Iterator
+/// Note that while the sorting is deterministic, up to `frames`' storage's Iterator
 /// implementation, the output might not be sorted as expected, since nodes are swapped
 /// around for better efficiency.
 ///
 /// # Panics
-/// May panic if `map`.len() < number of frames in storage (out of bounds).
+/// The input has to make "sense", i.e., the `map` must not be empty, there, shouldn't
+/// be dependency cycles, etc. The algorithm loops through the qubits, searching for
+/// qubits whose dependecies are already in the graph. If there are no such qubits, it
+/// panics.
 ///
 /// # Examples
 /// ```
@@ -39,7 +42,7 @@ pub type DependencyGraph = Vec<Vec<(usize, Vec<usize>)>>;
 ///     pauli::PauliStack,
 ///     tracker::frames::dependency_graph::create_dependency_graph,
 /// };
-/// let storage = BufferedVector(vec![
+/// let storage = BufferedVector::from(vec![
 ///     PauliStack::<Vec<bool>>::try_from_str("", "").unwrap(),
 ///     PauliStack::<Vec<bool>>::try_from_str("10", "00").unwrap(),
 ///     PauliStack::<Vec<bool>>::try_from_str("01", "10").unwrap(),
@@ -92,8 +95,7 @@ where
 
     assert!(
         !graph[0].is_empty(),
-        "couldn't find any independent qubit; maybe the
-            storage was empty?"
+        "couldn't find any independent qubit; maybe the storage was empty?"
     );
 
     let mut layer_idx = 0;
@@ -132,7 +134,7 @@ where
 
         assert!(
             !new_layer.is_empty(),
-            "couldn't find qubit with resolved deps in layer {}",
+            "couldn't find qubit with resolved dependencies in layer {}",
             layer_idx + 1
         );
 

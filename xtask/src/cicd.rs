@@ -62,7 +62,7 @@ pub fn fmt() {
 // }}
 
 // test
-pub fn locked() {
+pub fn standard() {
     println!("TEST: LOCKED");
     cargo!("+nightly", "update", "-Zdirect-minimal-versions");
     cargo!("test", "--locked", "--all-features", "--all-targets");
@@ -87,8 +87,10 @@ pub fn coverage() {
 
 pub fn proptest() {
     println!("TEST: PROPTEST");
+    cargo!("+nightly", "update", "-Zdirect-minimal-versions");
     cargo!(
         "test",
+        "--locked",
         "--release",
         "proptest",
         "--all-features",
@@ -125,7 +127,7 @@ pub fn full() {
     beta();
     clippy_beta();
     clippy();
-    locked();
+    standard();
     proptest();
     hack();
     coverage();

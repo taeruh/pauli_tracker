@@ -24,12 +24,12 @@ serde = ["dep:serde", "hashbrown/serde", "bitvec?/serde", "bitvec_simd?/use_serd
 
 # about the specified dependency version:
 # - we use the newest major version if possible: if we expose an item from a dependency,
-#   then bumping the dependencies major version is a break change, therefore, if we don't
-#   have to bump the dependency's version, we wait until we really want to increase our
-#   major version because of some other reasons
-# - we use the lowest possible minor version (manually search it with a binary like
-#   search and test with `./target/debug/xtask ci coverage`); this is okay because we
-#   test it in our CI (test locked) and provides maximal flexibility to users.
+#   then bumping the dependencies major version is a breaking change, therefore, if we
+#   don't have to bump the dependency's version, we wait until we really want to
+#   increase our major version because of some other reasons
+# - we use the lowest possible minor version (manually search it with a binary-like
+#   search and test with `./target/debug/xtask ci locked`); this is okay because we
+#   test it in our CI (test locked) and it provides maximal flexibility to users.
 #   However, note that we are not testing all versions in the possible range from our
 #   specified minimal version to the latest version. This means that there might be
 #   versions within the allowed range that do not compile. That is in general a problem
@@ -40,13 +40,14 @@ serde = ["dep:serde", "hashbrown/serde", "bitvec?/serde", "bitvec_simd?/use_serd
 #   breakages, but since this is rather a SemVer failure, I think this is better then
 #   restricting when this library can be used (through too tight dependency version
 #   bounds)
-# - we tend to use a higher patch version (because this are fixes or internal
+# - we tend to use a higher patch version (because these are bug fixes or internal
 #   improvements), i.e., when adding a dependency or updating its major and/or minor
 #   versions, we select the highest possible patch version (because finding the minimal
 #   working patch version seems rather unnecessary - why would someone want to restrict
 #   a dependency to a smaller patch version (except if the patch breaks something, but
-#   then it should be fixed soonly))
-# the above is of course unnecessary for dev-dependencies, xtask, ...
+#   then it should be fixed soon))
+# the above is of course unnecessary for dev-dependencies, xtask, ..., just use whatever
+# works
 
 [dependencies]
 itertools = "0.11.0"

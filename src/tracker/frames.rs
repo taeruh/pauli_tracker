@@ -56,7 +56,7 @@ pub mod dependency_graph;
 ///
 /// The type implements the core functionality to track the Pauli frames through a
 /// Clifford circuit. To be useful, the generic `Storage` type should implement
-/// [Collection] (or at least [CollectionRequired]). The explicit storage type should
+/// [IterableBase] (or better [Full]). The explicit storage type should
 /// have the [PauliStack]s on it's minor axis (this is more or less enforced by
 /// the [collection] traits). The module [collection] provides some
 /// compatible storage types.
@@ -211,7 +211,7 @@ macro_rules! movements {
 }
 
 /// Note that the methods that add or remove memory hold the invariants of (S)torage's
-/// [CollectionRequired] implementation.
+/// [Base] implementation.
 impl<S, B> Tracker for Frames<S>
 where
     S: IterableBase<T = PauliStack<B>>,

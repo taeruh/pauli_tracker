@@ -6,10 +6,6 @@ use std::{
         Enumerate,
     },
     mem,
-    ops::{
-        Deref,
-        DerefMut,
-    },
 };
 
 #[cfg(feature = "serde")]
@@ -29,29 +25,35 @@ use crate::slice_extension::GetTwoMutSlice;
 
 #[derive(Debug, Clone, Default, PartialEq, Eq, PartialOrd, Ord, Hash)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-pub struct BufferedVector<T>(pub Vec<T>);
+pub struct BufferedVector<T> {
+    pub n: Vec<T>,
+}
 
 impl<T> BufferedVector<T> {
     pub fn new() -> Self {
-        Self(Vec::new())
+        Self { n: Vec::new() }
+    }
+
+    pub fn wrap(vec: Vec<T>) -> Self {
+        Self { n: vec }
     }
 }
 
-impl<T> Deref for BufferedVector<T> {
-    type Target = Vec<T>;
-    fn deref(&self) -> &Self::Target {
-        &self.0
-    }
-}
-impl<T> DerefMut for BufferedVector<T> {
-    fn deref_mut(&mut self) -> &mut Self::Target {
-        &mut self.0
-    }
-}
+// impl<T> Deref for BufferedVector<T> {
+//     type Target = Vec<T>;
+//     fn deref(&self) -> &Self::Target {
+//         &self.0
+//     }
+// }
+// impl<T> DerefMut for BufferedVector<T> {
+//     fn deref_mut(&mut self) -> &mut Self::Target {
+//         &mut self.0
+//     }
+// }
 
 impl<T> From<Vec<T>> for BufferedVector<T> {
     fn from(vec: Vec<T>) -> Self {
-        Self(vec)
+        Self { n: vec }
     }
 }
 
@@ -61,7 +63,7 @@ impl<T> FromIterator<(usize, T)> for BufferedVector<T> {
         for (key, value) in iter {
             res.insert(key, value);
         }
-        Self(res)
+        Self { n: res }
     }
 }
 
@@ -69,7 +71,7 @@ impl<'l, T> IntoIterator for &'l BufferedVector<T> {
     type Item = (usize, &'l T);
     type IntoIter = Enumerate<slice::Iter<'l, T>>;
     fn into_iter(self) -> Self::IntoIter {
-        self.0.iter().enumerate()
+        self.n.iter().enumerate()
     }
 }
 
@@ -77,7 +79,7 @@ impl<'l, T> IntoIterator for &'l mut BufferedVector<T> {
     type Item = (usize, &'l mut T);
     type IntoIter = Enumerate<slice::IterMut<'l, T>>;
     fn into_iter(self) -> Self::IntoIter {
-        self.0.iter_mut().enumerate()
+        self.n.iter_mut().enumerate()
     }
 }
 
@@ -85,7 +87,7 @@ impl<T> IntoIterator for BufferedVector<T> {
     type Item = (usize, T);
     type IntoIter = Enumerate<<Vec<T> as IntoIterator>::IntoIter>;
     fn into_iter(self) -> Self::IntoIter {
-        self.0.into_iter().enumerate()
+        self.n.into_iter().enumerate()
     }
 }
 
@@ -103,16 +105,16 @@ where
                 value,
             )),
             Ordering::Equal => {
-                self.push(value);
+                self.n.push(value);
                 None
             }
             Ordering::Greater => {
                 let diff = key - len;
-                self.try_reserve(diff).unwrap_or_else(|e| {
+                self.n.try_reserve(diff).unwrap_or_else(|e| {
                     panic!("error when trying to reserve enough memory: {e}")
                 });
-                self.extend(iter::repeat(T::default()).take(diff));
-                self.push(value);
+                self.n.extend(iter::repeat(T::default()).take(diff));
+                self.n.push(value);
                 None
             }
         }
@@ -125,7 +127,8 @@ where
                  consecutively from the end"
             ),
             Ordering::Equal => Some(
-                self.pop()
+                self.n
+                    .pop()
                     .expect("bug: we checked above that len is bigger than 0"),
             ),
             Ordering::Greater => None,
@@ -134,25 +137,25 @@ where
 
     #[inline(always)]
     fn get(&self, key: usize) -> Option<&T> {
-        self.0.get(key)
+        self.n.get(key)
     }
 
     #[inline(always)]
     fn get_mut(&mut self, key: usize) -> Option<&mut T> {
-        self.0.get_mut(key)
+        self.n.get_mut(key)
     }
 
     fn get_two_mut(&mut self, key_a: usize, key_b: usize) -> Option<(&mut T, &mut T)> {
-        self.0.get_two_mut(key_a, key_b)
+        self.n.get_two_mut(key_a, key_b)
     }
 
     fn len(&self) -> usize {
-        self.0.len()
+        self.n.len()
     }
 
     #[inline(always)]
     fn is_empty(&self) -> bool {
-        self.0.is_empty()
+        self.n.is_empty()
     }
 }
 
@@ -180,7 +183,7 @@ where
     T: Clone + Default,
 {
     fn init(len: usize) -> Self {
-        Self(vec![Default::default(); len])
+        Self { n: vec![Default::default(); len] }
     }
 }
 

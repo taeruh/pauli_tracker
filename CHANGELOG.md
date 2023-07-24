@@ -39,7 +39,8 @@ possible.
   required for the `Frames` tracker. `Init` is just a helper for initialization and
   `Full` just the combination of all those traits. The implementors of the `collection`
   traits are located in the `collection` module. `Vector` is renamed to
-  `BufferedVector`.
+  `BufferedVector`, has changed semantics and does not implement the `Deref(Mut)`
+  anymore.
 - **Breaking Change**: In `Base/StackStorage::insert_pauli`, overwrite and return
   the old value if the qubit is already present, instead of returning the new value.
 - **Breaking Change**: Return the measurement outcomes in in
