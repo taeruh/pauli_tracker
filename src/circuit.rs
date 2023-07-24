@@ -13,8 +13,8 @@ use std::mem;
 use crate::{
     boolean_vector::BooleanVector,
     collection::{
+        Base,
         Full,
-        Iterable,
     },
     pauli::PauliStack,
     tracker::{
@@ -281,8 +281,8 @@ where
 impl<C, A, S, B> TrackedCircuit<C, Frames<A>, S>
 where
     C: CliffordCircuit,
-    A: Full<T = PauliStack<B>>,
-    S: Iterable<T = PauliStack<B>>,
+    A: Full<T = PauliStack<B>> + Default,
+    S: Base<TB = PauliStack<B>>,
     B: BooleanVector,
 {
     /// Perform a **Measurement** and move the according qubit with its Pauli stack from
@@ -309,9 +309,7 @@ where
     ) -> (Vec<(usize, C::Outcome)>, Result<(), OverwriteStack<B>>) {
         let mut outcome = Vec::<(usize, C::Outcome)>::new();
         let num_frames = self.tracker.frames_num();
-        let mut storage = mem::replace(&mut self.tracker, Frames::<A>::init(0))
-            .into_storage()
-            .into_iter();
+        let mut storage = mem::take(&mut self.tracker).into_storage().into_iter();
         while let Some((bit, pauli)) = storage.next() {
             outcome.push((bit, self.circuit.measure(bit)));
             if let Some(stack) = self.storage.insert(bit, pauli) {
@@ -327,7 +325,6 @@ where
 mod tests {
     use bitvec::vec::BitVec;
     use coverage_helper::test;
-    use hashbrown::HashMap;
 
     use super::*;
     use crate::{
@@ -338,6 +335,7 @@ mod tests {
         },
         collection::{
             BufferedVector,
+            Map,
             MappedVector,
         },
         pauli::{
@@ -360,9 +358,8 @@ mod tests {
     fn measure_and_store() {
         let mut circ = TrackedCircuit {
             circuit: DummyCircuit {},
-            // tracker: Frames::<MappedVector<BitVec>>::init(3),
             tracker: Frames::<MappedVector<PauliStack<BitVec>>>::init(3),
-            storage: HashMap::default(),
+            storage: Map::<_>::default(),
         };
 
         circ.measure_and_store(0).1.unwrap();
@@ -413,7 +410,7 @@ mod tests {
         let mut circ = TrackedCircuit {
             circuit: DummyCircuit {},
             tracker: Frames::<MappedVector<PauliStack<BitVec>>>::init(2),
-            storage: MappedVector::default(),
+            storage: MappedVector::<_>::default(),
         };
 
         circ.cz(0, 1);
@@ -435,7 +432,7 @@ mod tests {
         let mut circ = TrackedCircuit {
             circuit: DummyCircuit {},
             tracker: Frames::<MappedVector<PauliStack<SimdBitVec>>>::init(5),
-            storage: MappedVector::default(),
+            storage: MappedVector::<_>::default(),
         };
 
         circ.cx(0, 2);

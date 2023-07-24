@@ -20,9 +20,7 @@ crate-type = ["lib"]
 scheduler = []
 circuit = ["dep:rand"]
 experimental = []
-serde = ["dep:serde",
-  "hashbrown/serde", "bitvec?/serde", "bitvec_simd?/use_serde", "bit-vec?/serde"
-]
+serde = ["dep:serde", "hashbrown/serde", "bitvec?/serde", "bitvec_simd?/use_serde", "bit-vec?/serde"]
 
 # about the specified dependency version:
 # - we use the newest major version if possible: if we expose an item from a dependency,
@@ -68,6 +66,7 @@ rustdoc-args = ["--cfg", "docsrs"]
 [dev-dependencies]
 proptest = "1.2.0"
 coverage-helper = "0.1.0"
+rustc-hash = "1.1.0"
 
 
 [workspace]

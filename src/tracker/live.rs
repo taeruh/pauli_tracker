@@ -20,7 +20,7 @@ use super::{
 use crate::{
     collection::{
         Base,
-        Iterable,
+        Init,
     },
     pauli::Pauli,
 };
@@ -44,33 +44,38 @@ impl<S> From<S> for Live<S> {
     }
 }
 
-impl<T> Live<T> {
-    pub fn into(self) -> T {
-        self.storage
-    }
-}
-
 impl<S> AsRef<S> for Live<S> {
     fn as_ref(&self) -> &S {
         &self.storage
     }
 }
 
+impl<T> Live<T> {
+    pub fn new(storage: T) -> Self {
+        Self { storage }
+    }
+
+    pub fn into(self) -> T {
+        self.storage
+    }
+}
+
+impl<T: Init> Live<T> {
+    pub fn init(size: usize) -> Self {
+        Self { storage: T::init(size) }
+    }
+}
+
 impl<S, T> Live<S>
 where
-    S: Base<T = T>,
+    S: Base<TB = T>,
 {
     /// Returns a mutable reference to an element at index. Returns [None] if out of
     /// bounds.
     pub fn get_mut(&mut self, bit: usize) -> Option<&mut T> {
         self.storage.get_mut(bit)
     }
-}
 
-impl<S, T> Live<S>
-where
-    S: Iterable<T = T>,
-{
     /// Returns a reference to an element at index. Returns [None] if out of bounds.
     pub fn get(&self, bit: usize) -> Option<&T> {
         self.storage.get(bit)
@@ -100,7 +105,7 @@ macro_rules! movements {
 /// contain buffer qubits, even though they were not explicitly initialized.
 impl<S, P> Tracker for Live<S>
 where
-    S: Base<T = P>,
+    S: Base<TB = P>,
     P: Pauli + Clone,
 {
     type Stack = P;
@@ -112,10 +117,6 @@ where
         (move_z_to_x, xpz, set_z),
         (move_z_to_z, zpz, set_z),
     );
-
-    fn init(num_bits: usize) -> Self {
-        Live { storage: S::init(num_bits, P::I) }
-    }
 
     fn new_qubit(&mut self, bit: usize) -> Option<Self::Stack> {
         self.storage.insert(bit, P::I)
@@ -165,7 +166,7 @@ mod tests {
         },
     };
 
-    trait Pw: Pauli + Copy + Default + Into<PauliDense> + From<PauliDense> {}
+    trait Pw: Pauli + Copy + Clone + Default + Into<PauliDense> + From<PauliDense> {}
     type Live<P> = super::Live<BufferedVector<P>>;
 
     mod single_actions {

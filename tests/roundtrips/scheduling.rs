@@ -4,7 +4,6 @@ use std::{
 };
 
 use hashbrown::{
-    hash_map,
     HashMap,
     HashSet,
 };
@@ -31,12 +30,9 @@ use pauli_tracker::{
         },
         Scheduler,
     },
-    tracker::{
-        frames::{
-            dependency_graph,
-            Frames,
-        },
-        Tracker,
+    tracker::frames::{
+        dependency_graph,
+        Frames,
     },
 };
 use proptest::{

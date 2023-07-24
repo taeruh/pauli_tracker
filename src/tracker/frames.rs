@@ -38,7 +38,8 @@ use crate::{
     collection::{
         Base,
         Full,
-        Iterable,
+        Init,
+        IterableBase,
     },
     pauli::{
         Pauli,
@@ -162,56 +163,11 @@ impl<S> Frames<S> {
     pub fn y(&self, _: usize) {}
 }
 
-impl<S, B> Frames<S>
-where
-    S: Iterable<T = PauliStack<B>>,
-    B: BooleanVector,
-{
-    /// Pop the last tracked Pauli frame.
-    pub fn pop_frame<P: Pauli>(&mut self) -> Option<PauliString<P>> {
-        if self.storage.is_empty() || self.frames_num == 0 {
-            return None;
-        }
-        let mut ret = Vec::new();
-        for (i, p) in self.storage.iter_mut() {
-            if let Some(pauli) = p.pop() {
-                ret.push((i, pauli))
-            }
-        }
-        self.frames_num -= 1;
-        Some(ret)
-    }
-
-    /// Measure a qu`bit` and store the according stack of tracked Paulis into
-    /// `storage`. Errors when the qu`bit` is not present in the tracker.
-    pub fn measure_and_store(
-        &mut self,
-        bit: usize,
-        storage: &mut impl Base<T = PauliStack<B>>,
-    ) -> Result<(), StoreError<B>> {
-        match storage.insert(bit, self.measure(bit)?) {
-            Some(p) => Err(OverwriteStack { bit, stack: p }.into()),
-            None => Ok(()),
-        }
-    }
-}
-
-impl<S, B> Frames<S>
-where
-    S: Full<T = PauliStack<B>>,
-    B: BooleanVector,
-{
-    /// Measure all qubits and put the according stack of Paulis into `storage`, i.e.,
-    /// do [Frames::measure_and_store] for all qubits.
-    pub fn measure_and_store_all(
-        &mut self,
-        storage: &mut impl Base<T = PauliStack<B>>,
-    ) {
-        for (bit, pauli) in
-            mem::replace(&mut self.storage, S::init(0, PauliStack::default()))
-                .into_iter()
-        {
-            storage.insert(bit, pauli);
+impl<S: Init> Frames<S> {
+    pub fn init(size: usize) -> Self {
+        Self {
+            storage: S::init(size),
+            frames_num: 0,
         }
     }
 }
@@ -258,18 +214,11 @@ macro_rules! movements {
 /// [CollectionRequired] implementation.
 impl<S, B> Tracker for Frames<S>
 where
-    S: Iterable<T = PauliStack<B>>,
+    S: IterableBase<T = PauliStack<B>>,
     B: BooleanVector,
 {
     type Stack = PauliStack<B>;
     type Pauli = PauliTuple;
-
-    fn init(num_qubits: usize) -> Self {
-        Self {
-            storage: S::init(num_qubits, PauliStack::default()),
-            frames_num: 0,
-        }
-    }
 
     fn new_qubit(&mut self, qubit: usize) -> Option<Self::Stack> {
         self.storage.insert(qubit, Self::Stack::zeros(self.frames_num))
@@ -331,6 +280,60 @@ where
 
     fn measure(&mut self, bit: usize) -> Result<PauliStack<B>, MissingStack> {
         self.storage.remove(bit).ok_or(MissingStack { bit })
+    }
+}
+
+impl<S, B> Frames<S>
+where
+    S: IterableBase<T = PauliStack<B>>,
+    B: BooleanVector,
+{
+    /// Pop the last tracked Pauli frame.
+    pub fn pop_frame<P: Pauli>(&mut self) -> Option<PauliString<P>> {
+        if self.storage.is_empty() || self.frames_num == 0 {
+            return None;
+        }
+        let mut ret = Vec::new();
+        for (i, p) in self.storage.iter_mut() {
+            if let Some(pauli) = p.pop() {
+                ret.push((i, pauli))
+            }
+        }
+        self.frames_num -= 1;
+        Some(ret)
+    }
+
+    /// Measure a qu`bit` and store the according stack of tracked Paulis into
+    /// `storage`. Errors when the qu`bit` is not present in the tracker.
+    pub fn measure_and_store(
+        &mut self,
+        bit: usize,
+        storage: &mut impl Base<TB = PauliStack<B>>,
+    ) -> Result<(), StoreError<B>> {
+        match storage.insert(bit, self.measure(bit)?) {
+            Some(p) => Err(OverwriteStack { bit, stack: p }.into()),
+            None => Ok(()),
+        }
+    }
+}
+
+impl<S, B> Frames<S>
+where
+    S: Full<T = PauliStack<B>> + Default,
+    B: BooleanVector,
+{
+    /// Measure all qubits and put the according stack of Paulis into `storage`, i.e.,
+    /// do [Frames::measure_and_store] for all qubits.
+    pub fn measure_and_store_all(
+        &mut self,
+        storage: &mut impl Base<TB = PauliStack<B>>,
+    ) {
+        for (bit, pauli) in
+            // mem::replace(&mut self.storage, S::init(0, PauliStack::default()))
+            mem::take(&mut self.storage).into_iter()
+        {
+            storage.insert(bit, pauli);
+        }
     }
 }
 

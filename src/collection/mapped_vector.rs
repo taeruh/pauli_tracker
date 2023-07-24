@@ -1,4 +1,5 @@
 use std::{
+    hash::BuildHasher,
     iter::{
         Map,
         Zip,
@@ -11,7 +12,10 @@ use std::{
     slice,
 };
 
-use hashbrown::HashMap;
+use hashbrown::{
+    hash_map::DefaultHashBuilder,
+    HashMap,
+};
 use itertools::Itertools;
 #[cfg(feature = "serde")]
 use serde::{
@@ -22,17 +26,32 @@ use serde::{
 use super::{
     Base,
     Full,
+    Init,
     Iterable,
+    IterableBase,
 };
 use crate::slice_extension::GetTwoMutSlice;
 
-#[derive(Debug, Clone, Default, PartialEq, Eq)]
+#[derive(Debug, Clone, Default)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-pub struct MappedVector<T> {
+#[serde(bound(serialize = "S: BuildHasher + Serialize, T: Serialize"))]
+#[serde(bound(deserialize = "S: Default + BuildHasher + for<'a> Deserialize<'a>, \
+                             T: for<'a> Deserialize<'a>"))]
+pub struct MappedVector<T, S = DefaultHashBuilder> {
     frames: Vec<T>,
-    position: HashMap<usize, usize>,
+    position: HashMap<usize, usize, S>,
     inverse_position: Vec<usize>,
 }
+
+impl<T, S> PartialEq for MappedVector<T, S>
+where
+    T: PartialEq,
+{
+    fn eq(&self, other: &Self) -> bool {
+        self.frames == other.frames && self.inverse_position == other.inverse_position
+    }
+}
+impl<T, S> Eq for MappedVector<T, S> where T: Eq {}
 
 impl<T> MappedVector<T> {
     pub fn new() -> Self {
@@ -43,6 +62,37 @@ impl<T> MappedVector<T> {
         }
     }
 
+    pub fn with_capacity(capacity: usize) -> Self {
+        Self {
+            frames: Vec::with_capacity(capacity),
+            position: HashMap::with_capacity(capacity),
+            inverse_position: Vec::with_capacity(capacity),
+        }
+    }
+}
+
+impl<T, S> MappedVector<T, S> {
+    pub fn with_hasher(hash_builder: S) -> Self {
+        Self {
+            frames: Vec::new(),
+            position: HashMap::with_hasher(hash_builder),
+            inverse_position: Vec::new(),
+        }
+    }
+
+    pub fn with_capacity_and_hasher(capacity: usize, hash_builder: S) -> Self {
+        Self {
+            frames: Vec::with_capacity(capacity),
+            position: HashMap::with_capacity_and_hasher(capacity, hash_builder),
+            inverse_position: Vec::with_capacity(capacity),
+        }
+    }
+}
+
+impl<T, S> MappedVector<T, S>
+where
+    S: BuildHasher,
+{
     pub fn frames(&self) -> &Vec<T> {
         &self.frames
     }
@@ -63,9 +113,12 @@ impl<T> MappedVector<T> {
     }
 }
 
-impl<T> FromIterator<(usize, T)> for MappedVector<T> {
+impl<T, S> FromIterator<(usize, T)> for MappedVector<T, S>
+where
+    S: BuildHasher + Default,
+{
     fn from_iter<I: IntoIterator<Item = (usize, T)>>(iter: I) -> Self {
-        let mut res = MappedVector::new();
+        let mut res = MappedVector::with_hasher(Default::default());
         for (key, value) in iter {
             res.insert(key, value);
         }
@@ -73,7 +126,7 @@ impl<T> FromIterator<(usize, T)> for MappedVector<T> {
     }
 }
 
-impl<'l, T> IntoIterator for &'l MappedVector<T> {
+impl<'l, T, S> IntoIterator for &'l MappedVector<T, S> {
     type Item = (usize, &'l T);
     type IntoIter =
         Zip<Map<slice::Iter<'l, usize>, fn(&usize) -> usize>, slice::Iter<'l, T>>;
@@ -85,7 +138,7 @@ impl<'l, T> IntoIterator for &'l MappedVector<T> {
     }
 }
 
-impl<'l, T> IntoIterator for &'l mut MappedVector<T> {
+impl<'l, T, S> IntoIterator for &'l mut MappedVector<T, S> {
     type Item = (usize, &'l mut T);
     type IntoIter =
         Zip<Map<slice::Iter<'l, usize>, fn(&usize) -> usize>, slice::IterMut<'l, T>>;
@@ -97,7 +150,7 @@ impl<'l, T> IntoIterator for &'l mut MappedVector<T> {
     }
 }
 
-impl<T> IntoIterator for MappedVector<T> {
+impl<T, S> IntoIterator for MappedVector<T, S> {
     type Item = (usize, T);
     type IntoIter =
         Zip<<Vec<usize> as IntoIterator>::IntoIter, <Vec<T> as IntoIterator>::IntoIter>;
@@ -106,8 +159,11 @@ impl<T> IntoIterator for MappedVector<T> {
     }
 }
 
-impl<T: Clone> Base for MappedVector<T> {
-    type T = T;
+impl<T, S> Base for MappedVector<T, S>
+where
+    S: BuildHasher,
+{
+    type TB = T;
     #[inline]
     fn insert(&mut self, key: usize, value: T) -> Option<T> {
         self.insert(key, value)
@@ -154,21 +210,15 @@ impl<T: Clone> Base for MappedVector<T> {
     fn is_empty(&self) -> bool {
         self.frames.is_empty()
     }
-
-    fn init(num_keys: usize, init_val: T) -> Self {
-        let (frames, position, inverse_position) =
-            (0..num_keys).map(|i| (init_val.clone(), (i, i), i)).multiunzip();
-        Self {
-            frames,
-            position,
-            inverse_position,
-        }
-    }
 }
 
-impl<T: Clone> Iterable for MappedVector<T> {
-    type Iter<'l> = <&'l Self as IntoIterator>::IntoIter where T: 'l;
-    type IterMut<'l> = <&'l mut Self as IntoIterator>::IntoIter where T: 'l;
+impl<T, S> Iterable for MappedVector<T, S>
+where
+    T: Clone,
+{
+    type TI = T;
+    type Iter<'l> = <&'l Self as IntoIterator>::IntoIter where T: 'l, S: 'l;
+    type IterMut<'l> = <&'l mut Self as IntoIterator>::IntoIter where T: 'l, S: 'l;
 
     #[inline]
     fn iter(&self) -> Self::Iter<'_> {
@@ -181,4 +231,28 @@ impl<T: Clone> Iterable for MappedVector<T> {
     }
 }
 
-impl<T: Clone> Full for MappedVector<T> {}
+impl<T, S> Init for MappedVector<T, S>
+where
+    T: Clone + Default,
+    S: BuildHasher + Default,
+{
+    fn init(len: usize) -> Self {
+        let init_val = T::default();
+        let (frames, position, inverse_position) =
+            (0..len).map(|i| (init_val.clone(), (i, i), i)).multiunzip();
+        Self {
+            frames,
+            position,
+            inverse_position,
+        }
+    }
+}
+
+impl<T, S> IterableBase for MappedVector<T, S>
+where
+    T: Clone,
+    S: BuildHasher,
+{
+    type T = T;
+}
+impl<T: Clone + Default, S: BuildHasher + Default> Full for MappedVector<T, S> {}

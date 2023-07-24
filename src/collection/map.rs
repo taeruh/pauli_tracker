@@ -1,20 +1,32 @@
-use std::iter;
+use std::{
+    hash::BuildHasher,
+    iter,
+};
 
 use hashbrown::{
-    hash_map,
+    hash_map::{
+        self,
+        DefaultHashBuilder,
+    },
     HashMap,
 };
 
 use super::{
     Base,
     Full,
+    Init,
     Iterable,
+    IterableBase,
 };
 
-pub type Map<T> = HashMap<usize, T>;
+pub type Map<T, S = DefaultHashBuilder> = HashMap<usize, T, S>;
 
-impl<T: Clone> Base for Map<T> {
-    type T = T;
+impl<T, S> Base for Map<T, S>
+where
+    T: Clone,
+    S: BuildHasher + Default,
+{
+    type TB = T;
 
     #[inline]
     fn insert(&mut self, key: usize, value: T) -> Option<T> {
@@ -49,26 +61,23 @@ impl<T: Clone> Base for Map<T> {
     fn is_empty(&self) -> bool {
         self.is_empty()
     }
-
-    fn init(num_keys: usize, init_val: T) -> Self {
-        let mut ret = HashMap::with_capacity(num_keys);
-        for i in 0..num_keys {
-            ret.insert(i, init_val.clone());
-        }
-        ret
-    }
 }
 
-impl<T: Clone> Iterable for Map<T> {
+impl<T, S> Iterable for Map<T, S>
+where
+    T: Clone,
+    S: BuildHasher + Default,
+{
+    type TI = T;
     type Iter<'l> = iter::Map<
         hash_map::Iter<'l, usize, T>,
         fn((&'l usize, &'l T)) -> (usize, &'l T),
-    > where T: 'l;
+    > where T: 'l, S: 'l;
 
     type IterMut<'l> = iter::Map<
         hash_map::IterMut<'l, usize, T>,
         fn((&'l usize, &'l mut T)) -> (usize, &'l mut T),
-    > where T: 'l;
+    > where T: 'l, S: 'l;
 
     #[inline]
     fn iter(&self) -> Self::Iter<'_> {
@@ -81,4 +90,27 @@ impl<T: Clone> Iterable for Map<T> {
     }
 }
 
-impl<T: Clone> Full for Map<T> {}
+impl<T: Clone + Default, S: BuildHasher + Default> Init for Map<T, S> {
+    fn init(num_keys: usize) -> Self {
+        let init_val = T::default();
+        let mut ret = HashMap::with_capacity_and_hasher(num_keys, S::default());
+        for i in 0..num_keys {
+            ret.insert(i, init_val.clone());
+        }
+        ret
+    }
+}
+
+impl<T, S> IterableBase for Map<T, S>
+where
+    T: Clone,
+    S: BuildHasher + Default,
+{
+    type T = T;
+}
+impl<T, S> Full for Map<T, S>
+where
+    T: Clone + Default,
+    S: BuildHasher + Default,
+{
+}

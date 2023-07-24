@@ -21,7 +21,9 @@ use serde::{
 use super::{
     Base,
     Full,
+    Init,
     Iterable,
+    IterableBase,
 };
 use crate::slice_extension::GetTwoMutSlice;
 
@@ -87,8 +89,11 @@ impl<T> IntoIterator for BufferedVector<T> {
     }
 }
 
-impl<T: Clone + Default> Base for BufferedVector<T> {
-    type T = T;
+impl<T> Base for BufferedVector<T>
+where
+    T: Clone + Default,
+{
+    type TB = T;
     fn insert(&mut self, key: usize, value: T) -> Option<T> {
         let len = self.len();
         match key.cmp(&len) {
@@ -149,14 +154,13 @@ impl<T: Clone + Default> Base for BufferedVector<T> {
     fn is_empty(&self) -> bool {
         self.0.is_empty()
     }
-
-    #[inline(always)]
-    fn init(num_keys: usize, init_val: T) -> Self {
-        Self(vec![init_val; num_keys])
-    }
 }
 
-impl<T: Default + Clone> Iterable for BufferedVector<T> {
+impl<T> Iterable for BufferedVector<T>
+where
+    T: Default + Clone,
+{
+    type TI = T;
     type Iter<'l> = <&'l Self as IntoIterator>::IntoIter where T: 'l;
     type IterMut<'l> = <&'l mut Self as IntoIterator>::IntoIter where T: 'l;
 
@@ -171,4 +175,19 @@ impl<T: Default + Clone> Iterable for BufferedVector<T> {
     }
 }
 
-impl<T: Default + Clone> Full for BufferedVector<T> {}
+impl<T> Init for BufferedVector<T>
+where
+    T: Clone + Default,
+{
+    fn init(len: usize) -> Self {
+        Self(vec![Default::default(); len])
+    }
+}
+
+impl<T> IterableBase for BufferedVector<T>
+where
+    T: Default + Clone,
+{
+    type T = T;
+}
+impl<T> Full for BufferedVector<T> where T: Default + Clone {}

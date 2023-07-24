@@ -1,6 +1,6 @@
 // lints and similar
 #![deny(unsafe_op_in_unsafe_fn)]
-#![warn(missing_docs)]
+// #![warn(missing_docs)]
 #![warn(missing_debug_implementations)]
 // opting out is the exception
 #![warn(missing_copy_implementations)]
@@ -203,7 +203,8 @@ use pauli_tracker::{
 };
 type BoolVec = Vec<bool>;
 type PauliStack = pauli::PauliStack<BoolVec>;
-// we want a fixed order in our storage for this test, so we use Vector and not Map
+// we want a fixed order in our storage for this test, so we use BufferedVector and not
+// Map
 type Storage = BufferedVector<PauliStack>;
 type Frames = frames::Frames<Storage>;
 

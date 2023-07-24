@@ -110,9 +110,6 @@ pub trait Tracker {
     /// [track_pauli](Self::track_pauli).
     type Pauli: Pauli;
 
-    /// Initialize the tracker with qubits numbered from 0 to `num_bits`-1.
-    fn init(num_bits: usize) -> Self;
-
     /// Insert a new qu`bit` into the tracker. If the qu`bit`, the old value is
     /// overwritten and returned.
     fn new_qubit(&mut self, bit: usize) -> Option<Self::Stack>;

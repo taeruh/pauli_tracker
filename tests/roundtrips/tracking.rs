@@ -1,6 +1,9 @@
 #![cfg(feature = "circuit")]
 
-use std::fmt::Debug;
+use std::{
+    fmt::Debug,
+    hash::BuildHasherDefault,
+};
 
 use hashbrown::HashMap;
 use pauli_tracker::{
@@ -14,6 +17,7 @@ use pauli_tracker::{
     collection::{
         BufferedVector,
         Iterable,
+        Map,
     },
     pauli::{
         tuple::PauliTuple,
@@ -42,13 +46,13 @@ use proptest::{
         FileFailurePersistence,
     },
 };
+use rustc_hash::FxHasher;
 
 // type BoolVec = bitvec::vec::BitVec;
 // type BoolVec = pauli_tracker::boolean_vector::bitvec_simd::SimdBitVec;
 pub type BoolVec = bit_vec::BitVec;
 
-pub type Storage = HashMap<usize, PauliStack<BoolVec>>;
-// type PauliVec = pauli::PauliVec<BoolVec>;
+pub type Storage = Map<PauliStack<BoolVec>, BuildHasherDefault<FxHasher>>;
 type Live<P> = live::Live<BufferedVector<P>>;
 
 const MAX_INIT: usize = 100;

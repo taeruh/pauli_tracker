@@ -15,6 +15,8 @@ possible.
 - **Possible Breaking Change**: Add `Frames::new`.
 - **Possible Breaking Change**: Add `impl Default for SimdBitVec`.
 ### Changed
+- **Breaking Change**: Rename `LiveVector` to `Live` and make it generic.
+- **Breaking Change**: Use `hashbrown::HashMap` instead of `std::collections::HashMap`.
 - **Breaking Change**: `Tracker::new_qubit` now overwrites the old value, and returns
   it.
 - **Breaking Change**: Rename `PauliVec` to `PauliStack`.
@@ -24,37 +26,44 @@ possible.
   `Frames` now uses `crate::pauli::tuple::PauliTuple` for methods like `track_Pauli`.
   `PauliTuple` is another implementor of `Pauli`. `PauliTuple` implements
   `From<PauliDense>` and vice versa.
-- **Breaking Change**: Rename `StackStorage`s `(insert,remove)_pauli` methods to
-  `(insert,remove)_pauli_stack`.
-- **Breaking Change**: Return u8 `in Pauli::storage` instead of a reference.
-- **Breaking Change**: Change the Debug and Display implementations of `Pauli`. Debug is
-  now derived, so we have the standard format, and Display shows "X, Y, Z, I" instead of
-  numbers.
-- **Breaking Change**: In `StackStorage::insert_pauli`, overwrite and return the old
-  value if the qubit is already present, not the new value.
+- **Breaking Change**: Return u8 `in PauliDense::storage` instead of a reference.
+- **Breaking Change**: Change the Debug and Display implementations of `PauliDense`.
+  Debug is now derived, so we have the standard format, and Display shows "X, Y, Z, I"
+  instead of numbers.
+- Completely refactor the `tracker::frames::storage` module: The `StackStorage` trait
+  has been removed, instead there are now five traits `Base`, `Iterable`,
+  `IterableBase`, `Init` and `Full` in the `collection` module which basically do the
+  same job. However, they are "more generic" so that they can also be used for the
+  `Live` tracker and they the methods are split up. `Base` is the absolute minimum
+  that is required for the `Live` tracker. `IterableBase`, which is `Base + Iterable` is
+  required for the `Frames` tracker. `Init` is just a helper for initialization and
+  `Full` just the combination of all those traits. The implementors of the `collection`
+  traits are located in the `collection` module. `Vector` is renamed to
+  `BufferedVector`.
+- **Breaking Change**: In `Base/StackStorage::insert_pauli`, overwrite and return
+  the old value if the qubit is already present, instead of returning the new value.
 - **Breaking Change**: Return the measurement outcomes in in
   `circuit::measure_and_store(_all)` and error if one would overwrite something in the
   additional storage.
 - **Breaking Change**: Move `create_dependency_graph` and related functions into
   `frames::dependency_graph`
 - **Breaking Change**: Move `sort_by_bit` and `into_sorted_by_bit` into the
-  `Collection` trait, replacing "bit" by "key".
-- **Possible Breaking Change**: Implement Clone, PartialEq, Debug for
-  `bitvec_simd::Iter*`; Implement Debug for TrackedCircuit.
-- For the "fixed" `Vector`, it wasn't allowed to `insert_pauli`s at qubits which have a
-  higher number than the length of the inner storage type (it would panic). Now it is
-  allowed, but some buffer stacks are inserted.
+  `collection` traits, replacing "bit" by "key".
+- **Possible Breaking Change**: Implement a bunch of standard traits (Clone, Default,
+  PartialEq, ...) for mutiple types.
+- For the `BufferedVector` (previously `Vector`), it wasn't allowed to `insert_pauli`s
+  at qubits which have a higher number than the length of the inner storage type (it
+  would panic). Now it is allowed, but some buffer stacks are inserted.
 - **Breaking Change**: All functions that returned Results with Strings as Err, now
   return real Error types.
-- **Breaking Change**: `TrackedCircuit::measure_and_store*` now return a tuple of the
-  measurement outcome and the storing result. Before, they returned a result, where the
-  Ok contained the measurement outcomes and Err the storing error.
-- **Breaking Change**: Add `FromIterator` as supertrait to `StackStorage`.
+- **Breaking Change**: `TrackedCircuit::measure_and_store*` now returns a tuple of the
+  measurement outcome and the storing result. Before, it returned a result, where the
+  Ok variant contained the measurement outcomes and Err the storing error.
 ### Deprecated
 ### Removed
 ### Fixed
-- Now `Map`s `StackStorage::insert_pauli` actually does what the trait's signature
-  documentation says.
+- Now `Map`s `Base/StackStorage::insert_pauli` actually does what the trait's
+  signature documentation says.
 - Fix `impl FromIterator<bool> for SimdBitVec`; it was not working at all.
 ### Security
 
