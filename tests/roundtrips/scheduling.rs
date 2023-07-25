@@ -20,7 +20,7 @@ use pauli_tracker::{
             GraphBuffer,
         },
         time::{
-            LookupBuffer,
+            DependencyBuffer,
             Partitioner,
             PathGenerator,
         },
@@ -137,12 +137,9 @@ fn roundtrip(ops: Vec<Operation>, edges: Edges, num_nodes: usize) {
     // println!("{:?}", dependency_graph);
     // println!("{:?}", dependency_graph.len());
 
-    let mut buffer = LookupBuffer::new(num_nodes);
-    let path_generator = PathGenerator::<Partitioner>::from_dependency_graph(
-        dependency_graph,
-        &mut buffer,
-        None,
-    );
+    let mut buffer = DependencyBuffer::new(num_nodes);
+    let path_generator =
+        PathGenerator::from_dependency_graph(dependency_graph, &mut buffer, None);
     let graph_buffer = GraphBuffer::new(&edges, num_nodes, None, true);
     let graph = Graph::from_graph_buffer(&graph_buffer);
     #[allow(clippy::redundant_clone)]
@@ -193,7 +190,7 @@ fn roundtrip(ops: Vec<Operation>, edges: Edges, num_nodes: usize) {
                     path.len() + 2
                 };
                 if current.space().max_memory() >= predicates[minimum_time] {
-                    if scheduler.skip_focus().is_err() {
+                    if scheduler.skip_current().is_err() {
                         break;
                     }
                 } else {

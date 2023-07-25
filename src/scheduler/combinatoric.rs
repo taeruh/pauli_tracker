@@ -6,6 +6,7 @@ use itertools::{
     Powerset,
 };
 
+/// An iterator over all partitions of a set.
 #[derive(Debug, Clone)]
 pub struct Partition<T> {
     pub(crate) set: T,
@@ -22,6 +23,7 @@ impl<T: Default> Default for Partition<T> {
 }
 
 impl<T> Partition<T> {
+    /// Create a new partition iterator.
     pub fn new(set: T, len: usize) -> Self {
         Self { set, iter: (0..len).powerset() }
     }

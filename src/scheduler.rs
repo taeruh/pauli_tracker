@@ -1,12 +1,31 @@
 /*!
-... tools to analyse the tracking results ...
+Analyse scheduling paths on a [graph state] allowed by a
+[DependencyGraph].
+
+**This module is currently rather experimental.**
+
+*The module is rather independent of the principle of Pauli tracking. In general, one
+just needs a time ordering on the qubits, like a [DependencyGraph] (or have no time
+ordering at all).*
+
+Realizing [graph states] on a quantum computer can be done sequentially (cf. [space]),
+however, this is often restricted by a time ordering induced by non-determinism (cf.
+[time]).
+
+This module provides a [Scheduler] that combines [PathGenerator] and [Graph]. It can be
+used to analyze allowed scheduling paths - the process of initializing and measuring
+qubits - regarding the required quantum memory and the number of required measurement
+steps.
+
+[graph state]: https://en.wikipedia.org/wiki/Graph_state
+[DependencyGraph]: crate::tracker::frames::dependency_graph::DependencyGraph
 */
 
 pub(crate) mod combinatoric;
 
 use std::fmt::Display;
 
-use combinatoric::Partition;
+use time::Partitioner;
 
 use self::{
     space::{
@@ -14,7 +33,7 @@ use self::{
         Graph,
     },
     time::{
-        Init,
+        MeasurableSet,
         NotMeasurable,
         PathGenerator,
     },
@@ -37,6 +56,8 @@ pub mod space;
 pub mod time;
 pub mod tree;
 
+/// A scheduler to generate allowed paths scheduling paths, capturing the required
+/// quantum memory. Compare the [module documentation](crate::scheduler).
 #[derive(Debug, Clone)]
 pub struct Scheduler<'l, T> {
     time: PathGenerator<'l, T>,
@@ -44,23 +65,26 @@ pub struct Scheduler<'l, T> {
 }
 
 impl<'l, T> Scheduler<'l, T> {
+    /// Create a new scheduler.
     pub fn new(time: PathGenerator<'l, T>, space: Graph<'l>) -> Self {
         Self { time, space }
     }
 
+    /// Get a reference to the underlying [PathGenerator].
     pub fn time(&self) -> &PathGenerator<'l, T> {
         &self.time
     }
 
+    /// Get a reference to the underlying [Graph].
     pub fn space(&self) -> &Graph {
         &self.space
     }
 }
 
 // just for seeing whether it works as expected while developing
-pub(crate) static mut COUNT: usize = 0;
+// pub(crate) static mut COUNT: usize = 0;
 
-impl<T: Init<usize>> Focus<&[usize]> for Scheduler<'_, T> {
+impl<T: MeasurableSet<usize>> Focus<&[usize]> for Scheduler<'_, T> {
     type Error = InstructionError;
 
     fn focus_inplace(&mut self, measure_set: &[usize]) -> Result<(), Self::Error> {
@@ -85,7 +109,7 @@ impl<T: Init<usize>> Focus<&[usize]> for Scheduler<'_, T> {
     }
 }
 
-impl FocusIterator for Scheduler<'_, Partition<Vec<usize>>> {
+impl FocusIterator for Scheduler<'_, Partitioner> {
     type IterItem = Vec<usize>;
     type LeafItem = usize;
 
@@ -94,7 +118,7 @@ impl FocusIterator for Scheduler<'_, Partition<Vec<usize>>> {
         Self: Sized,
     {
         let (new_time, mess) = self.time.next_and_focus()?;
-        unsafe { COUNT += 1 };
+        // unsafe { COUNT += 1 };
         #[cfg(debug_assertions)]
         let new_space = self.space.focus(&mess).unwrap();
         #[cfg(not(debug_assertions))]
@@ -111,9 +135,12 @@ impl FocusIterator for Scheduler<'_, Partition<Vec<usize>>> {
     }
 }
 
+/// An error that can happen when instructing the [Scheduler]
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum InstructionError {
+    /// See [NotMeasurable].
     TimeOrderingViolation(NotMeasurable),
+    /// See [AlreadyMeasured].
     AlreadyMeasured(AlreadyMeasured),
 }
 impl Display for InstructionError {
@@ -146,11 +173,11 @@ impl Default for InstructionError {
     }
 }
 
-impl<'l> IntoIterator for Scheduler<'l, Partition<Vec<usize>>> {
+impl<'l> IntoIterator for Scheduler<'l, Partitioner> {
     type Item = <Self::IntoIter as Iterator>::Item;
     type IntoIter = Sweep<Self>;
     fn into_iter(self) -> Self::IntoIter {
-        Self::IntoIter::new(self, Vec::new())
+        Self::IntoIter::new(self)
     }
 }
 
@@ -160,7 +187,7 @@ mod tests {
     use hashbrown::HashMap;
 
     use super::{
-        time::LookupBuffer,
+        time::DependencyBuffer,
         tree::Step,
         *,
     };
@@ -181,7 +208,7 @@ mod tests {
         let num = 4;
         let max = 4;
 
-        let mut lookup_buffer = LookupBuffer::new(num);
+        let mut lookup_buffer = DependencyBuffer::new(num);
         let graph = Graph::from_graph_buffer(&graph_buffer);
         let scheduler = Scheduler::new(
             PathGenerator::from_dependency_graph(ordering, &mut lookup_buffer, None),
@@ -255,7 +282,7 @@ mod tests {
                         path.len() + 2 // ...
                     };
                     if current.space.max_memory() >= predicates[minimum_time] {
-                        if scheduler.skip_focus().is_err() {
+                        if scheduler.skip_current().is_err() {
                             break;
                         }
                     } else {

@@ -23,33 +23,30 @@ use super::{
 };
 use crate::slice_extension::GetTwoMutSlice;
 
+/// A newtype wrapper around [Vec].
 #[derive(Debug, Clone, Default, PartialEq, Eq, PartialOrd, Ord, Hash)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct BufferedVector<T> {
+    /// The inner type of our (n)ewtype.
     pub n: Vec<T>,
 }
 
 impl<T> BufferedVector<T> {
+    /// Creates a new empty [BufferedVector].
     pub fn new() -> Self {
         Self { n: Vec::new() }
     }
 
+    /// Creates a new empty [BufferedVector] with the given capacity.
+    pub fn with_capacity(capacity: usize) -> Self {
+        Self { n: Vec::with_capacity(capacity) }
+    }
+
+    /// Wrap a [Vec] into a [BufferedVector].
     pub fn wrap(vec: Vec<T>) -> Self {
         Self { n: vec }
     }
 }
-
-// impl<T> Deref for BufferedVector<T> {
-//     type Target = Vec<T>;
-//     fn deref(&self) -> &Self::Target {
-//         &self.0
-//     }
-// }
-// impl<T> DerefMut for BufferedVector<T> {
-//     fn deref_mut(&mut self) -> &mut Self::Target {
-//         &mut self.0
-//     }
-// }
 
 impl<T> From<Vec<T>> for BufferedVector<T> {
     fn from(vec: Vec<T>) -> Self {
@@ -91,6 +88,9 @@ impl<T> IntoIterator for BufferedVector<T> {
     }
 }
 
+/// Note that [BufferedVector] is essentially a [Vec]. Therefore, we can basically only
+/// remove Pauli stacks at the end without screwing things up. When inserting Pauli
+/// stacks at qubits above the length, buffer stacks are added.
 impl<T> Base for BufferedVector<T>
 where
     T: Clone + Default,

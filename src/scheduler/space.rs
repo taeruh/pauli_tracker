@@ -1,5 +1,14 @@
 /*!
-...
+This module provides a [Graph] to describe the initialization and measuring process of
+qubits in a [graph state].
+
+When realizing a [graph state] one does not necessarily need to initialize - having
+a qubit in quantum memory - all qubits at once. Instead, one can initialize them one by
+one, and if they are measured, reuse the freed quantum memory. However, to measure a
+node, all its neighbors need to be initialized, otherwise it would have been impossible
+to create the edges.
+
+[graph state]: https://en.wikipedia.org/wiki/Graph_state
 */
 
 use std::{
@@ -11,22 +20,36 @@ use hashbrown::HashMap;
 
 use super::tree::Focus;
 
-type Node<'l> = (State, &'l Vec<usize>);
-type Nodes<'l> = Vec<Node<'l>>;
+/// A single node, containing the state of the qubit and the edges to other qubits. The
+/// edges are usually owned by a [GraphBuffer].
+pub type Node<'l> = (State, &'l Vec<usize>);
 
+/// Multiple nodes.
+pub type Nodes<'l> = Vec<Node<'l>>;
+
+/// Possible states of a qubit node in the graph.
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum State {
+    /// Not initialized, i.e., not in quantum memory.
     #[default]
     Sleeping,
+    /// Initialized, i.e., in node quantum, and can be measured.
     InMemory,
+    /// Measured!
     Measured,
 }
 
+/// A buffer that holds the edges of a graph.
 #[derive(Debug, Clone, Default, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct GraphBuffer {
     inner: Vec<Vec<usize>>,
 }
 
+/// A graph that holds the information about the states of the qubits and the edges
+/// between them.
+///
+/// While initializing and measuring qubits, the graph keeps track of the required
+/// quantum memory.
 #[derive(Debug, Clone, Default, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct Graph<'l> {
     nodes: Nodes<'l>,
@@ -71,14 +94,21 @@ macro_rules! new_body {
 }
 
 impl GraphBuffer {
+    /// Create a new buffer for our graph. `edges` is a list of the edges and
+    /// `num_nodes` holds the number of nodes in the graph. The [Graph], and its buffer,
+    /// require that the nodes are numbered from 0 to `num_nodes - 1`. To accomplish
+    /// this, if needed, `bit_mapping` can be used, whose keys are the original node ids
+    /// and whose values are the new node ids. Loops and Multi-edges are not allowed. If
+    /// `check_loop_multi_edge` is true, then the function will check for those and skip
+    /// them.
     pub fn new(
         edges: &[(usize, usize)],
-        num_bits: usize,
+        num_nodes: usize,
         bit_mapping: Option<&HashMap<usize, usize>>,
-        check_duplicates: bool,
+        check_loop_multi_edge: bool,
     ) -> Self {
-        let mut inner = vec![Vec::new(); num_bits];
-        if check_duplicates {
+        let mut inner = vec![Vec::new(); num_nodes];
+        if check_loop_multi_edge {
             new_loop!(inner, edges, bit_mapping, checked);
         } else {
             new_loop!(inner, edges, bit_mapping, unchecked);
@@ -88,14 +118,7 @@ impl GraphBuffer {
 }
 
 impl<'l> Graph<'l> {
-    pub fn new(nodes: Nodes<'l>, current_memory: usize, max_memory: usize) -> Self {
-        Self {
-            nodes,
-            current_memory,
-            max_memory,
-        }
-    }
-
+    /// Create a freshly initialized graph from a `graph_buffer`.
     pub fn from_graph_buffer(graph_buffer: &'l GraphBuffer) -> Self {
         Self {
             nodes: graph_buffer
@@ -108,14 +131,17 @@ impl<'l> Graph<'l> {
         }
     }
 
+    /// Get a reference to the nodes of the graph.
     pub fn nodes(&self) -> &[Node] {
         &self.nodes
     }
 
+    /// Get the number of qubits which are currently in quantum memory.
     pub fn current_memory(&self) -> usize {
         self.current_memory
     }
 
+    /// Get the, so far, maximum required quantum memory.
     pub fn max_memory(&self) -> usize {
         self.max_memory
     }
@@ -226,6 +252,7 @@ impl<'l> Graph<'l> {
     }
 }
 
+/// Error type when a bit is measured multiple times.
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct AlreadyMeasured {
     bit: usize,

@@ -43,8 +43,16 @@ use crate::slice_extension::GetTwoMutSlice;
     serde(bound(deserialize = "S: Default + BuildHasher + for<'a>  \
                                Deserialize<'a>, T: for<'a> Deserialize<'a>"))
 )]
+
+/// A mixture of a [Vec] and a [HashMap].
+///
+/// The elements are stored in a [Vec] storage while accessing them is done through a
+/// [HashMap] to get the right index in the storage. Inserting elements is done by
+/// pushing to the storage and removing is done via swap-removes.
+///
+/// [HashMap]: https://docs.rs/hashbrown/latest/hashbrown/struct.HashMap.html#
 pub struct MappedVector<T, S = DefaultHashBuilder> {
-    frames: Vec<T>,
+    storage: Vec<T>,
     position: HashMap<usize, usize, S>,
     inverse_position: Vec<usize>,
 }
@@ -54,23 +62,25 @@ where
     T: PartialEq,
 {
     fn eq(&self, other: &Self) -> bool {
-        self.frames == other.frames && self.inverse_position == other.inverse_position
+        self.storage == other.storage && self.inverse_position == other.inverse_position
     }
 }
 impl<T, S> Eq for MappedVector<T, S> where T: Eq {}
 
 impl<T> MappedVector<T> {
+    /// Creates a new empty [MappedVector].
     pub fn new() -> Self {
         Self {
-            frames: Vec::new(),
+            storage: Vec::new(),
             position: HashMap::new(),
             inverse_position: Vec::new(),
         }
     }
 
+    /// Creates a new empty [MappedVector] with the given capacity.
     pub fn with_capacity(capacity: usize) -> Self {
         Self {
-            frames: Vec::with_capacity(capacity),
+            storage: Vec::with_capacity(capacity),
             position: HashMap::with_capacity(capacity),
             inverse_position: Vec::with_capacity(capacity),
         }
@@ -78,17 +88,19 @@ impl<T> MappedVector<T> {
 }
 
 impl<T, S> MappedVector<T, S> {
+    /// Creates a new empty [MappedVector] with the given hasher.
     pub fn with_hasher(hash_builder: S) -> Self {
         Self {
-            frames: Vec::new(),
+            storage: Vec::new(),
             position: HashMap::with_hasher(hash_builder),
             inverse_position: Vec::new(),
         }
     }
 
+    /// Creates a new empty [MappedVector] with the given capacity and hasher.
     pub fn with_capacity_and_hasher(capacity: usize, hash_builder: S) -> Self {
         Self {
-            frames: Vec::with_capacity(capacity),
+            storage: Vec::with_capacity(capacity),
             position: HashMap::with_capacity_and_hasher(capacity, hash_builder),
             inverse_position: Vec::with_capacity(capacity),
         }
@@ -99,21 +111,26 @@ impl<T, S> MappedVector<T, S>
 where
     S: BuildHasher,
 {
-    pub fn frames(&self) -> &Vec<T> {
-        &self.frames
+    /// Get the inner storage of the elements. Together with the return value from
+    /// [inverse_position](Self::inverse_position), the zipped values are the correct
+    /// key-value pairs.
+    pub fn storage(&self) -> &Vec<T> {
+        &self.storage
     }
 
+    /// Get the inverse position of the elements. Together with the return value from
+    /// [storage](Self::storage), the zipped values are the correct key-value pairs.
     pub fn inverse_position(&self) -> &Vec<usize> {
         &self.inverse_position
     }
 
     fn insert(&mut self, key: usize, value: T) -> Option<T> {
         if let Some(&key) = self.position.get(&key) {
-            let old = mem::replace(self.frames.index_mut(key), value);
+            let old = mem::replace(self.storage.index_mut(key), value);
             return Some(old);
         }
-        self.position.insert(key, self.frames.len());
-        self.frames.push(value);
+        self.position.insert(key, self.storage.len());
+        self.storage.push(value);
         self.inverse_position.push(key);
         None
     }
@@ -140,7 +157,7 @@ impl<'l, T, S> IntoIterator for &'l MappedVector<T, S> {
         self.inverse_position
             .iter()
             .map((|i| *i) as fn(&usize) -> usize)
-            .zip(self.frames.iter())
+            .zip(self.storage.iter())
     }
 }
 
@@ -152,7 +169,7 @@ impl<'l, T, S> IntoIterator for &'l mut MappedVector<T, S> {
         self.inverse_position
             .iter()
             .map((|i| *i) as fn(&usize) -> usize)
-            .zip(self.frames.iter_mut())
+            .zip(self.storage.iter_mut())
     }
 }
 
@@ -161,7 +178,7 @@ impl<T, S> IntoIterator for MappedVector<T, S> {
     type IntoIter =
         Zip<<Vec<usize> as IntoIterator>::IntoIter, <Vec<T> as IntoIterator>::IntoIter>;
     fn into_iter(self) -> Self::IntoIter {
-        self.inverse_position.into_iter().zip(self.frames)
+        self.inverse_position.into_iter().zip(self.storage)
     }
 }
 
@@ -189,32 +206,32 @@ where
                 )
                 .expect("that's an implementation bug; please report") = key_position;
         }
-        Some(self.frames.swap_remove(key_position))
+        Some(self.storage.swap_remove(key_position))
     }
 
     #[inline]
     fn get(&self, key: usize) -> Option<&T> {
-        Some(self.frames.index(*self.position.get(&key)?))
+        Some(self.storage.index(*self.position.get(&key)?))
     }
 
     #[inline]
     fn get_mut(&mut self, key: usize) -> Option<&mut T> {
-        Some(self.frames.index_mut(*self.position.get(&key)?))
+        Some(self.storage.index_mut(*self.position.get(&key)?))
     }
 
     fn get_two_mut(&mut self, key_a: usize, key_b: usize) -> Option<(&mut T, &mut T)> {
-        self.frames
+        self.storage
             .get_two_mut(*self.position.get(&key_a)?, *self.position.get(&key_b)?)
     }
 
     #[inline]
     fn len(&self) -> usize {
-        self.frames.len()
+        self.storage.len()
     }
 
     #[inline]
     fn is_empty(&self) -> bool {
-        self.frames.is_empty()
+        self.storage.is_empty()
     }
 }
 
@@ -247,7 +264,7 @@ where
         let (frames, position, inverse_position) =
             (0..len).map(|i| (init_val.clone(), (i, i), i)).multiunzip();
         Self {
-            frames,
+            storage: frames,
             position,
             inverse_position,
         }

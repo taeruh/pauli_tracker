@@ -70,8 +70,6 @@ rustdoc-args = ["--cfg", "docsrs"]
 [dev-dependencies]
 proptest = "1.2.0"
 coverage-helper = "0.1.0"
-rustc-hash = "1.1.0"
-
 
 [workspace]
 members = [
@@ -82,7 +80,3 @@ members = [
 default-members = [
   "./",
 ]
-
-# [[example]]
-# name = "foo"
-# test = true

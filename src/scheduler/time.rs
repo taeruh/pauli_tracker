@@ -1,45 +1,55 @@
 /*!
-...
+Given a [DependencyGraph], there are only specific allowed sequences of measuring
+qubits. This module provides a [PathGenerator] that can generate all allowed paths.
+
+The time ordering defined by the [DependencyGraph] is often induced by non-determinism
+introduced by quantum measurements, e.g., as in MBQC, and captured by a Pauli tracker
+(cf. [README](https://github.com/taeruh/pauli_tracker)).
 */
 
 use std::{
     error::Error,
     fmt::Display,
     hash::BuildHasherDefault,
-    // mem,
 };
 
 use hashbrown::HashMap;
 use rustc_hash::FxHasher;
 
-use super::{
-    combinatoric::Partition,
-    tree::{
-        Focus,
-        FocusIterator,
-        Sweep,
-    },
+pub use super::combinatoric::Partition;
+use super::tree::{
+    Focus,
+    FocusIterator,
+    Sweep,
 };
 use crate::tracker::frames::dependency_graph::DependencyGraph;
 
 type DepsCounters = HashMap<usize, usize, BuildHasherDefault<FxHasher>>;
 type Lookup = Vec<Vec<usize>>;
 
+/// A buffer that holds the dependency structure implied by a [DependencyGraph].
 #[derive(Debug, Clone, Default, PartialEq, Eq, PartialOrd, Ord, Hash)]
-pub struct LookupBuffer {
+pub struct DependencyBuffer {
     look: Lookup,
 }
 
-impl LookupBuffer {
-    pub fn new(num_bits: usize) -> Self {
-        Self { look: vec![Vec::new(); num_bits] }
+impl DependencyBuffer {
+    /// Initialize a new [DependencyBuffer] to hold the dependency structure for `len`
+    /// qubits.
+    pub fn new(len: usize) -> Self {
+        Self { look: vec![Vec::new(); len] }
     }
 }
 
-pub type Set = Vec<usize>;
+type Set = Vec<usize>;
+
+/// An iterator over all partitions of a set of integers.
 pub type Partitioner = Partition<Set>;
+
+/// A generator to create a scheduling path - initialization and measuring of qubits -
+/// allowed by a [DependencyGraph].
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub struct PathGenerator<'l, T /* : Init<I> */> {
+pub struct PathGenerator<'l, T /* Measurable */> {
     // one could also put the dependents with the bit into the partition set and in deps
     // have values of the form (dependents, dependencies), however, the Partition clones
     // the set multiple times, therefore we don't want the dependents in there (also it
@@ -68,22 +78,31 @@ impl<'l, T> PathGenerator<'l, T> {
         }
     }
 
+    /// Get a reference to currently the measurable set of qubits.
     pub fn measureable(&self) -> &T {
         &self.measurable
     }
 
+    /// Check whether there are qubits that cannot be measured yet.
     pub fn has_unmeasureable(&self) -> bool {
         !self.deps.is_empty()
     }
 }
 
-impl<'l, T: Init<usize>> PathGenerator<'l, T> {
+impl<'l, T: MeasurableSet<usize>> PathGenerator<'l, T> {
+    /// Create a new [PathGenerator] from a [DependencyGraph]. `dependency_buffer` is
+    /// going to own the dependency structure implied by the `graph`, so that it can be
+    /// reused again.
+    ///
+    /// # Panics
+    /// Panics if the dependency_buffer has a length smaller than the number of qubits
+    /// in the `graph`
     pub fn from_dependency_graph(
         mut graph: DependencyGraph,
-        lookup: &'l mut LookupBuffer,
+        dependency_buffer: &'l mut DependencyBuffer,
         bit_mapping: Option<&HashMap<usize, usize>>,
     ) -> Self {
-        let look = &mut lookup.look;
+        let look = &mut dependency_buffer.look;
 
         if graph.is_empty() {
             return Self {
@@ -210,7 +229,7 @@ impl<'l, T: Init<usize>> PathGenerator<'l, T> {
     }
 }
 
-impl<T: Init<usize>> Focus<&[usize]> for PathGenerator<'_, T> {
+impl<T: MeasurableSet<usize>> Focus<&[usize]> for PathGenerator<'_, T> {
     type Error = NotMeasurable;
 
     fn focus(&mut self, measure_set: &[usize]) -> Result<Self, NotMeasurable>
@@ -261,7 +280,7 @@ impl<'l> IntoIterator for PathGenerator<'l, Partition<Vec<usize>>> {
     type Item = <Self::IntoIter as Iterator>::Item;
     type IntoIter = Sweep<Self>;
     fn into_iter(self) -> Self::IntoIter {
-        Self::IntoIter::new(self, Vec::new())
+        Self::IntoIter::new(self)
     }
 }
 
@@ -272,11 +291,21 @@ mod sealed {
     impl<T> Sealed for Partition<Vec<T>> {}
 }
 
-pub trait Init<T>: sealed::Sealed + Default {
+/// A trait for types that describe the set of measurable qubits in [PathGenerator].
+///
+/// Use [`Vec<usize>`] if you want to manually create the paths, and [Partitioner] if you
+/// want to iterate over all paths.
+///
+/// **This trait is sealed**
+pub trait MeasurableSet<T>: sealed::Sealed + Default {
+    /// Create a new instance of the type from a set of measurable qubits.
     fn init(set: Vec<T>) -> Self;
+
+    /// Get the set of measurable qubits.
     fn set(&self) -> &[T];
 }
-impl<T> Init<T> for Vec<T> {
+
+impl<T> MeasurableSet<T> for Vec<T> {
     #[inline(always)]
     fn init(set: Vec<T>) -> Self {
         set
@@ -288,7 +317,7 @@ impl<T> Init<T> for Vec<T> {
     }
 }
 
-impl<T: Clone> Init<T> for Partition<Vec<T>> {
+impl<T: Clone> MeasurableSet<T> for Partition<Vec<T>> {
     fn init(set: Vec<T>) -> Self {
         let len = set.len();
         let mut res = Partition::new(set, len);
@@ -302,6 +331,8 @@ impl<T: Clone> Init<T> for Partition<Vec<T>> {
     }
 }
 
+/// An error that is returned when trying to measure a qubit that is not measurable yet,
+/// i.e., it's dependencies haven't been measured yet.
 #[derive(Debug, Clone, Default, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct NotMeasurable(Vec<usize>);
 impl Display for NotMeasurable {
@@ -353,7 +384,7 @@ pub(crate) mod tests {
 
     #[test]
     fn simple_paths() {
-        let mut buffer = LookupBuffer::new(5);
+        let mut buffer = DependencyBuffer::new(5);
         let time = PathGenerator::<Partitioner>::from_dependency_graph(
             example_ordering(),
             &mut buffer,
@@ -379,7 +410,7 @@ pub(crate) mod tests {
             1, 1, 3, 13, 75, 541, // 4683, 47293, 545835,  7087261, 102247563
         ];
 
-        let mut buffer = LookupBuffer::new(10);
+        let mut buffer = DependencyBuffer::new(10);
 
         for (n, &result) in ORDERED_BELL_NUMBERS.iter().enumerate() {
             let time = PathGenerator::<Partitioner>::from_dependency_graph(
@@ -404,7 +435,7 @@ pub(crate) mod tests {
         ];
         let map = [5, 8, 2, 4];
 
-        let mut buffer = LookupBuffer::new(5);
+        let mut buffer = DependencyBuffer::new(5);
 
         assert!(
             panic::catch_unwind(|| {

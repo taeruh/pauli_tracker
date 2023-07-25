@@ -152,7 +152,9 @@ impl<T: BooleanVector> PauliStack<T> {
                     .pop()
                     .expect("shouldn't be possible since right.len > left.len >= 0"),
             )),
-            Ordering::Equal => Some(P::new_product(self.left.pop()?, self.right.pop()?)),
+            Ordering::Equal => {
+                Some(P::new_product(self.left.pop()?, self.right.pop()?))
+            }
             Ordering::Greater => Some(P::new_product(
                 self.left
                     .pop()

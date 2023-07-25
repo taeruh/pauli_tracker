@@ -63,7 +63,7 @@ pub fn fmt() {
 
 // test
 pub fn standard() {
-    println!("TEST: LOCKED");
+    println!("TEST: STANDARD");
     cargo!("+nightly", "update", "-Zdirect-minimal-versions");
     cargo!("test", "--locked", "--all-features", "--all-targets");
     cargo!("test", "--locked", "--all-features", "--doc");

@@ -65,6 +65,11 @@ general brief introduction to Pauli tracking is given in the repository's
 * **circuit**
   Includes the [circuit] module which contains tools to combine the Pauli tracking
   mechanism with a circuit simulator/description.
+* **scheduler**
+  Includes the [scheduler] module that can be used to analyze the process of
+  initializing and measuring qubits in a graph state, restricted by a certain time
+  ordering, which is for example, capture by a [Frames](tracker::frames::Frames) Pauli
+  tracker.
 * **bitvec**
   Implement [BooleanVector](boolean_vector::BooleanVector) for
   [bitvec::vec::BitVec](https://docs.rs/bitvec/latest/bitvec/vec/struct.BitVec.html)
@@ -628,10 +633,10 @@ mod tests {
         normal::<scheduler::space::AlreadyMeasured>();
         normal::<scheduler::space::Graph>();
         normal::<scheduler::space::GraphBuffer>();
-        normal::<scheduler::time::LookupBuffer>();
+        normal::<scheduler::time::DependencyBuffer>();
         normal::<scheduler::time::NotMeasurable>();
         normal::<scheduler::time::PathGenerator<()>>();
-        normal::<scheduler::tree::EmptyStackError>();
+        normal::<scheduler::tree::EmptyStack>();
         normal::<scheduler::tree::Sweep<()>>();
         normal::<tracker::MissingStack>();
         normal::<tracker::frames::Frames<()>>();

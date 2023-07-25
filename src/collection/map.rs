@@ -19,6 +19,8 @@ use super::{
     IterableBase,
 };
 
+/// A [HashMap](https://docs.rs/hashbrown/latest/hashbrown/struct.HashMap.html#) of with
+/// [usize] keys.
 pub type Map<T, S = DefaultHashBuilder> = HashMap<usize, T, S>;
 
 impl<T, S> Base for Map<T, S>

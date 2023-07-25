@@ -9,6 +9,8 @@ We try to follow the [SemVer](https://semver.org/) rules, specifically
 possible.
 
 ## [Unreleased]
+There's a fairly big number of breaking changes. I'm couldn't list all of them, but
+hopefully the most important ones.
 ### Added
 - **Breaking Change**: Add blanket `impl<S> AsRef<S> for Frames<S>`.
 - Add a new `scheduler` module, activated by the "scheduler" feature.
@@ -24,8 +26,7 @@ possible.
   Paulis. The former type `crate::pauli::single::Pauli` is replaced by the type
   `crate::pauli::dense::PauliDense` (which implements `Pauli`). The `Tracker` impl of
   `Frames` now uses `crate::pauli::tuple::PauliTuple` for methods like `track_Pauli`.
-  `PauliTuple` is another implementor of `Pauli`. `PauliTuple` implements
-  `From<PauliDense>` and vice versa.
+  `PauliTuple` and `PauliEnum` are another implementors of `Pauli`.
 - **Breaking Change**: Return u8 `in PauliDense::storage` instead of a reference.
 - **Breaking Change**: Change the Debug and Display implementations of `PauliDense`.
   Debug is now derived, so we have the standard format, and Display shows "X, Y, Z, I"
