@@ -146,14 +146,14 @@ impl<T: BooleanVector> PauliStack<T> {
     /// # }
     pub fn pop<P: Pauli>(&mut self) -> Option<P> {
         match self.left.len().cmp(&self.right.len()) {
-            Ordering::Less => Some(P::new(
+            Ordering::Less => Some(P::new_product(
                 false,
                 self.right
                     .pop()
                     .expect("shouldn't be possible since right.len > left.len >= 0"),
             )),
-            Ordering::Equal => Some(P::new(self.left.pop()?, self.right.pop()?)),
-            Ordering::Greater => Some(P::new(
+            Ordering::Equal => Some(P::new_product(self.left.pop()?, self.right.pop()?)),
+            Ordering::Greater => Some(P::new_product(
                 self.left
                     .pop()
                     .expect("shouldn't be possible since left.len > right.len >= 0"),
@@ -217,7 +217,7 @@ impl<T: BooleanVector> PauliStack<T> {
     /// # }
     /// ```
     pub fn sum_up(&self, filter: &[bool]) -> PauliTuple {
-        PauliTuple::new(self.left.sum_up(filter), self.right.sum_up(filter))
+        PauliTuple::new_product(self.left.sum_up(filter), self.right.sum_up(filter))
     }
 }
 

@@ -1,6 +1,6 @@
 // lints and similar
 #![deny(unsafe_op_in_unsafe_fn)]
-// #![warn(missing_docs)]
+#![warn(missing_docs)]
 #![warn(missing_debug_implementations)]
 // opting out is the exception
 #![warn(missing_copy_implementations)]
@@ -620,10 +620,10 @@ mod tests {
         normal::<circuit::TrackedCircuit<(), (), ()>>();
         normal::<collection::BufferedVector<()>>();
         normal::<collection::MappedVector<()>>();
-        normal::<pauli::dense::PauliDense>();
+        normal::<pauli::PauliDense>();
+        normal::<pauli::PauliStack<()>>();
+        normal::<pauli::PauliTuple>();
         normal::<pauli::stack::BitCharError>();
-        normal::<pauli::stack::PauliStack<()>>();
-        normal::<pauli::tuple::PauliTuple>();
         normal::<scheduler::Scheduler<()>>();
         normal::<scheduler::space::AlreadyMeasured>();
         normal::<scheduler::space::Graph>();
@@ -638,6 +638,7 @@ mod tests {
         normal::<tracker::frames::OverwriteStack<()>>();
         normal::<tracker::live::Live<()>>();
         // Enums
+        normal::<pauli::PauliEnum>();
         normal::<scheduler::InstructionError>();
         normal::<scheduler::space::State>();
         normal::<scheduler::tree::Step<(), ()>>();

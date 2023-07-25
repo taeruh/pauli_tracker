@@ -10,17 +10,17 @@ use serde::{
     Serialize,
 };
 
-use super::Pauli;
+use super::{
+    tableau_encoding,
+    Pauli,
+};
 
 /// Pauli encoding into two bits. It is basically an "u2", in terms of a single Pauli
 /// operator (without phases).
 ///
-/// The Pauli is specified as product of X and Z. Note that
-/// it is Y = XZ, up to a phase (and (anti)cyclical)
-///
 /// The inner storage holds the invariant that it's value is between 0 and 3
-/// (inclusive). The encoding is as follows: 0 <-> identity, 1 <-> Z, 2 <-> X, 3 <-> Y
-/// (cf. [encoding]). This encoding is often used under the name tableau representation.
+/// (inclusive). The encoding follows [tableau_encoding]. Compare
+/// [PauliEnum](super::PauliEnum) for a similar representation.
 ///
 /// Unsafe code might rely on that invariant (e.g., via accessing the storage with
 /// [Self::storage] and using it to index a pointer), therefore, functions that make it
@@ -29,20 +29,6 @@ use super::Pauli;
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct PauliDense {
     storage: u8,
-}
-
-impl TryFrom<u8> for PauliDense {
-    type Error = u8;
-    fn try_from(value: u8) -> Result<Self, Self::Error> {
-        if value > 3 { Err(value) } else { Ok(Self { storage: value }) }
-    }
-}
-
-impl From<PauliDense> for u8 {
-    #[inline(always)]
-    fn from(value: PauliDense) -> u8 {
-        value.storage
-    }
 }
 
 impl PauliDense {
@@ -141,32 +127,18 @@ impl PauliDense {
     }
 }
 
-impl Display for PauliDense {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self.storage {
-            encoding::I => write!(f, "I"),
-            encoding::Z => write!(f, "Z"),
-            encoding::X => write!(f, "X"),
-            encoding::Y => write!(f, "Y"),
-            _ => panic!("unvalid {self:?}"),
-        }
-    }
-}
-
 macro_rules! const_pauli {
     ($($name:ident,)*) => {$(
-        const $name: Self = Self { storage: encoding::$name };
+        const $name: Self = Self { storage: tableau_encoding::$name };
     )*};
 }
 
 impl Pauli for PauliDense {
     const_pauli!(I, X, Y, Z,);
 
-    fn new(x: bool, z: bool) -> Self {
+    fn new_product(x: bool, z: bool) -> Self {
         Self { storage: x.left() ^ z.right() }
     }
-
-    new_impl!();
 
     #[inline]
     fn add(&mut self, other: Self) {
@@ -225,16 +197,30 @@ impl Pauli for PauliDense {
     }
 }
 
-/// Pauli encoding into two bits (ignoring phases).
-pub mod encoding {
-    /// Code for the identity.
-    pub const I: u8 = 0;
-    /// Code for the Pauli X gate.
-    pub const X: u8 = 2;
-    /// Code for the Pauli Y gate.
-    pub const Y: u8 = 3;
-    /// Code for the Pauli Z gate.
-    pub const Z: u8 = 1;
+impl TryFrom<u8> for PauliDense {
+    type Error = u8;
+    fn try_from(value: u8) -> Result<Self, Self::Error> {
+        if value > 3 { Err(value) } else { Ok(Self { storage: value }) }
+    }
+}
+
+impl From<PauliDense> for u8 {
+    #[inline(always)]
+    fn from(value: PauliDense) -> u8 {
+        value.storage
+    }
+}
+
+impl Display for PauliDense {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self.storage {
+            tableau_encoding::I => write!(f, "I"),
+            tableau_encoding::Z => write!(f, "Z"),
+            tableau_encoding::X => write!(f, "X"),
+            tableau_encoding::Y => write!(f, "Y"),
+            _ => panic!("unvalid {self:?}"),
+        }
+    }
 }
 
 // just to effectively have an impl bool to make things more convenient here; the
@@ -283,5 +269,5 @@ mod tests {
         }
     }
 
-    // gate conjugation is tested in live_vector
+    // gate conjugation is tested in live
 }

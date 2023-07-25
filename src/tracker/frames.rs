@@ -130,8 +130,11 @@ impl<T: Default> Default for StoreError<T> {
 }
 
 impl<S> Frames<S> {
-    /// Create a new [Frames] instance.
-    pub fn new(storage: S, frames_num: usize) -> Self {
+    /// Create a new [Frames] instance with a given storage and number of frames. It
+    /// does not check whether the storage is compatible with the number of frames. If
+    /// it is not, using the create instance might result in errors or panics. This
+    /// function is mainly useful to put some parts of a frames storage into a new one.
+    pub fn new_unchecked(storage: S, frames_num: usize) -> Self {
         Self { storage, frames_num }
     }
 
@@ -140,14 +143,14 @@ impl<S> Frames<S> {
         &self.storage
     }
 
-    /// Get the number of tracked frames.
-    pub fn frames_num(&self) -> usize {
-        self.frames_num
-    }
-
     /// Convert the object into the underlining storage.
     pub fn into_storage(self) -> S {
         self.storage
+    }
+
+    /// Get the number of tracked frames.
+    pub fn frames_num(&self) -> usize {
+        self.frames_num
     }
 
     // Pauli gates don't do anything; we just include them for completeness and because
@@ -164,9 +167,20 @@ impl<S> Frames<S> {
 }
 
 impl<S: Init> Frames<S> {
-    pub fn init(size: usize) -> Self {
+    /// Creates a new [Frames] tracker initialized with the given `len`gth.
+    ///
+    /// # Examples
+    /// ```
+    /// # #[cfg_attr(coverage_nightly, no_coverage)]
+    /// # fn main() {
+    /// # use pauli_tracker::{collection::Map, tracker::frames::Frames};
+    /// # use pauli_tracker::pauli::PauliStack;
+    /// let tracker = Frames::<Map<PauliStack<Vec<bool>>>>::init(1);
+    /// assert_eq!(tracker.into_storage(), Map::from([(0, PauliStack::new())]));
+    /// # }
+    pub fn init(len: usize) -> Self {
         Self {
-            storage: S::init(size),
+            storage: S::init(len),
             frames_num: 0,
         }
     }

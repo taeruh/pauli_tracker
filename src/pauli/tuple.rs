@@ -12,6 +12,8 @@ use serde::{
 
 use super::Pauli;
 
+/// A Pauli represented by two booleans values. The first one is the X part and the
+/// second one is the Z part.
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq, PartialOrd, Ord, Hash)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct PauliTuple(bool, bool);
@@ -33,11 +35,9 @@ impl Pauli for PauliTuple {
     const Y: Self = Self(true, true);
     const Z: Self = Self(false, true);
 
-    fn new(x: bool, z: bool) -> Self {
+    fn new_product(x: bool, z: bool) -> Self {
         Self(x, z)
     }
-
-    new_impl!();
 
     #[inline]
     fn add(&mut self, other: Self) {

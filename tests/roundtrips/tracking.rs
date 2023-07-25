@@ -20,9 +20,9 @@ use pauli_tracker::{
         Map,
     },
     pauli::{
-        tuple::PauliTuple,
         Pauli,
         PauliStack,
+        PauliTuple,
     },
     tracker::{
         frames::{

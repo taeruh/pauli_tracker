@@ -51,18 +51,30 @@ impl<S> AsRef<S> for Live<S> {
 }
 
 impl<T> Live<T> {
+    /// Creates a new [Live] tracker with the given storage.
     pub fn new(storage: T) -> Self {
         Self { storage }
     }
 
+    /// Returns the inner storage.
     pub fn into(self) -> T {
         self.storage
     }
 }
 
 impl<T: Init> Live<T> {
-    pub fn init(size: usize) -> Self {
-        Self { storage: T::init(size) }
+    /// Creates a new [Live] tracker initialized with the given `len`gth.
+    ///
+    /// # Examples
+    /// ```
+    /// # #[cfg_attr(coverage_nightly, no_coverage)]
+    /// # fn main() {
+    /// # use pauli_tracker::{collection::BufferedVector, tracker::live::Live};
+    /// let tracker = Live::<BufferedVector<bool>>::init(2);
+    /// assert_eq!(tracker.into(), BufferedVector::wrap(vec![false; 2]));
+    /// # }
+    pub fn init(len: usize) -> Self {
+        Self { storage: T::init(len) }
     }
 }
 
@@ -162,6 +174,7 @@ mod tests {
         collection::BufferedVector,
         pauli::{
             PauliDense,
+            PauliEnum,
             PauliTuple,
         },
     };
@@ -258,7 +271,11 @@ mod tests {
         )*};
     }
 
-    test_actions!((PauliDense, pauli_dense), (PauliTuple, pauli_tuple),);
+    test_actions!(
+        (PauliDense, pauli_dense),
+        (PauliTuple, pauli_tuple),
+        (PauliEnum, pauli_enum),
+    );
 
     #[test]
     fn new_qubit_and_measure() {

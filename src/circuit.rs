@@ -309,7 +309,7 @@ where
         while let Some((bit, pauli)) = storage.next() {
             outcome.push((bit, self.circuit.measure(bit)));
             if let Some(stack) = self.storage.insert(bit, pauli) {
-                self.tracker = Frames::new(storage.collect(), num_frames);
+                self.tracker = Frames::new_unchecked(storage.collect(), num_frames);
                 return (outcome, Err(OverwriteStack { bit, stack }));
             }
         }
