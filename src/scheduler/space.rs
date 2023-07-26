@@ -11,12 +11,8 @@ to create the edges.
 [graph state]: https://en.wikipedia.org/wiki/Graph_state
 */
 
-use std::{
-    error::Error,
-    fmt::Display,
-};
-
 use hashbrown::HashMap;
+use thiserror::Error;
 
 use super::tree::Focus;
 
@@ -191,7 +187,7 @@ macro_rules! return_type {
 }
 macro_rules! return_error {
     (checked, $bit:expr) => {
-        Err(AlreadyMeasured { bit: $bit })
+        Err(AlreadyMeasured($bit))
     };
     (unchecked, $bit:expr) => {
         ()
@@ -253,16 +249,9 @@ impl<'l> Graph<'l> {
 }
 
 /// Error type when a bit is measured multiple times.
-#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, PartialOrd, Ord, Hash)]
-pub struct AlreadyMeasured {
-    bit: usize,
-}
-impl Display for AlreadyMeasured {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "cannot measure bit \"{}\" as it is already measured", self.bit)
-    }
-}
-impl Error for AlreadyMeasured {}
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, PartialOrd, Ord, Hash, Error)]
+#[error("bit \"{0}\" has been already measured")]
+pub struct AlreadyMeasured(pub usize);
 
 #[cfg(test)]
 pub(crate) mod tests {

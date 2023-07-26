@@ -1,4 +1,3 @@
-- use thiserror
 - scheduler doc examples
 - test whether the we actually activate avx2 in dependents
 - remove the above that it is only done for test and document that users should do it by
@@ -24,8 +23,3 @@
 
 - maybe make a proc crate for all the macros that are not so good
 - ergonomic trait implementations
-
-
-another major bump:
-- maybe make Map's and Vector's inner type private (making Map to a newtype) and remove
-  Deref(Mut) impls

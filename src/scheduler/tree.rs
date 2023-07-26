@@ -21,6 +21,7 @@ use serde::{
     Deserialize,
     Serialize,
 };
+use thiserror::Error;
 
 /// A trait which acts a little bit like a [zipper](https://wiki.haskell.org/Zipper).
 pub trait Focus<I> {
@@ -85,14 +86,10 @@ pub struct Sweep<T> {
 /// This error might occur when trying to skipping a node in
 /// [skip_current](Sweep::skip_current). This is usually not a problem, but rather a
 /// final break condition in a loop.
-#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, PartialOrd, Ord, Hash, Error)]
+#[error("the stack is empty")]
 pub struct EmptyStack;
-impl Display for EmptyStack {
-    fn fmt(&self, f: &mut Formatter) -> fmt::Result {
-        write!(f, "the stack is empty")
-    }
-}
-impl Error for EmptyStack {}
+
 
 impl<T> Sweep<T> {
     /// Initialize the iterator with a given state.

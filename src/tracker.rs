@@ -4,14 +4,6 @@ This module defines the [Tracker] trait and provides different implementors thro
 tracking Pauli gates through a Clifford circuit.
 */
 
-use std::{
-    error::Error,
-    fmt::{
-        Display,
-        Formatter,
-    },
-};
-
 use crate::pauli::Pauli;
 
 /// A vector describing an encoded Pauli string, for example, one frame of
@@ -25,18 +17,10 @@ use crate::pauli::Pauli;
 /// vector should be mainly used to analyze single Pauli strings.
 pub type PauliString<T> = Vec<(usize, T)>;
 
-/// The Error when we try to [measure](Tracker::measure) a missing qubit.
-#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, PartialOrd, Ord, Hash)]
-pub struct MissingStack {
-    /// The missing qubit.
-    pub bit: usize,
-}
-impl Display for MissingStack {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        write!(f, "there's no Pauli stack for qubit {}", self.bit)
-    }
-}
-impl Error for MissingStack {}
+/// The Error when one tries to [measure](Tracker::measure) a missing bit.
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, PartialOrd, Ord, Hash, Error)]
+#[error("there's no Pauli stack for qubit {0}")]
+pub struct MissingBit(pub usize);
 
 macro_rules! single {
     ($(( $name:ident, $gate:literal),)*) => {$(
@@ -137,7 +121,7 @@ pub trait Tracker {
     );
 
     /// Remove the Pauli stack on qu`bit`, if it is present.
-    fn measure(&mut self, bit: usize) -> Result<Self::Stack, MissingStack>;
+    fn measure(&mut self, bit: usize) -> Result<Self::Stack, MissingBit>;
 }
 
 // {{ some helpers for simpler gate implementations
@@ -148,6 +132,7 @@ macro_rules! unwrap_get_mut {
             .unwrap_or_else(|| panic!("{}: qubit {} does not exist", $gate, $bit))
     };
 }
+use thiserror::Error;
 use unwrap_get_mut;
 
 // that's not stable yet (https://github.com/rust-lang/rust/issues/83527), so we have

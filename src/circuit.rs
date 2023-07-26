@@ -20,8 +20,8 @@ use crate::{
     tracker::{
         frames::{
             Frames,
+            MoveError,
             OverwriteStack,
-            StoreError,
         },
         PauliString,
         Tracker,
@@ -287,7 +287,7 @@ where
     pub fn measure_and_store(
         &mut self,
         bit: usize,
-    ) -> (C::Outcome, Result<(), StoreError<B>>) {
+    ) -> (C::Outcome, Result<(), MoveError<B>>) {
         let outcome = self.circuit.measure(bit);
         match self.tracker.measure_and_store(bit, &mut self.storage) {
             Ok(_) => (outcome, Ok(())),
@@ -341,7 +341,7 @@ mod tests {
         tracker::{
             frames::Frames,
             live,
-            MissingStack,
+            MissingBit,
         },
     };
 
@@ -365,7 +365,7 @@ mod tests {
         circ.measure_and_store(2).1.unwrap();
         circ.tracker.new_qubit(2);
         match circ.measure_and_store(2).1.unwrap_err() {
-            StoreError::OverwriteStack(e) => {
+            MoveError::OverwriteStack(e) => {
                 assert_eq!(
                     e,
                     OverwriteStack {
@@ -374,12 +374,12 @@ mod tests {
                     }
                 );
             }
-            StoreError::MissingStack(_) => panic!("wrong error"),
+            MoveError::MissingBit(_) => panic!("wrong error"),
         }
         match circ.measure_and_store(2).1.unwrap_err() {
-            StoreError::OverwriteStack(_) => panic!("wrong error"),
-            StoreError::MissingStack(e) => {
-                assert_eq!(e, MissingStack { bit: 2 });
+            MoveError::OverwriteStack(_) => panic!("wrong error"),
+            MoveError::MissingBit(e) => {
+                assert_eq!(e, MissingBit(2));
             }
         }
         circ.tracker.new_qubit(2);

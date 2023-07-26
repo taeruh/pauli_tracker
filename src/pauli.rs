@@ -157,7 +157,7 @@ impl From<PauliDense> for PauliEnum {
         pauli
             .storage()
             .try_into()
-            .unwrap_or_else(|e| panic!("invalid {e:?}"))
+            .unwrap_or_else(|e| panic!("{e}"))
     }
 }
 impl From<PauliTuple> for PauliEnum {

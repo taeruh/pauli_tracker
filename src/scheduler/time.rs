@@ -7,20 +7,20 @@ introduced by quantum measurements, e.g., as in MBQC, and captured by a Pauli tr
 (cf. [README](https://github.com/taeruh/pauli_tracker)).
 */
 
-use std::{
-    error::Error,
-    fmt::Display,
-    hash::BuildHasherDefault,
-};
+use std::hash::BuildHasherDefault;
 
 use hashbrown::HashMap;
 use rustc_hash::FxHasher;
+use thiserror::Error;
 
-pub use super::combinatoric::Partition;
-use super::tree::{
-    Focus,
-    FocusIterator,
-    Sweep,
+use super::{
+    tree::{
+        Focus,
+        FocusIterator,
+        Step,
+        Sweep,
+    },
+    Partition,
 };
 use crate::tracker::frames::dependency_graph::DependencyGraph;
 
@@ -277,7 +277,7 @@ impl FocusIterator for PathGenerator<'_, Partitioner> {
 }
 
 impl<'l> IntoIterator for PathGenerator<'l, Partition<Vec<usize>>> {
-    type Item = <Self::IntoIter as Iterator>::Item;
+    type Item = Step<Vec<usize>, Option<()>>;
     type IntoIter = Sweep<Self>;
     fn into_iter(self) -> Self::IntoIter {
         Self::IntoIter::new(self)
@@ -333,14 +333,9 @@ impl<T: Clone> MeasurableSet<T> for Partition<Vec<T>> {
 
 /// An error that is returned when trying to measure a qubit that is not measurable yet,
 /// i.e., it's dependencies haven't been measured yet.
-#[derive(Debug, Clone, Default, PartialEq, Eq, PartialOrd, Ord, Hash)]
-pub struct NotMeasurable(Vec<usize>);
-impl Display for NotMeasurable {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "the bits {:?} are not in the measureable set", self.0)
-    }
-}
-impl Error for NotMeasurable {}
+#[derive(Debug, Clone, Default, PartialEq, Eq, PartialOrd, Ord, Hash, Error)]
+#[error("the bits {0:?} are not in the measureable set")]
+pub struct NotMeasurable(pub Vec<usize>);
 
 #[cfg(test)]
 pub(crate) mod tests {

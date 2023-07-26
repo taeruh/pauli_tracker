@@ -17,12 +17,12 @@
 
 // some guidelines (should do a better contributing file ...):
 //
-// If possible all structs and enums should derive #[derive(Debug, Clone, Copy, Default,
-// PartialEq, Eq, PartialOrd, Ord, Hash)] in this order! The fixed order, so that it is
-// easier to see if something is missing. If a trait cannot be derived and it makes
-// sense to implement it, or we need some custom implementation, do it manually. The
-// same thing is valid for Serialize and Deserialized, conditioned by a
-// cfg(_attr)(feature = "serde"(, ...)).
+// If possible all structs and enums should derive
+// #[derive(Debug, Clone, Copy, Default, PartialEq, Eq, PartialOrd, Ord, Hash)]
+// in this order! The fixed order, so that it is easier to see if something is missing.
+// If a trait cannot be derived and it makes sense to implement it, or we need some
+// custom implementation, do it manually. The same thing is valid for Serialize and
+// Deserialized, conditioned by a cfg(_attr)(feature = "serde"(, ...)).
 //
 // Debug, Clone and Default have to be implemented, except if it is possible (e.g.,
 // Default is not really possible if the type contains references). Default is
@@ -190,7 +190,7 @@ let conditional_summed_frames: Vec<_> = frames
     .into_iter()
     .map(|(_, pauli_stack)| pauli_stack.sum_up(&measurements))
     .collect();
-assert_eq!(tracker.as_ref().n, conditional_summed_frames, "{measurements:?}");
+assert_eq!(tracker.as_ref().0, conditional_summed_frames, "{measurements:?}");
 # }
 # #[cfg_attr(coverage_nightly, no_coverage)]
 # #[cfg(not(feature = "circuit"))]
@@ -638,7 +638,7 @@ mod tests {
         normal::<scheduler::time::PathGenerator<()>>();
         normal::<scheduler::tree::EmptyStack>();
         normal::<scheduler::tree::Sweep<()>>();
-        normal::<tracker::MissingStack>();
+        normal::<tracker::MissingBit>();
         normal::<tracker::frames::Frames<()>>();
         normal::<tracker::frames::OverwriteStack<()>>();
         normal::<tracker::live::Live<()>>();
@@ -647,6 +647,6 @@ mod tests {
         normal::<scheduler::InstructionError>();
         normal::<scheduler::space::State>();
         normal::<scheduler::tree::Step<(), ()>>();
-        normal::<tracker::frames::StoreError<()>>();
+        normal::<tracker::frames::MoveError<()>>();
     }
 }

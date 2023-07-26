@@ -11,25 +11,17 @@ effectiving each other; this is the main difference to the tracker defined in
 [live](super::live).
 */
 
-use std::{
-    error::Error,
-    fmt::{
-        self,
-        Debug,
-        Display,
-        Formatter,
-    },
-    mem,
-};
+use std::mem;
 
 #[cfg(feature = "serde")]
 use serde::{
     Deserialize,
     Serialize,
 };
+use thiserror::Error;
 
 use super::{
-    MissingStack,
+    MissingBit,
     PauliString,
     Tracker,
 };
@@ -69,20 +61,15 @@ pub struct Frames<Storage> {
     frames_num: usize,
 }
 
-/// The Error when we overwrite a qubit's Pauli stack.
-#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, PartialOrd, Ord, Hash)]
+/// The Error when one overwrites a qubit's Pauli stack.
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, PartialOrd, Ord, Hash, Error)]
+#[error("the Pauli stack for bit {bit} has been overwritten")]
 pub struct OverwriteStack<T> {
-    /// The qubit.
+    /// The bit.
     pub bit: usize,
-    /// The stack we have overwritten.
+    /// The stack that was overwritten.
     pub stack: PauliStack<T>,
 }
-impl<T> Display for OverwriteStack<T> {
-    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
-        write!(f, "the Pauli stack for qubit {} has been overwritten", self.bit)
-    }
-}
-impl<T: Debug> Error for OverwriteStack<T> {}
 
 impl<Storage> AsRef<Storage> for Frames<Storage> {
     fn as_ref(&self) -> &Storage {
@@ -92,40 +79,20 @@ impl<Storage> AsRef<Storage> for Frames<Storage> {
 
 /// The Error when one tries to measure a qubit and store it stacks in another storage,
 /// as in [measure_and_store](Frames::measure_and_store).
-///
-/// It can be either a [MissingStack] error, if the qubit is missing, or an
-/// [OverwriteStack] error if the qubit was already present in the other storage.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
-pub enum StoreError<T> {
-    /// If one would overwrite the stack in the other storage.
-    OverwriteStack(OverwriteStack<T>),
-    /// If the qubit and its stack are missing.
-    MissingStack(MissingStack),
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Error)]
+pub enum MoveError<T> {
+    /// See [OverwriteStack].
+    #[error(transparent)]
+    OverwriteStack(#[from] OverwriteStack<T>),
+    /// See [MissingBit].
+    #[error(transparent)]
+    MissingBit(#[from] MissingBit),
 }
-impl<T> Display for StoreError<T> {
-    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
-        match self {
-            StoreError::OverwriteStack(e) => write!(f, "{e}"),
-            StoreError::MissingStack(e) => write!(f, "{e}"),
-        }
-    }
-}
-impl<T: Debug> Error for StoreError<T> {}
 
-impl<T> From<OverwriteStack<T>> for StoreError<T> {
-    fn from(value: OverwriteStack<T>) -> Self {
-        StoreError::OverwriteStack(value)
-    }
-}
-impl<T> From<MissingStack> for StoreError<T> {
-    fn from(value: MissingStack) -> Self {
-        StoreError::MissingStack(value)
-    }
-}
 #[doc = non_semantic_default!()]
-impl<T: Default> Default for StoreError<T> {
+impl<T: Default> Default for MoveError<T> {
     fn default() -> Self {
-        Self::MissingStack(MissingStack::default())
+        Self::MissingBit(MissingBit::default())
     }
 }
 
@@ -292,8 +259,8 @@ where
         (move_z_to_z, right, right, "Z", "Z")
     );
 
-    fn measure(&mut self, bit: usize) -> Result<PauliStack<B>, MissingStack> {
-        self.storage.remove(bit).ok_or(MissingStack { bit })
+    fn measure(&mut self, bit: usize) -> Result<PauliStack<B>, MissingBit> {
+        self.storage.remove(bit).ok_or(MissingBit(bit))
     }
 }
 
@@ -323,7 +290,7 @@ where
         &mut self,
         bit: usize,
         storage: &mut impl Base<TB = PauliStack<B>>,
-    ) -> Result<(), StoreError<B>> {
+    ) -> Result<(), MoveError<B>> {
         match storage.insert(bit, self.measure(bit)?) {
             Some(p) => Err(OverwriteStack { bit, stack: p }.into()),
             None => Ok(()),

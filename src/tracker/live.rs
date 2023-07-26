@@ -13,7 +13,7 @@ use serde::{
 use super::{
     unwrap_get_mut,
     unwrap_get_two_mut,
-    MissingStack,
+    MissingBit,
     PauliString,
     Tracker,
 };
@@ -160,8 +160,8 @@ where
         b.zpx(a);
     }
 
-    fn measure(&mut self, bit: usize) -> Result<Self::Stack, MissingStack> {
-        self.get_mut(bit).ok_or(MissingStack { bit }).cloned()
+    fn measure(&mut self, bit: usize) -> Result<Self::Stack, MissingBit> {
+        self.get_mut(bit).ok_or(MissingBit(bit)).cloned()
     }
 }
 
@@ -284,7 +284,7 @@ mod tests {
         assert_eq!(tracker.new_qubit(0), Some(PauliTuple::X));
         assert_eq!(tracker.new_qubit(1), None);
         tracker.track_y(0);
-        assert_eq!(tracker.as_ref().n, vec![PauliTuple::Y, PauliTuple::I]);
+        assert_eq!(tracker.as_ref().0, vec![PauliTuple::Y, PauliTuple::I]);
         assert_eq!(tracker.measure(0), Ok(PauliTuple::Y));
         assert_eq!(tracker.new_qubit(3), None);
         // assert_eq!(

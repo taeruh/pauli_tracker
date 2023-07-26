@@ -1,14 +1,13 @@
 /*!
-Analyse scheduling paths on a [graph state] allowed by a
-[DependencyGraph].
+Analyse scheduling paths on a [graph state] allowed by a [DependencyGraph].
 
 **This module is currently rather experimental.**
 
-*The module is rather independent of the principle of Pauli tracking. In general, one
-just needs a time ordering on the qubits, like a [DependencyGraph] (or have no time
-ordering at all).*
+*The module is rather independent of of Pauli tracking. In general, one just needs a
+time ordering on the qubits, like a [DependencyGraph] (or have no time ordering at
+all).*
 
-Realizing [graph states] on a quantum computer can be done sequentially (cf. [space]),
+Realizing [graph state]s on a quantum computer can be done sequentially (cf. [space]),
 however, this is often restricted by a time ordering induced by non-determinism (cf.
 [time]).
 
@@ -17,14 +16,33 @@ used to analyze allowed scheduling paths - the process of initializing and measu
 qubits - regarding the required quantum memory and the number of required measurement
 steps.
 
+# Performance
+
+There are lots of possible scheduling paths, in the worst case the number of possible
+paths is given by the
+[ordered Bell number](https://en.wikipedia.org/wiki/Ordered_Bell_number). Therefore,
+if the task is to find the optimal path, under some metric, doing this by checking all
+possible paths might scale very, very badly. The [Sweep] iterator in [tree] tries to
+reduce that scaling by keeping track of its states to reduce the number of redundant
+calculations (this comes at the cost of memory, but this cost is scaling linearly), and
+a [skipping method](Sweep::skip_current) to skip states that are known to be not
+interesting. However, the scaling can still be very, very bad.
+
+Saying that, if you have a high number of qubits, you might not want to use this module,
+but it might still be useful for testing purposes.
+
+It is a goal to find better algorithms, but this will probably happen in a separate
+project.
+
 [graph state]: https://en.wikipedia.org/wiki/Graph_state
 [DependencyGraph]: crate::tracker::frames::dependency_graph::DependencyGraph
 */
 
-pub(crate) mod combinatoric;
+mod combinatoric;
 
-use std::fmt::Display;
+use std::error::Error;
 
+pub use combinatoric::Partition;
 use time::Partitioner;
 
 use self::{
@@ -40,6 +58,7 @@ use self::{
     tree::{
         Focus,
         FocusIterator,
+        Step,
         Sweep,
     },
 };
@@ -135,46 +154,26 @@ impl FocusIterator for Scheduler<'_, Partitioner> {
     }
 }
 
-/// An error that can happen when instructing the [Scheduler]
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+/// An error that can happen when instructing the [Scheduler].
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, thiserror::Error)]
 pub enum InstructionError {
     /// See [NotMeasurable].
-    TimeOrderingViolation(NotMeasurable),
+    #[error(transparent)]
+    NotMeasurable(#[from] NotMeasurable),
     /// See [AlreadyMeasured].
-    AlreadyMeasured(AlreadyMeasured),
+    #[error(transparent)]
+    AlreadyMeasured(#[from] AlreadyMeasured),
 }
-impl Display for InstructionError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            InstructionError::TimeOrderingViolation(e) => {
-                write!(f, "time ordering violation: {}", e)
-            }
-            InstructionError::AlreadyMeasured(e) => {
-                write!(f, "bit already measured: {}", e)
-            }
-        }
-    }
-}
-impl std::error::Error for InstructionError {}
-impl From<NotMeasurable> for InstructionError {
-    fn from(error: NotMeasurable) -> Self {
-        Self::TimeOrderingViolation(error)
-    }
-}
-impl From<AlreadyMeasured> for InstructionError {
-    fn from(error: AlreadyMeasured) -> Self {
-        Self::AlreadyMeasured(error)
-    }
-}
+
 #[doc = non_semantic_default!()]
 impl Default for InstructionError {
     fn default() -> Self {
-        Self::TimeOrderingViolation(NotMeasurable::default())
+        Self::NotMeasurable(NotMeasurable::default())
     }
 }
 
 impl<'l> IntoIterator for Scheduler<'l, Partitioner> {
-    type Item = <Self::IntoIter as Iterator>::Item;
+    type Item = Step<Vec<usize>, Option<usize>>;
     type IntoIter = Sweep<Self>;
     fn into_iter(self) -> Self::IntoIter {
         Self::IntoIter::new(self)

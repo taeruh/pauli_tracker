@@ -197,10 +197,15 @@ impl Pauli for PauliDense {
     }
 }
 
+use thiserror::Error;
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, PartialOrd, Ord, Hash, Error)]
+#[error("{0} is not between 0 and 3")]
+pub struct InvalidU8(pub u8);
+
 impl TryFrom<u8> for PauliDense {
-    type Error = u8;
+    type Error = InvalidU8;
     fn try_from(value: u8) -> Result<Self, Self::Error> {
-        if value > 3 { Err(value) } else { Ok(Self { storage: value }) }
+        if value > 3 { Err(InvalidU8(value)) } else { Ok(Self { storage: value }) }
     }
 }
 

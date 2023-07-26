@@ -16,6 +16,7 @@ use serde::{
     Deserialize,
     Serialize,
 };
+use thiserror::Error;
 
 use super::{
     dense::PauliDense,
@@ -41,17 +42,12 @@ pub struct PauliStack<T /* : BooleanVector */> {
 }
 
 /// The Error when one tries to parse a char into a bool.
-#[derive(Debug, Clone, Default, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, PartialOrd, Ord, Hash, Error)]
+#[error("'{chr}' is neither '0' nor '1'")]
 pub struct BitCharError {
     /// The invalid char.
-    pub string: String,
+    pub chr: char,
 }
-impl Display for BitCharError {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{} is not a valid binary", self.string)
-    }
-}
-impl std::error::Error for BitCharError {}
 
 impl<T: BooleanVector> PauliStack<T> {
     /// Create a new empty [PauliStack].
@@ -82,7 +78,7 @@ impl<T: BooleanVector> PauliStack<T> {
         fn to_bool(c: char) -> Result<bool, BitCharError> {
             match c.to_digit(2) {
                 Some(d) => Ok(d == 1),
-                None => Err(BitCharError { string: c.to_string() }),
+                None => Err(BitCharError { chr: c }),
             }
         }
         Ok(Self {
