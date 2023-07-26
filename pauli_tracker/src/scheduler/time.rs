@@ -338,7 +338,7 @@ impl<T: Clone> MeasurableSet<T> for Partition<Vec<T>> {
 pub struct NotMeasurable(pub Vec<usize>);
 
 #[cfg(test)]
-pub(crate) mod tests {
+mod tests {
     use std::panic;
 
     use coverage_helper::test;

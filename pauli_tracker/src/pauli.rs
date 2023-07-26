@@ -154,10 +154,7 @@ impl From<PauliTuple> for PauliDense {
 
 impl From<PauliDense> for PauliEnum {
     fn from(pauli: PauliDense) -> Self {
-        pauli
-            .storage()
-            .try_into()
-            .unwrap_or_else(|e| panic!("{e}"))
+        pauli.storage().try_into().unwrap_or_else(|e| panic!("{e}"))
     }
 }
 impl From<PauliTuple> for PauliEnum {

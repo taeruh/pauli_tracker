@@ -4,10 +4,6 @@
 
 use std::{
     cmp::Ordering,
-    fmt::{
-        Display,
-        Formatter,
-    },
     mem,
 };
 

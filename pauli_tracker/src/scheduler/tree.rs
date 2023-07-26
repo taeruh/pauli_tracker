@@ -6,15 +6,7 @@ nodes describe the set of qubits that are going to be measured in this step. The
 and data structures are described in terms of a tree.
 */
 
-use std::{
-    error::Error,
-    fmt::{
-        self,
-        Display,
-        Formatter,
-    },
-    mem,
-};
+use std::mem;
 
 #[cfg(feature = "serde")]
 use serde::{
@@ -90,7 +82,6 @@ pub struct Sweep<T> {
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq, PartialOrd, Ord, Hash, Error)]
 #[error("the stack is empty")]
 pub struct EmptyStack;
-
 
 impl<T> Sweep<T> {
     /// Initialize the iterator with a given state.

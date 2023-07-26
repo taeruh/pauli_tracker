@@ -1,0 +1,170 @@
+// lints and similar
+#![deny(unsafe_op_in_unsafe_fn)]
+#![warn(missing_docs)]
+#![warn(missing_debug_implementations)]
+// opting out is the exception
+#![warn(missing_copy_implementations)]
+// semantically wrong; but useful for init stuff, cf. comments below
+// imagine #![warn(missing_default_implementations)]
+//
+// (nightly) features, only for development
+#![cfg_attr(docsrs, feature(doc_cfg))]
+#![cfg_attr(coverage_nightly, feature(no_coverage))]
+// cf .https://doc.rust-lang.org/rustdoc/write-documentation/documentation-tests.html (I
+// thought doc-test should capture the normal #! attributes?)
+#![cfg_attr(coverage_nightly, doc(test(attr(feature(no_coverage)))))]
+//
+
+// some guidelines (should do a better contributing file ...):
+//
+// If possible all structs and enums should derive
+// #[derive(Debug, Clone, Copy, Default, PartialEq, Eq, PartialOrd, Ord, Hash)]
+// in this order! The fixed order, so that it is easier to see if something is missing.
+// If a trait cannot be derived and it makes sense to implement it, or we need some
+// custom implementation, do it manually. The same thing is valid for Serialize and
+// Deserialized, conditioned by a cfg(_attr)(feature = "serde"(, ...)).
+//
+// Debug, Clone and Default have to be implemented, except if it is possible (e.g.,
+// Default is not really possible if the type contains references). Default is
+// debatable, because it doesn't make always sense, semantically, but it is useful for
+// initialization; annotate such cases with with #[doc = non_semantic_default!()].
+//
+// All types must implement Copy, except if they are really not Copy
+//
+// set up all feature code as follows for proper feature documentation: #[cfg(feature =
+// "<feature>")] #[cfg_attr(docsrs, doc(cfg(feature = "<feature>")))] --cfg docsrs is
+// set when the documentation is build
+//
+// the lines of the tests should not be included in the coverage, therefore, put
+// #[cfg_attr(coverage_nightly, no_coverage)] on every test function (except if the test
+// is ignore, e.g., proptest); also on closures (except if we are in a doc-test and it
+// is is a oneline closure in, for example, iter::map, and adding the annotation would
+// change the formatting) and functions that are exclusively used in the test (except we
+// really want coverage for them); this attribute does sadly not work with modules; to
+// make things easier one can `use coverage_helper::test` in the test modules and just
+// use the (modified) #[test] attribute; in doc-tests we always need to specify the main
+// function explicitly and put the ...no_coverage... attribute on it
+//
+// tests are always run with --all--features; however, doc-tests should be under
+// cfg-features conditions if they use them (and this should also be documented) and
+// should be tested with only those features enabled
+//
+// When defining a new type, add it to the marker test at the end of this file (with a
+// customized check function if required). If this test fails in the future, it would be
+// a breaking change!
+
+//
+#![doc = include_str!("../xdocs/lib.md")]
+
+macro_rules! non_semantic_default {
+    () => {
+        "Note, that semantically, this impl makes not much sense. It is rather useful \
+         for initialization."
+    };
+}
+
+pub mod boolean_vector;
+
+#[cfg(feature = "circuit")]
+#[cfg_attr(docsrs, doc(cfg(feature = "circuit")))]
+pub mod circuit;
+
+pub mod collection;
+
+#[cfg(feature = "scheduler")]
+#[cfg_attr(docsrs, doc(cfg(feature = "scheduler")))]
+pub mod scheduler;
+
+pub mod pauli;
+
+mod slice_extension;
+
+pub mod tracker;
+
+/// Figure out which target feature has been enabled regarding SIMD operations.
+///
+///For example, if avx2 has been enabled, we probably have the most efficient
+///implementation of "simd-types". Some features are automatically enabled at compile
+///time and some have to be enabled manually, for example, in your `build.rs` script:
+/// ```
+/// # #[cfg_attr(coverage_nightly, no_coverage)]
+/// # fn main() {
+/// #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
+/// if is_x86_feature_detected!("avx2") {
+///     println!(r#"cargo:rustc-cfg=target_feature="avx2""#);
+/// }
+/// # }
+/// ```
+/// ***currently this function only tests against "avx2" and "sse"***
+#[allow(unreachable_code)] // because rust-analyzer detects the target_feature(s)
+pub fn enabled_simd_target_feature() -> &'static str {
+    #[cfg(target_feature = "avx2")]
+    {
+        return "avx2";
+    }
+    #[cfg(target_feature = "sse2")]
+    {
+        return "sse2";
+    }
+    "other or none"
+}
+
+#[cfg(test)]
+mod tests {
+    use coverage_helper::test;
+
+    use super::*;
+
+    #[test]
+    // check whether the code in the documentation of [enabled_target_feature] makes
+    // sense (and whether we enabled the target feature that we want when running the
+    // tests)
+    fn target_feature() {
+        #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
+        if is_x86_feature_detected!("avx2") {
+            assert_eq!("avx2", enabled_simd_target_feature());
+        } else if is_x86_feature_detected!("sse2") {
+            assert_eq!("sse2", enabled_simd_target_feature());
+        }
+    }
+
+    #[cfg_attr(coverage_nightly, no_coverage)]
+    fn normal<T: Sized + Send + Sync + Unpin>() {}
+
+    #[test]
+    fn marker() {
+        // cf. "List of all items" in docs
+        // Structs
+        normal::<boolean_vector::bitvec_simd::Iter>();
+        normal::<boolean_vector::bitvec_simd::IterFromRef>();
+        normal::<boolean_vector::bitvec_simd::SimdBitVec>();
+        normal::<circuit::DummyCircuit>();
+        normal::<circuit::RandomMeasurementCircuit>();
+        normal::<circuit::TrackedCircuit<(), (), ()>>();
+        normal::<collection::BufferedVector<()>>();
+        normal::<collection::MappedVector<()>>();
+        normal::<pauli::PauliDense>();
+        normal::<pauli::PauliStack<()>>();
+        normal::<pauli::PauliTuple>();
+        normal::<pauli::stack::BitCharError>();
+        normal::<scheduler::Scheduler<()>>();
+        normal::<scheduler::space::AlreadyMeasured>();
+        normal::<scheduler::space::Graph>();
+        normal::<scheduler::space::GraphBuffer>();
+        normal::<scheduler::time::DependencyBuffer>();
+        normal::<scheduler::time::NotMeasurable>();
+        normal::<scheduler::time::PathGenerator<()>>();
+        normal::<scheduler::tree::EmptyStack>();
+        normal::<scheduler::tree::Sweep<()>>();
+        normal::<tracker::MissingBit>();
+        normal::<tracker::frames::Frames<()>>();
+        normal::<tracker::frames::OverwriteStack<()>>();
+        normal::<tracker::live::Live<()>>();
+        // Enums
+        normal::<pauli::PauliEnum>();
+        normal::<scheduler::InstructionError>();
+        normal::<scheduler::space::State>();
+        normal::<scheduler::tree::Step<(), ()>>();
+        normal::<tracker::frames::MoveError<()>>();
+    }
+}

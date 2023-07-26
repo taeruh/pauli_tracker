@@ -345,27 +345,34 @@ fn split_instructions(
             ref step @ Step::Backward(at_leaf) => {
                 task.push(step.clone());
                 init.pop();
-                if at_leaf.is_some() {
-                    paths_in_task += 1;
-                    if paths_in_task == paths_per_job {
-                        paths_in_task = 0;
-                        for step in instructions.by_ref() {
-                            match step {
-                                Step::Backward(_) => {
-                                    init.pop();
-                                }
-                                step => {
-                                    init.push(step);
-                                    break;
-                                }
-                            }
+
+                if at_leaf.is_none() {
+                    continue;
+                }
+
+                paths_in_task += 1;
+                if paths_in_task != paths_per_job {
+                    continue;
+                }
+
+                paths_in_task = 0;
+                for step in instructions.by_ref() {
+                    match step {
+                        Step::Backward(_) => {
+                            init.pop();
                         }
-                        res.push(mem::replace(&mut task, init.clone()));
-                        num_done_tasks += 1;
-                        if num_done_tasks == num_normal_tasks {
-                            paths_per_job += 1;
+                        step => {
+                            init.push(step);
+                            break;
                         }
                     }
+                }
+
+                res.push(mem::replace(&mut task, init.clone()));
+
+                num_done_tasks += 1;
+                if num_done_tasks == num_normal_tasks {
+                    paths_per_job += 1;
                 }
             }
             step => {

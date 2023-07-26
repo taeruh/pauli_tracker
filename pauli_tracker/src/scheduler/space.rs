@@ -254,7 +254,7 @@ impl<'l> Graph<'l> {
 pub struct AlreadyMeasured(pub usize);
 
 #[cfg(test)]
-pub(crate) mod tests {
+mod tests {
     use coverage_helper::test;
     use State::*;
 
