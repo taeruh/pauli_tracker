@@ -52,7 +52,8 @@ pub trait FocusIterator {
     where
         Self: Sized;
 
-    /// Check whether the current node is a leaf node.
+    /// Check whether the current node is a leaf node. If true, return an associated
+    /// item.
     fn at_leaf(&self) -> Option<Self::LeafItem>;
 }
 

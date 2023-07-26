@@ -115,7 +115,7 @@ impl GraphBuffer {
 
 impl<'l> Graph<'l> {
     /// Create a freshly initialized graph from a `graph_buffer`.
-    pub fn from_graph_buffer(graph_buffer: &'l GraphBuffer) -> Self {
+    pub fn new(graph_buffer: &'l GraphBuffer) -> Self {
         Self {
             nodes: graph_buffer
                 .inner
@@ -287,10 +287,10 @@ pub(crate) mod tests {
         let mapped_buffer = GraphBuffer::new(&GM, NUM, None, false);
         let graph_checked_buffer = GraphBuffer::new(&GNW, NUM, Some(&mp), true);
         let mapped_checked_buffer = GraphBuffer::new(&GMW, NUM, None, true);
-        let graph = Graph::from_graph_buffer(&graph_buffer);
-        assert_eq!(graph, Graph::from_graph_buffer(&mapped_buffer));
-        assert_eq!(graph, Graph::from_graph_buffer(&graph_checked_buffer));
-        assert_eq!(graph, Graph::from_graph_buffer(&mapped_checked_buffer));
+        let graph = Graph::new(&graph_buffer);
+        assert_eq!(graph, Graph::new(&mapped_buffer));
+        assert_eq!(graph, Graph::new(&graph_checked_buffer));
+        assert_eq!(graph, Graph::new(&mapped_checked_buffer));
         assert_eq!(
             graph,
             Graph {
@@ -309,7 +309,7 @@ pub(crate) mod tests {
     #[test]
     fn updating() {
         let init_buffer = example_graph();
-        let init_graph = Graph::from_graph_buffer(&init_buffer);
+        let init_graph = Graph::new(&init_buffer);
         let mut graph = init_graph.clone();
         let new = graph.focus(&[2, 3]).unwrap();
         graph.focus_inplace(&[2, 3]).unwrap();
