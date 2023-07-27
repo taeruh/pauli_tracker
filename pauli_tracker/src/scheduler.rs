@@ -63,7 +63,7 @@ impl<'l, T> Scheduler<'l, T> {
 // just for seeing whether it works as expected while developing
 // pub(crate) static mut COUNT: usize = 0;
 
-impl<T: MeasurableSet<usize>> Focus<&[usize]> for Scheduler<'_, T> {
+impl<T: MeasurableSet> Focus<&[usize]> for Scheduler<'_, T> {
     type Error = InstructionError;
 
     fn focus_inplace(&mut self, measure_set: &[usize]) -> Result<(), Self::Error> {

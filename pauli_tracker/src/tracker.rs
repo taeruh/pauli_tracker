@@ -1,7 +1,20 @@
 /*!
-This module defines the [Tracker] trait and provides different implementors through the
-[frames] and [live] module. The [Tracker] trait provides the core functionality of
-tracking Pauli gates through a Clifford circuit.
+This module defines the [Tracker] trait and provides the [Frames] and
+[Live] implementors.
+
+The [Tracker] trait provides the core functionality of tracking Pauli gates through a
+Clifford circuit.
+
+[Frames] is a tracker that is useful for anlyzing the dependency flow, for example, in
+MBQC, or in general when gates are injected or teleported and have non-deterministic
+side effects.
+
+[Live] can be used to track Pauli gates during the actual execution of a circuit to
+adopt measurements correctly.
+
+[Frames]: frames::Frames
+[Live]: live::Live
+[MBQC]: https://doi.org/10.48550/arXiv.0910.1116
 */
 
 use crate::pauli::Pauli;
@@ -65,7 +78,7 @@ macro_rules! movements {
 
 macro_rules! track_pauli {
     ($(($name:ident, $gate:ident),)*) => {$(
-        /// Track a new frame consisting of the [Pauli]
+        /// Track a new frame consisting of the Pauli
         #[doc = stringify!($gate)]
         /// at qu`bit`.
         #[inline]
@@ -82,27 +95,29 @@ macro_rules! track_pauli {
 ///
 /// For extensive examples, please refer to the [library documentation](crate#examples).
 ///
-/// *currently, the set of supported Cliffords is very limited, it will be extended over
-/// time*
+/// *currently, the set of supported Cliffords is very limited, but a complete
+/// generator; it will be extended over time*
 pub trait Tracker {
     /// The storage type used to store the tracked Paulis for each qubit, e.g.,
     /// [PauliStack](crate::pauli::PauliStack) for the [Frames](frames::Frames) tracker or
-    /// just a simple [Pauli] for the [Live](live::Live) tracker.
+    /// just a simple [Pauli] for the [Live](live::Live) tracker (in this case it's a
+    /// stack with one element ...).
     type Stack;
 
-    /// The type of Pauli representation use for operations like
-    /// [track_pauli](Self::track_pauli).
+    /// The type of Pauli representation used for operations like
+    /// [track_pauli](Self::track_pauli). It is usally the type that is the most
+    /// compatible with [Self::Stack].
     type Pauli: Pauli;
 
     /// Insert a new qu`bit` into the tracker. If the qu`bit`, the old value is
     /// overwritten and returned.
     fn new_qubit(&mut self, bit: usize) -> Option<Self::Stack>;
 
-    /// Track a new frame consisting of the [Pauli] gate `pauli` at qu`bit`.
+    /// Track a new frame consisting of the Pauli gate `pauli` at qu`bit`.
     fn track_pauli(&mut self, bit: usize, pauli: Self::Pauli);
 
-    /// Track a new frame including multiple [Pauli] gates, i.e., e [PauliString] to the
-    /// Tracker, i.e., do [Tracker::track_pauli] for multiple [Pauli]s but all within
+    /// Track a new frame including multiple Pauli gates, i.e., e [PauliString] to the
+    /// Tracker, i.e., do [Tracker::track_pauli] for multiple Paulis but all within
     /// the same frame.
     fn track_pauli_string(&mut self, string: PauliString<Self::Pauli>);
 

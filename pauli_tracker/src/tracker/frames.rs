@@ -1,14 +1,22 @@
 /*!
-The [Frames] type can be used as [Tracker] to analyze how the tracked Paulis effect the
-qubits.
+Track Pauli gates when constructing a circuit.
 
-Each new tracked Pauli introduces a new frame on the qubits, for example corresponding
-to a measurement, with the tracked Pauli on the qubit where it has been initialized and
-on all other qubits identities. The Clifford gates act on this frame, according to the
-conjugation rules, causing the tracked Pauli to being copied, moved, swaped, ... within
-the frame. The frames of multiple tracked Paulis are stacked up together, not
-effectiving each other; this is the main difference to the tracker defined in
-[live](super::live).
+This module provides the [Frames] Pauli tracker. Each new tracked Pauli introduces a new
+frame on the qubits, for example corresponding to a measurement, with the tracked Pauli
+on the qubit where it has been initialized and identities on all other qubits. The
+Clifford gates act on this frame, according to the conjugation rules, causing the
+tracked Pauli to being copied, moved, swaped, ... within the frame. The frames of
+multiple tracked Paulis are stacked up, not effectiving each other; this is the main
+difference to the [Live] tracker, which adds up the frames.
+
+When using this tracer, you probably only want to track Paulis, via the `track_x/y/z`
+methods, induced by non-deterministic measurements, and account for other Paulis simply
+through the `x/y/z` methods (since these methods do literally nothing, you can actually
+ignore them). This is because this tracker is used to analyze the dependency induced by
+the measurements. To track Paulis during the actual execution of a circuit, the [Live]
+tracker is more useful.
+
+[Live]: super::live::Live
 */
 
 use std::mem;
@@ -43,14 +51,12 @@ use crate::{
 // pub mod storage;
 pub mod dependency_graph;
 
-/// A container of multiple Pauli frames, using a generic `Storage` type  as internal
-/// storage, that implements [Tracker].
+/// A container of multiple Pauli frames that implements [Tracker].
 ///
-/// The type implements the core functionality to track the Pauli frames through a
-/// Clifford circuit. To be useful, the generic `Storage` type should implement
-/// [IterableBase] (or better [Full]). The explicit storage type should
-/// have the [PauliStack]s on it's minor axis (this is more or less enforced by
-/// the [collection] traits). The module [collection] provides some
+/// Compare the [module documentation](super::frames). To be useful, the generic
+/// `Storage` type should implement [IterableBase] (or better [Full]). The explicit
+/// storage type should have the [PauliStack]s on it's minor axis (this is more or less
+/// enforced by the [collection] traits). The [collection] module provides some
 /// compatible storage types.
 ///
 /// [collection]: crate::collection

@@ -1,5 +1,20 @@
 /*!
-A [BooleanVector] impl for a SIMD vector.
+A [BooleanVector] implementation for a SIMD vector.
+
+Compare the documentation of [bitvec_simd](https://docs.rs/bitvec_simd/latest/bitvec_simd/index.html).
+Note it uses [smallvec](https://docs.rs/smallvec/1.10.0/smallvec/).
+
+SIMD target features are often automatically enabled by Cargo, if not one can enable
+them manually, for example in a build.rs script:
+```
+# #[cfg_attr(coverage_nightly, no_coverage)]
+# fn main() {
+#[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
+if is_x86_feature_detected!("avx2") {
+    println!(r#"cargo:rustc-cfg=target_feature="avx2""#);
+}
+# }
+```
 */
 
 use bitvec_simd::BitVec;
@@ -11,7 +26,7 @@ use serde::{
 
 use super::BooleanVector;
 
-/// A transparent newtype wrapper around
+/// A newtype wrapper around
 /// [bitvec_simd::BitVec](https://docs.rs/bitvec_simd/latest/bitvec_simd/type.BitVec.html).
 #[derive(Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
@@ -48,7 +63,7 @@ impl Iterator for Iter {
     }
 }
 
-/// An [Iterator] over &[SimdBitVec]. Created with [BooleanVector::iter_vals].
+/// An [Iterator] over &[SimdBitVec]. Create with [BooleanVector::iter_vals].
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct IterFromRef<'l> {
     vec: &'l SimdBitVec,

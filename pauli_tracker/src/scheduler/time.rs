@@ -4,7 +4,10 @@ qubits. This module provides a [PathGenerator] that can generate all allowed pat
 
 The time ordering defined by the [DependencyGraph] is often induced by non-determinism
 introduced by quantum measurements, e.g., as in MBQC, and captured by a Pauli tracker
-(cf. [README](https://github.com/taeruh/pauli_tracker)).
+(cf. [README]).
+
+[README]: https://github.com/taeruh/pauli_tracker.
+[MBQC]: https://doi.org/10.48550/arXiv.0910.1116
 */
 
 use std::hash::BuildHasherDefault;
@@ -25,19 +28,21 @@ use super::{
 use crate::tracker::frames::dependency_graph::DependencyGraph;
 
 type DepsCounters = HashMap<usize, usize, BuildHasherDefault<FxHasher>>;
-type Lookup = Vec<Vec<usize>>;
+type Dependents = Vec<Vec<usize>>;
 
 /// A buffer that holds the dependency structure implied by a [DependencyGraph].
 #[derive(Debug, Clone, Default, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct DependencyBuffer {
-    look: Lookup,
+    dependents: Dependents,
 }
 
 impl DependencyBuffer {
     /// Initialize a new [DependencyBuffer] to hold the dependency structure for `len`
     /// qubits.
     pub fn new(len: usize) -> Self {
-        Self { look: vec![Vec::new(); len] }
+        Self {
+            dependents: vec![Vec::new(); len],
+        }
     }
 }
 
@@ -56,7 +61,7 @@ pub struct PathGenerator<'l, T /* Measurable */> {
     // makes the from(DependencyGraph) function and the step function simpler if it is
     // separated)
     measurable: T,
-    deps: DepsCounters,
+    deps_counter: DepsCounters,
     // it would have been slightly more ergnomic to use use an Rc instead of a reference
     // (no need to keep the actual map in an extra variable), however, this would have
     // been slightly less performant (Rc has an overhead every time it is cloned or
@@ -66,15 +71,19 @@ pub struct PathGenerator<'l, T /* Measurable */> {
     // HashMap, this does not really change the lookup time, rather the removing might
     // cause a slight overhead, and also we have the additional time and space overhead
     // when cloning it
-    look: &'l Lookup,
+    dependents: &'l Dependents,
 }
 
 impl<'l, T> PathGenerator<'l, T> {
-    fn new(measureable: T, deps: DepsCounters, look: &'l Lookup) -> Self {
+    fn new(
+        measureable: T,
+        deps_counter: DepsCounters,
+        dependents: &'l Dependents,
+    ) -> Self {
         Self {
             measurable: measureable,
-            deps,
-            look,
+            deps_counter,
+            dependents,
         }
     }
 
@@ -85,11 +94,11 @@ impl<'l, T> PathGenerator<'l, T> {
 
     /// Check whether there are qubits that cannot be measured yet.
     pub fn has_unmeasureable(&self) -> bool {
-        !self.deps.is_empty()
+        !self.deps_counter.is_empty()
     }
 }
 
-impl<'l, T: MeasurableSet<usize>> PathGenerator<'l, T> {
+impl<'l, T: MeasurableSet> PathGenerator<'l, T> {
     /// Create a new [PathGenerator] from a [DependencyGraph]. `dependency_buffer` is
     /// going to own the dependency structure implied by the `graph`, so that it can be
     /// reused again.
@@ -102,13 +111,13 @@ impl<'l, T: MeasurableSet<usize>> PathGenerator<'l, T> {
         dependency_buffer: &'l mut DependencyBuffer,
         bit_mapping: Option<&HashMap<usize, usize>>,
     ) -> Self {
-        let look = &mut dependency_buffer.look;
+        let dependents = &mut dependency_buffer.dependents;
 
         if graph.is_empty() {
             return Self {
                 measurable: T::default(),
-                deps: DepsCounters::default(),
-                look,
+                deps_counter: DepsCounters::default(),
+                dependents,
             };
         }
 
@@ -125,7 +134,11 @@ impl<'l, T: MeasurableSet<usize>> PathGenerator<'l, T> {
             }
         }
 
-        fn resolve(bit: usize, rest: &[Vec<(usize, Vec<usize>)>], look: &mut Lookup) {
+        fn resolve(
+            bit: usize,
+            rest: &[Vec<(usize, Vec<usize>)>],
+            look: &mut Dependents,
+        ) {
             let mut dependents = Vec::new();
             for layer in rest {
                 for (dep, deps) in layer {
@@ -145,14 +158,14 @@ impl<'l, T: MeasurableSet<usize>> PathGenerator<'l, T> {
         let first = graph_iter.next().unwrap();
         let rest = graph_iter.as_ref();
         for (bit, _) in first {
-            resolve(bit, rest, look);
+            resolve(bit, rest, dependents);
             measureable.push(bit);
         }
 
         while let Some(layer) = graph_iter.next() {
             let rest = graph_iter.as_ref();
             for (bit, dependency) in layer {
-                resolve(bit, rest, look);
+                resolve(bit, rest, dependents);
                 deps.insert(bit, dependency.len());
             }
         }
@@ -160,8 +173,8 @@ impl<'l, T: MeasurableSet<usize>> PathGenerator<'l, T> {
         let measureable = T::init(measureable);
         Self {
             measurable: measureable,
-            deps,
-            look,
+            deps_counter: deps,
+            dependents,
         }
     }
 
@@ -190,7 +203,7 @@ impl<'l, T: MeasurableSet<usize>> PathGenerator<'l, T> {
     // # Panics
     // Panics if measure_set contains a bit with a dependent that is already resolved.
     fn update_unchecked(
-        look: &Lookup, // always self.look; don't use self because of borrow problems
+        look: &Dependents, /* always self.look; don't use self because of borrow problems */
         deps: &mut DepsCounters, // might be self.deps
         measure_set: &[usize],
         new_measurable_set: &mut Vec<usize>,
@@ -218,18 +231,18 @@ impl<'l, T: MeasurableSet<usize>> PathGenerator<'l, T> {
         measure_set: &[usize],
         mut new_measureable_set: Vec<usize>,
     ) -> Self {
-        let mut deps = self.deps.clone();
+        let mut deps = self.deps_counter.clone();
         Self::update_unchecked(
-            self.look,
+            self.dependents,
             &mut deps,
             measure_set,
             &mut new_measureable_set,
         );
-        Self::new(T::init(new_measureable_set), deps, self.look)
+        Self::new(T::init(new_measureable_set), deps, self.dependents)
     }
 }
 
-impl<T: MeasurableSet<usize>> Focus<&[usize]> for PathGenerator<'_, T> {
+impl<T: MeasurableSet> Focus<&[usize]> for PathGenerator<'_, T> {
     type Error = NotMeasurable;
 
     fn focus(&mut self, measure_set: &[usize]) -> Result<Self, NotMeasurable>
@@ -244,8 +257,8 @@ impl<T: MeasurableSet<usize>> Focus<&[usize]> for PathGenerator<'_, T> {
         let mut new_measureable_set = self.partition(measure_set)?;
         // self.partition already catches ensures the input is okay
         Self::update_unchecked(
-            self.look,
-            &mut self.deps,
+            self.dependents,
+            &mut self.deps_counter,
             measure_set,
             &mut new_measureable_set,
         );
@@ -287,8 +300,8 @@ impl<'l> IntoIterator for PathGenerator<'l, Partition<Vec<usize>>> {
 mod sealed {
     use super::Partition;
     pub trait Sealed {}
-    impl<T> Sealed for Vec<T> {}
-    impl<T> Sealed for Partition<Vec<T>> {}
+    impl Sealed for Vec<usize> {}
+    impl Sealed for Partition<Vec<usize>> {}
 }
 
 /// A trait for types that describe the set of measurable qubits in [PathGenerator].
@@ -297,28 +310,28 @@ mod sealed {
 /// want to iterate over all paths.
 ///
 /// **This trait is sealed**
-pub trait MeasurableSet<T>: sealed::Sealed + Default {
+pub trait MeasurableSet: sealed::Sealed + Default {
     /// Create a new instance of the type from a set of measurable qubits.
-    fn init(set: Vec<T>) -> Self;
+    fn init(set: Vec<usize>) -> Self;
 
     /// Get the set of measurable qubits.
-    fn set(&self) -> &[T];
+    fn set(&self) -> &[usize];
 }
 
-impl<T> MeasurableSet<T> for Vec<T> {
+impl MeasurableSet for Vec<usize> {
     #[inline(always)]
-    fn init(set: Vec<T>) -> Self {
+    fn init(set: Vec<usize>) -> Self {
         set
     }
 
     #[inline]
-    fn set(&self) -> &[T] {
+    fn set(&self) -> &[usize] {
         self
     }
 }
 
-impl<T: Clone> MeasurableSet<T> for Partition<Vec<T>> {
-    fn init(set: Vec<T>) -> Self {
+impl MeasurableSet for Partition<Vec<usize>> {
+    fn init(set: Vec<usize>) -> Self {
         let len = set.len();
         let mut res = Partition::new(set, len);
         res.next();
@@ -326,7 +339,7 @@ impl<T: Clone> MeasurableSet<T> for Partition<Vec<T>> {
     }
 
     #[inline]
-    fn set(&self) -> &[T] {
+    fn set(&self) -> &[usize] {
         &self.set
     }
 }

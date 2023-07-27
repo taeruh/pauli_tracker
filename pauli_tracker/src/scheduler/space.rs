@@ -54,9 +54,8 @@ pub struct Graph<'l> {
 }
 
 // not sure how idiomatic it is to do this macro stuff here; a proc macro might be
-// cleaner, but it is not necessary and probably wouldn't lead to less code; someone
-// knows a better way (without copy paste or more runtime operations (ignoring
-// optimizations))?
+// cleaner, but it is not necessary and probably wouldn't lead to less code; does
+// someone knows a better way (without copy paste or more runtime operations)?
 
 macro_rules! new_loop {
     ($inner:expr, $edges:expr, $bit_mapping:expr, $check:tt) => {

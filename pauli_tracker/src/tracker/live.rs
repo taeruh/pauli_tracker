@@ -1,7 +1,15 @@
 /*!
-This module provides [Tracker]s that are similar to the ones in [frames](super::frames),
-with the major difference that there's effectively only one frames, which adds up
-multiple tracked Paulis.
+Track Pauli gates when executing a circuit.
+
+This module provides the [Live] tracker. Compare the documentation in
+[frames](super::frames). The difference between the [Live] tracker and the [Frames] is
+that while the [Frames] tracker stores each Pauli frame, the [Live] tracker adds them
+up.
+
+Usually you want to use this tracker during execution of a circuit and track *all*
+Paulis via `track_x/y/z` methods.
+
+[Frames]: super::frames::Frames
 */
 
 #[cfg(feature = "serde")]
@@ -27,15 +35,16 @@ use crate::{
 
 // todo: make it generic and also do it with a hashmap
 
-/// An implementor of [Tracker], similar to [Frames](super::frames::Frames), with the
-/// difference, that instead of storing each Pauli frame, it adds the Pauli frames (mod
-/// 2).
+/// An implementor of [Tracker] that tracks Pauli gates at runtime.
+///
+/// Compare the [module documentation](super::live). To be useful, the generic `Storage`
+/// type should at least implement [Base], with implementors of [Pauli] as elements.
 // I'm not sure what the most efficient inner type would be here, Vec<bool>, Vec<Pauli>,
 // BitVec, ...
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq, PartialOrd, Ord, Hash)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-pub struct Live<S> {
-    storage: S,
+pub struct Live<Storage> {
+    storage: Storage,
 }
 
 impl<S> From<S> for Live<S> {

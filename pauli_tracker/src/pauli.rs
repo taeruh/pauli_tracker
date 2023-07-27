@@ -14,7 +14,7 @@ a bunch of match statements.
 
 It probably depends very much on the situation which representation is best. We haven't
 performed any benchmarks. If needed one can easily create a custom type that implements
-[Pauli], so that it can be used for tracking.
+[Pauli].
 
 [PauliStack] is a stack for multiple Pauli operators, which is used in the
 [Frames](crate::tracker::frames::Frames) tracker.

@@ -23,10 +23,11 @@ use super::{
 };
 use crate::slice_extension::GetTwoMutSlice;
 
-/// A newtype wrapper around [Vec], implementing the [collection](super) traits. Since
-/// we cannot arbitrarily insert and remove elements, inserting as only allowed for keys
-/// bigger than the current length of the vector (inserting additional buffer elements
-/// if necessary), and only the last element can be removed.
+/// A newtype wrapper around [Vec], implementing the [collection](super) traits.
+///
+/// Since we cannot arbitrarily insert and remove elements, inserting as only allowed
+/// for keys bigger than the current length of the vector (inserting additional buffer
+/// elements if necessary), and only the last element can be removed.
 #[derive(Debug, Clone, Default, PartialEq, Eq, PartialOrd, Ord, Hash)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct BufferedVector<T>(pub Vec<T>);

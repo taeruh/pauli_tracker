@@ -16,7 +16,12 @@ use super::Pauli;
 /// second one is the Z part.
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq, PartialOrd, Ord, Hash)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-pub struct PauliTuple(bool, bool);
+pub struct PauliTuple(
+    /// X part
+    pub bool,
+    /// Z part
+    pub bool,
+);
 
 impl Display for PauliTuple {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {

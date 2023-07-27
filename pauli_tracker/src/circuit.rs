@@ -28,29 +28,30 @@ use crate::{
     },
 };
 
-/// The interface into a circuit that can handle Clifford gates and (unspecified)
-/// measurements. We don't really care what the circuit is actually doing, except for
-/// possible measurement outcomes, since we only use this interface to pass the actions
-/// through to the implementing circuit.
+/// API for Clifford gates.
+///
+/// We don't really care what the circuit is actually doing, except for possible
+/// measurement outcomes, since we only use this interface to pass the actions through
+/// to the implementing circuit.
 pub trait CliffordCircuit {
     /// The type of the measurement outcome, e.g., a boolean for
     /// [RandomMeasurementCircuit].
     type Outcome;
-    /// Apply the **X** gate
+    /// Apply the X gate
     fn x(&mut self, bit: usize);
-    /// Apply the **Y** gate
+    /// Apply the Y gate
     fn y(&mut self, bit: usize);
-    /// Apply the **Z** gate
+    /// Apply the Z gate
     fn z(&mut self, bit: usize);
-    /// Apply the **H** gate
+    /// Apply the H gate
     fn h(&mut self, bit: usize);
-    /// Apply the **S** gate
+    /// Apply the S gate
     fn s(&mut self, bit: usize);
-    /// Apply the **Control X (Control Not)** gate
+    /// Apply the Control X (Control Not) gate
     fn cx(&mut self, control: usize, target: usize);
-    /// Apply the **Control Z** gate
+    /// Apply the Control Z gate
     fn cz(&mut self, bit_a: usize, bit_b: usize);
-    /// **Measure** (unspecified)
+    /// Measure (unspecified)
     fn measure(&mut self, bit: usize) -> Self::Outcome;
 }
 
@@ -66,7 +67,9 @@ pub use random_measurement::RandomMeasurementCircuit;
 ///
 /// The type can be used to build up the underlining circuit, while keeping track of the
 /// Pauli gates that shall be extracted from the (quantum) simulation, e.g., the Pauli
-/// corrections in [MBQC](https://doi.org/10.48550/arXiv.0910.1116).
+/// corrections in [MBQC].
+///
+/// [MBQC]: https://doi.org/10.48550/arXiv.0910.1116
 // #[derive(Debug, Clone, Copy, Default, PartialEq, Eq, PartialOrd, Ord, Hash)]
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct TrackedCircuit<Circuit, Tracker, Storage> {

@@ -8,16 +8,19 @@ use crate::{
     pauli::PauliStack,
 };
 
-/// A layered graph, describing the how the qubits depend on each other. Each layer l =
-/// DependencyGraph\[i\] consist of an vector of tuples, where the first tuple element is
-/// the node qubits and the second tuple element contains all qubits on which the node
-/// qubit depends.
+/// A layered graph, describing the how the qubits depend on each other.
+///
+/// Each layer l = DependencyGraph\[i\] consist of an vector of tuples, where the first
+/// tuple element is the node qubits and the second tuple element contains all qubits on
+/// which the node qubit depends.
 pub type DependencyGraph = Vec<Vec<(usize, Vec<usize>)>>;
 
 /// Sort the `frames`' qubits according to the induced dependencies by the frames (row
-/// through the PauliStacks). Each frame in `frames` maps to a qubit number in `map`;
-/// frame(i) -> `map`\[i\]. If a qubit's Pauli stack has non-zero elements in a
-/// frame(i), the qubit is assumed to depend on `map`\[i\].
+/// through the PauliStacks).
+///
+/// Each frame in `frames` maps to a qubit number in `map`; frame(i) -> `map`\[i\]. If a
+/// qubit's Pauli stack has non-zero elements in a frame(i), the qubit is assumed to
+/// depend on `map`\[i\].
 ///
 /// Dependencies that are already covered by later dependencies, i.e., dependencies that
 /// are in a higher layer, are removed. For example if 0 depends on 1 and 2 but 1 also

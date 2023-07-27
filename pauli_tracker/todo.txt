@@ -1,7 +1,3 @@
-- test whether the we actually activate avx2 in dependents
-- remove the above that it is only done for test and document that users should do it by
-  themselves; remove the according test and utility function in lib
-- go through docs
 
 ---------- release new major
 

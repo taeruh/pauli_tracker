@@ -3,17 +3,15 @@ This module defines a common interface [BooleanVector] over boolean storage type
 we use in [frames](crate::tracker::frames) and for
 [PauliStack](crate::pauli::PauliStack).
 
-We provide optional implementations for the foreign types
-[bitvec::vec::BitVec](https://docs.rs/bitvec/latest/bitvec/vec/struct.BitVec.html),
-[bitvec_simd::BitVec] (included via the corresponding features) and
-[bit_vec::BitVec](https://docs.rs/bit-vec/latest/bit_vec/struct.BitVec.html).
-However, note that these types of bit-vector implementations might not be the most
-efficient for your problem, e.g., while [bitvec_simd::BitVec] uses SIMD operations,
-it also uses the crate [smallvec](https://docs.rs/smallvec/1.10.0/smallvec/) for its
-inner storage, which can be disadvantageous, depending on the situation. There are other
-bit-vector libraries too, for which it should be easy to implement [BooleanVector].
+The trait is implement for [`Vec<bool>`] and
+optionally for the foreign types [bitvec::vec::BitVec], [bitvec_simd::BitVec] and
+[bit_vec::BitVec] (included via the corresponding features). There are other bit-vector
+libraries too, for which it should be easy to implement [BooleanVector].
 
+[bitvec::vec::BitVec]: https://docs.rs/bitvec/latest/bitvec/vec/struct.BitVec.html
+[bit_vec::BitVec]: https://docs.rs/bit-vec/latest/bit_vec/struct.BitVec.html
 [bitvec_simd::BitVec]: https://docs.rs/bitvec_simd/latest/bitvec_simd/type.BitVec.html
+[smallvec]: https://docs.rs/smallvec/1.10.0/smallvec/
 */
 
 use std::fmt::Debug;
