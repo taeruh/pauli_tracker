@@ -54,6 +54,10 @@ impl BooleanVector for BitVec {
         self.len()
     }
 
+    fn get(&self, idx: usize) -> Option<bool> {
+        self.get(idx)
+    }
+
     type IterVals<'l> = Iter<'l>
     where
         Self: 'l;

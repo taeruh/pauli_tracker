@@ -2,19 +2,6 @@
 A [BooleanVector] implementation for a SIMD vector.
 
 Compare the documentation of [bitvec_simd](https://docs.rs/bitvec_simd/latest/bitvec_simd/index.html).
-Note it uses [smallvec](https://docs.rs/smallvec/1.10.0/smallvec/).
-
-SIMD target features are often automatically enabled by Cargo, if not one can enable
-them manually, for example in a build.rs script:
-```
-# #[cfg_attr(coverage_nightly, no_coverage)]
-# fn main() {
-#[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
-if is_x86_feature_detected!("avx2") {
-    println!(r#"cargo:rustc-cfg=target_feature="avx2""#);
-}
-# }
-```
 */
 
 use bitvec_simd::BitVec;
@@ -143,6 +130,10 @@ impl BooleanVector for SimdBitVec {
 
     fn len(&self) -> usize {
         self.0.len()
+    }
+
+    fn get(&self, idx: usize) -> Option<bool> {
+        self.0.get(idx)
     }
 
     fn iter_vals(&self) -> Self::IterVals<'_> {

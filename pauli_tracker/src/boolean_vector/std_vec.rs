@@ -52,6 +52,10 @@ impl BooleanVector for Vec<bool> {
         self.len()
     }
 
+    fn get(&self, idx: usize) -> Option<bool> {
+        (**self).get(idx).copied()
+    }
+
     fn iter_vals(&self) -> Self::IterVals<'_> {
         self.iter().copied()
     }

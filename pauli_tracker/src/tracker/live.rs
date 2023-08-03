@@ -71,18 +71,8 @@ impl<T> Live<T> {
     }
 }
 
-impl<T: Init> Live<T> {
-    /// Creates a new [Live] tracker initialized with the given `len`gth.
-    ///
-    /// # Examples
-    /// ```
-    /// # #[cfg_attr(coverage_nightly, no_coverage)]
-    /// # fn main() {
-    /// # use pauli_tracker::{collection::BufferedVector, tracker::live::Live};
-    /// let tracker = Live::<BufferedVector<bool>>::init(2);
-    /// assert_eq!(tracker.into(), BufferedVector::wrap(vec![false; 2]));
-    /// # }
-    pub fn init(len: usize) -> Self {
+impl<T: Init> Init for Live<T> {
+    fn init(len: usize) -> Self {
         Self { storage: T::init(len) }
     }
 }

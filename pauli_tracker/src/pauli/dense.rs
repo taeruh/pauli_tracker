@@ -195,6 +195,10 @@ impl Pauli for PauliDense {
         self.storage &= z.right() | 2;
         self.storage |= z.right();
     }
+
+    fn tableau_encoding(&self) -> u8 {
+        self.storage
+    }
 }
 
 use thiserror::Error;

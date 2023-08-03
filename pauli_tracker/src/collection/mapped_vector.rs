@@ -32,18 +32,6 @@ use super::{
 };
 use crate::slice_extension::GetTwoMutSlice;
 
-#[derive(Debug, Clone, Default)]
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-#[cfg_attr(
-    feature = "serde",
-    serde(bound(serialize = "S: BuildHasher + Serialize, T: Serialize"))
-)]
-#[cfg_attr(
-    feature = "serde",
-    serde(bound(deserialize = "S: Default + BuildHasher + for<'a>  \
-                               Deserialize<'a>, T: for<'a> Deserialize<'a>"))
-)]
-
 /// A mixture of a [Vec] and a [HashMap].
 ///
 /// The elements are stored in a [Vec] storage while accessing them is done through a
@@ -51,10 +39,56 @@ use crate::slice_extension::GetTwoMutSlice;
 /// pushing to the storage and removing is done via swap-removes.
 ///
 /// [HashMap]: https://docs.rs/hashbrown/latest/hashbrown/struct.HashMap.html#
+#[derive(Debug, Clone, Default)]
+/// instead of going through _MappedVector we should implement it directly, at least for
+/// the serialization, because we are unnecessarily cloning it there
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde", serde(from = "_MappedVector<T>"))]
+#[cfg_attr(feature = "serde", serde(into = "_MappedVector<T>"))]
+#[cfg_attr(
+    feature = "serde",
+    serde(bound(serialize = "T: Clone + Serialize, S: Clone"))
+)]
+#[cfg_attr(
+    feature = "serde",
+    serde(bound(deserialize = "T: for<'a> Deserialize<'a>, S: Default + BuildHasher"))
+)]
 pub struct MappedVector<T, S = DefaultHashBuilder> {
     storage: Vec<T>,
     position: HashMap<usize, usize, S>,
     inverse_position: Vec<usize>,
+}
+
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+struct _MappedVector<T> {
+    storage: Vec<T>,
+    inverse_position: Vec<usize>,
+}
+
+impl<T, S: Default + BuildHasher> From<_MappedVector<T>> for MappedVector<T, S> {
+    fn from(value: _MappedVector<T>) -> Self {
+        Self {
+            storage: value.storage,
+            position: HashMap::from_iter(
+                value
+                    .inverse_position
+                    .iter()
+                    .copied()
+                    .enumerate()
+                    .map(|(position, key)| (key, position)),
+            ),
+            inverse_position: value.inverse_position,
+        }
+    }
+}
+
+impl<T, S> From<MappedVector<T, S>> for _MappedVector<T> {
+    fn from(value: MappedVector<T, S>) -> Self {
+        Self {
+            storage: value.storage,
+            inverse_position: value.inverse_position,
+        }
+    }
 }
 
 impl<T, S> PartialEq for MappedVector<T, S>
@@ -244,12 +278,12 @@ where
     type IterMut<'l> = <&'l mut Self as IntoIterator>::IntoIter where T: 'l, S: 'l;
 
     #[inline]
-    fn iter(&self) -> Self::Iter<'_> {
+    fn iter_pairs(&self) -> Self::Iter<'_> {
         self.into_iter()
     }
 
     #[inline]
-    fn iter_mut(&mut self) -> Self::IterMut<'_> {
+    fn iter_pairs_mut(&mut self) -> Self::IterMut<'_> {
         self.into_iter()
     }
 }

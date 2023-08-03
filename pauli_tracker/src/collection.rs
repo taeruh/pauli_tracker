@@ -81,15 +81,15 @@ pub trait Iterable {
 
     /// Get an [Iterator] over the tuples of keys and references of the corresponding
     /// elements.
-    fn iter(&self) -> Self::Iter<'_>;
+    fn iter_pairs(&self) -> Self::Iter<'_>;
 
     /// Get an [Iterator] over the tuples of keys and mutable references of the
     /// corresponding elements.
-    fn iter_mut(&mut self) -> Self::IterMut<'_>;
+    fn iter_pairs_mut(&mut self) -> Self::IterMut<'_>;
 
     /// Sort the collection according to the keys.
     fn sort_by_key(&self) -> Vec<(usize, &Self::TI)> {
-        let mut ret = self.iter().collect::<Vec<(usize, &Self::TI)>>();
+        let mut ret = self.iter_pairs().collect::<Vec<(usize, &Self::TI)>>();
         ret.sort_by_key(|(i, _)| *i);
         ret
     }
@@ -144,7 +144,9 @@ pub trait Full:
 mod buffered_vector;
 mod map;
 mod mapped_vector;
+mod naive_vector;
 
 pub use buffered_vector::BufferedVector;
 pub use map::Map;
 pub use mapped_vector::MappedVector;
+pub use naive_vector::NaiveVector;

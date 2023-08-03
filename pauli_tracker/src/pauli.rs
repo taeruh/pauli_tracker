@@ -129,6 +129,9 @@ pub trait Pauli {
     /// assert_eq!(pauli, Pauli::new_x());
     /// # }
     fn set_z(&mut self, z: bool);
+
+    /// Translate into the tableau encoding
+    fn tableau_encoding(&self) -> u8;
 }
 
 mod dense;

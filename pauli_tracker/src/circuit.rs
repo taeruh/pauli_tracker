@@ -335,7 +335,7 @@ mod tests {
         collection::{
             BufferedVector,
             Map,
-            MappedVector,
+            MappedVector, Init,
         },
         pauli::{
             PauliDense,

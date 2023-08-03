@@ -15,7 +15,7 @@ use super::{
     Pauli,
 };
 
-/// Pauli describe as enum.
+/// Pauli described as enum.
 ///
 /// The discrimants are set according to [tableau_encoding]. Internally, it is very much
 /// like [PauliDense](super::dense::PauliDense) (cf. [module](super)).
@@ -210,6 +210,10 @@ impl Pauli for PauliEnum {
                 Self::Z => *self = Self::I,
             }
         }
+    }
+
+    fn tableau_encoding(&self) -> u8 {
+        self.discriminant()
     }
 }
 

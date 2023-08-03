@@ -139,19 +139,8 @@ impl<S> Frames<S> {
     pub fn y(&self, _: usize) {}
 }
 
-impl<S: Init> Frames<S> {
-    /// Creates a new [Frames] tracker initialized with the given `len`gth.
-    ///
-    /// # Examples
-    /// ```
-    /// # #[cfg_attr(coverage_nightly, no_coverage)]
-    /// # fn main() {
-    /// # use pauli_tracker::{collection::Map, tracker::frames::Frames};
-    /// # use pauli_tracker::pauli::PauliStack;
-    /// let tracker = Frames::<Map<PauliStack<Vec<bool>>>>::init(1);
-    /// assert_eq!(tracker.into_storage(), Map::from([(0, PauliStack::new())]));
-    /// # }
-    pub fn init(len: usize) -> Self {
+impl<S: Init> Init for Frames<S> {
+    fn init(len: usize) -> Self {
         Self {
             storage: S::init(len),
             frames_num: 0,
@@ -215,7 +204,7 @@ where
         if self.storage.is_empty() {
             return;
         }
-        for (i, p) in self.storage.iter_mut() {
+        for (i, p) in self.storage.iter_pairs_mut() {
             if i == qubit {
                 p.push(pauli);
             } else {
@@ -229,7 +218,7 @@ where
         if self.storage.is_empty() {
             return;
         }
-        for (_, p) in self.storage.iter_mut() {
+        for (_, p) in self.storage.iter_pairs_mut() {
             p.push(Self::Pauli::new_i());
         }
         for (i, p) in string {
@@ -281,7 +270,7 @@ where
             return None;
         }
         let mut ret = Vec::new();
-        for (i, p) in self.storage.iter_mut() {
+        for (i, p) in self.storage.iter_pairs_mut() {
             if let Some(pauli) = p.pop() {
                 ret.push((i, pauli))
             }

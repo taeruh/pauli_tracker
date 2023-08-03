@@ -97,4 +97,8 @@ impl Pauli for PauliTuple {
     fn set_z(&mut self, z: bool) {
         self.1 = z;
     }
+
+    fn tableau_encoding(&self) -> u8 {
+        (self.0 as u8) << 1 | self.1 as u8
+    }
 }

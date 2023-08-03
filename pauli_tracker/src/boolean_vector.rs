@@ -107,6 +107,9 @@ pub trait BooleanVector:
         self.len() == 0
     }
 
+    /// Get an element from the vector.
+    fn get(&self, idx: usize) -> Option<bool>;
+
     /// Iterate over the stored values. Note that in contrast to the conventional iter()
     /// functions, the returned Iterator has `bool` items and not `&bool`. This is
     /// because some bit-vector iterators provide only this kind of iter() and for the

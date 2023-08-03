@@ -50,6 +50,10 @@ impl BooleanVector for BitVec {
         self.len()
     }
 
+    fn get(&self, idx: usize) -> Option<bool> {
+        (**self).get(idx).map(|b| *b)
+    }
+
     fn iter_vals(&self) -> Self::IterVals<'_> {
         BitSlice::iter(self).by_vals()
     }

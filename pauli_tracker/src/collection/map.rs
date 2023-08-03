@@ -19,7 +19,7 @@ use super::{
     IterableBase,
 };
 
-/// A [HashMap](https://docs.rs/hashbrown/latest/hashbrown/struct.HashMap.html#) of with
+/// A [HashMap](https://docs.rs/hashbrown/latest/hashbrown/struct.HashMap.html#) with
 /// [usize] keys.
 pub type Map<T, S = DefaultHashBuilder> = HashMap<usize, T, S>;
 
@@ -82,12 +82,12 @@ where
     > where T: 'l, S: 'l;
 
     #[inline]
-    fn iter(&self) -> Self::Iter<'_> {
+    fn iter_pairs(&self) -> Self::Iter<'_> {
         self.iter().map(|(&i, p)| (i, p))
     }
 
     #[inline]
-    fn iter_mut(&mut self) -> Self::IterMut<'_> {
+    fn iter_pairs_mut(&mut self) -> Self::IterMut<'_> {
         self.iter_mut().map(|(&i, p)| (i, p))
     }
 }

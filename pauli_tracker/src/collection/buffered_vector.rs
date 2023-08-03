@@ -1,4 +1,3 @@
-use core::slice;
 use std::{
     cmp::Ordering,
     iter::{
@@ -6,6 +5,7 @@ use std::{
         Enumerate,
     },
     mem,
+    slice,
 };
 
 #[cfg(feature = "serde")]
@@ -169,12 +169,12 @@ where
     type IterMut<'l> = <&'l mut Self as IntoIterator>::IntoIter where T: 'l;
 
     #[inline(always)]
-    fn iter(&self) -> Self::Iter<'_> {
+    fn iter_pairs(&self) -> Self::Iter<'_> {
         self.into_iter()
     }
 
     #[inline(always)]
-    fn iter_mut(&mut self) -> Self::IterMut<'_> {
+    fn iter_pairs_mut(&mut self) -> Self::IterMut<'_> {
         self.into_iter()
     }
 }
