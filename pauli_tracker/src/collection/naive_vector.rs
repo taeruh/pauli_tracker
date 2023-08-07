@@ -33,17 +33,17 @@ pub struct NaiveVector<T>(pub Vec<T>);
 // exactly the same, except for the remove and insert methods)
 
 impl<T> NaiveVector<T> {
-    /// Creates a new empty [Vector].
+    /// Creates a new empty [NaiveVector].
     pub fn new() -> Self {
         Self(Vec::new())
     }
 
-    /// Creates a new empty [Vector] with the given capacity.
+    /// Creates a new empty [NaiveVector] with the given capacity.
     pub fn with_capacity(capacity: usize) -> Self {
         Self(Vec::with_capacity(capacity))
     }
 
-    /// Wrap a [Vec] into a [Vector].
+    /// Wrap a [Vec] into a [NaiveVector].
     pub fn wrap(vec: Vec<T>) -> Self {
         Self(vec)
     }

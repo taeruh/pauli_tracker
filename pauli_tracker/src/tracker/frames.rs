@@ -234,17 +234,16 @@ where
     }
 
     single!(h, s);
+    fn cz(&mut self, bit_a: usize, bit_b: usize) {
+        let (a, b) = unwrap_get_two_mut!(self.storage, bit_a, bit_b, "cz");
+        a.right.xor_inplace(&b.left);
+        b.right.xor_inplace(&a.left);
+    }
 
     fn cx(&mut self, control: usize, target: usize) {
         let (c, t) = unwrap_get_two_mut!(self.storage, control, target, "cx");
         t.left.xor_inplace(&c.left);
         c.right.xor_inplace(&t.right);
-    }
-
-    fn cz(&mut self, bit_a: usize, bit_b: usize) {
-        let (a, b) = unwrap_get_two_mut!(self.storage, bit_a, bit_b, "cz");
-        a.right.xor_inplace(&b.left);
-        b.right.xor_inplace(&a.left);
     }
 
     movements!(
@@ -333,7 +332,7 @@ mod tests {
         use crate::{
             collection::BufferedVector,
             pauli::PauliDense,
-            tracker::test::impl_utils::{
+            tracker::test::utils::{
                 self,
                 DoubleAction,
                 DoubleResults,
@@ -385,7 +384,7 @@ mod tests {
                 }
             }
 
-            impl_utils::single_check(runner, ACTIONS)
+            utils::single_check(runner, ACTIONS)
         }
 
         #[test]
@@ -405,18 +404,18 @@ mod tests {
             fn runner(action: Action, result: DoubleResults) {
                 let mut tracker: ThisTracker = Frames::init(2);
                 for pauli in (0..16).rev() {
-                    tracker.track_pauli_string(impl_utils::double_init(pauli));
+                    tracker.track_pauli_string(utils::double_init(pauli));
                 }
                 (action)(&mut tracker, 0, 1);
                 for (input, check) in (0u8..).zip(result.1) {
-                    let output = impl_utils::double_output(
+                    let output = utils::double_output(
                         tracker.pop_frame::<PauliDense>().unwrap(),
                     );
                     assert_eq!(output, check, "{}, {}", result.0, input);
                 }
             }
 
-            impl_utils::double_check(runner, ACTIONS);
+            utils::double_check(runner, ACTIONS);
         }
     }
 }

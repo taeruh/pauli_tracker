@@ -81,9 +81,9 @@ even further, we can ignore $Y$ Paulis since $Y \propto XZ$.
 We are only interested in how $X$ and $Z$ are conjugated. Even though we don't need the
 phases for the Pauli tracking, we keep them here for completeness. Proofs are at the end
 of this section. 
-
+___
 ### Single qubit operations
-
+___
 The Pauli gates $X$, $Y$, $Z$ (hermitian)
 
 Rules:
@@ -109,10 +109,10 @@ Rules:
 $$
   S^{\dagger}XS = Z; \qquad S^{\dagger}ZS = iZX
 $$
-
+___
 ### Two qubit operation
-
-The control Z gate $\mathrm{CNOT}$/$\mathrm{CX}$ (hermitian)
+___
+The control Z gate $\mathrm{CZ}$ (hermitian)
 $$
   \mathrm{CZ}_{a, b} = \begin{pmatrix}
   1&0&0&0\\

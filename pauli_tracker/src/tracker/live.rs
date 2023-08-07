@@ -147,16 +147,16 @@ where
     }
 
     single!(h, s,);
+    fn cz(&mut self, bit_a: usize, bit_b: usize) {
+        let (a, b) = unwrap_get_two_mut!(self.storage, bit_a, bit_b, "cz");
+        a.zpx(b);
+        b.zpx(a);
+    }
 
     fn cx(&mut self, control: usize, target: usize) {
         let (c, t) = unwrap_get_two_mut!(self.storage, control, target, "cx");
         t.xpx(c);
         c.zpz(t);
-    }
-    fn cz(&mut self, bit_a: usize, bit_b: usize) {
-        let (a, b) = unwrap_get_two_mut!(self.storage, bit_a, bit_b, "cz");
-        a.zpx(b);
-        b.zpx(a);
     }
 
     fn measure(&mut self, bit: usize) -> Result<Self::Stack, MissingBit> {
@@ -183,7 +183,7 @@ mod tests {
 
     mod single_actions {
         use super::*;
-        use crate::tracker::test::impl_utils::{
+        use crate::tracker::test::utils::{
             self,
             SingleAction,
             SingleResults,
@@ -196,7 +196,7 @@ mod tests {
         fn runner<P: Pw>(action: Action<P>, result: SingleResults) {
             for (input, check) in (0u8..).zip(result.1) {
                 let mut tracker = Live::<P>::init(2);
-                tracker.track_pauli_string(impl_utils::single_init(input));
+                tracker.track_pauli_string(utils::single_init(input));
                 (action)(&mut tracker, 0);
                 assert_eq!(
                     P::into(*tracker.storage.get(0).unwrap()).storage(),
@@ -211,13 +211,13 @@ mod tests {
         #[cfg_attr(coverage_nightly, no_coverage)]
         pub(super) fn run<P: Pw>() {
             let actions: [Action<P>; N_SINGLES] = [Live::h, Live::s];
-            impl_utils::single_check(runner, actions);
+            utils::single_check(runner, actions);
         }
     }
 
     mod double_actions {
         use super::*;
-        use crate::tracker::test::impl_utils::{
+        use crate::tracker::test::utils::{
             self,
             DoubleAction,
             DoubleResults,
@@ -230,9 +230,9 @@ mod tests {
         fn runner<P: Pw>(action: Action<P>, result: DoubleResults) {
             for (input, check) in (0u8..).zip(result.1) {
                 let mut tracker = Live::init(2);
-                tracker.track_pauli_string(impl_utils::double_init(input));
+                tracker.track_pauli_string(utils::double_init(input));
                 (action)(&mut tracker, 0, 1);
-                let output = impl_utils::double_output(tracker.storage);
+                let output = utils::double_output(tracker.storage);
                 assert_eq!(output, check, "{}, {}", result.0, input);
             }
         }
@@ -247,7 +247,7 @@ mod tests {
                 Live::move_z_to_z,
             ];
 
-            impl_utils::double_check(runner, actions);
+            utils::double_check(runner, actions);
         }
     }
 
@@ -286,15 +286,15 @@ mod tests {
         assert_eq!(tracker.as_ref().0, vec![PauliTuple::Y, PauliTuple::I]);
         assert_eq!(tracker.measure(0), Ok(PauliTuple::Y));
         assert_eq!(tracker.new_qubit(3), None);
-        // assert_eq!(
-        //     *tracker.as_ref(),
-        //     vec![
-        //         PauliTuple::new_x(),
-        //         PauliTuple::new_i(),
-        //         PauliTuple::new_i(),
-        //         PauliTuple::new_i()
-        //     ]
-        // );
+        assert_eq!(
+            *tracker.as_ref().0,
+            vec![
+                PauliTuple::new_y(),
+                PauliTuple::new_i(),
+                PauliTuple::new_i(),
+                PauliTuple::new_i()
+            ]
+        );
     }
 
     //

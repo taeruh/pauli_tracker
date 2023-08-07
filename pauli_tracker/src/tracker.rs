@@ -35,28 +35,30 @@ pub type PauliString<T> = Vec<(usize, T)>;
 #[error("there's no Pauli stack for qubit {0}")]
 pub struct MissingBit(pub usize);
 
-macro_rules! single {
-    ($(( $name:ident, $gate:literal),)*) => {$(
-        /// Update the tracked frames according the
-        #[doc=$gate]
-        /// gate on qu`bit`.
-        fn $name(&mut self, bit: usize);
-    )*}
+macro_rules! single_doc {
+    ($gate:literal) => {
+        concat!(
+            "Update the tracked frames according the ",
+            $gate,
+            " gate on qu`bit`."
+        )
+    };
 }
 
-macro_rules! double {
-    ($name:ident, $gate:literal) => {
-        double!($name, $gate, bit_a, bit_b);
+macro_rules! double_doc {
+    ($gate:literal) => {
+        double_doc!($gate, bit_a, bit_b)
     };
-    ($name:ident, $gate:literal, $bit_a:ident, $bit_b:ident) => {
-        /// Update the tracked frames according to the
-        #[doc=$gate]
-        /// on the `
-        #[doc=stringify!($bit_a)]
-        /// ` and `
-        #[doc=stringify!($bit_b)]
-        /// ` qubits.
-        fn $name(&mut self, $bit_a: usize, $bit_b: usize);
+    ($gate:literal, $bit_a:ident, $bit_b:ident) => {
+        concat!(
+            "Update the tracked frames according to the ",
+            $gate,
+            " on the `",
+            stringify!($bit_a),
+            "` and `",
+            stringify!($bit_b),
+            "` qubits."
+        )
     };
 }
 
@@ -91,12 +93,18 @@ macro_rules! track_pauli {
 /// The core API to track Paulis through a clifford circuit.
 ///
 /// The implementors must ensure that they implement the methods correctly according
-/// to the conjugation rules of Clifford gates with Pauli gates.
+/// to the conjugation rules of Clifford gates with Pauli gates
+/// [^rust_analyzer_impl_members]. While many gates have default implementations, one
+/// might to implement them directly for performance reasons.
 ///
 /// For extensive examples, please refer to the [library documentation](crate#examples).
 ///
 /// *currently, the set of supported Cliffords is very limited, but a complete
 /// generator; it will be extended over time*
+///
+/// [^rust_analyzer_impl_members]: Using rust-analyzer's "implement members" feature
+/// inserts some weird looking docs, which may not compile. This is because we generate
+/// a bunch of the methods with macros. You should delete these docs.
 pub trait Tracker {
     /// The storage type used to store the tracked Paulis for each qubit, e.g.,
     /// [PauliStack](crate::pauli::PauliStack) for the [Frames](frames::Frames) tracker or
@@ -114,19 +122,31 @@ pub trait Tracker {
     fn new_qubit(&mut self, bit: usize) -> Option<Self::Stack>;
 
     /// Track a new frame consisting of the Pauli gate `pauli` at qu`bit`.
+    ///
+    /// If qu`bit` is not tracked, the method does not error, but simply tracks an empty
+    /// frame.
     fn track_pauli(&mut self, bit: usize, pauli: Self::Pauli);
 
-    /// Track a new frame including multiple Pauli gates, i.e., e [PauliString] to the
-    /// Tracker, i.e., do [Tracker::track_pauli] for multiple Paulis but all within
-    /// the same frame.
+    /// Track a new frame including multiple Pauli gates, i.e., i.e., do
+    /// [Tracker::track_pauli] for multiple Paulis but all within the same frame.
     fn track_pauli_string(&mut self, string: PauliString<Self::Pauli>);
 
     track_pauli!((track_x, X), (track_y, Y), (track_z, Z),);
 
-    single!((h, "Hadamard"), (s, "S"),);
+    // generators
+    #[doc = single_doc!("Hadamard")]
+    fn h(&mut self, bit: usize);
+    #[doc = single_doc!("S")]
+    fn s(&mut self, bit: usize);
+    #[doc = double_doc!("Control Z")]
+    fn cz(&mut self, bit_a: usize, bit_b: usize);
 
-    double!(cx, "Control X (Control Not)", control, target);
-    double!(cz, "Control Z");
+    #[doc = double_doc!("Control X (Control Not)", control, target)]
+    fn cx(&mut self, control: usize, target: usize) {
+        self.h(target);
+        self.cz(control, target);
+        self.h(target);
+    }
 
     movements!(
         (move_x_to_x, "X", "X"),
@@ -181,12 +201,10 @@ pub mod live;
 
 #[cfg(test)]
 mod test {
-    pub mod impl_utils {
-        use super::super::*;
-        use crate::{
-            pauli::PauliDense,
-            tracker::PauliString,
-        };
+    use super::*;
+    pub mod utils {
+        use super::*;
+        use crate::pauli::PauliDense;
 
         // when we update the results here and use this module in the test of the tracker
         // implementors, the type system ensures that we test all gates/actions
@@ -198,6 +216,9 @@ mod test {
         pub type DoubleAction<T> = fn(&mut T, usize, usize);
 
         // the following expected results are proven in ./docs/conjugation_rules.md
+
+        // instead of writing out all the SingleResults and DoubleResults, we make use
+        // of homomorphy and just define the results on a basis
 
         pub const N_SINGLES: usize = 2;
         const SINGLE_GENERATORS: [(&str, [u8; 2]); N_SINGLES] =
@@ -286,6 +307,156 @@ mod test {
                 output[i] = p.into().storage()
             }
             (output[0], output[1])
+        }
+    }
+
+    mod defaults {
+        use coverage_helper::test;
+
+        use super::{
+            super::*,
+            utils::{
+                DoubleAction,
+                DoubleResults,
+                N_DOUBLES,
+            },
+        };
+        use crate::{
+            collection::{
+                Base,
+                Map,
+            },
+            pauli::{
+                Pauli,
+                PauliDense,
+            },
+        };
+
+        struct DefaultTester {
+            paulis: Map<PauliDense>,
+            skip_it: bool,
+        }
+
+        impl DefaultTester {
+            fn init(n: usize) -> Self {
+                Self {
+                    paulis: Map::from_iter((0..n).map(|i| (i, PauliDense::I))),
+                    skip_it: false,
+                }
+            }
+
+            fn skip(&mut self, _: usize, _: usize) {
+                self.skip_it = true
+            }
+        }
+
+        impl Tracker for DefaultTester {
+            type Stack = PauliDense;
+            type Pauli = PauliDense;
+
+            fn new_qubit(&mut self, bit: usize) -> Option<Self::Stack> {
+                self.paulis.insert(bit, PauliDense::I)
+            }
+            fn track_pauli(&mut self, _: usize, _: Self::Pauli) {
+                todo!()
+            }
+            fn track_pauli_string(&mut self, string: PauliString<Self::Pauli>) {
+                for (bit, pauli) in string {
+                    if let Some(p) = self.paulis.get_mut(&bit) {
+                        p.add(pauli)
+                    }
+                }
+            }
+
+            fn h(&mut self, bit: usize) {
+                self.paulis.get_mut(&bit).unwrap().h()
+            }
+            fn s(&mut self, bit: usize) {
+                self.paulis.get_mut(&bit).unwrap().s()
+            }
+            fn cz(&mut self, bit_a: usize, bit_b: usize) {
+                let (a, b) = self.paulis.get_two_mut(bit_a, bit_b).unwrap();
+                a.zpx(b);
+                b.zpx(a);
+            }
+
+            fn move_x_to_x(&mut self, _: usize, _: usize) {
+                todo!()
+            }
+            fn move_x_to_z(&mut self, _: usize, _: usize) {
+                todo!()
+            }
+            fn move_z_to_x(&mut self, _: usize, _: usize) {
+                todo!()
+            }
+            fn move_z_to_z(&mut self, _: usize, _: usize) {
+                todo!()
+            }
+
+            fn measure(&mut self, _: usize) -> Result<Self::Stack, MissingBit> {
+                todo!()
+            }
+        }
+
+        use super::*;
+        use crate::tracker::test::utils::{
+            self,
+            SingleAction,
+            SingleResults,
+            N_SINGLES,
+        };
+
+        type ActionS = SingleAction<DefaultTester>;
+        type ActionD = DoubleAction<DefaultTester>;
+
+        #[cfg_attr(coverage_nightly, no_coverage)]
+        fn single_runner(action: ActionS, result: SingleResults) {
+            for (input, check) in (0u8..).zip(result.1) {
+                let mut tracker = DefaultTester::init(2);
+                tracker.track_pauli_string(utils::single_init(input));
+                (action)(&mut tracker, 0);
+                assert_eq!(
+                    tracker.paulis.get(&0).unwrap().storage(),
+                    check,
+                    "{}, {}",
+                    result.0,
+                    input
+                );
+            }
+        }
+
+        #[test]
+        fn single_actions() {
+            let actions: [ActionS; N_SINGLES] = [DefaultTester::h, DefaultTester::s];
+            utils::single_check(single_runner, actions);
+        }
+
+        #[cfg_attr(coverage_nightly, no_coverage)]
+        fn double_runner(action: ActionD, result: DoubleResults) {
+            for (input, check) in (0u8..).zip(result.1) {
+                let mut tracker = DefaultTester::init(2);
+                tracker.track_pauli_string(utils::double_init(input));
+                (action)(&mut tracker, 0, 1);
+                if tracker.skip_it {
+                    tracker.skip_it = false;
+                    return;
+                }
+                let output = utils::double_output(tracker.paulis);
+                assert_eq!(output, check, "{}, {}", result.0, input);
+            }
+        }
+
+        #[test]
+        fn double_actions() {
+            let actions: [ActionD; N_DOUBLES] = [
+                DefaultTester::cx,
+                DefaultTester::cz,
+                DefaultTester::skip,
+                DefaultTester::skip,
+                DefaultTester::skip,
+                DefaultTester::skip,
+            ];
+            utils::double_check(double_runner, actions);
         }
     }
 }
