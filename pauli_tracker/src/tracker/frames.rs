@@ -125,18 +125,6 @@ impl<S> Frames<S> {
     pub fn frames_num(&self) -> usize {
         self.frames_num
     }
-
-    // Pauli gates don't do anything; we just include them for completeness and because
-    // it might be more convenient to have them on the caller side
-    /// Apply Pauli X, note that it is just the identity.
-    #[inline(always)]
-    pub fn x(&self, _: usize) {}
-    /// Apply Pauli Z, note that it is just the identity.
-    #[inline(always)]
-    pub fn z(&self, _: usize) {}
-    /// Apply Pauli Y, note that it is just the identity.
-    #[inline(always)]
-    pub fn y(&self, _: usize) {}
 }
 
 impl<S: Init> Init for Frames<S> {
@@ -355,7 +343,7 @@ mod tests {
         fn single() {
             type Action = SingleAction<ThisTracker>;
 
-            const ACTIONS: [Action; N_SINGLES] = [Frames::h, Frames::s];
+            const ACTIONS: [Action; N_SINGLES] = [Frames::h, Frames::s, Frames::sdg];
 
             #[cfg_attr(coverage_nightly, no_coverage)]
             fn runner(action: Action, result: SingleResults) {

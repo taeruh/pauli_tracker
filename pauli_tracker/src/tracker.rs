@@ -95,16 +95,24 @@ macro_rules! track_pauli {
 /// The implementors must ensure that they implement the methods correctly according
 /// to the conjugation rules of Clifford gates with Pauli gates
 /// [^rust_analyzer_impl_members]. While many gates have default implementations, one
-/// might to implement them directly for performance reasons.
+/// might want to implement them directly for performance reasons[^generators].
 ///
 /// For extensive examples, please refer to the [library documentation](crate#examples).
 ///
-/// *currently, the set of supported Cliffords is very limited, but a complete
+/// *currently, the set of supported Cliffords is very limited, but it is a complete
 /// generator; it will be extended over time*
 ///
 /// [^rust_analyzer_impl_members]: Using rust-analyzer's "implement members" feature
 /// inserts some weird looking docs, which may not compile. This is because we generate
 /// a bunch of the methods with macros. You should delete these docs.
+///
+/// [^generators]: The default implementations are implemented using the generators
+/// [Tracker::h], [Tracker::s] and [Tracker::cz]. For example, [Tracker::cx] is
+/// implement as `self.h(target); self.cz(control, target); self.h(target);`. This can
+/// probably be done more efficiently by directly implementing this method. On the other
+/// hand, some default implementations are just one function call, e.g., [Tracker::sdg]
+/// is just `self.s(target);`, which we annotate with `#[inline(always)]`; for these,
+/// there's probably no need to implement them directly.
 pub trait Tracker {
     /// The storage type used to store the tracked Paulis for each qubit, e.g.,
     /// [PauliStack](crate::pauli::PauliStack) for the [Frames](frames::Frames) tracker or
@@ -140,6 +148,25 @@ pub trait Tracker {
     fn s(&mut self, bit: usize);
     #[doc = double_doc!("Control Z")]
     fn cz(&mut self, bit_a: usize, bit_b: usize);
+
+    #[doc = single_doc!("X")]
+    /// Note that it is just the identity.
+    #[inline(always)]
+    fn x(&self, _: usize) {}
+    #[doc = single_doc!("Y")]
+    /// Note that it is just the identity.
+    #[inline(always)]
+    fn y(&self, _: usize) {}
+    #[doc = single_doc!("Z")]
+    /// Note that it is just the identity.
+    #[inline(always)]
+    fn z(&self, _: usize) {}
+
+    #[doc = single_doc!("S^dagger")]
+    #[inline(always)]
+    fn sdg(&mut self, bit: usize) {
+        self.s(bit);
+    }
 
     #[doc = double_doc!("Control X (Control Not)", control, target)]
     fn cx(&mut self, control: usize, target: usize) {
@@ -220,10 +247,10 @@ mod test {
         // instead of writing out all the SingleResults and DoubleResults, we make use
         // of homomorphy and just define the results on a basis
 
-        pub const N_SINGLES: usize = 2;
+        pub const N_SINGLES: usize = 3;
         const SINGLE_GENERATORS: [(&str, [u8; 2]); N_SINGLES] =
             // (name, [conjugate X, conjugate Z])
-            [("H", [1, 2]), ("S", [3, 1])];
+            [("H", [1, 2]), ("S", [3, 1]), ("SDG", [3, 1])];
 
         pub const N_DOUBLES: usize = 6;
         const DOUBLE_GENERATORS: [(&str, [(u8, u8); 4]); N_DOUBLES] = [
@@ -427,7 +454,8 @@ mod test {
 
         #[test]
         fn single_actions() {
-            let actions: [ActionS; N_SINGLES] = [DefaultTester::h, DefaultTester::s];
+            let actions: [ActionS; N_SINGLES] =
+                [DefaultTester::h, DefaultTester::s, DefaultTester::sdg];
             utils::single_check(single_runner, actions);
         }
 

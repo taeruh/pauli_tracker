@@ -210,7 +210,7 @@ mod tests {
 
         #[cfg_attr(coverage_nightly, no_coverage)]
         pub(super) fn run<P: Pw>() {
-            let actions: [Action<P>; N_SINGLES] = [Live::h, Live::s];
+            let actions: [Action<P>; N_SINGLES] = [Live::h, Live::s, Live::sdg];
             utils::single_check(runner, actions);
         }
     }

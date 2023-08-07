@@ -110,6 +110,15 @@ $$
   S^{\dagger}XS = Z; \qquad S^{\dagger}ZS = iZX
 $$
 ___
+The Phase gate $S^{\dagger}$
+$$
+  S = \begin{pmatrix}1&0\\0&-i\end{pmatrix}
+$$
+Rules:
+$$
+  SXS^{\dagger} = Z; \qquad SZS^{\dagger} = -iZX
+$$
+___
 ### Two qubit operation
 ___
 The control Z gate $\mathrm{CZ}$ (hermitian)
@@ -178,6 +187,9 @@ $$\begin{aligned}
   \begin{pmatrix}1&0\\0&-i\end{pmatrix}
   \begin{pmatrix}0&i\\1&0\end{pmatrix} =
   \begin{pmatrix}0&i\\-i&0\end{pmatrix} = -Y = iZX\\
+
+  SXS^{\dagger} &=
+  ZS^{\dagger}XSZ = ZiZXZ = -iZX\\
 
   \mathrm{CZ}_{c, t}X_t\mathrm{CZ}_{c, t} &=
   \begin{pmatrix}1&0\\0&Z\end{pmatrix}
