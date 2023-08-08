@@ -170,17 +170,20 @@ impl<T: BooleanVector> PauliStack<T> {
     #[inline(always)]
     pub fn y(&self) {}
 
-    /// Apply the Hadamard gate.
+    /// Conjugate the PauliStack with the Hadamard gate ignoring phases.
     #[inline]
     pub fn h(&mut self) {
         mem::swap(&mut self.left, &mut self.right);
     }
-
-    /// Apply the Phase S gate.
+    /// Conjugate the Paulistack with the S gate ignoring phases.
     #[inline]
     pub fn s(&mut self) {
-        // self.right.xor(&self.left);
         self.right.xor_inplace(&self.left);
+    }
+
+    /// Conjugate the Paulistack with the sqrt(X) gate ignoring phases.
+    pub fn sx(&mut self) {
+        self.left.xor_inplace(&self.right);
     }
 
     /// Multiply the Paulis, i.e., summing them up mod 2 in the tableau representation,

@@ -51,7 +51,13 @@ macro_rules! plus {
     )*};
 }
 
-/// The interface we need for the Pauli tracking
+/// The interface we need for the Pauli tracking.
+///
+/// Note that we only implement some of the gate conjugations, since many are redundant;
+/// also you may want to implement some of the default gate conjugations directly for
+/// performance reasons; compare the documentation of [Tracker].
+///
+/// [Tracker]: crate::tracker::Tracker
 pub trait Pauli {
     const_pauli!(I, X, Y, Z,);
     new_pauli!((new_i, I), (new_x, X), (new_y, Y), (new_z, Z),);
@@ -73,10 +79,17 @@ pub trait Pauli {
     /// Add the `other` Pauli to `self` in place.
     fn add(&mut self, other: Self);
 
-    /// Conjugate the Pauli with the Hadamard Gate ignoring phases.
+    /// Conjugate the Pauli with the Hadamard gate ignoring phases.
     fn h(&mut self);
-    /// Conjugate the Pauli with the S Gate ignoring phases.
+    /// Conjugate the Pauli with the S gate ignoring phases.
     fn s(&mut self);
+
+    /// Conjugate the Pauli with the sqrt(X) gate ignoring phases.
+    fn sx(&mut self) {
+        self.h();
+        self.s();
+        self.h();
+    }
 
     plus!((xpx, X, X), (xpz, X, Z), (zpx, Z, X), (zpz, Z, Z),);
 

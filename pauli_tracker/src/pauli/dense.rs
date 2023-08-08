@@ -157,6 +157,11 @@ impl Pauli for PauliDense {
     }
 
     #[inline]
+    fn sx(&mut self) {
+        self.storage ^= (self.storage & 1) << 1;
+    }
+
+    #[inline]
     fn xpx(&mut self, other: &Self) {
         self.xor_u8(other.xmask());
     }

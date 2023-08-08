@@ -146,7 +146,7 @@ where
         }
     }
 
-    single!(h, s,);
+    single!(h, s, sx,);
     fn cz(&mut self, bit_a: usize, bit_b: usize) {
         let (a, b) = unwrap_get_two_mut!(self.storage, bit_a, bit_b, "cz");
         a.zpx(b);
