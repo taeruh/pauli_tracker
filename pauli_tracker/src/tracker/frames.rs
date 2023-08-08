@@ -343,7 +343,7 @@ mod tests {
         fn single() {
             type Action = SingleAction<ThisTracker>;
 
-            const ACTIONS: [Action; N_SINGLES] = [Frames::h, Frames::s, Frames::sdg];
+            const ACTIONS: [Action; N_SINGLES] = utils::single_actions!(ThisTracker);
 
             #[cfg_attr(coverage_nightly, no_coverage)]
             fn runner(action: Action, result: SingleResults) {
@@ -379,14 +379,7 @@ mod tests {
         fn double() {
             type Action = DoubleAction<ThisTracker>;
 
-            const ACTIONS: [Action; N_DOUBLES] = [
-                Frames::cx,
-                Frames::cz,
-                Frames::move_x_to_x,
-                Frames::move_x_to_z,
-                Frames::move_z_to_x,
-                Frames::move_z_to_z,
-            ];
+            const ACTIONS: [Action; N_DOUBLES] = utils::double_actions!(ThisTracker);
 
             #[cfg_attr(coverage_nightly, no_coverage)]
             fn runner(action: Action, result: DoubleResults) {

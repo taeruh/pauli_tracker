@@ -210,7 +210,7 @@ mod tests {
 
         #[cfg_attr(coverage_nightly, no_coverage)]
         pub(super) fn run<P: Pw>() {
-            let actions: [Action<P>; N_SINGLES] = [Live::h, Live::s, Live::sdg];
+            let actions: [Action<P>; N_SINGLES] = utils::single_actions!(Live<P>);
             utils::single_check(runner, actions);
         }
     }
@@ -238,14 +238,7 @@ mod tests {
         }
 
         pub(super) fn run<T: Pw>() {
-            let actions: [Action<T>; N_DOUBLES] = [
-                Live::cx,
-                Live::cz,
-                Live::move_x_to_x,
-                Live::move_x_to_z,
-                Live::move_z_to_x,
-                Live::move_z_to_z,
-            ];
+            let actions: [Action<T>; N_DOUBLES] = utils::double_actions!(Live<T>);
 
             utils::double_check(runner, actions);
         }

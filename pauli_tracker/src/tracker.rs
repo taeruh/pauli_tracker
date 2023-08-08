@@ -17,6 +17,8 @@ adopt measurements correctly.
 [MBQC]: https://doi.org/10.48550/arXiv.0910.1116
 */
 
+use thiserror::Error;
+
 use crate::pauli::Pauli;
 
 /// A vector describing an encoded Pauli string, for example, one frame of
@@ -112,7 +114,10 @@ macro_rules! track_pauli {
 /// probably be done more efficiently by directly implementing this method. On the other
 /// hand, some default implementations are just one function call, e.g., [Tracker::sdg]
 /// is just `self.s(target);`, which we annotate with `#[inline(always)]`; for these,
-/// there's probably no need to implement them directly.
+/// there's probably no need to implement them directly. The [conjugation-rules]
+/// document contains useful operator identities.
+///
+/// [conjugation-rules]: https://github.com/taeruh/pauli_tracker/blob/main/docs/conjugation_rules.md
 pub trait Tracker {
     /// The storage type used to store the tracked Paulis for each qubit, e.g.,
     /// [PauliStack](crate::pauli::PauliStack) for the [Frames](frames::Frames) tracker or
@@ -152,19 +157,56 @@ pub trait Tracker {
     #[doc = single_doc!("X")]
     /// Note that it is just the identity.
     #[inline(always)]
-    fn x(&self, _: usize) {}
+    fn x(&mut self, _: usize) {}
     #[doc = single_doc!("Y")]
     /// Note that it is just the identity.
     #[inline(always)]
-    fn y(&self, _: usize) {}
+    fn y(&mut self, _: usize) {}
     #[doc = single_doc!("Z")]
     /// Note that it is just the identity.
     #[inline(always)]
-    fn z(&self, _: usize) {}
+    fn z(&mut self, _: usize) {}
 
     #[doc = single_doc!("S^dagger")]
     #[inline(always)]
     fn sdg(&mut self, bit: usize) {
+        self.s(bit);
+    }
+
+    #[doc = single_doc!("sqrt(X)")]
+    fn sx(&mut self, bit: usize) {
+        self.h(bit);
+        self.s(bit);
+        self.h(bit);
+    }
+
+    #[doc = single_doc!("sqrt(X)^dagger")]
+    #[inline(always)]
+    fn sxdg(&mut self, bit: usize) {
+        self.sx(bit);
+    }
+
+    #[doc = single_doc!("sqrt(Y)")]
+    #[inline(always)]
+    fn sy(&mut self, bit: usize) {
+        self.h(bit);
+    }
+
+    #[doc = single_doc!("sqrt(Y)")]
+    #[inline(always)]
+    fn sydg(&mut self, bit: usize) {
+        self.h(bit);
+    }
+
+    #[doc = single_doc!("sqrt(Z)")]
+    #[inline(always)]
+    fn sz(&mut self, bit: usize) {
+        self.s(bit);
+    }
+
+    #[doc = single_doc!("sqrt(Z)^dagger")]
+    #[inline(always)]
+    fn szdg(&mut self, bit: usize) {
         self.s(bit);
     }
 
@@ -194,7 +236,7 @@ macro_rules! unwrap_get_mut {
             .unwrap_or_else(|| panic!("{}: qubit {} does not exist", $gate, $bit))
     };
 }
-use thiserror::Error;
+
 use unwrap_get_mut;
 
 // that's not stable yet (https://github.com/rust-lang/rust/issues/83527), so we have
@@ -247,16 +289,49 @@ mod test {
         // instead of writing out all the SingleResults and DoubleResults, we make use
         // of homomorphy and just define the results on a basis
 
-        pub const N_SINGLES: usize = 3;
+        pub const N_SINGLES: usize = 12;
         const SINGLE_GENERATORS: [(&str, [u8; 2]); N_SINGLES] =
             // (name, [conjugate X, conjugate Z])
-            [("H", [1, 2]), ("S", [3, 1]), ("SDG", [3, 1])];
+            [
+                ("H", [1, 2]),
+                ("S", [3, 1]),
+                ("SDG", [3, 1]),
+                ("X", [2, 1]),
+                ("Y", [2, 1]),
+                ("Z", [2, 1]),
+                ("SX", [2, 3]),
+                ("SXDG", [2, 3]),
+                ("SY", [1, 2]),
+                ("SYDG", [1, 2]),
+                ("SZ", [3, 1]),
+                ("SZDG", [3, 1]),
+            ];
+
+        macro_rules! single_actions {
+            ($tracker:ty) => {
+                [
+                    <$tracker>::h,
+                    <$tracker>::s,
+                    <$tracker>::sdg,
+                    <$tracker>::x,
+                    <$tracker>::y,
+                    <$tracker>::z,
+                    <$tracker>::sx,
+                    <$tracker>::sxdg,
+                    <$tracker>::sy,
+                    <$tracker>::sydg,
+                    <$tracker>::sz,
+                    <$tracker>::szdg,
+                ]
+            };
+        }
+        pub(crate) use single_actions;
 
         pub const N_DOUBLES: usize = 6;
         const DOUBLE_GENERATORS: [(&str, [(u8, u8); 4]); N_DOUBLES] = [
             // (name, [conjugate X1, conjugate Z1, conjugate 1X, conjugate 1Z])
-            ("cx", [(2, 2), (1, 0), (0, 2), (1, 1)]),
             ("cz", [(2, 1), (1, 0), (1, 2), (0, 1)]),
+            ("cx", [(2, 2), (1, 0), (0, 2), (1, 1)]),
             // these here are not conjugations with unitary operators, however it still
             // works, because the move operation is a homomorphism
             ("move_x_to_x", [(0, 2), (1, 0), (0, 2), (0, 1)]),
@@ -264,6 +339,20 @@ mod test {
             ("move_z_to_x", [(2, 0), (0, 2), (0, 2), (0, 1)]),
             ("move_z_to_z", [(2, 0), (0, 1), (0, 2), (0, 1)]),
         ];
+
+        macro_rules! double_actions {
+            ($tracker:ty) => {
+                [
+                    <$tracker>::cz,
+                    <$tracker>::cx,
+                    <$tracker>::move_x_to_x,
+                    <$tracker>::move_x_to_z,
+                    <$tracker>::move_z_to_x,
+                    <$tracker>::move_z_to_z,
+                ]
+            };
+        }
+        pub(crate) use double_actions;
 
         #[cfg_attr(coverage_nightly, no_coverage)]
         pub fn single_check<T, R>(runner: R, actions: [SingleAction<T>; N_SINGLES])
@@ -371,10 +460,6 @@ mod test {
                     skip_it: false,
                 }
             }
-
-            fn skip(&mut self, _: usize, _: usize) {
-                self.skip_it = true
-            }
         }
 
         impl Tracker for DefaultTester {
@@ -408,16 +493,16 @@ mod test {
             }
 
             fn move_x_to_x(&mut self, _: usize, _: usize) {
-                todo!()
+                self.skip_it = true
             }
             fn move_x_to_z(&mut self, _: usize, _: usize) {
-                todo!()
+                self.skip_it = true
             }
             fn move_z_to_x(&mut self, _: usize, _: usize) {
-                todo!()
+                self.skip_it = true
             }
             fn move_z_to_z(&mut self, _: usize, _: usize) {
-                todo!()
+                self.skip_it = true
             }
 
             fn measure(&mut self, _: usize) -> Result<Self::Stack, MissingBit> {
@@ -454,8 +539,7 @@ mod test {
 
         #[test]
         fn single_actions() {
-            let actions: [ActionS; N_SINGLES] =
-                [DefaultTester::h, DefaultTester::s, DefaultTester::sdg];
+            let actions: [ActionS; N_SINGLES] = utils::single_actions!(DefaultTester);
             utils::single_check(single_runner, actions);
         }
 
@@ -476,14 +560,7 @@ mod test {
 
         #[test]
         fn double_actions() {
-            let actions: [ActionD; N_DOUBLES] = [
-                DefaultTester::cx,
-                DefaultTester::cz,
-                DefaultTester::skip,
-                DefaultTester::skip,
-                DefaultTester::skip,
-                DefaultTester::skip,
-            ];
+            let actions: [ActionD; N_DOUBLES] = utils::double_actions!(DefaultTester);
             utils::double_check(double_runner, actions);
         }
     }

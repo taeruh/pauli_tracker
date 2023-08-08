@@ -1,5 +1,8 @@
 # Conjugation of the Pauli group under Clifford operations
 
+*has to be viewed with katex*
+___
+
 This document captures all the [conjugation rules](#conjugation-of-the-pauli-gates) for
 the Clifford operations, and some [other
 operations](#other-operations-provided-by-the-library), provided by the library. But
@@ -73,7 +76,7 @@ already uniquely defined its conjugation on Pauli string where only one of the P
 is not the identity, since a general Pauli string is just a product of those and the
 conjugation is a automorphism with respect to the matrix multiplication (that's also
 true for the matrix addition, but we need it for the multiplication). To simplify it
-even further, we can ignore $Y$ Paulis since $Y \propto XZ$.
+even further, we can ignore $Y$ Paulis since $Y = iXZ$.
 
 
 ## Conjugation of the Pauli gates
@@ -84,12 +87,13 @@ of this section.
 ___
 ### Single qubit operations
 ___
-The Pauli gates $X$, $Y$, $Z$ (hermitian)
+The Pauli gates $X = HSSH$, $Y = iHSSHSS$, $Z = SS$ (hermitian)
 
 Rules:
 $$\begin{aligned}
-  XXX &= X; \qquad\,\,\,\, ZXZ = -X\\
-  XZX &= -Z; \qquad ZZZ\, = Z
+  XXX &= X; \qquad\,\,\,\,\, XZX = -X\\
+  ZXZ &= -X; \qquad ZZZ = Z\\
+  YXY &= -X; \qquad YZY = -Z
 \end{aligned}$$
 ___
 The Hadamard gate $H$ (hermitian)
@@ -101,13 +105,13 @@ $$
   HXH = Z; \qquad HZH = X
 $$
 ___
-The Phase gate $S$
+The Phase gate $S$ ($= \sqrt{Z}$)
 $$
   S = \begin{pmatrix}1&0\\0&i\end{pmatrix}
 $$
 Rules:
 $$
-  S^{\dagger}XS = Z; \qquad S^{\dagger}ZS = iZX
+  S^{\dagger}XS = iZX; \qquad S^{\dagger}ZS = Z
 $$
 ___
 The Phase gate $S^{\dagger}$
@@ -116,7 +120,44 @@ $$
 $$
 Rules:
 $$
-  SXS^{\dagger} = Z; \qquad SZS^{\dagger} = -iZX
+  SXS^{\dagger} = -iZX; \qquad SZS^{\dagger} = Z
+$$
+___
+The root X gate ($\sqrt{X} = HSH$)
+$$
+  \sqrt{X} = \frac{1}{2}\begin{pmatrix}1+i&1-i\\1-i&1+i\end{pmatrix}
+$$
+Rules:
+$$
+  \sqrt{X}^{\dagger}X\sqrt{X} = X; \qquad \sqrt{X}^{\dagger}Z\sqrt{X} = iXZ
+$$
+
+___
+The $\sqrt{X}^{\dagger}$ gate
+$$
+  \sqrt{X}^{\dagger} = \frac{1}{2}\begin{pmatrix}1-i&1+i\\1+i&1-i\end{pmatrix}
+$$
+Rules:
+$$
+  \sqrt{X}X\sqrt{X}^{\dagger} = X; \qquad \sqrt{X}Z\sqrt{X}^{\dagger} = -iXZ
+$$
+___
+The root Y gate ($\sqrt{Y} = \sqrt{i}HSS$)
+$$
+  \sqrt{Y} = \frac{1}{2}\begin{pmatrix}1+i&1-i\\1+i&1+i\end{pmatrix}
+$$
+Rules:
+$$
+  \sqrt{Y}^{\dagger}X\sqrt{Y} = Z; \qquad \sqrt{Y}^{\dagger}Z\sqrt{Y} = -X
+$$
+___
+The $\sqrt{Y}^{\dagger}$ gate
+$$
+  \sqrt{Y} = \frac{1}{2}\begin{pmatrix}1-i&1+i\\1-i&1-i\end{pmatrix}
+$$
+Rules:
+$$
+  \sqrt{Y}X\sqrt{Y}^{\dagger} = -Z; \qquad \sqrt{Y}Z\sqrt{Y}^{\dagger} = X
 $$
 ___
 ### Two qubit operation
@@ -165,7 +206,7 @@ $$\begin{aligned}
 ### Proofs
 
 Use [characteristics of the Paulis](#the-pauli-set) and [other useful
-conjugations](#other-useful-conjugations). Trivial proofs, where all operators are
+conjugations](#other-useful-rules). Trivial proofs, where all operators are
 completely diagonal, are skipped.
 $$\begin{aligned}
   XZX &= iXY = -Z\\
@@ -190,6 +231,30 @@ $$\begin{aligned}
 
   SXS^{\dagger} &=
   ZS^{\dagger}XSZ = ZiZXZ = -iZX\\
+
+  \sqrt{X}^{\dagger}X\sqrt{X} &=
+  \sqrt{X}^{\dagger}\sqrt{X}\sqrt{X}\sqrt{X} =
+  \sqrt{X}\sqrt{X} = X\\
+  \sqrt{X}^{\dagger}Z\sqrt{X} &=
+  HS^{\dagger}HZHSH = HS^{\dagger}XSH = iHZXH = iXZ\\
+
+  \sqrt{X}X\sqrt{X}^{\dagger} &= \ldots = X\\
+  \sqrt{X}Z\sqrt{X}^{\dagger} &= \ldots = -iXZ\\
+
+  \sqrt{Y}^{\dagger}X\sqrt{Y} &=
+  S^{\dagger}S^{\dagger}HXHSS =
+  S^{\dagger}S^{\dagger}ZSS = Z\\
+
+  \sqrt{Y}^{\dagger}Z\sqrt{Y} &=
+  \left(\sqrt{Y}^{\dagger}\right)^2X\sqrt{Y}^2 = -X\\
+
+  \sqrt{Y}X\sqrt{Y}^{\dagger} &=
+  HSSXS^{\dagger}S^{\dagger}H =
+  -iHSZXS^{\dagger}H =
+  -HXH = -Z\\
+
+  \sqrt{Y}Z\sqrt{Y}^{\dagger} &=
+  -\left(\sqrt{Y}^{\dagger}\right)^2X\sqrt{Y}^2 = X\\
 
   \mathrm{CZ}_{c, t}X_t\mathrm{CZ}_{c, t} &=
   \begin{pmatrix}1&0\\0&Z\end{pmatrix}
@@ -240,12 +305,22 @@ $$\begin{aligned}
 and on the other elements they are the identity.
 
 
-## Other useful conjugations
+## Other useful rules
 
 $$\begin{aligned}
-  H_t \mathrm{CX}_{c, t} H_t &= \mathrm{CZ}_{c, t}\\
-  H_c \mathrm{CZ}_{c, t} H_c &= \mathrm{CX}_{t, c}\\
-  H_t \mathrm{CZ}_{c, t} H_t &= \mathrm{CX}_{c, t}
+  \mathrm{CZ}_{c, t} &= H_t \mathrm{CX}_{c, t} H_t\\
+  \mathrm{CX}_{t, c} &= H_c \mathrm{CZ}_{c, t} H_c\\
+  \mathrm{CX}_{c, t} &= H_t \mathrm{CZ}_{c, t} H_t\\
+  S^{\dagger} &= SZ = ZS\\
+  \sqrt{X} &= HSH\\
+  \sqrt{X}^{2} &= X = HSSH\\
+  \sqrt{X}^{\dagger} &= \sqrt{X}^{-1}\\
+  \sqrt{Z} &= S\\
+  \sqrt{Z}^{2} &= Z = SS\\
+  \sqrt{Z}^{\dagger} &= \sqrt{Z}^{-1}\\
+  \sqrt{Y} &= \sqrt{i}HSS \propto HZ \propto ZH\\
+  \sqrt{Y}^{2} &= Y = iHSSHSS \propto HSSHSS \propto SSHSSH\\
+  \sqrt{Y}^{\dagger} &= \sqrt{Y}^{-1}
 \end{aligned}$$
 
 ### Proofs
@@ -257,6 +332,31 @@ $$\begin{aligned}
   \begin{pmatrix}1&0\\0&X\end{pmatrix}
   \begin{pmatrix}H&0\\0&H\end{pmatrix}
   = \begin{pmatrix}1&0\\0&Z\end{pmatrix} = \mathrm{CZ}_{c, t}\\
+
   H_t \mathrm{CZ}_{c, t} H_t &= H_t^2 \mathrm{CX}_{c, t} H_t^2 = \mathrm{CX}_{c, t}\\
-  H_c \mathrm{CZ}_{c, t} H_t &= H_t^2 \mathrm{CX}_{t, c} H_t^2 = \mathrm{CX}_{t, c}
+
+  H_c \mathrm{CZ}_{c, t} H_t &= H_t^2 \mathrm{CX}_{t, c} H_t^2 = \mathrm{CX}_{t, c}\\
+
+  2HSH &=
+  \begin{pmatrix}1&1\\1&-1\end{pmatrix}
+  \begin{pmatrix}1&0\\0&i\end{pmatrix}
+  \begin{pmatrix}1&1\\1&-1\end{pmatrix} =
+  \begin{pmatrix}1&1\\1&-1\end{pmatrix}
+  \begin{pmatrix}1&1\\i&-i\end{pmatrix} =
+  \begin{pmatrix}1+i&1-i\\1-i&1+i\end{pmatrix} = 2\sqrt{X}\\
+
+  \sqrt{X}^{2} &= HSHHSH = HZH = X\\
+
+  \sqrt{X}^{\dagger}\sqrt{X} &= HS^{\dagger}HHSH = 1\\
+
+  2\sqrt{i}HZ &=
+  \sqrt{2i}\begin{pmatrix}1&1\\1&-1\end{pmatrix}
+  \begin{pmatrix}1&0\\0&-1\end{pmatrix} =
+  \sqrt{2i}\begin{pmatrix}1&-1\\1&1\end{pmatrix} =
+  \begin{pmatrix}1+i&-1-i\\1+i&1+i\end{pmatrix} = 2\sqrt{Y}\\
+
+  \sqrt{Y}^{2} &= iHSSHSS = iXZ = Y\\
+
+  \sqrt{Y}^{\dagger}\sqrt{Y} &= S^{\dagger}S^{\dagger}HHSS = 1
+
 \end{aligned}$$
