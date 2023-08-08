@@ -161,22 +161,17 @@ impl<T: BooleanVector> PauliStack<T> {
     // Pauli gates don't do anything; we just include them for completeness and since it
     // might be more convenient to have them on the caller side
     /// Apply Pauli X, note that it is just the identity.
-    #[inline(always)]
     pub fn x(&self) {}
     /// Apply Pauli Z, note that it is just the identity.
-    #[inline(always)]
     pub fn z(&self) {}
     /// Apply Pauli Y, note that it is just the identity.
-    #[inline(always)]
     pub fn y(&self) {}
 
     /// Conjugate the PauliStack with the Hadamard gate ignoring phases.
-    #[inline]
     pub fn h(&mut self) {
         mem::swap(&mut self.left, &mut self.right);
     }
     /// Conjugate the Paulistack with the S gate ignoring phases.
-    #[inline]
     pub fn s(&mut self) {
         self.right.xor_inplace(&self.left);
     }

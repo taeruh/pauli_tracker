@@ -221,7 +221,6 @@ where
     S: BuildHasher,
 {
     type TB = T;
-    #[inline]
     fn insert(&mut self, key: usize, value: T) -> Option<T> {
         self.insert(key, value)
     }
@@ -243,12 +242,10 @@ where
         Some(self.storage.swap_remove(key_position))
     }
 
-    #[inline]
     fn get(&self, key: usize) -> Option<&T> {
         Some(self.storage.index(*self.position.get(&key)?))
     }
 
-    #[inline]
     fn get_mut(&mut self, key: usize) -> Option<&mut T> {
         Some(self.storage.index_mut(*self.position.get(&key)?))
     }
@@ -258,12 +255,10 @@ where
             .get_two_mut(*self.position.get(&key_a)?, *self.position.get(&key_b)?)
     }
 
-    #[inline]
     fn len(&self) -> usize {
         self.storage.len()
     }
 
-    #[inline]
     fn is_empty(&self) -> bool {
         self.storage.is_empty()
     }
@@ -277,12 +272,10 @@ where
     type Iter<'l> = <&'l Self as IntoIterator>::IntoIter where T: 'l, S: 'l;
     type IterMut<'l> = <&'l mut Self as IntoIterator>::IntoIter where T: 'l, S: 'l;
 
-    #[inline]
     fn iter_pairs(&self) -> Self::Iter<'_> {
         self.into_iter()
     }
 
-    #[inline]
     fn iter_pairs_mut(&mut self) -> Self::IterMut<'_> {
         self.into_iter()
     }

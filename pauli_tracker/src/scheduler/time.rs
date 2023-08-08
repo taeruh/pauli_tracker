@@ -319,12 +319,10 @@ pub trait MeasurableSet: sealed::Sealed + Default {
 }
 
 impl MeasurableSet for Vec<usize> {
-    #[inline(always)]
     fn init(set: Vec<usize>) -> Self {
         set
     }
 
-    #[inline]
     fn set(&self) -> &[usize] {
         self
     }
@@ -338,7 +336,6 @@ impl MeasurableSet for Partition<Vec<usize>> {
         res
     }
 
-    #[inline]
     fn set(&self) -> &[usize] {
         &self.set
     }

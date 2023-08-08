@@ -141,7 +141,6 @@ impl<'l> Graph<'l> {
         self.max_memory
     }
 
-    #[inline]
     fn initialize(&mut self, bit: usize) {
         match &mut self.nodes[bit].0 {
             state @ State::Sleeping => {

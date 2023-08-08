@@ -104,12 +104,10 @@ where
         self.0.pop()
     }
 
-    #[inline(always)]
     fn get(&self, key: usize) -> Option<&T> {
         self.0.get(key)
     }
 
-    #[inline(always)]
     fn get_mut(&mut self, key: usize) -> Option<&mut T> {
         self.0.get_mut(key)
     }
@@ -122,7 +120,6 @@ where
         self.0.len()
     }
 
-    #[inline(always)]
     fn is_empty(&self) -> bool {
         self.0.is_empty()
     }
@@ -136,12 +133,10 @@ where
     type Iter<'l> = <&'l Self as IntoIterator>::IntoIter where T: 'l;
     type IterMut<'l> = <&'l mut Self as IntoIterator>::IntoIter where T: 'l;
 
-    #[inline(always)]
     fn iter_pairs(&self) -> Self::Iter<'_> {
         self.into_iter()
     }
 
-    #[inline(always)]
     fn iter_pairs_mut(&mut self) -> Self::IterMut<'_> {
         self.into_iter()
     }

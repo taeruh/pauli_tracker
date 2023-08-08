@@ -40,7 +40,6 @@ pub enum PauliEnum {
 
 impl PauliEnum {
     /// Get the descriminant of the enum. The discrimant follows [tableau_encoding].
-    #[inline(always)]
     pub fn discriminant(&self) -> u8 {
         *self as u8
     }
@@ -240,7 +239,6 @@ impl TryFrom<u8> for PauliEnum {
 }
 
 impl From<PauliEnum> for u8 {
-    #[inline(always)]
     fn from(value: PauliEnum) -> u8 {
         value.discriminant()
     }

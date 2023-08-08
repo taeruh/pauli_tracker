@@ -321,11 +321,9 @@ impl Instructor {
         }
     }
 
-    #[inline(always)]
     fn idx(&self, bit: usize) -> usize {
         bit % self.memory.len()
     }
-    #[inline]
     fn mem_idx(&self, bit: usize) -> usize {
         self.memory[self.idx(bit)]
     }

@@ -30,22 +30,18 @@ where
 {
     type TB = T;
 
-    #[inline]
     fn insert(&mut self, key: usize, value: T) -> Option<T> {
         self.insert(key, value)
     }
 
-    #[inline]
     fn remove(&mut self, key: usize) -> Option<T> {
         self.remove(&key)
     }
 
-    #[inline]
     fn get(&self, key: usize) -> Option<&T> {
         self.get(&key)
     }
 
-    #[inline]
     fn get_mut(&mut self, key: usize) -> Option<&mut T> {
         self.get_mut(&key)
     }
@@ -54,12 +50,10 @@ where
         self.get_many_mut([&key_a, &key_b]).map(|[a, b]| (a, b))
     }
 
-    #[inline]
     fn len(&self) -> usize {
         self.len()
     }
 
-    #[inline]
     fn is_empty(&self) -> bool {
         self.is_empty()
     }
@@ -81,12 +75,10 @@ where
         fn((&'l usize, &'l mut T)) -> (usize, &'l mut T),
     > where T: 'l, S: 'l;
 
-    #[inline]
     fn iter_pairs(&self) -> Self::Iter<'_> {
         self.iter().map(|(&i, p)| (i, p))
     }
 
-    #[inline]
     fn iter_pairs_mut(&mut self) -> Self::IterMut<'_> {
         self.iter_mut().map(|(&i, p)| (i, p))
     }

@@ -44,53 +44,43 @@ impl Pauli for PauliTuple {
         Self(x, z)
     }
 
-    #[inline]
     fn add(&mut self, other: Self) {
         self.0 ^= other.0;
         self.1 ^= other.1;
     }
 
-    #[inline]
     fn h(&mut self) {
         mem::swap(&mut self.0, &mut self.1);
     }
 
-    #[inline]
     fn s(&mut self) {
         self.1 ^= self.0;
     }
 
-    #[inline]
     fn sx(&mut self) {
         self.0 ^= self.1;
     }
 
-    #[inline]
     fn xpx(&mut self, other: &Self) {
         self.0 ^= other.0;
     }
 
-    #[inline]
     fn xpz(&mut self, other: &Self) {
         self.0 ^= other.1;
     }
 
-    #[inline]
     fn zpx(&mut self, other: &Self) {
         self.1 ^= other.0;
     }
 
-    #[inline]
     fn zpz(&mut self, other: &Self) {
         self.1 ^= other.1;
     }
 
-    #[inline]
     fn get_x(&self) -> bool {
         self.0
     }
 
-    #[inline]
     fn get_z(&self) -> bool {
         self.1
     }

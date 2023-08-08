@@ -85,7 +85,6 @@ macro_rules! track_pauli {
         /// Track a new frame consisting of the Pauli
         #[doc = stringify!($gate)]
         /// at qu`bit`.
-        #[inline]
         fn $name(&mut self, bit: usize) {
             self.track_pauli(bit, Self::Pauli::$gate );
         }
@@ -113,9 +112,9 @@ macro_rules! track_pauli {
 /// implement as `self.h(target); self.cz(control, target); self.h(target);`. This can
 /// probably be done more efficiently by directly implementing this method. On the other
 /// hand, some default implementations are just one function call, e.g., [Tracker::sdg]
-/// is just `self.s(target);`, which we annotate with `#[inline(always)]`; for these,
-/// there's probably no need to implement them directly. The [conjugation-rules]
-/// document contains useful operator identities.
+/// is just `self.s(target);`, which is hopefully inlined when turning on lto; there's
+/// probably no need to implement them directly. The [conjugation-rules] document
+/// contains some useful operator identities.
 ///
 /// [conjugation-rules]: https://github.com/taeruh/pauli_tracker/blob/main/docs/conjugation_rules.md
 pub trait Tracker {
@@ -156,19 +155,15 @@ pub trait Tracker {
 
     #[doc = single_doc!("X")]
     /// Note that it is just the identity.
-    #[inline(always)]
     fn x(&mut self, _: usize) {}
     #[doc = single_doc!("Y")]
     /// Note that it is just the identity.
-    #[inline(always)]
     fn y(&mut self, _: usize) {}
     #[doc = single_doc!("Z")]
     /// Note that it is just the identity.
-    #[inline(always)]
     fn z(&mut self, _: usize) {}
 
     #[doc = single_doc!("S^dagger")]
-    #[inline(always)]
     fn sdg(&mut self, bit: usize) {
         self.s(bit);
     }
@@ -181,31 +176,26 @@ pub trait Tracker {
     }
 
     #[doc = single_doc!("sqrt(X)^dagger")]
-    #[inline(always)]
     fn sxdg(&mut self, bit: usize) {
         self.sx(bit);
     }
 
     #[doc = single_doc!("sqrt(Y)")]
-    #[inline(always)]
     fn sy(&mut self, bit: usize) {
         self.h(bit);
     }
 
     #[doc = single_doc!("sqrt(Y)")]
-    #[inline(always)]
     fn sydg(&mut self, bit: usize) {
         self.h(bit);
     }
 
     #[doc = single_doc!("sqrt(Z)")]
-    #[inline(always)]
     fn sz(&mut self, bit: usize) {
         self.s(bit);
     }
 
     #[doc = single_doc!("sqrt(Z)^dagger")]
-    #[inline(always)]
     fn szdg(&mut self, bit: usize) {
         self.s(bit);
     }

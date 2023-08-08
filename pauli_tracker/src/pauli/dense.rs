@@ -140,7 +140,6 @@ impl Pauli for PauliDense {
         Self { storage: x.left() ^ z.right() }
     }
 
-    #[inline]
     fn add(&mut self, other: Self) {
         self.xor(other);
     }
@@ -151,42 +150,34 @@ impl Pauli for PauliDense {
         self.storage ^= (self.storage & 1) << 1;
     }
 
-    #[inline]
     fn s(&mut self) {
         self.storage ^= (self.storage & 2) >> 1;
     }
 
-    #[inline]
     fn sx(&mut self) {
         self.storage ^= (self.storage & 1) << 1;
     }
 
-    #[inline]
     fn xpx(&mut self, other: &Self) {
         self.xor_u8(other.xmask());
     }
 
-    #[inline]
     fn xpz(&mut self, other: &Self) {
         self.xor_u8(other.zmask() << 1);
     }
 
-    #[inline]
     fn zpx(&mut self, other: &Self) {
         self.xor_u8(other.xmask() >> 1);
     }
 
-    #[inline]
     fn zpz(&mut self, other: &Self) {
         self.xor_u8(other.zmask());
     }
 
-    #[inline]
     fn get_x(&self) -> bool {
         self.storage & 2 != 0
     }
 
-    #[inline]
     fn get_z(&self) -> bool {
         self.storage & 1 != 0
     }
@@ -219,7 +210,6 @@ impl TryFrom<u8> for PauliDense {
 }
 
 impl From<PauliDense> for u8 {
-    #[inline(always)]
     fn from(value: PauliDense) -> u8 {
         value.storage
     }
@@ -244,11 +234,9 @@ trait ResolvePauli {
     fn right(self) -> u8;
 }
 impl ResolvePauli for bool {
-    #[inline(always)]
     fn left(self) -> u8 {
         (self as u8) << 1
     }
-    #[inline(always)]
     fn right(self) -> u8 {
         self as u8
     }
