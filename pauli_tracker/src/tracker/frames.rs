@@ -234,6 +234,11 @@ where
         c.right.xor_inplace(&t.right);
     }
 
+    fn swap(&mut self, control: usize, target: usize) {
+        let (a, b) = unwrap_get_two_mut!(self.storage, control, target, "swap");
+        mem::swap(a, b)
+    }
+
     movements!(
         (move_x_to_x, left, left, "X", "X"),
         (move_x_to_z, left, right, "X", "Z"),

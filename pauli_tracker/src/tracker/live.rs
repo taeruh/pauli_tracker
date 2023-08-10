@@ -12,6 +12,8 @@ Paulis via `track_x/y/z` methods.
 [Frames]: super::frames::Frames
 */
 
+use std::mem;
+
 #[cfg(feature = "serde")]
 use serde::{
     Deserialize,
@@ -157,6 +159,11 @@ where
         let (c, t) = unwrap_get_two_mut!(self.storage, control, target, "cx");
         t.xpx(c);
         c.zpz(t);
+    }
+
+    fn swap(&mut self, control: usize, target: usize) {
+        let (a, b) = unwrap_get_two_mut!(self.storage, control, target, "swap");
+        mem::swap(a, b)
     }
 
     fn measure(&mut self, bit: usize) -> Result<Self::Stack, MissingBit> {

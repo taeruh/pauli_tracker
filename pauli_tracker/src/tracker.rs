@@ -110,9 +110,10 @@ macro_rules! track_pauli {
 /// [^generators]: The default implementations are implemented using the generators
 /// [Tracker::h], [Tracker::s] and [Tracker::cz]. For example, [Tracker::cx] is
 /// implement as `self.h(target); self.cz(control, target); self.h(target);`. This can
-/// probably be done more efficiently by directly implementing this method. On the other
+/// probably be done more efficiently by directly implementing this method (it's for
+/// example trivial for [Tracker::swap]: three cnots vs one mem::swap). On the other
 /// hand, some default implementations are just one function call, e.g., [Tracker::sdg]
-/// is just `self.s(target);`, which is hopefully inlined when turning on lto; there's
+/// is just `self.s(target);`, which is hopefully inlined (at least after lto); there's
 /// probably no need to implement them directly. The [conjugation-rules] document
 /// contains some useful operator identities.
 ///
@@ -205,6 +206,13 @@ pub trait Tracker {
         self.h(target);
         self.cz(control, target);
         self.h(target);
+    }
+
+    #[doc = double_doc!("Swap")]
+    fn swap(&mut self, bit_a: usize, bit_b: usize) {
+        self.cx(bit_a, bit_b);
+        self.cx(bit_b, bit_a);
+        self.cx(bit_a, bit_b);
     }
 
     movements!(
@@ -317,11 +325,12 @@ mod test {
         }
         pub(crate) use single_actions;
 
-        pub const N_DOUBLES: usize = 6;
+        pub const N_DOUBLES: usize = 7;
         const DOUBLE_GENERATORS: [(&str, [(u8, u8); 4]); N_DOUBLES] = [
             // (name, [conjugate X1, conjugate Z1, conjugate 1X, conjugate 1Z])
             ("cz", [(2, 1), (1, 0), (1, 2), (0, 1)]),
             ("cx", [(2, 2), (1, 0), (0, 2), (1, 1)]),
+            ("swap", [(0, 2), (0, 1), (2, 0), (1, 0)]),
             // these here are not conjugations with unitary operators, however it still
             // works, because the move operation is a homomorphism
             ("move_x_to_x", [(0, 2), (1, 0), (0, 2), (0, 1)]),
@@ -335,6 +344,7 @@ mod test {
                 [
                     <$tracker>::cz,
                     <$tracker>::cx,
+                    <$tracker>::swap,
                     <$tracker>::move_x_to_x,
                     <$tracker>::move_x_to_z,
                     <$tracker>::move_z_to_x,

@@ -35,9 +35,9 @@ $$
 
 ### A useful tensor product rule
 
-Let $g, l_0, \ldots, l_{m-1} \in \mathbb{N}_0$ for some $m \in \mathbb{N}$ with $g > l_j
-for all $j = 0, \ldots, m-1$, and $A$ an operator in the subspace of qubit $g$ and $B$ an
-operator in the subspace of the qubits $l_0, \ldots l_{m-1}$. Then the matrix
+Let $g, l_0, \ldots, l_{m-1} \in \mathbb{N}_0$ for some $m \in \mathbb{N}$ with $g >
+l_j$ for all $j = 0, \ldots, m-1$, and $A$ an operator in the subspace of qubit $g$ and
+$B$ an operator in the subspace of the qubits $l_0, \ldots l_{m-1}$. Then the matrix
 representation of $AB$ is given by
 $$
   AB = \begin{pmatrix}A_{00}B&A_{01}B\\A_{10}B&A_{11}B\end{pmatrix}
@@ -164,22 +164,23 @@ ___
 ___
 The control Z gate $\mathrm{CZ}$ (hermitian)
 $$
-  \mathrm{CZ}_{a, b} = \begin{pmatrix}
+  \mathrm{CZ}_{ab} = \begin{pmatrix}
   1&0&0&0\\
   0&1&0&0\\
   0&0&1&0\\
   0&0&0&-1
-  \end{pmatrix} = \mathrm{CZ}_{a, b}
+  \end{pmatrix} = \mathrm{CZ}_{ba}
 $$
 Rules:
 $$\begin{aligned}
-  \mathrm{CZ}_{c, t}X_c\mathrm{CZ}_{c, t} &= X_cZ_t\\
-  \mathrm{CZ}_{c, t}X_t\mathrm{CZ}_{c, t} &= Z_cX_t\\
-  \mathrm{CZ}_{c, t}Z_c\mathrm{CZ}_{c, t} &= Z_c\\
-  \mathrm{CZ}_{c, t}Z_t\mathrm{CZ}_{c, t} &= Z_t
+  \mathrm{CZ}_{ab}X_a\mathrm{CZ}_{ab} &= X_aZ_b\\
+  \mathrm{CZ}_{ab}X_b\mathrm{CZ}_{ab} &= Z_aX_b\\
+  \mathrm{CZ}_{ab}Z_a\mathrm{CZ}_{ab} &= Z_a\\
+  \mathrm{CZ}_{ab}Z_b\mathrm{CZ}_{ab} &= Z_b
 \end{aligned}$$
 ___
-The control not gate $\mathrm{CNOT}$/$\mathrm{CX}$ (hermitian); without loss of generality
+The control not gate $\mathrm{CNOT}$/$\mathrm{CX}$ ($\mathrm{CX}_{gl} = H_l
+\mathrm{CZ}_{gl} H_l$) (hermitian); without loss of generality
 let $g > l$ for $g, l \in \mathbb{N}_0$ (left index is control and right index is
 target)
 $$
@@ -197,11 +198,29 @@ $$
 $$
 Rules:
 $$\begin{aligned}
-  \mathrm{CX}_{c, t}X_c\mathrm{CX}_{c, t} &= X_cX_t\\
-  \mathrm{CX}_{c, t}X_t\mathrm{CX}_{c, t} &= X_t\\
-  \mathrm{CX}_{c, t}Z_c\mathrm{CX}_{c, t} &= Z_c\\
-  \mathrm{CX}_{c, t}Z_t\mathrm{CX}_{c, t} &= Z_cZ_t
+  \mathrm{CX}_{ct}X_c\mathrm{CX}_{ct} &= X_cX_t\\
+  \mathrm{CX}_{ct}X_t\mathrm{CX}_{ct} &= X_t\\
+  \mathrm{CX}_{ct}Z_c\mathrm{CX}_{ct} &= Z_c\\
+  \mathrm{CX}_{ct}Z_t\mathrm{CX}_{ct} &= Z_cZ_t
 \end{aligned}$$
+___
+The $\mathrm{SWAP}$ gate (hermitian)
+$$
+  \mathrm{SWAP}_{ab} = \begin{pmatrix}
+  1&0&0&0\\
+  0&0&1&0\\
+  0&1&0&0\\
+  0&0&0&1
+  \end{pmatrix} = \mathrm{SWAP}_{ba}
+$$
+Rules:
+$$\begin{aligned}
+  \mathrm{SWAP}_{ab}X_a\mathrm{SWAP}_{ab} &= X_b\\
+  \mathrm{SWAP}_{ab}X_b\mathrm{SWAP}_{ab} &= X_a\\
+  \mathrm{SWAP}_{ab}Z_a\mathrm{SWAP}_{ab} &= Z_b\\
+  \mathrm{SWAP}_{ab}Z_b\mathrm{SWAP}_{ab} &= Z_a
+\end{aligned}$$
+___
 
 ### Proofs
 
@@ -256,30 +275,43 @@ $$\begin{aligned}
   \sqrt{Y}Z\sqrt{Y}^{\dagger} &=
   -\left(\sqrt{Y}^{\dagger}\right)^2X\sqrt{Y}^2 = X\\
 
-  \mathrm{CZ}_{c, t}X_t\mathrm{CZ}_{c, t} &=
+  \mathrm{CZ}_{ab}X_b\mathrm{CZ}_{ab} &=
   \begin{pmatrix}1&0\\0&Z\end{pmatrix}
   \begin{pmatrix}1&0\\0&X\end{pmatrix}
   \begin{pmatrix}1&0\\0&Z\end{pmatrix} =
-  \begin{pmatrix}1&0\\0&-X\end{pmatrix} = Z_cX_t\\
-  \mathrm{CZ}_{c, t}X_c\mathrm{CZ}_{c, t} &=
-  \mathrm{CZ}_{t, c}X_c\mathrm{CZ}_{t, c} = Z_tX_c\\
+  \begin{pmatrix}1&0\\0&-X\end{pmatrix} = Z_aX_b\\
 
-  \mathrm{CX}_{c, t}X_t\mathrm{CX}_{c, t} &=
-  H_t^2\mathrm{CX}_{c, t}H_t^2X_tH_t^2\mathrm{CX}_{c, t}H_t^2 =
-  H_t\mathrm{CZ}_{c, t}Z_t\mathrm{CZ}_{c, t}H_t =
+  \mathrm{CX}_{ct}X_t\mathrm{CX}_{ct} &=
+  H_t^2\mathrm{CX}_{ct}H_t^2X_tH_t^2\mathrm{CX}_{ct}H_t^2 =
+  H_t\mathrm{CZ}_{ct}Z_t\mathrm{CZ}_{ct}H_t =
   H_tZ_tH_t = X_t\\
-  \mathrm{CX}_{c, t}X_c\mathrm{CX}_{c, t} &=
-  H_t^2\mathrm{CX}_{c, t}H_t^2X_c\mathrm{CX}_{c, t}H_t^2 =
-  H_t\mathrm{CZ}_{c, t}X_c\mathrm{CZ}_{c, t}H_t =
+  \mathrm{CX}_{ct}X_c\mathrm{CX}_{ct} &=
+  H_t^2\mathrm{CX}_{ct}H_t^2X_c\mathrm{CX}_{ct}H_t^2 =
+  H_t\mathrm{CZ}_{ct}X_c\mathrm{CZ}_{ct}H_t =
   H_tZ_tX_cH_t = X_cX_t\\
-  \mathrm{CX}_{c, t}Z_t\mathrm{CX}_{c, t} &=
-  H_t^2\mathrm{CX}_{c, t}H_t^2Z_tH_t^2\mathrm{CX}_{c, t}H_t^2 =
-  H_t\mathrm{CZ}_{c, t}X_t\mathrm{CZ}_{c, t}H_t =
+  \mathrm{CX}_{ct}Z_t\mathrm{CX}_{ct} &=
+  H_t^2\mathrm{CX}_{ct}H_t^2Z_tH_t^2\mathrm{CX}_{ct}H_t^2 =
+  H_t\mathrm{CZ}_{ct}X_t\mathrm{CZ}_{ct}H_t =
   H_tZ_cX_tH_t = Z_cZ_t\\
-  \mathrm{CX}_{c, t}Z_c\mathrm{CX}_{c, t} &=
-  H_t^2\mathrm{CX}_{c, t}H_t^2Z_c\mathrm{CX}_{c, t}H_t^2 =
-  H_t\mathrm{CZ}_{c, t}Z_c\mathrm{CZ}_{c, t}H_t =
+  \mathrm{CX}_{ct}Z_c\mathrm{CX}_{ct} &=
+  H_t^2\mathrm{CX}_{ct}H_t^2Z_c\mathrm{CX}_{ct}H_t^2 =
+  H_t\mathrm{CZ}_{ct}Z_c\mathrm{CZ}_{ct}H_t =
   H_tZ_cH_t = Z_c\\
+
+  \mathrm{SWAP}_{ab} X_b \mathrm{SWAP}_{ab} &=
+  \mathrm{CX}_{ab}\mathrm{CX}_{ba}\mathrm{CX}_{ab}
+  X_b
+  \mathrm{CX}_{ab}\mathrm{CX}_{ba}\mathrm{CX}_{ab} =
+  \mathrm{CX}_{ab}\mathrm{CX}_{ba} X_b \mathrm{CX}_{ba}\mathrm{CX}_{ab}\\
+  &= \mathrm{CX}_{ab} X_aX_b \mathrm{CX}_{ab} = X_a\\
+
+  \mathrm{SWAP}_{ab} Z_a \mathrm{SWAP}_{ab} &=
+  \mathrm{CX}_{ab}\mathrm{CX}_{ba}\mathrm{CX}_{ab}
+  Z_a
+  \mathrm{CX}_{ab}\mathrm{CX}_{ba}\mathrm{CX}_{ab} =
+  \mathrm{CX}_{ab}\mathrm{CX}_{ba} Z_a \mathrm{CX}_{ba}\mathrm{CX}_{ab}\\
+  &= \mathrm{CX}_{ab} Z_aZ_b \mathrm{CX}_{ab} = Z_b
+
 \end{aligned}$$
 
 ## Other operations provided by the library
@@ -308,9 +340,6 @@ and on the other elements they are the identity.
 ## Other useful rules
 
 $$\begin{aligned}
-  \mathrm{CZ}_{c, t} &= H_t \mathrm{CX}_{c, t} H_t\\
-  \mathrm{CX}_{t, c} &= H_c \mathrm{CZ}_{c, t} H_c\\
-  \mathrm{CX}_{c, t} &= H_t \mathrm{CZ}_{c, t} H_t\\
   S^{\dagger} &= SZ = ZS\\
   \sqrt{X} &= HSH\\
   \sqrt{X}^{2} &= X = HSSH\\
@@ -320,23 +349,18 @@ $$\begin{aligned}
   \sqrt{Z}^{\dagger} &= \sqrt{Z}^{-1}\\
   \sqrt{Y} &= \sqrt{i}HSS \propto HZ \propto ZH\\
   \sqrt{Y}^{2} &= Y = iHSSHSS \propto HSSHSS \propto SSHSSH\\
-  \sqrt{Y}^{\dagger} &= \sqrt{Y}^{-1}
+  \sqrt{Y}^{\dagger} &= \sqrt{Y}^{-1}\\
+
+  \mathrm{CZ}_{ct} &= H_t \mathrm{CX}_{ct} H_t\\
+  \mathrm{CX}_{tc} &= H_c \mathrm{CZ}_{ct} H_c\\
+  \mathrm{CX}_{ct} &= H_t \mathrm{CZ}_{ct} H_t\\
+  \mathrm{SWAP}_{ab} &= \mathrm{CX}_{ab}\mathrm{CX}_{ba}\mathrm{CX}_{ab}\\
 \end{aligned}$$
 
 ### Proofs
 
 Without loss of generality, let $c > t$.
 $$\begin{aligned}
-  H_t \mathrm{CX}_{c, t} H_t &=
-  \begin{pmatrix}H&0\\0&H\end{pmatrix}
-  \begin{pmatrix}1&0\\0&X\end{pmatrix}
-  \begin{pmatrix}H&0\\0&H\end{pmatrix}
-  = \begin{pmatrix}1&0\\0&Z\end{pmatrix} = \mathrm{CZ}_{c, t}\\
-
-  H_t \mathrm{CZ}_{c, t} H_t &= H_t^2 \mathrm{CX}_{c, t} H_t^2 = \mathrm{CX}_{c, t}\\
-
-  H_c \mathrm{CZ}_{c, t} H_t &= H_t^2 \mathrm{CX}_{t, c} H_t^2 = \mathrm{CX}_{t, c}\\
-
   2HSH &=
   \begin{pmatrix}1&1\\1&-1\end{pmatrix}
   \begin{pmatrix}1&0\\0&i\end{pmatrix}
@@ -357,6 +381,24 @@ $$\begin{aligned}
 
   \sqrt{Y}^{2} &= iHSSHSS = iXZ = Y\\
 
-  \sqrt{Y}^{\dagger}\sqrt{Y} &= S^{\dagger}S^{\dagger}HHSS = 1
+  \sqrt{Y}^{\dagger}\sqrt{Y} &= S^{\dagger}S^{\dagger}HHSS = 1\\
+
+  H_t \mathrm{CX}_{ct} H_t &=
+  \begin{pmatrix}H&0\\0&H\end{pmatrix}
+  \begin{pmatrix}1&0\\0&X\end{pmatrix}
+  \begin{pmatrix}H&0\\0&H\end{pmatrix}
+  = \begin{pmatrix}1&0\\0&Z\end{pmatrix} = \mathrm{CZ}_{ct}\\
+
+  H_t\mathrm{CZ}_{ct}H_t &= H_t^2 \mathrm{CX}_{ct} H_t^2 = \mathrm{CX}_{ct}\\
+
+  H_c\mathrm{CZ}_{ct}H_c &= H_c^2 \mathrm{CX}_{tc} H_t^2 = \mathrm{CX}_{tc}\\
+
+  \mathrm{CX}_{ct}\mathrm{CX}_{tc}\mathrm{CX}_{ct} &=
+  \begin{pmatrix}1&0\\0&X\end{pmatrix}
+  \begin{pmatrix}1&0&0&0\\0&0&0&1\\0&0&1&0\\0&1&0&0\end{pmatrix}
+  \begin{pmatrix}1&0\\0&X\end{pmatrix} =
+  \begin{pmatrix}1&0\\0&X\end{pmatrix}
+  \begin{pmatrix}1&0&0&0\\0&0&1&0\\0&0&0&1\\0&1&0&0\end{pmatrix} = \mathrm{SWAP}_{ct}\\
+  
 
 \end{aligned}$$
