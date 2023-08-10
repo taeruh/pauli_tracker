@@ -37,22 +37,58 @@ pub trait CliffordCircuit {
     /// The type of the measurement outcome, e.g., a boolean for
     /// [RandomMeasurementCircuit].
     type Outcome;
+
     /// Apply the X gate
     fn x(&mut self, bit: usize);
     /// Apply the Y gate
     fn y(&mut self, bit: usize);
     /// Apply the Z gate
     fn z(&mut self, bit: usize);
-    /// Apply the H gate
+    /// Apply the root X gate
+    fn sx(&mut self, bit: usize);
+    /// Apply the root Y gate
+    fn sy(&mut self, bit: usize);
+    /// Apply the root Z gate
+    fn sz(&mut self, bit: usize);
+    /// Apply the root X)^dagger gate
+    fn sxdg(&mut self, bit: usize);
+    /// Apply the (root Y)^dagger gate
+    fn sydg(&mut self, bit: usize);
+    /// Apply the (root Z)^dagger gate
+    fn szdg(&mut self, bit: usize);
+    /// Apply the (root H gate
     fn h(&mut self, bit: usize);
     /// Apply the S gate
     fn s(&mut self, bit: usize);
+    /// Apply the S^dagger gate
+    fn sdg(&mut self, bit: usize);
     /// Apply the Control X (Control Not) gate
     fn cx(&mut self, control: usize, target: usize);
     /// Apply the Control Z gate
     fn cz(&mut self, bit_a: usize, bit_b: usize);
+    /// Apply the Control SWAP gate
+    fn swap(&mut self, bit_a: usize, bit_b: usize);
     /// Measure (unspecified)
     fn measure(&mut self, bit: usize) -> Self::Outcome;
+}
+
+macro_rules! single {
+    ($($name:ident,)*) => {$(
+        fn $name(&mut self, _: usize) {}
+    )*};
+}
+
+macro_rules! double {
+    ($($name:ident,)*) => {$(
+        fn $name(&mut self, _: usize, _: usize) {}
+    )*};
+}
+
+macro_rules! impl_gates {
+    () => {
+        single!(x, y, z, sx, sy, sz, sxdg, sydg, szdg, h, s, sdg,);
+        double!(cx, cz, swap,);
+    };
 }
 
 mod dummy;
@@ -271,10 +307,21 @@ where
     C: CliffordCircuit,
     T: Tracker,
 {
-    single_gate!((h, "H"), (s, "S"),);
+    single_gate!(
+        (h, "H"),
+        (s, "S"),
+        (sdg, "SDG"),
+        (sx, "SX"),
+        (sy, "SY"),
+        (sz, "SZ"),
+        (sxdg, "SXD"),
+        (sydg, "SYD"),
+        (szdg, "SZD"),
+    );
 
     double_gate!(cx, "Control X (Control Not)", control, target);
     double_gate!(cz, "Control Z");
+    double_gate!(swap, "SWAP");
 }
 
 impl<C, A, S, B> TrackedCircuit<C, Frames<A>, S>

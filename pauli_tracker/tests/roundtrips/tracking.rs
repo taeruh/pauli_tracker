@@ -257,6 +257,12 @@ impl Instructor {
                 Operation::X(b) => circuit.x(self.mem_idx(b)),
                 Operation::Y(b) => circuit.y(self.mem_idx(b)),
                 Operation::Z(b) => circuit.z(self.mem_idx(b)),
+                Operation::Sx(b) => circuit.sx(self.mem_idx(b)),
+                Operation::Sy(b) => circuit.sy(self.mem_idx(b)),
+                Operation::Sz(b) => circuit.sz(self.mem_idx(b)),
+                Operation::Sxdg(b) => circuit.sxdg(self.mem_idx(b)),
+                Operation::Sydg(b) => circuit.sydg(self.mem_idx(b)),
+                Operation::Szdg(b) => circuit.szdg(self.mem_idx(b)),
                 Operation::TeleportedX(a, b) => {
                     if let Some(pos_in_mem) = self.pauli_teleportation(
                         a,
@@ -293,16 +299,21 @@ impl Instructor {
 
                 Operation::H(b) => circuit.h(self.mem_idx(b)),
                 Operation::S(b) => circuit.s(self.mem_idx(b)),
-                Operation::CX(a, b) => match self.double_mem_idx(a, b) {
+                Operation::Sdg(b) => circuit.sdg(self.mem_idx(b)),
+                Operation::Cx(a, b) => match self.double_mem_idx(a, b) {
                     Some((a, b)) => circuit.cx(a, b),
                     None => continue,
                 },
 
-                Operation::CZ(a, b) => match self.double_mem_idx(a, b) {
+                Operation::Cz(a, b) => match self.double_mem_idx(a, b) {
                     Some((a, b)) => circuit.cz(a, b),
                     None => continue,
                 },
-                Operation::RZ(b) => {
+                Operation::Swap(a, b) => match self.double_mem_idx(a, b) {
+                    Some((a, b)) => circuit.swap(a, b),
+                    None => continue,
+                },
+                Operation::Rz(b) => {
                     let bit = self.mem_idx(b);
                     measurements
                         .store(bit, circuit.z_rotation_teleportation(bit, self.used));
@@ -463,14 +474,22 @@ pub enum Operation {
     X(usize),
     Y(usize),
     Z(usize),
+    Sx(usize),
+    Sy(usize),
+    Sz(usize),
+    Sxdg(usize),
+    Sydg(usize),
+    Szdg(usize),
     TeleportedX(usize, usize),
     TeleportedY(usize, usize),
     TeleportedZ(usize, usize),
     H(usize),
     S(usize),
-    CX(usize, usize),
-    CZ(usize, usize),
-    RZ(usize),
+    Sdg(usize),
+    Cx(usize, usize),
+    Cz(usize, usize),
+    Swap(usize, usize),
+    Rz(usize),
     Measure(usize),
     NewQubit(usize),
 }
@@ -482,6 +501,12 @@ fn operation() -> impl Strategy<Value = Operation> {
         1 => any::<usize>().prop_map(Operation::X),
         1 => any::<usize>().prop_map(Operation::Y),
         1 => any::<usize>().prop_map(Operation::Z),
+        3 => any::<usize>().prop_map(Operation::Sx),
+        3 => any::<usize>().prop_map(Operation::Sy),
+        3 => any::<usize>().prop_map(Operation::Sz),
+        3 => any::<usize>().prop_map(Operation::Sxdg),
+        3 => any::<usize>().prop_map(Operation::Sydg),
+        3 => any::<usize>().prop_map(Operation::Szdg),
         15 => (any::<usize>(), any::<usize>())
                  .prop_map(|(a, b)| Operation::TeleportedX(a, b)),
         15 => (any::<usize>(), any::<usize>())
@@ -490,9 +515,11 @@ fn operation() -> impl Strategy<Value = Operation> {
                  .prop_map(|(a, b)| Operation::TeleportedZ(a, b)),
         30 => any::<usize>().prop_map(Operation::H),
         30 => any::<usize>().prop_map(Operation::S),
-        30 => (any::<usize>(), any::<usize>()).prop_map(|(a, b)| Operation::CX(a, b)),
-        30 => (any::<usize>(), any::<usize>()).prop_map(|(a, b)| Operation::CZ(a, b)),
-        100 => any::<usize>().prop_map(Operation::RZ),
+        30 => any::<usize>().prop_map(Operation::Sdg),
+        30 => (any::<usize>(), any::<usize>()).prop_map(|(a, b)| Operation::Cx(a, b)),
+        30 => (any::<usize>(), any::<usize>()).prop_map(|(a, b)| Operation::Cz(a, b)),
+        40 => (any::<usize>(), any::<usize>()).prop_map(|(a, b)| Operation::Swap(a, b)),
+        100 => any::<usize>().prop_map(Operation::Rz),
         2 => any::<usize>().prop_map(Operation::Measure),
         2 => any::<usize>().prop_map(Operation::NewQubit),
     ]

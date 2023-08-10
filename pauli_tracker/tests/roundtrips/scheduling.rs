@@ -104,7 +104,7 @@ fn roundtrip(ops: Vec<Operation>, edges: Edges, num_nodes: usize) {
         .filter_map(|op| match op {
             Operation::Measure(_) => None,
             Operation::NewQubit(_) => None,
-            Operation::RZ(a) => match a % 4 {
+            Operation::Rz(a) => match a % 4 {
                 0 => Some(Operation::TeleportedX(a, a + 73)),
                 1 => Some(Operation::TeleportedY(a, a + 73)),
                 2 => Some(Operation::TeleportedZ(a, a + 73)),
