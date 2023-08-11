@@ -9,6 +9,14 @@ We try to follow the [SemVer](https://semver.org/) rules, specifically
 possible.
 
 ## [Unreleased]
+### Added
+### Changed
+### Deprecated
+### Removed
+### Fixed
+### Security
+
+## [0.3.0] + 2023-08-11
 There's a fairly big number of breaking changes. I'm sure that I'm not listing all of
 them, but hopefully the most important ones.
 ### Added
@@ -130,7 +138,8 @@ them, but hopefully the most important ones.
 
 ## [0.1.0] - 2023-06-01
 
-[Unreleased]: https://github.com/taeruh/pauli_tracker/compare/v0.2.2...HEAD
+[Unreleased]: https://github.com/taeruh/pauli_tracker/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/taeruh/pauli_tracker/compare/v0.2.2...v0.3.0
 [0.2.2]: https://github.com/taeruh/pauli_tracker/compare/v0.2.1...v0.2.2
 [0.2.1]: https://github.com/taeruh/pauli_tracker/compare/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/taeruh/pauli_tracker/compare/v0.1.1...v0.2.0
