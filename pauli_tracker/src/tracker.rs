@@ -283,13 +283,16 @@ mod test {
         pub type DoubleAction<T> = fn(&mut T, usize, usize);
 
         // the following expected results are proven in ./docs/conjugation_rules.md
-
+        //
         // instead of writing out all the SingleResults and DoubleResults, we make use
         // of homomorphy and just define the results on a basis
+        //
+        // the encoding is according to crate::pauli::tableau_encoding, i.e., 0=I, 2=X,
+        // 3=Y, 1=Z
 
         pub const N_SINGLES: usize = 12;
         const SINGLE_GENERATORS: [(&str, [u8; 2]); N_SINGLES] =
-            // (name, [conjugate X, conjugate Z])
+            // (name, result: [conjugate X, conjugate Z])
             [
                 ("H", [1, 2]),
                 ("S", [3, 1]),
@@ -327,7 +330,9 @@ mod test {
 
         pub const N_DOUBLES: usize = 7;
         const DOUBLE_GENERATORS: [(&str, [(u8, u8); 4]); N_DOUBLES] = [
-            // (name, [conjugate X1, conjugate Z1, conjugate 1X, conjugate 1Z])
+            // (name, result: [conjugate X1, conjugate Z1, conjugate 1X, conjugate 1Z])
+            // the left tuple entry of the results belongs to the first qubit in the
+            // function call and the right entry to the second one
             ("cz", [(2, 1), (1, 0), (1, 2), (0, 1)]),
             ("cx", [(2, 2), (1, 0), (0, 2), (1, 1)]),
             ("swap", [(0, 2), (0, 1), (2, 0), (1, 0)]),

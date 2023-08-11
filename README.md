@@ -34,10 +34,20 @@ while simulating the circuit.
 For examples, please look into the the [crate
 documentation](https://docs.rs/pauli_tracker/#examples).
 
-### MSRV policy
+## MSRV policy
 
 There is no guarantee for a long-time support of a specific Rust version. Bumping the
 MSRV increments the minor SemVer version.
+
+## Contributing
+
+Contributions are very welcome, e.g., if you find bugs or need additional Clifford
+gates. Check out the [guidelines](/CONTRIBUTING.md).
+
+## How to cite
+
+When you use the Pauli Tracker for your research please cite it (currently just by
+linking to this repo; a paper is in progress).
 
 ## License
 

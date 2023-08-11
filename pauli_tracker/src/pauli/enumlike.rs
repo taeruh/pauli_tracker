@@ -21,11 +21,11 @@ use super::{
 /// like [PauliDense](super::dense::PauliDense) (cf. [module](super)).
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq, PartialOrd, Ord, Hash)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-// annotating it with #[repr(u8)] would allow us to do some unsafe casting, but I'm not
-// sure whether this is worth it and I, guess it would limit the optimizations the
-// compiler is allowed to perform (there's not much difference in the generated assembly
-// code when compiling with --release, but it's still there); also, making it repr(u8)
-// is not a breaking change, while vice versa is
+// annotating it with #[repr(u8)] would allow us to do some unsafe casting (and also
+// nice for ffi), but I'm not sure whether this is worth it and I, guess it would limit
+// the optimizations the compiler is allowed to perform (there's not much difference in
+// the generated assembly code when compiling with --release, but it's still there);
+// also, making it repr(u8) is not a breaking change, while vice versa is
 pub enum PauliEnum {
     #[default]
     /// Identity

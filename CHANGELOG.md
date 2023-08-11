@@ -9,13 +9,15 @@ We try to follow the [SemVer](https://semver.org/) rules, specifically
 possible.
 
 ## [Unreleased]
-There's a fairly big number of breaking changes. I'm couldn't list all of them, but
-hopefully the most important ones.
+There's a fairly big number of breaking changes. I'm sure that I'm not listing all of
+them, but hopefully the most important ones.
 ### Added
 - **Breaking Change**: Add blanket `impl<S> AsRef<S> for Frames<S>`.
 - Add a new `scheduler` module, activated by the "scheduler" feature.
 - **Possible Breaking Change**: Add `Frames::new`.
 - **Possible Breaking Change**: Add `impl Default for SimdBitVec`.
+- **Possible Breaking Change**: Add more Clifford gates (sdg, swap, sx, sy, sz, sxdg,
+  sydg, szdg, x, y, z)
 ### Changed
 - **Breaking Change**: Rename `LiveVector` to `Live` and make it generic.
 - **Breaking Change**: Use `hashbrown::HashMap` instead of `std::collections::HashMap`.

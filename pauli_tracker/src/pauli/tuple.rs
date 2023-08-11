@@ -1,6 +1,8 @@
-use core::fmt;
 use std::{
-    fmt::Display,
+    fmt::{
+        self,
+        Display,
+    },
     mem,
 };
 
