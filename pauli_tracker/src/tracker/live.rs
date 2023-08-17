@@ -166,6 +166,15 @@ where
         mem::swap(a, b)
     }
 
+    fn iswap(&mut self, control: usize, target: usize) {
+        let (a, b) = unwrap_get_two_mut!(self.storage, control, target, "swap");
+        mem::swap(a, b);
+        a.set_z(a.get_z() ^ a.get_x());
+        b.set_z(b.get_z() ^ a.get_x());
+        b.set_z(b.get_z() ^ b.get_x());
+        a.set_z(a.get_z() ^ b.get_x());
+    }
+
     fn measure(&mut self, bit: usize) -> Result<Self::Stack, MissingBit> {
         self.get_mut(bit).ok_or(MissingBit(bit)).cloned()
     }
@@ -190,7 +199,7 @@ mod tests {
 
     mod single_actions {
         use super::*;
-        use crate::tracker::test::utils::{
+        use crate::tracker::tests::utils::{
             self,
             SingleAction,
             SingleResults,
@@ -224,7 +233,7 @@ mod tests {
 
     mod double_actions {
         use super::*;
-        use crate::tracker::test::utils::{
+        use crate::tracker::tests::utils::{
             self,
             DoubleAction,
             DoubleResults,

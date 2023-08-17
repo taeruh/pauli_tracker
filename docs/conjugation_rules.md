@@ -204,7 +204,8 @@ $$\begin{aligned}
   \mathrm{CX}_{ct}Z_t\mathrm{CX}_{ct} &= Z_cZ_t
 \end{aligned}$$
 ___
-The $\mathrm{SWAP}$ gate (hermitian)
+The $\mathrm{SWAP}$ gate ($\mathrm{SWAP}_{ab} =
+\mathrm{CX}_{ab}\mathrm{CX}_{ba}\mathrm{CX}_{ab}$) (hermitian)
 $$
   \mathrm{SWAP}_{ab} = \begin{pmatrix}
   1&0&0&0\\
@@ -221,12 +222,49 @@ $$\begin{aligned}
   \mathrm{SWAP}_{ab}Z_b\mathrm{SWAP}_{ab} &= Z_a
 \end{aligned}$$
 ___
+The imginary $\mathrm{iSWAP}$ gate ($\mathrm{iSWAP}_{ab} =
+H_b\mathrm{CX}_{ba}\mathrm{CX}_{ab}H_aS_aS_b$)
+$$
+  \mathrm{iSWAP}_{ab} = \begin{pmatrix}
+  1&0&0&0\\
+  0&0&i&0\\
+  0&i&0&0\\
+  0&0&0&1
+  \end{pmatrix} = \mathrm{SWAP}_{ba}
+$$
+Rules:
+$$\begin{aligned}
+  \mathrm{iSWAP}_{ab}X_a\mathrm{iSWAP}_{ab} &= iZ_aZ_bX_b\\
+  \mathrm{iSWAP}_{ab}X_b\mathrm{iSWAP}_{ab} &= iZ_aX_aZ_b\\
+  \mathrm{iSWAP}_{ab}Z_a\mathrm{iSWAP}_{ab} &= Z_b\\
+  \mathrm{iSWAP}_{ab}Z_b\mathrm{iSWAP}_{ab} &= Z_a
+\end{aligned}$$
+___
+The imginary $\mathrm{iSWAP}^{\dagger}$ gate ($\mathrm{iSWAP}_{ab}^{\dagger} =
+S_a^{\dagger}S_b^{\dagger}H_a\mathrm{CX}_{ab}\mathrm{CX}_{ba}H_b$)
+$$
+  \mathrm{iSWAP}_{ab}^{\dagger} = \begin{pmatrix}
+  1&0&0&0\\
+  0&0&-i&0\\
+  0&-i&0&0\\
+  0&0&0&1
+  \end{pmatrix} = \mathrm{SWAP}_{ba}^{\dagger}
+$$
+Rules:
+$$\begin{aligned}
+  \mathrm{iSWAP}_{ab}X_a\mathrm{iSWAP}_{ab} &= -iZ_aZ_bX_b\\
+  \mathrm{iSWAP}_{ab}X_b\mathrm{iSWAP}_{ab} &= -iZ_aX_aZ_b\\
+  \mathrm{iSWAP}_{ab}Z_a\mathrm{iSWAP}_{ab} &= Z_b\\
+  \mathrm{iSWAP}_{ab}Z_b\mathrm{iSWAP}_{ab} &= Z_a
+\end{aligned}$$
+___
 
 ### Proofs
 
 Use [characteristics of the Paulis](#the-pauli-set) and [other useful
 conjugations](#other-useful-rules). Trivial proofs, where all operators are
-completely diagonal, are skipped.
+completely diagonal, are skipped. Without loss of generality, let $c > t$ and $a > b$.
+
 $$\begin{aligned}
   XZX &= iXY = -Z\\
   ZXZ &= iYZ = -X\\
@@ -281,10 +319,11 @@ $$\begin{aligned}
   \begin{pmatrix}1&0\\0&Z\end{pmatrix} =
   \begin{pmatrix}1&0\\0&-X\end{pmatrix} = Z_aX_b\\
 
-  \mathrm{CX}_{ct}X_t\mathrm{CX}_{ct} &=
-  H_t^2\mathrm{CX}_{ct}H_t^2X_tH_t^2\mathrm{CX}_{ct}H_t^2 =
-  H_t\mathrm{CZ}_{ct}Z_t\mathrm{CZ}_{ct}H_t =
-  H_tZ_tH_t = X_t\\
+  \mathrm{CZ}_{ct}X_t\mathrm{CZ}_{ct} &=
+  \begin{pmatrix}1&0\\0&X\end{pmatrix}
+  \begin{pmatrix}X&0\\0&X\end{pmatrix}
+  \begin{pmatrix}1&0\\0&X\end{pmatrix} =
+  \begin{pmatrix}X&0\\0&X\end{pmatrix} = X_t\\
   \mathrm{CX}_{ct}X_c\mathrm{CX}_{ct} &=
   H_t^2\mathrm{CX}_{ct}H_t^2X_c\mathrm{CX}_{ct}H_t^2 =
   H_t\mathrm{CZ}_{ct}X_c\mathrm{CZ}_{ct}H_t =
@@ -310,7 +349,43 @@ $$\begin{aligned}
   Z_a
   \mathrm{CX}_{ab}\mathrm{CX}_{ba}\mathrm{CX}_{ab} =
   \mathrm{CX}_{ab}\mathrm{CX}_{ba} Z_a \mathrm{CX}_{ba}\mathrm{CX}_{ab}\\
-  &= \mathrm{CX}_{ab} Z_aZ_b \mathrm{CX}_{ab} = Z_b
+  &= \mathrm{CX}_{ab} Z_aZ_b \mathrm{CX}_{ab} = Z_b\\
+
+  \mathrm{iSWAP}_{ab}^{\dagger} X_a \mathrm{iSWAP}_{ab} &=
+  S_a^{\dagger}S_b^{\dagger}H_a\mathrm{CX}_{ab}\mathrm{CX}_{ba}H_b
+  X_a
+  H_b\mathrm{CX}_{ba}\mathrm{CX}_{ab}H_aS_aS_b\\
+  &= S_a^{\dagger}S_b^{\dagger}H_a\mathrm{CX}_{ab}
+  X_a
+  \mathrm{CX}_{ab}H_aS_aS_b\\
+  &= S_a^{\dagger}S_b^{\dagger} Z_aX_b S_aS_b = iZ_aZ_bX_b\\
+
+  \mathrm{iSWAP}_{ab}^{\dagger} Z_a \mathrm{iSWAP}_{ab} &=
+  S_a^{\dagger}S_b^{\dagger}H_a\mathrm{CX}_{ab}\mathrm{CX}_{ba}H_b
+  Z_a
+  H_b\mathrm{CX}_{ba}\mathrm{CX}_{ab}H_aS_aS_b\\
+  &= S_a^{\dagger}S_b^{\dagger}H_a\mathrm{CX}_{ab}
+  Z_aZ_b
+  \mathrm{CX}_{ab}H_aS_aS_b\\
+  &= S_a^{\dagger}S_b^{\dagger} Z_b S_aS_b = Z_b\\
+
+  \mathrm{iSWAP}_{ab} X_a \mathrm{iSWAP}_{ab}^{\dagger} &=
+  H_b\mathrm{CX}_{ba}\mathrm{CX}_{ab}H_aS_aS_b
+  X_a
+  S_a^{\dagger}S_b^{\dagger}H_a\mathrm{CX}_{ab}\mathrm{CX}_{ba}H_b\\
+  &= -iH_b\mathrm{CX}_{ba}\mathrm{CX}_{ab}
+  Z_aX_a
+  \mathrm{CX}_{ab}\mathrm{CX}_{ba}H_b\\
+  &= -iH_b\mathrm{CX}_{ba} Z_aX_aX_b \mathrm{CX}_{ba}H_b
+  = -iH_b Z_aX_aX_b H_b = -iZ_aZ_bX_b\\
+
+  \mathrm{iSWAP}_{ab} Z_a \mathrm{iSWAP}_{ab}^{\dagger} &=
+  H_b\mathrm{CX}_{ba}\mathrm{CX}_{ab}H_aS_aS_b
+  Z_a
+  S_a^{\dagger}S_b^{\dagger}H_a\mathrm{CX}_{ab}\mathrm{CX}_{ba}H_b\\
+  &= H_b\mathrm{CX}_{ba}\mathrm{CX}_{ab} X_a \mathrm{CX}_{ab}\mathrm{CX}_{ba}H_b\\
+  &= H_b\mathrm{CX}_{ba} X_aX_b \mathrm{CX}_{ba}H_b = H_b X_b H_b = Z_b\\
+  
 
 \end{aligned}$$
 
@@ -355,17 +430,18 @@ $$\begin{aligned}
   \mathrm{CX}_{tc} &= H_c \mathrm{CZ}_{ct} H_c\\
   \mathrm{CX}_{ct} &= H_t \mathrm{CZ}_{ct} H_t\\
   \mathrm{SWAP}_{ab} &= \mathrm{CX}_{ab}\mathrm{CX}_{ba}\mathrm{CX}_{ab}\\
+  \mathrm{iSWAP}_{ab} &= H_b\mathrm{CX}_{ba}\mathrm{CX}_{ab}H_aS_aS_b\\
 \end{aligned}$$
 
 ### Proofs
 
-Without loss of generality, let $c > t$.
+Without loss of generality, let $c > t$ and $a > b$.
 $$\begin{aligned}
   2HSH &=
   \begin{pmatrix}1&1\\1&-1\end{pmatrix}
   \begin{pmatrix}1&0\\0&i\end{pmatrix}
-  \begin{pmatrix}1&1\\1&-1\end{pmatrix} =
-  \begin{pmatrix}1&1\\1&-1\end{pmatrix}
+  \begin{pmatrix}1&1\\1&-1\end{pmatrix}\\
+  &= \begin{pmatrix}1&1\\1&-1\end{pmatrix}
   \begin{pmatrix}1&1\\i&-i\end{pmatrix} =
   \begin{pmatrix}1+i&1-i\\1-i&1+i\end{pmatrix} = 2\sqrt{X}\\
 
@@ -399,6 +475,13 @@ $$\begin{aligned}
   \begin{pmatrix}1&0\\0&X\end{pmatrix} =
   \begin{pmatrix}1&0\\0&X\end{pmatrix}
   \begin{pmatrix}1&0&0&0\\0&0&1&0\\0&0&0&1\\0&1&0&0\end{pmatrix} = \mathrm{SWAP}_{ct}\\
-  
+
+  2H_b\mathrm{CX}_{ba}\mathrm{CX}_{ab}H_aS_aS_b &=
+  \begin{pmatrix}1&0&0&1\\1&0&0&-1\\0&1&1&0\\0&-1&1&0\end{pmatrix}
+  \begin{pmatrix}1&1\\X&-X\end{pmatrix}
+  \begin{pmatrix}S&0\\0&iS\end{pmatrix}\\
+  &= \begin{pmatrix}1&0&0&1\\1&0&0&-1\\0&1&1&0\\0&-1&1&0\end{pmatrix}
+  \begin{pmatrix}1&0&i&0\\0&i&0&-1\\0&i&0&1\\1&0&-i&0\end{pmatrix}\\
+  &= \begin{pmatrix}2&0&0&0\\0&0&2i&0\\0&2i&0&0\\0&0&0&2\end{pmatrix} = 2 \mathrm{iSWAP}
 
 \end{aligned}$$

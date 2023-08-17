@@ -1,8 +1,12 @@
 ---------- release new major
 
+- when things are pretty stable, instead of implementing methods through macros,
+  implement them manually, this is because rust-analyzer has problems with it
+  - wrong doc comments
+  - "implement members" feature doesn't work completely
+
 - implement more gates
 
-- maybe use https://docs.rs/err-derive/latest/err_derive/#
 - maybe try to depend only on proptest when we really run proptest (for less
   dependencies in ci)
 
@@ -11,9 +15,6 @@
 
 - implement a file streaming storage
 - more tests
-
-- don't generate trait methods with macros, that's not so good with rust-analyzer's
-  "implement members" feature
 
 - maybe make a proc crate for all the macros that are not so good
 - ergonomic trait implementations

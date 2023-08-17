@@ -215,6 +215,21 @@ pub trait Tracker {
         self.cx(bit_a, bit_b);
     }
 
+    #[doc = double_doc!("iSwap")]
+    fn iswap(&mut self, bit_a: usize, bit_b: usize) {
+        self.s(bit_b);
+        self.s(bit_a);
+        self.h(bit_a);
+        self.cx(bit_a, bit_b);
+        self.cx(bit_b, bit_a);
+        self.h(bit_b);
+    }
+
+    #[doc = double_doc!("iSwap^dagger")]
+    fn iswapdg(&mut self, bit_a: usize, bit_b: usize) {
+        self.iswap(bit_a, bit_b);
+    }
+
     movements!(
         (move_x_to_x, "X", "X"),
         (move_x_to_z, "X", "Z"),
@@ -267,7 +282,7 @@ pub mod frames;
 pub mod live;
 
 #[cfg(test)]
-mod test {
+mod tests {
     use super::*;
     pub mod utils {
         use super::*;
@@ -328,14 +343,16 @@ mod test {
         }
         pub(crate) use single_actions;
 
-        pub const N_DOUBLES: usize = 7;
+        pub const N_DOUBLES: usize = 9;
         const DOUBLE_GENERATORS: [(&str, [(u8, u8); 4]); N_DOUBLES] = [
-            // (name, result: [conjugate X1, conjugate Z1, conjugate 1X, conjugate 1Z])
+            // (name, result: [conjugate X1, conjugate Z1, conjugate X2, conjugate Z2])
             // the left tuple entry of the results belongs to the first qubit in the
             // function call and the right entry to the second one
             ("cz", [(2, 1), (1, 0), (1, 2), (0, 1)]),
             ("cx", [(2, 2), (1, 0), (0, 2), (1, 1)]),
             ("swap", [(0, 2), (0, 1), (2, 0), (1, 0)]),
+            ("iswap", [(1, 3), (0, 1), (3, 1), (1, 0)]),
+            ("iswapdg", [(1, 3), (0, 1), (3, 1), (1, 0)]),
             // these here are not conjugations with unitary operators, however it still
             // works, because the move operation is a homomorphism
             ("move_x_to_x", [(0, 2), (1, 0), (0, 2), (0, 1)]),
@@ -350,6 +367,8 @@ mod test {
                     <$tracker>::cz,
                     <$tracker>::cx,
                     <$tracker>::swap,
+                    <$tracker>::iswap,
+                    <$tracker>::iswapdg,
                     <$tracker>::move_x_to_x,
                     <$tracker>::move_x_to_z,
                     <$tracker>::move_z_to_x,
@@ -516,7 +535,7 @@ mod test {
         }
 
         use super::*;
-        use crate::tracker::test::utils::{
+        use crate::tracker::tests::utils::{
             self,
             SingleAction,
             SingleResults,

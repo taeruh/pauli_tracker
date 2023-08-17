@@ -277,7 +277,7 @@ done by "simply" splitting the iterations. In case of the [Sweep] iterators, one
 for example, set different initial states per thread. One can also first calculate all
 paths with the [PathGenerator], split them up, and then instruct [Graph] with them. In
 the
-[scheduling-proptest](https://github.com/taeruh/pauli_tracker/blob/main/pauli_tracker/tests/roundtrips/scheduling.rs).
+[scheduling-proptest](https://github.com/taeruh/pauli_tracker/blob/main/pauli_tracker/tests/roundtrips/scheduling.rs)
 is some messy code which does exactly that (the `split_instructions` function and the
 code after that function call).
 

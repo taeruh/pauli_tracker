@@ -68,6 +68,10 @@ pub trait CliffordCircuit {
     fn cz(&mut self, bit_a: usize, bit_b: usize);
     /// Apply the Control SWAP gate
     fn swap(&mut self, bit_a: usize, bit_b: usize);
+    /// Apply the Control iSWAP gate
+    fn iswap(&mut self, bit_a: usize, bit_b: usize);
+    /// Apply the Control iSWAP^dagger gate
+    fn iswapdg(&mut self, bit_a: usize, bit_b: usize);
     /// Measure (unspecified)
     fn measure(&mut self, bit: usize) -> Self::Outcome;
 }
@@ -87,7 +91,7 @@ macro_rules! double {
 macro_rules! impl_gates {
     () => {
         single!(x, y, z, sx, sy, sz, sxdg, sydg, szdg, h, s, sdg,);
-        double!(cx, cz, swap,);
+        double!(cx, cz, swap, iswap, iswapdg,);
     };
 }
 
@@ -322,6 +326,8 @@ where
     double_gate!(cx, "Control X (Control Not)", control, target);
     double_gate!(cz, "Control Z");
     double_gate!(swap, "SWAP");
+    double_gate!(iswap, "iSWAP");
+    double_gate!(iswapdg, "iSWAP^dagger");
 }
 
 impl<C, A, S, B> TrackedCircuit<C, Frames<A>, S>
@@ -390,7 +396,10 @@ mod tests {
             PauliStack,
         },
         tracker::{
-            frames::Frames,
+            frames::{
+                dependency_graph,
+                Frames,
+            },
             live,
             MissingBit,
         },
@@ -478,7 +487,7 @@ mod tests {
     fn control_v_dagger() {
         let mut circ = TrackedCircuit {
             circuit: DummyCircuit {},
-            tracker: Frames::<MappedVector<PauliStack<SimdBitVec>>>::init(5),
+            tracker: Frames::<MappedVector<PauliSimdBitVec>>::init(5),
             storage: MappedVector::<_>::default(),
         };
 
@@ -636,10 +645,8 @@ mod tests {
 
         // println!("{:#?}", rest);
 
-        let _graph = crate::tracker::frames::dependency_graph::create_dependency_graph(
-            &rest,
-            &[0, 1, 2, 4, 5, 7, 8],
-        );
+        let _graph =
+            dependency_graph::create_dependency_graph(&rest, &[0, 1, 2, 4, 5, 7, 8]);
         // println!("{:?}", graph);
         // println!("{:?}", graph.len());
     }

@@ -10,6 +10,8 @@ possible.
 
 ## [Unreleased]
 ### Added
+- Add `GraphBuffer::from_sparse`.
+- Add `Tracker::iswap` and `Tracker::iswapdg`.
 ### Changed
 ### Deprecated
 ### Removed

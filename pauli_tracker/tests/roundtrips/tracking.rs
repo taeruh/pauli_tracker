@@ -313,6 +313,14 @@ impl Instructor {
                     Some((a, b)) => circuit.swap(a, b),
                     None => continue,
                 },
+                Operation::ISwap(a, b) => match self.double_mem_idx(a, b) {
+                    Some((a, b)) => circuit.iswap(a, b),
+                    None => continue,
+                },
+                Operation::ISwapdg(a, b) => match self.double_mem_idx(a, b) {
+                    Some((a, b)) => circuit.iswapdg(a, b),
+                    None => continue,
+                },
                 Operation::Rz(b) => {
                     let bit = self.mem_idx(b);
                     measurements
@@ -489,6 +497,8 @@ pub enum Operation {
     Cx(usize, usize),
     Cz(usize, usize),
     Swap(usize, usize),
+    ISwap(usize, usize),
+    ISwapdg(usize, usize),
     Rz(usize),
     Measure(usize),
     NewQubit(usize),
@@ -519,6 +529,8 @@ fn operation() -> impl Strategy<Value = Operation> {
         30 => (any::<usize>(), any::<usize>()).prop_map(|(a, b)| Operation::Cx(a, b)),
         30 => (any::<usize>(), any::<usize>()).prop_map(|(a, b)| Operation::Cz(a, b)),
         40 => (any::<usize>(), any::<usize>()).prop_map(|(a, b)| Operation::Swap(a, b)),
+        5 => (any::<usize>(), any::<usize>()).prop_map(|(a, b)| Operation::ISwap(a, b)),
+        5 => (any::<usize>(), any::<usize>()).prop_map(|(a, b)| Operation::ISwapdg(a, b)),
         100 => any::<usize>().prop_map(Operation::Rz),
         2 => any::<usize>().prop_map(Operation::Measure),
         2 => any::<usize>().prop_map(Operation::NewQubit),

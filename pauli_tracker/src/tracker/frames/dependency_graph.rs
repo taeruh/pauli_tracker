@@ -10,9 +10,9 @@ use crate::{
 
 /// A layered graph, describing the how the qubits depend on each other.
 ///
-/// Each layer l = DependencyGraph\[i\] consist of an vector of tuples, where the first
-/// tuple element is the node qubits and the second tuple element contains all qubits on
-/// which the node qubit depends.
+/// Each layer l_i = DependencyGraph\[i\] consist of an vector of tuples, where the
+/// first tuple element is the node qubits and the second tuple element contains all
+/// qubits on which the node qubit depends.
 pub type DependencyGraph = Vec<Vec<(usize, Vec<usize>)>>;
 
 /// Sort the `frames`' qubits according to the induced dependencies by the frames (row

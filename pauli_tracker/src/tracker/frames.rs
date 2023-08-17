@@ -239,6 +239,15 @@ where
         mem::swap(a, b)
     }
 
+    fn iswap(&mut self, control: usize, target: usize) {
+        let (a, b) = unwrap_get_two_mut!(self.storage, control, target, "swap");
+        mem::swap(a, b);
+        a.right.xor_inplace(&a.left);
+        b.right.xor_inplace(&a.left);
+        b.right.xor_inplace(&b.left);
+        a.right.xor_inplace(&b.left);
+    }
+
     movements!(
         (move_x_to_x, left, left, "X", "X"),
         (move_x_to_z, left, right, "X", "Z"),
@@ -325,7 +334,7 @@ mod tests {
         use crate::{
             collection::BufferedVector,
             pauli::PauliDense,
-            tracker::test::utils::{
+            tracker::tests::utils::{
                 self,
                 DoubleAction,
                 DoubleResults,

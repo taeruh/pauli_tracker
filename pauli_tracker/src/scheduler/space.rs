@@ -89,13 +89,14 @@ macro_rules! new_body {
 }
 
 impl GraphBuffer {
-    /// Create a new buffer for our graph. `edges` is a list of the edges and
-    /// `num_nodes` holds the number of nodes in the graph. The [Graph], and its buffer,
-    /// require that the nodes are numbered from 0 to `num_nodes - 1`. To accomplish
-    /// this, if needed, `bit_mapping` can be used, whose keys are the original node ids
-    /// and whose values are the new node ids. Loops and Multi-edges are not allowed. If
-    /// `check_loop_multi_edge` is true, then the function will check for those and skip
-    /// them.
+    /// Create a new buffer for our graph.
+    ///
+    /// `edges` is a list of the edges and `num_nodes` holds the number of nodes in the
+    /// graph. The [Graph], and its buffer, require that the nodes are numbered from 0
+    /// to `num_nodes - 1`! To accomplish this, if needed, `bit_mapping` can be used,
+    /// whose keys are the original node ids and whose values are the new node ids.
+    /// Loops and Multi-edges are not allowed. If `check_loop_multi_edge` is true, then
+    /// the function will check for those and skip them.
     pub fn new(
         edges: &[(usize, usize)],
         num_nodes: usize,
@@ -109,6 +110,13 @@ impl GraphBuffer {
             new_loop!(inner, edges, bit_mapping, unchecked);
         }
         Self { inner }
+    }
+
+    /// Create a new buffer from a sparse representation of the graph.
+    ///
+    /// The same requirements as for [GraphBuffer::new] apply!
+    pub fn from_sparse(value: Vec<Vec<usize>>) -> Self {
+        Self { inner: value }
     }
 }
 
