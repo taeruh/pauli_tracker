@@ -201,6 +201,16 @@ pub trait Tracker {
         self.s(bit);
     }
 
+    #[doc = single_doc!("H_xy")]
+    fn hxy(&mut self, bit: usize) {
+        self.s(bit);
+    }
+
+    #[doc = single_doc!("H_xy")]
+    fn hyz(&mut self, bit: usize) {
+        self.sx(bit);
+    }
+
     #[doc = double_doc!("Control X (Control Not)", control, target)]
     fn cx(&mut self, control: usize, target: usize) {
         self.h(target);
@@ -305,7 +315,7 @@ mod tests {
         // the encoding is according to crate::pauli::tableau_encoding, i.e., 0=I, 2=X,
         // 3=Y, 1=Z
 
-        pub const N_SINGLES: usize = 12;
+        pub const N_SINGLES: usize = 14;
         const SINGLE_GENERATORS: [(&str, [u8; 2]); N_SINGLES] =
             // (name, result: [conjugate X, conjugate Z])
             [
@@ -321,6 +331,8 @@ mod tests {
                 ("SYDG", [1, 2]),
                 ("SZ", [3, 1]),
                 ("SZDG", [3, 1]),
+                ("H_xy", [3, 1]),
+                ("H_yz", [2, 3]),
             ];
 
         macro_rules! single_actions {
@@ -338,6 +350,8 @@ mod tests {
                     <$tracker>::sydg,
                     <$tracker>::sz,
                     <$tracker>::szdg,
+                    <$tracker>::hxy,
+                    <$tracker>::hyz,
                 ]
             };
         }

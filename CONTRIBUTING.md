@@ -44,7 +44,7 @@ I hope the following list includes all steps ...
    them) and how they conjugate the X and Z Paulis.
 2. Provide a default method in the `Tracker` trait based on the required Clifford gates
    (or gates derived from them).
-3. If the method is not trivial, i.e., not just one function call, and it is a single
+3. If the method is trivial, i.e., not just one function call, and it is a single
    qubit gate, provide a default method for the `Pauli` trait in similar fashion. In
    this case also do the following: Implement the method directly for the `Live`
    tracker, by calling `Pauli`s method (you probably just need to add it to the

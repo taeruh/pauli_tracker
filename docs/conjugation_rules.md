@@ -160,6 +160,26 @@ $$
   \sqrt{Y}X\sqrt{Y}^{\dagger} = -Z; \qquad \sqrt{Y}Z\sqrt{Y}^{\dagger} = X
 $$
 ___
+The XY-Hadamard gate $H_{xy}$ ($= \mathrm{e}^{i\pi/4}SHZH$) (swaps x and y axes)
+(hermitian)
+$$
+  H_{xy} = \frac{1}{\sqrt{2}}\begin{pmatrix}0&1-i\\1+i&0\end{pmatrix}
+$$
+Rules:
+$$
+  H_{xy}XH_{xy} = Y; \qquad H_{xy}ZH_{xy} = -Z
+$$
+___
+The YZ-Hadamard gate $H_{yz}$ ($= \mathrm{e}^{-i\pi/4}ZHSH$) (swaps y and z axes)
+(hermitian)
+$$
+  H_{xy} = \frac{1}{\sqrt{2}}\begin{pmatrix}1&-i\\i&-1\end{pmatrix}
+$$
+Rules:
+$$
+  H_{yz}XH_{yz} = -X; \qquad H_{yz}ZH_{yz} = Y
+$$
+___
 ### Two qubit operation
 ___
 The control Z gate $\mathrm{CZ}$ (hermitian)
@@ -313,6 +333,23 @@ $$\begin{aligned}
   \sqrt{Y}Z\sqrt{Y}^{\dagger} &=
   -\left(\sqrt{Y}^{\dagger}\right)^2X\sqrt{Y}^2 = X\\
 
+  H_{xy}^{\dagger} X H_{xy} &=
+  HZHS^{\dagger} X SHZH = iHZH ZX HZH =
+  i H ZX H = iXZ = Y\\
+
+  H_{xy}^{\dagger} Z H_{xy} &=
+  HZHS^{\dagger} Z SHZH = HZ X ZH =
+  -H X H = -Z\\
+
+  H_{yz}^{\dagger} X H_{yz} &=
+  HS^{\dagger}HZ X ZHSH = -HS^{\dagger} Z SH =
+  -H Z H = - X\\
+
+  H_{yz}^{\dagger} Z H_{yz} &=
+  HS^{\dagger}HZ Z ZHSH = HS^{\dagger} X SH =
+  iH ZX H = iXZ = Y\\
+
+
   \mathrm{CZ}_{ab}X_b\mathrm{CZ}_{ab} &=
   \begin{pmatrix}1&0\\0&Z\end{pmatrix}
   \begin{pmatrix}1&0\\0&X\end{pmatrix}
@@ -425,6 +462,8 @@ $$\begin{aligned}
   \sqrt{Y} &= \sqrt{i}HSS \propto HZ \propto ZH\\
   \sqrt{Y}^{2} &= Y = iHSSHSS \propto HSSHSS \propto SSHSSH\\
   \sqrt{Y}^{\dagger} &= \sqrt{Y}^{-1}\\
+  H_{xy} &= \mathrm{e}^{i\pi/4}SHZH\\
+  H_{yz} &= \mathrm{e}^{-i\pi/4}ZHSH\\
 
   \mathrm{CZ}_{ct} &= H_t \mathrm{CX}_{ct} H_t\\
   \mathrm{CX}_{tc} &= H_c \mathrm{CZ}_{ct} H_c\\
@@ -458,6 +497,13 @@ $$\begin{aligned}
   \sqrt{Y}^{2} &= iHSSHSS = iXZ = Y\\
 
   \sqrt{Y}^{\dagger}\sqrt{Y} &= S^{\dagger}S^{\dagger}HHSS = 1\\
+
+  SHZH &= SX = \begin{pmatrix}0&1\\i&0\end{pmatrix} = H_{xy}\sqrt{2}/(1-i)\\
+
+  2ZHSH &=
+  \begin{pmatrix}1&1\\-1&1\end{pmatrix}
+  \begin{pmatrix}1&1\\i&-i\end{pmatrix} =
+  \begin{pmatrix}1+i&1-i\\-1+i&-1-i\end{pmatrix} = 2H_{xy}(1+i)/\sqrt{2}\\
 
   H_t \mathrm{CX}_{ct} H_t &=
   \begin{pmatrix}H&0\\0&H\end{pmatrix}

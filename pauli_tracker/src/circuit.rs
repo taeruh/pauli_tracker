@@ -50,14 +50,18 @@ pub trait CliffordCircuit {
     fn sy(&mut self, bit: usize);
     /// Apply the root Z gate
     fn sz(&mut self, bit: usize);
-    /// Apply the root X)^dagger gate
+    /// Apply the (root X)^dagger gate
     fn sxdg(&mut self, bit: usize);
     /// Apply the (root Y)^dagger gate
     fn sydg(&mut self, bit: usize);
     /// Apply the (root Z)^dagger gate
     fn szdg(&mut self, bit: usize);
-    /// Apply the (root H gate
+    /// Apply the H gate
     fn h(&mut self, bit: usize);
+    /// Apply the H_xy gate
+    fn hxy(&mut self, bit: usize);
+    /// Apply the H_yz gate
+    fn hyz(&mut self, bit: usize);
     /// Apply the S gate
     fn s(&mut self, bit: usize);
     /// Apply the S^dagger gate
@@ -90,7 +94,7 @@ macro_rules! double {
 
 macro_rules! impl_gates {
     () => {
-        single!(x, y, z, sx, sy, sz, sxdg, sydg, szdg, h, s, sdg,);
+        single!(x, y, z, sx, sy, sz, sxdg, sydg, szdg, h, s, sdg, hxy, hyz,);
         double!(cx, cz, swap, iswap, iswapdg,);
     };
 }
@@ -318,9 +322,11 @@ where
         (sx, "SX"),
         (sy, "SY"),
         (sz, "SZ"),
-        (sxdg, "SXD"),
-        (sydg, "SYD"),
-        (szdg, "SZD"),
+        (sxdg, "SXDG"),
+        (sydg, "SYDG"),
+        (szdg, "SZDG"),
+        (hxy, "H_xy"),
+        (hyz, "H_yz"),
     );
 
     double_gate!(cx, "Control X (Control Not)", control, target);

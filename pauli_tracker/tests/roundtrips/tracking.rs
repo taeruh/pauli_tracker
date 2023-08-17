@@ -298,6 +298,8 @@ impl Instructor {
                 }
 
                 Operation::H(b) => circuit.h(self.mem_idx(b)),
+                Operation::Hxy(b) => circuit.hxy(self.mem_idx(b)),
+                Operation::Hyz(b) => circuit.hyz(self.mem_idx(b)),
                 Operation::S(b) => circuit.s(self.mem_idx(b)),
                 Operation::Sdg(b) => circuit.sdg(self.mem_idx(b)),
                 Operation::Cx(a, b) => match self.double_mem_idx(a, b) {
@@ -492,6 +494,8 @@ pub enum Operation {
     TeleportedY(usize, usize),
     TeleportedZ(usize, usize),
     H(usize),
+    Hxy(usize),
+    Hyz(usize),
     S(usize),
     Sdg(usize),
     Cx(usize, usize),
@@ -524,6 +528,8 @@ fn operation() -> impl Strategy<Value = Operation> {
         15 => (any::<usize>(), any::<usize>())
                  .prop_map(|(a, b)| Operation::TeleportedZ(a, b)),
         30 => any::<usize>().prop_map(Operation::H),
+        4 => any::<usize>().prop_map(Operation::Hxy),
+        4 => any::<usize>().prop_map(Operation::Hyz),
         30 => any::<usize>().prop_map(Operation::S),
         30 => any::<usize>().prop_map(Operation::Sdg),
         30 => (any::<usize>(), any::<usize>()).prop_map(|(a, b)| Operation::Cx(a, b)),
