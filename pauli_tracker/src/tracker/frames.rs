@@ -103,9 +103,10 @@ impl<T: Default> Default for MoveError<T> {
 }
 
 impl<S> Frames<S> {
-    /// Create a new [Frames] instance with a given storage and number of frames. It
-    /// does not check whether the storage is compatible with the number of frames. If
-    /// it is not, using the create instance might result in errors or panics. This
+    /// Create a new [Frames] instance with a given storage and number of frames.
+    ///
+    /// It does not check whether the storage is compatible with the number of frames.
+    /// If it is not, using the create instance might result in errors or panics. This
     /// function is mainly useful to put some parts of a frames storage into a new one.
     pub fn new_unchecked(storage: S, frames_num: usize) -> Self {
         Self { storage, frames_num }
@@ -315,7 +316,53 @@ where
             None => Ok(()),
         }
     }
+
+    /// Transpose the frames, with reverted order.
+    ///
+    /// # Panics
+    /// Panics if `num_qubits` is smaller than the number of tracked qubits.
+    pub fn transpose_reverted(mut self, num_qubits: usize) -> Vec<PauliStack<B>> {
+        let mut ret = Vec::with_capacity(self.frames_num);
+        while let Some(frame) = self.pop_frame() {
+            let mut paulis = vec![PauliTuple::I; num_qubits];
+            for (i, p) in frame {
+                paulis[i] = p;
+            }
+            ret.push(PauliStack::from_iter(paulis));
+        }
+        ret
+    }
 }
+
+// #[test]
+// fn foo() {
+//     type Storage = crate::collection::Map<PauliStack<Vec<bool>>>;
+//     let mut frames = Frames::<Storage>::init(3);
+//     let mut storage = Storage::with_capacity(3);
+//     frames.track_x(0);
+//     frames.cx(0, 1);
+//     frames.track_z(1);
+//     frames.measure_and_store(0, &mut storage).unwrap();
+//     frames.track_x(2);
+//     frames.measure_and_store_all(&mut storage);
+//     let frames = Frames::new_unchecked(storage, frames.frames_num());
+//     for stack in frames.as_storage().iter() {
+//         println!("{:?}", stack);
+//     }
+//     let mut transposed = frames.transpose_reverted(3);
+//     println!();
+//     for string in transposed.iter() {
+//         println!("{:?}", string);
+//     }
+//     println!();
+//     let mut current = transposed.pop().unwrap();
+//     println!("{:?}", current);
+//     current.xor_inplace(&transposed.pop().unwrap());
+//     println!("{:?}", current);
+//     println!("{:?}", current.get::<PauliTuple>(1));
+//     current.xor_inplace(&transposed.pop().unwrap());
+//     println!("{:?}", current);
+// }
 
 impl<S, B> Frames<S>
 where

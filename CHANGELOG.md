@@ -8,11 +8,23 @@ We try to follow the [SemVer](https://semver.org/) rules, specifically
 [Cargo guidelines](https://doc.rust-lang.org/cargo/reference/semver.html), as best as
 possible.
 
+## [Future major bump]
+### Added
+### Changed
+### Deprecated
+### Removed
+### Fixed
+### Security
+
 ## [Unreleased]
 ### Added
 - Add `GraphBuffer::from_sparse`.
-- Add `Tracker::iswap` and `Tracker::iswapdg`.
+- Add `Tracker::iswap`, `Tracker::iswapdg`, `Tracker::h_(xy,yz)`, `Tracker::cy`.
+- Add `Frames::transpose_reverted`, `PauliStack::get`, `PauliStack::get_with_default`.
 ### Changed
+- **Possible Breaking Change**: Remove of `FromIterator<PauliDense> for PauliStack<impl
+  BooleanVector>`
+  and add `FromIterator<impl Pauli> for PauliStack<impl BooleanVector>`.
 ### Deprecated
 ### Removed
 ### Fixed

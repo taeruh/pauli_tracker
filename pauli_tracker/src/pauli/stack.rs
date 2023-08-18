@@ -15,7 +15,6 @@ use serde::{
 use thiserror::Error;
 
 use super::{
-    dense::PauliDense,
     Pauli,
     PauliTuple,
 };
@@ -26,6 +25,8 @@ use crate::boolean_vector::BooleanVector;
 /// Instead of having a vector over [Pauli]s, we separate the X and Z parts into two
 /// vectors (cf. [Pauli] for encoding). This enables us to efficiently perform
 /// (Clifford) operations on those [PauliStack]s.
+///
+/// Note that the fields are public and the methods are mainly convenience methods.
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq, PartialOrd, Ord, Hash)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct PauliStack<T /* : BooleanVector */> {
@@ -91,7 +92,7 @@ impl<T: BooleanVector> PauliStack<T> {
     }
 
     /// Push a new [Pauli] onto the Pauli stack. If one part of the stack, i.e, `left`
-    /// or `right`, is shorter than the other, it is fill up with `false/0` to have the
+    /// or `right`, is shorter than the other, it is filled up with `false/0` to have the
     /// same length, before the `pauli` is pushed.
     ///
     /// # Examples
@@ -156,6 +157,46 @@ impl<T: BooleanVector> PauliStack<T> {
         }
     }
 
+    /// Get the Pauli at index `idx` from the stack.
+    ///
+    /// If one part of the stack, i.e., `left` or `right`, doesn't have the
+    /// corresponding element, but the other does, the missing element is substituted
+    /// with `false/0`. If both parts of the stack are too short, [None] is returned.
+    pub fn get_with_default<P: Pauli>(&self, idx: usize) -> Option<P> {
+        if idx < self.left.len() {
+            Some(P::new_product(
+                match self.left.get(idx) {
+                    Some(v) => v,
+                    None => unreachable!(),
+                },
+                self.right.get(idx).unwrap_or(false),
+            ))
+        } else if idx < self.right.len() {
+            Some(P::new_product(
+                self.left.get(idx).unwrap_or(false),
+                match self.right.get(idx) {
+                    Some(v) => v,
+                    None => unreachable!(),
+                },
+            ))
+        } else {
+            None
+        }
+    }
+
+    /// Get the Pauli at index `idx` from the stack, assuming that both stack parts have
+    /// an element at that index.
+    pub fn get<P: Pauli>(&self, idx: usize) -> Option<P> {
+        P::new_product(self.left.get(idx)?, self.right.get(idx)?).into()
+    }
+
+    /// Perform a bitwise XOR between the left and right stacks of `self` and `other`,
+    /// respectively, updating `self` in place.
+    pub fn xor_inplace(&mut self, other: &Self) {
+        self.left.xor_inplace(&other.left);
+        self.right.xor_inplace(&other.right);
+    }
+
     // we can define the action of local gates
 
     // Pauli gates don't do anything; we just include them for completeness and since it
@@ -213,8 +254,8 @@ impl<T: BooleanVector> PauliStack<T> {
     }
 }
 
-impl<T: BooleanVector> FromIterator<PauliDense> for PauliStack<T> {
-    fn from_iter<I: IntoIterator<Item = PauliDense>>(iter: I) -> Self {
+impl<T: BooleanVector, P: Pauli> FromIterator<P> for PauliStack<T> {
+    fn from_iter<I: IntoIterator<Item = P>>(iter: I) -> Self {
         let mut ret = PauliStack::new();
         for pauli in iter {
             ret.push(pauli);

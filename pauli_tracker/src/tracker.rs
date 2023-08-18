@@ -21,15 +21,11 @@ use thiserror::Error;
 
 use crate::pauli::Pauli;
 
-/// A vector describing an encoded Pauli string, for example, one frame of
-/// [Frames](frames::Frames) (via [Frames::pop_frame](frames::Frames::pop_frame)).
+/// A vector describing an encoded Pauli string.
 ///
-/// The `usize` element is the qubit index of the `Pauli` However, importantly note,
-/// that it is not optimal to build arrays with PauliStrings on the minor access. The
-/// library is build to use implementors of the traits in
-/// [collection](crate::collection), which should have
-/// [PauliStack](crate::pauli::PauliStack)s on the minor array axis, as workhorses. This
-/// vector should be mainly used to analyze single Pauli strings.
+/// For example, one frame of [Frames](frames::Frames) (via
+/// [Frames::pop_frame](frames::Frames::pop_frame)). The `usize` element is the qubit
+/// index of the `Pauli`.
 pub type PauliString<T> = Vec<(usize, T)>;
 
 /// The Error when one tries to [measure](Tracker::measure) a missing bit.

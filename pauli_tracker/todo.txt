@@ -1,5 +1,7 @@
 ---------- release new major
 
+- include transposed_reverted into lib docs
+
 - when things are pretty stable, instead of implementing methods through macros,
   implement them manually, this is because rust-analyzer has problems with it
   - wrong doc comments
