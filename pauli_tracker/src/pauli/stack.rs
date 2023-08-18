@@ -240,14 +240,15 @@ impl<T: BooleanVector> PauliStack<T> {
     /// ```
     /// # #[cfg_attr(coverage_nightly, no_coverage)]
     /// # fn main() {
-    /// # use pauli_tracker::{pauli::{Pauli, PauliStack}, boolean_vector::BooleanVector};
+    /// # use pauli_tracker::{
+    /// #    pauli::{PauliTuple, Pauli, PauliStack}, boolean_vector::BooleanVector};
     /// let paulis = [
-    ///     Pauli::new_x(),
-    ///     Pauli::new_y(),
-    ///     Pauli::new_z(),
-    ///     Pauli::new_x(),
-    ///     Pauli::new_y(),
-    ///     Pauli::new_z(),
+    ///     PauliTuple::new_x(),
+    ///     PauliTuple::new_y(),
+    ///     PauliTuple::new_z(),
+    ///     PauliTuple::new_x(),
+    ///     PauliTuple::new_y(),
+    ///     PauliTuple::new_z(),
     /// ]
     /// .into_iter()
     /// .collect::<PauliStack<Vec<bool>>>();
