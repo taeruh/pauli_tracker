@@ -216,8 +216,11 @@ impl<'l, T: MeasurableSet> PathGenerator<'l, T> {
                     .unwrap_or_else(|| panic!("the {bit} is already resolved"));
                 *dependency_count -= 1;
                 if *dependency_count == 0 {
-                    deps.remove(bit)
-                        .expect("bug: already checked with the expect above");
+                    match deps.remove(bit) {
+                        Some(_) => {}
+                        // already checked above with the get_mut
+                        None => unreachable!(),
+                    }
                     new_measurable_set.push(*bit);
                 }
             }

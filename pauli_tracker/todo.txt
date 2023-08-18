@@ -2,6 +2,8 @@
 
 - include transposed_reverted into lib docs
 
+- replace unreachable with unchecked_unreachable
+
 - when things are pretty stable, instead of implementing methods through macros,
   implement them manually, this is because rust-analyzer has problems with it
   - wrong doc comments

@@ -141,17 +141,21 @@ impl<T: BooleanVector> PauliStack<T> {
         match self.left.len().cmp(&self.right.len()) {
             Ordering::Less => Some(P::new_product(
                 false,
-                self.right
-                    .pop()
-                    .expect("shouldn't be possible since right.len > left.len >= 0"),
+                match self.right.pop() {
+                    Some(v) => v,
+                    // since right.len > left.len >= 0
+                    None => unreachable!(),
+                },
             )),
             Ordering::Equal => {
                 Some(P::new_product(self.left.pop()?, self.right.pop()?))
             }
             Ordering::Greater => Some(P::new_product(
-                self.left
-                    .pop()
-                    .expect("shouldn't be possible since left.len > right.len >= 0"),
+                match self.left.pop() {
+                    Some(v) => v,
+                    // since left.len > right.len >= 0
+                    None => unreachable!(),
+                },
                 false,
             )),
         }
@@ -167,6 +171,7 @@ impl<T: BooleanVector> PauliStack<T> {
             Some(P::new_product(
                 match self.left.get(idx) {
                     Some(v) => v,
+                    // since idx < self.left.len()
                     None => unreachable!(),
                 },
                 self.right.get(idx).unwrap_or(false),
@@ -176,6 +181,7 @@ impl<T: BooleanVector> PauliStack<T> {
                 self.left.get(idx).unwrap_or(false),
                 match self.right.get(idx) {
                     Some(v) => v,
+                    // since idx < self.right.len()
                     None => unreachable!(),
                 },
             ))

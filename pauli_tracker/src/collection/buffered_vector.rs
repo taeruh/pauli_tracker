@@ -100,11 +100,11 @@ where
     fn insert(&mut self, key: usize, value: T) -> Option<T> {
         let len = self.len();
         match key.cmp(&len) {
-            Ordering::Less => Some(mem::replace(
-                self.get_mut(key)
-                    .expect("can't be out of bounds in this match arm"),
-                value,
-            )),
+            Ordering::Less => Some(match self.get_mut(key) {
+                Some(v) => mem::replace(v, value),
+                // since key < len
+                None => unreachable!(),
+            }),
             Ordering::Equal => {
                 self.0.push(value);
                 None
@@ -127,11 +127,12 @@ where
                 "this type, which is basically a Vec, only allows removing elements \
                  consecutively from the end"
             ),
-            Ordering::Equal => Some(
-                self.0
-                    .pop()
-                    .expect("bug: we checked above that len is bigger than 0"),
-            ),
+            Ordering::Equal => Some(match self.0.pop() {
+                Some(v) => v,
+                // since key = len > 0, because the checked_sub would have
+                // returned None otherwise
+                None => unreachable!(),
+            }),
             Ordering::Greater => None,
         }
     }
