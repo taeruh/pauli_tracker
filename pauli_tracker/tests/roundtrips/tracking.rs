@@ -306,7 +306,10 @@ impl Instructor {
                     Some((a, b)) => circuit.cx(a, b),
                     None => continue,
                 },
-
+                Operation::Cy(a, b) => match self.double_mem_idx(a, b) {
+                    Some((a, b)) => circuit.cy(a, b),
+                    None => continue,
+                },
                 Operation::Cz(a, b) => match self.double_mem_idx(a, b) {
                     Some((a, b)) => circuit.cz(a, b),
                     None => continue,
@@ -499,6 +502,7 @@ pub enum Operation {
     S(usize),
     Sdg(usize),
     Cx(usize, usize),
+    Cy(usize, usize),
     Cz(usize, usize),
     Swap(usize, usize),
     ISwap(usize, usize),
@@ -533,6 +537,7 @@ fn operation() -> impl Strategy<Value = Operation> {
         30 => any::<usize>().prop_map(Operation::S),
         30 => any::<usize>().prop_map(Operation::Sdg),
         30 => (any::<usize>(), any::<usize>()).prop_map(|(a, b)| Operation::Cx(a, b)),
+        7 => (any::<usize>(), any::<usize>()).prop_map(|(a, b)| Operation::Cy(a, b)),
         30 => (any::<usize>(), any::<usize>()).prop_map(|(a, b)| Operation::Cz(a, b)),
         40 => (any::<usize>(), any::<usize>()).prop_map(|(a, b)| Operation::Swap(a, b)),
         5 => (any::<usize>(), any::<usize>()).prop_map(|(a, b)| Operation::ISwap(a, b)),

@@ -91,7 +91,7 @@ macro_rules! track_pauli {
     )*};
 }
 
-/// The core API to track Paulis through a clifford circuit.
+/// The core API to track Paulis through a Clifford circuit.
 ///
 /// The implementors must ensure that they implement the methods correctly according
 /// to the conjugation rules of Clifford gates with Pauli gates
@@ -100,8 +100,9 @@ macro_rules! track_pauli {
 ///
 /// For extensive examples, please refer to the [library documentation](crate#examples).
 ///
-/// *currently, the set of supported Cliffords is very limited, but it is a complete
-/// generator; it will be extended over time*
+/// The supported gates are also described in [conjugation-rules]. Note that all
+/// Clifford gates can be generated form [H](Tracker::h), [S](Tracker::s) and
+/// [CZ](Tracker::cz), cf [conjugation-rules].
 ///
 /// [^rust_analyzer_impl_members]: Using rust-analyzer's "implement members" feature
 /// inserts some weird looking docs, which may not compile. This is because we generate
@@ -216,6 +217,13 @@ pub trait Tracker {
         self.h(target);
         self.cz(control, target);
         self.h(target);
+    }
+
+    #[doc = double_doc!("Control Y", control, target)]
+    fn cy(&mut self, control: usize, target: usize) {
+        self.hyz(target);
+        self.cz(control, target);
+        self.hyz(target);
     }
 
     #[doc = double_doc!("Swap")]
@@ -357,13 +365,14 @@ mod tests {
         }
         pub(crate) use single_actions;
 
-        pub const N_DOUBLES: usize = 9;
+        pub const N_DOUBLES: usize = 10;
         const DOUBLE_GENERATORS: [(&str, [(u8, u8); 4]); N_DOUBLES] = [
             // (name, result: [conjugate X1, conjugate Z1, conjugate X2, conjugate Z2])
             // the left tuple entry of the results belongs to the first qubit in the
             // function call and the right entry to the second one
             ("cz", [(2, 1), (1, 0), (1, 2), (0, 1)]),
             ("cx", [(2, 2), (1, 0), (0, 2), (1, 1)]),
+            ("cy", [(2, 3), (1, 0), (1, 2), (1, 1)]),
             ("swap", [(0, 2), (0, 1), (2, 0), (1, 0)]),
             ("iswap", [(1, 3), (0, 1), (3, 1), (1, 0)]),
             ("iswapdg", [(1, 3), (0, 1), (3, 1), (1, 0)]),
@@ -380,6 +389,7 @@ mod tests {
                 [
                     <$tracker>::cz,
                     <$tracker>::cx,
+                    <$tracker>::cy,
                     <$tracker>::swap,
                     <$tracker>::iswap,
                     <$tracker>::iswapdg,

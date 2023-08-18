@@ -161,6 +161,15 @@ where
         c.zpz(t);
     }
 
+    fn cy(&mut self, control: usize, target: usize) {
+        let (c, t) = unwrap_get_two_mut!(self.storage, control, target, "cx");
+        // cf. comment in frames implementation
+        c.zpz(t);
+        c.zpx(t);
+        t.zpx(c);
+        t.xpx(c);
+    }
+
     fn swap(&mut self, control: usize, target: usize) {
         let (a, b) = unwrap_get_two_mut!(self.storage, control, target, "swap");
         mem::swap(a, b)
@@ -169,10 +178,9 @@ where
     fn iswap(&mut self, control: usize, target: usize) {
         let (a, b) = unwrap_get_two_mut!(self.storage, control, target, "swap");
         mem::swap(a, b);
-        a.set_z(a.get_z() ^ a.get_x());
-        b.set_z(b.get_z() ^ a.get_x());
-        b.set_z(b.get_z() ^ b.get_x());
-        a.set_z(a.get_z() ^ b.get_x());
+        let copy = a.get_x() ^ b.get_x();
+        a.set_z(a.get_z() ^ copy);
+        b.set_z(b.get_z() ^ copy);
     }
 
     fn measure(&mut self, bit: usize) -> Result<Self::Stack, MissingBit> {

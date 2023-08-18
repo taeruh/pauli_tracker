@@ -96,7 +96,7 @@ $$\begin{aligned}
   YXY &= -X; \qquad YZY = -Z
 \end{aligned}$$
 ___
-The Hadamard gate $H$ (hermitian)
+The Hadamard gate $H = (X + Z)/\sqrt{2}$ (hermitian)
 $$
   H = \frac{1}{\sqrt{2}}\begin{pmatrix}1&1\\1&-1\end{pmatrix}
 $$
@@ -160,29 +160,29 @@ $$
   \sqrt{Y}X\sqrt{Y}^{\dagger} = -Z; \qquad \sqrt{Y}Z\sqrt{Y}^{\dagger} = X
 $$
 ___
-The XY-Hadamard gate $H_{xy}$ ($= \mathrm{e}^{i\pi/4}SHZH$) (swaps x and y axes)
-(hermitian)
+The XY-Hadamard gate $H^{xy}$ ($= \mathrm{e}^{i\pi/4}SHZH = (X + Y)/\sqrt{2}$) (swaps x
+and y axes) (hermitian)
 $$
-  H_{xy} = \frac{1}{\sqrt{2}}\begin{pmatrix}0&1-i\\1+i&0\end{pmatrix}
+  H^{xy} = \frac{1}{\sqrt{2}}\begin{pmatrix}0&1-i\\1+i&0\end{pmatrix}
 $$
 Rules:
 $$
-  H_{xy}XH_{xy} = Y; \qquad H_{xy}ZH_{xy} = -Z
+  H^{xy}XH^{xy} = iXZ; \qquad H^{xy}ZH^{xy} = -Z
 $$
 ___
-The YZ-Hadamard gate $H_{yz}$ ($= \mathrm{e}^{-i\pi/4}ZHSH$) (swaps y and z axes)
-(hermitian)
+The YZ-Hadamard gate $H^{yz}$ ($= \mathrm{e}^{-i\pi/4}ZHSH = (Y + Z)/\sqrt{2}$) (swaps y
+and z axes) (hermitian)
 $$
-  H_{xy} = \frac{1}{\sqrt{2}}\begin{pmatrix}1&-i\\i&-1\end{pmatrix}
+  H^{yz} = \frac{1}{\sqrt{2}}\begin{pmatrix}1&-i\\i&-1\end{pmatrix}
 $$
 Rules:
 $$
-  H_{yz}XH_{yz} = -X; \qquad H_{yz}ZH_{yz} = Y
+  H^{yz}XH^{yz} = -X; \qquad H^{yz}ZH^{yz} = iXZ
 $$
 ___
 ### Two qubit operation
 ___
-The control Z gate $\mathrm{CZ}$ (hermitian)
+The control $Z$ gate $\mathrm{CZ}$ (hermitian)
 $$
   \mathrm{CZ}_{ab} = \begin{pmatrix}
   1&0&0&0\\
@@ -222,6 +222,30 @@ $$\begin{aligned}
   \mathrm{CX}_{ct}X_t\mathrm{CX}_{ct} &= X_t\\
   \mathrm{CX}_{ct}Z_c\mathrm{CX}_{ct} &= Z_c\\
   \mathrm{CX}_{ct}Z_t\mathrm{CX}_{ct} &= Z_cZ_t
+\end{aligned}$$
+___
+The control $Y$ gate $\mathrm{CY}$ ($\mathrm{CY}_{gl} = H^{yz}_l \mathrm{CZ}_{gl}
+H^{yz}_l$) (hermitian); without loss of generality let $g > l$ for $g, l \in
+\mathbb{N}_0$ (left index is control and right index is target)
+$$
+  \mathrm{CY}_{g, l} = \begin{pmatrix}
+  1&0&0&0\\
+  0&1&0&0\\
+  0&0&0&-i\\
+  0&0&i&0
+  \end{pmatrix} \Leftrightarrow \mathrm{CY}_{l, g} = \begin{pmatrix}
+  1&0&0&0\\
+  0&0&0&-i\\
+  0&0&1&0\\
+  0&i&0&0
+  \end{pmatrix}
+$$
+Rules:
+$$\begin{aligned}
+  \mathrm{CY}_{ct}X_c\mathrm{CY}_{ct} &= X_cY_t\\
+  \mathrm{CY}_{ct}X_t\mathrm{CY}_{ct} &= Z_cX_t\\
+  \mathrm{CY}_{ct}Z_c\mathrm{CY}_{ct} &= Z_c\\
+  \mathrm{CY}_{ct}Z_t\mathrm{CY}_{ct} &= Z_cZ_t
 \end{aligned}$$
 ___
 The $\mathrm{SWAP}$ gate ($\mathrm{SWAP}_{ab} =
@@ -333,19 +357,19 @@ $$\begin{aligned}
   \sqrt{Y}Z\sqrt{Y}^{\dagger} &=
   -\left(\sqrt{Y}^{\dagger}\right)^2X\sqrt{Y}^2 = X\\
 
-  H_{xy}^{\dagger} X H_{xy} &=
+  (H^{xy})^{\dagger} X H^{xy} &=
   HZHS^{\dagger} X SHZH = iHZH ZX HZH =
   i H ZX H = iXZ = Y\\
 
-  H_{xy}^{\dagger} Z H_{xy} &=
+  (H^{xy})^{\dagger} Z H^{xy} &=
   HZHS^{\dagger} Z SHZH = HZ X ZH =
   -H X H = -Z\\
 
-  H_{yz}^{\dagger} X H_{yz} &=
+  (H^{yz})^{\dagger} X H^{yz} &=
   HS^{\dagger}HZ X ZHSH = -HS^{\dagger} Z SH =
   -H Z H = - X\\
 
-  H_{yz}^{\dagger} Z H_{yz} &=
+  (H^{yz})^{\dagger} Z H^{yz} &=
   HS^{\dagger}HZ Z ZHSH = HS^{\dagger} X SH =
   iH ZX H = iXZ = Y\\
 
@@ -356,23 +380,34 @@ $$\begin{aligned}
   \begin{pmatrix}1&0\\0&Z\end{pmatrix} =
   \begin{pmatrix}1&0\\0&-X\end{pmatrix} = Z_aX_b\\
 
-  \mathrm{CZ}_{ct}X_t\mathrm{CZ}_{ct} &=
+  \mathrm{CX}_{ct}X_t\mathrm{CX}_{ct} &=
   \begin{pmatrix}1&0\\0&X\end{pmatrix}
   \begin{pmatrix}X&0\\0&X\end{pmatrix}
   \begin{pmatrix}1&0\\0&X\end{pmatrix} =
   \begin{pmatrix}X&0\\0&X\end{pmatrix} = X_t\\
+
   \mathrm{CX}_{ct}X_c\mathrm{CX}_{ct} &=
-  H_t^2\mathrm{CX}_{ct}H_t^2X_c\mathrm{CX}_{ct}H_t^2 =
+  H_t^2\mathrm{CX}_{ct}H_t^2X_cH_t^2\mathrm{CX}_{ct}H_t^2 =
   H_t\mathrm{CZ}_{ct}X_c\mathrm{CZ}_{ct}H_t =
   H_tZ_tX_cH_t = X_cX_t\\
+
   \mathrm{CX}_{ct}Z_t\mathrm{CX}_{ct} &=
   H_t^2\mathrm{CX}_{ct}H_t^2Z_tH_t^2\mathrm{CX}_{ct}H_t^2 =
   H_t\mathrm{CZ}_{ct}X_t\mathrm{CZ}_{ct}H_t =
   H_tZ_cX_tH_t = Z_cZ_t\\
-  \mathrm{CX}_{ct}Z_c\mathrm{CX}_{ct} &=
-  H_t^2\mathrm{CX}_{ct}H_t^2Z_c\mathrm{CX}_{ct}H_t^2 =
-  H_t\mathrm{CZ}_{ct}Z_c\mathrm{CZ}_{ct}H_t =
-  H_tZ_cH_t = Z_c\\
+
+  \mathrm{CX}_{ct}Z_c\mathrm{CX}_{ct} &= \ldots = Z_c\\
+
+  \mathrm{CY}_{ct}Z_t\mathrm{CY}_{ct} &= \ldots = Z_cZ_t\\
+  \mathrm{CY}_{ct}Z_c\mathrm{CY}_{ct} &= \ldots = Z_c\\
+
+  \mathrm{CY}_{ct}X_t\mathrm{CY}_{ct} &=
+  \mathrm{CY}_{ct}iZ_tY_t\mathrm{CY}_{ct} =
+  iZ_cZ_tY_t =  Z_cX_t\\
+
+  \mathrm{CY}_{ct}X_c\mathrm{CY}_{ct} &=
+  \mathrm{CY}_{ct}iZ_cY_c\mathrm{CY}_{ct} =
+  iZ_cY_cY_t =  X_cY_t\\
 
   \mathrm{SWAP}_{ab} X_b \mathrm{SWAP}_{ab} &=
   \mathrm{CX}_{ab}\mathrm{CX}_{ba}\mathrm{CX}_{ab}
@@ -462,12 +497,13 @@ $$\begin{aligned}
   \sqrt{Y} &= \sqrt{i}HSS \propto HZ \propto ZH\\
   \sqrt{Y}^{2} &= Y = iHSSHSS \propto HSSHSS \propto SSHSSH\\
   \sqrt{Y}^{\dagger} &= \sqrt{Y}^{-1}\\
-  H_{xy} &= \mathrm{e}^{i\pi/4}SHZH\\
-  H_{yz} &= \mathrm{e}^{-i\pi/4}ZHSH\\
+  H^{xy} &= \mathrm{e}^{i\pi/4}SHZH\\
+  H^{yz} &= \mathrm{e}^{-i\pi/4}ZHSH\\
 
-  \mathrm{CZ}_{ct} &= H_t \mathrm{CX}_{ct} H_t\\
   \mathrm{CX}_{tc} &= H_c \mathrm{CZ}_{ct} H_c\\
   \mathrm{CX}_{ct} &= H_t \mathrm{CZ}_{ct} H_t\\
+  \mathrm{CY}_{ct} &= H^{yz}_t \mathrm{CZ}_{ct} H^{yz}_t\\
+  \mathrm{CY}_{tc} &= H^{yz}_c \mathrm{CZ}_{ct} H^{yz}_c\\
   \mathrm{SWAP}_{ab} &= \mathrm{CX}_{ab}\mathrm{CX}_{ba}\mathrm{CX}_{ab}\\
   \mathrm{iSWAP}_{ab} &= H_b\mathrm{CX}_{ba}\mathrm{CX}_{ab}H_aS_aS_b\\
 \end{aligned}$$
@@ -498,22 +534,21 @@ $$\begin{aligned}
 
   \sqrt{Y}^{\dagger}\sqrt{Y} &= S^{\dagger}S^{\dagger}HHSS = 1\\
 
-  SHZH &= SX = \begin{pmatrix}0&1\\i&0\end{pmatrix} = H_{xy}\sqrt{2}/(1-i)\\
+  SHZH &= SX = \begin{pmatrix}0&1\\i&0\end{pmatrix} = H^{xy}\sqrt{2}/(1-i)\\
 
   2ZHSH &=
   \begin{pmatrix}1&1\\-1&1\end{pmatrix}
   \begin{pmatrix}1&1\\i&-i\end{pmatrix} =
-  \begin{pmatrix}1+i&1-i\\-1+i&-1-i\end{pmatrix} = 2H_{xy}(1+i)/\sqrt{2}\\
+  \begin{pmatrix}1+i&1-i\\-1+i&-1-i\end{pmatrix} = 2H^{xy}(1+i)/\sqrt{2}\\
 
-  H_t \mathrm{CX}_{ct} H_t &=
+  H_t \mathrm{CZ}_{ct} H_t &=
   \begin{pmatrix}H&0\\0&H\end{pmatrix}
-  \begin{pmatrix}1&0\\0&X\end{pmatrix}
+  \begin{pmatrix}1&0\\0&Z\end{pmatrix}
   \begin{pmatrix}H&0\\0&H\end{pmatrix}
-  = \begin{pmatrix}1&0\\0&Z\end{pmatrix} = \mathrm{CZ}_{ct}\\
-
-  H_t\mathrm{CZ}_{ct}H_t &= H_t^2 \mathrm{CX}_{ct} H_t^2 = \mathrm{CX}_{ct}\\
-
-  H_c\mathrm{CZ}_{ct}H_c &= H_c^2 \mathrm{CX}_{tc} H_t^2 = \mathrm{CX}_{tc}\\
+  = \begin{pmatrix}1&0\\0&X\end{pmatrix} = \mathrm{CX}_{ct}\\
+  H_c\mathrm{CZ}_{ct}H_c &= H_t \mathrm{CX}_{tc} H_t = \mathrm{CX}_{tc}\\
+  H^{yz}_t\mathrm{CZ}_{ct}H^{yz}_t &= \ldots = \mathrm{CY}_{ct}\\
+  H^{yz}_c\mathrm{CZ}_{ct}H^{yz}_c &= \ldots = \mathrm{CY}_{tc}\\
 
   \mathrm{CX}_{ct}\mathrm{CX}_{tc}\mathrm{CX}_{ct} &=
   \begin{pmatrix}1&0\\0&X\end{pmatrix}

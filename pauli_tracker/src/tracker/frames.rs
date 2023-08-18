@@ -234,6 +234,21 @@ where
         c.right.xor_inplace(&t.right);
     }
 
+    fn cy(&mut self, control: usize, target: usize) {
+        let (c, t) = unwrap_get_two_mut!(self.storage, control, target, "cx");
+        // (c)ontrol, (t)arget, (l)eft, (r)ight, (o)ld, (n)ew
+        // crn = cro + tro + tlo
+        // cln = clo
+        // trn = tro + clo
+        // tln = tlo + clo
+        c.right.xor_inplace(&t.right);
+        c.right.xor_inplace(&t.left);
+        t.right.xor_inplace(&c.left);
+        t.left.xor_inplace(&c.left);
+        // this has the same number of (xor_inplace)(xor_inplace) operations as the
+        // default implementation
+    }
+
     fn swap(&mut self, control: usize, target: usize) {
         let (a, b) = unwrap_get_two_mut!(self.storage, control, target, "swap");
         mem::swap(a, b)
@@ -242,10 +257,18 @@ where
     fn iswap(&mut self, control: usize, target: usize) {
         let (a, b) = unwrap_get_two_mut!(self.storage, control, target, "swap");
         mem::swap(a, b);
+        // after a <-> b
+        // aln = alo
+        // bln = blo
+        // arn = aro + blo + alo
+        // brn = bro + blo + alo
         a.right.xor_inplace(&a.left);
+        a.right.xor_inplace(&b.left);
         b.right.xor_inplace(&a.left);
         b.right.xor_inplace(&b.left);
-        a.right.xor_inplace(&b.left);
+        // as in the Live implementation, we could save one xor_inplace by saving
+        // a.left ^ b.left in a temporary variable, but it's not clear whether that
+        // would be faster
     }
 
     movements!(

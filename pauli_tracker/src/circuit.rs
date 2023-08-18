@@ -70,6 +70,8 @@ pub trait CliffordCircuit {
     fn cx(&mut self, control: usize, target: usize);
     /// Apply the Control Z gate
     fn cz(&mut self, bit_a: usize, bit_b: usize);
+    /// Apply the Control Y gate
+    fn cy(&mut self, bit_a: usize, bit_b: usize);
     /// Apply the Control SWAP gate
     fn swap(&mut self, bit_a: usize, bit_b: usize);
     /// Apply the Control iSWAP gate
@@ -95,7 +97,7 @@ macro_rules! double {
 macro_rules! impl_gates {
     () => {
         single!(x, y, z, sx, sy, sz, sxdg, sydg, szdg, h, s, sdg, hxy, hyz,);
-        double!(cx, cz, swap, iswap, iswapdg,);
+        double!(cx, cz, cy, swap, iswap, iswapdg,);
     };
 }
 
@@ -331,6 +333,7 @@ where
 
     double_gate!(cx, "Control X (Control Not)", control, target);
     double_gate!(cz, "Control Z");
+    double_gate!(cy, "Control Y");
     double_gate!(swap, "SWAP");
     double_gate!(iswap, "iSWAP");
     double_gate!(iswapdg, "iSWAP^dagger");
