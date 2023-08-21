@@ -53,6 +53,10 @@ pub type Partitioner = Partition<Set>;
 
 /// A generator to create a scheduling path - initialization and measuring of qubits -
 /// allowed by a [DependencyGraph].
+///
+/// The generator can be used with a [Partitioner] as generic, which allows to iterate
+/// through all possible paths, or with a [`Vec<usize>`] to choose the path manually,
+/// cf. [Focus], [FocusIterator] and [MeasurableSet].
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct PathGenerator<'l, T /* Measurable */> {
     // one could also put the dependents with the bit into the partition set and in deps
@@ -200,10 +204,11 @@ impl<'l, T: MeasurableSet> PathGenerator<'l, T> {
     // "unchecked" in the sense that it does not check if the measure_set is a subset of
     // self.measurable and does not overlap with new_measurable_set
 
-    // # Panics
-    // Panics if measure_set contains a bit with a dependent that is already resolved.
+    /// # Panics
+    /// Panics if measure_set contains a bit with a dependent that is already resolved.
     fn update_unchecked(
-        look: &Dependents, /* always self.look; don't use self because of borrow problems */
+        // always self.look; don't use self because of borrow problems
+        look: &Dependents,
         deps: &mut DepsCounters, // might be self.deps
         measure_set: &[usize],
         new_measurable_set: &mut Vec<usize>,
@@ -227,10 +232,10 @@ impl<'l, T: MeasurableSet> PathGenerator<'l, T> {
         }
     }
 
-    // # Panics
-    // Panics if measure_set is not a subset of self.measureable
+    /// # Panics
+    /// Panics if measure_set is not a subset of self.measureable
     fn focus_unchecked(
-        &mut self,
+        &self,
         measure_set: &[usize],
         mut new_measureable_set: Vec<usize>,
     ) -> Self {
@@ -309,8 +314,8 @@ mod sealed {
 
 /// A trait for types that describe the set of measurable qubits in [PathGenerator].
 ///
-/// Use [`Vec<usize>`] if you want to manually create the paths, and [Partitioner] if you
-/// want to iterate over all paths.
+/// Use [`Vec<usize>`] if you want to manually create the paths, and [Partitioner] if
+/// you want to iterate over all paths, cf. [PathGenerator].
 ///
 /// **This trait is sealed**
 pub trait MeasurableSet: sealed::Sealed + Default {

@@ -22,9 +22,8 @@ possible.
 - Add `Tracker::iswap`, `Tracker::iswapdg`, `Tracker::h_(xy,yz)`, `Tracker::cy`.
 - Add `Frames::transpose_reverted`, `PauliStack::get`, `PauliStack::get_with_default`.
 ### Changed
-- **Possible Breaking Change**: Remove of `FromIterator<PauliDense> for PauliStack<impl
-  BooleanVector>`
-  and add `FromIterator<impl Pauli> for PauliStack<impl BooleanVector>`.
+- **Possible Breaking Change**: Remove `FromIterator<PauliDense> for PauliStack<impl
+  BooleanVector>` and add `FromIterator<impl Pauli> for PauliStack<impl BooleanVector>`.
 ### Deprecated
 ### Removed
 ### Fixed

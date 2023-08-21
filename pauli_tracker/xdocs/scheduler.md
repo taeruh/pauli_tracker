@@ -206,7 +206,7 @@ let mut scheduler = scheduler.into_iter();
 
 while let Some(step) = scheduler.next() {
     match step {
-        Step::Forward(mess) => {
+        Step::Forward(measure) => {
             // we get the current state of the scheduler, so that we can make an
             // estimate about the minimum path length for all paths that can be
             // generated from this state
@@ -234,7 +234,7 @@ while let Some(step) = scheduler.next() {
                     break;
                 }
             } else {
-                current_path.push(mess);
+                current_path.push(measure);
             }
         }
         Step::Backward(leaf) => {
