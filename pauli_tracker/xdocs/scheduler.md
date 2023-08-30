@@ -113,11 +113,11 @@ for step in scheduler {
 assert_eq!(
     results,
     vec![// path len,  required memory,  path
-        (       4,            3,         vec![vec![0], vec![3], vec![1], vec![2]]),
-        (       4,            3,         vec![vec![0], vec![3], vec![2], vec![1]]),
-        (       3,            3,         vec![vec![0], vec![3], vec![1, 2]]),
-        (       4,            3,         vec![vec![0], vec![1], vec![3], vec![2]]),
         (       3,            3,         vec![vec![0], vec![3, 1], vec![2]]),
+        (       4,            3,         vec![vec![0], vec![1], vec![3], vec![2]]),
+        (       3,            3,         vec![vec![0], vec![3], vec![1, 2]]),
+        (       4,            3,         vec![vec![0], vec![3], vec![2], vec![1]]),
+        (       4,            3,         vec![vec![0], vec![3], vec![1], vec![2]]),
     ]
 );
 # }
@@ -131,7 +131,7 @@ assert_eq!(
 # #[cfg_attr(coverage_nightly, no_coverage)]
 # #[cfg(feature = "scheduler")]
 # fn main() {
-use std::collections::HashMap;
+use std::{cmp, collections::HashMap};
 # #[rustfmt::skip]
 use pauli_tracker::tracker::frames::dependency_graph::DependencyGraph;
 # #[rustfmt::skip]
@@ -157,36 +157,35 @@ let num_bits = 4;
 // taking the previous results, one could simply filter them:
 
 let all_paths = vec![
-    (4, 3, vec![vec![0], vec![3], vec![1], vec![2]]), // optimal
-    (4, 3, vec![vec![0], vec![3], vec![2], vec![1]]),
-    (3, 3, vec![vec![0], vec![3], vec![1, 2]]), // optimal
-    (4, 3, vec![vec![0], vec![1], vec![3], vec![2]]),
     (3, 3, vec![vec![0], vec![3, 1], vec![2]]),
+    (4, 3, vec![vec![0], vec![1], vec![3], vec![2]]),
+    (3, 3, vec![vec![0], vec![3], vec![1, 2]]), // optimal
+    (4, 3, vec![vec![0], vec![3], vec![2], vec![1]]),
+    (4, 3, vec![vec![0], vec![3], vec![1], vec![2]]), // optimal
 ];
 
-//                             memory  lenght   path
-let mut optimal_paths: HashMap<usize, (usize, Vec<Vec<usize>>)> = HashMap::new();
+//                                       memory  lenght   path
+let mut optimal_for_each_length: HashMap<usize, (usize, Vec<Vec<usize>>)> = HashMap::new();
 for (len, mem, path) in all_paths {
-    if let Some(optimal) = optimal_paths.get_mut(&len) {
+    if let Some(optimal) = optimal_for_each_length.get_mut(&len) {
         if optimal.0 > mem {
             *optimal = (mem, path);
         }
     } else {
-        optimal_paths.insert(len, (mem, path));
+        optimal_for_each_length.insert(len, (mem, path));
     }
 }
 
 assert_eq!(
-    optimal_paths,
+    optimal_for_each_length,
     HashMap::from_iter(vec![
-        (4, (3, vec![vec![0], vec![3], vec![1], vec![2]])),
-        (3, (3, vec![vec![0], vec![3], vec![1, 2]])),
+        (3, (3, vec![vec![0], vec![3, 1], vec![2]])),
+        (4, (3, vec![vec![0], vec![1], vec![3], vec![2]])),
     ])
 );
 
-// however, this required us to first calculate all paths; we can do better by filtering
-// out paths for which we know that they cannot be optimal
-
+// however, this required us to first calculate all paths; we can do better by directly
+// skipping paths for which we know that they cannot be optimal
 
 let graph_buffer = GraphBuffer::new(&graph_state_edges, num_bits, None, false);
 let mut dependency_buffer = DependencyBuffer::new(num_bits);
@@ -196,11 +195,11 @@ let scheduler = Scheduler::new(
 );
 
 
-let mut results = Vec::new();
+let mut skipped_results = HashMap::new();
 let mut current_path = Vec::new();
 
 // we keep track of the minimum required memory for a given path length
-let mut predicates = vec![num_bits + 1; num_bits + 1];
+let mut best_memory = vec![num_bits + 1; num_bits + 1];
 
 let mut scheduler = scheduler.into_iter();
 
@@ -226,10 +225,10 @@ while let Some(step) = scheduler.next() {
                 current_path.len() + 2 // similar as above
             };
             // if the already maximal required memory for the current subpath is bigger
-            // than minimal required memory for paths which have the same length or are
-            // shorted, we skip this state and with that all paths that could be
+            // than the minimal required memory for paths which have the same length or
+            // are shorter, we skip this state and with that all paths that could be
             // generated from this state
-            if current.space().max_memory() >= predicates[minimum_path_length] {
+            if current.space().max_memory() >= best_memory[minimum_path_length] {
                 if scheduler.skip_current().is_err() {
                     break;
                 }
@@ -239,10 +238,16 @@ while let Some(step) = scheduler.next() {
         }
         Step::Backward(leaf) => {
             if let Some(mem) = leaf {
-                // we update our predicates, because we have found a path which is
-                // optimal so far
-                predicates[current_path.len()] = mem;
-                results.push((current_path.len(), mem, current_path.clone()));
+                // we update our best_memory, because we have found a path which is
+                // optimal so far (it is mem < best_memory[current_path.len()] because
+                // otherwise we would have skipped this state above
+                best_memory[current_path.len()] = mem;
+                // we also update the memory for all longer paths because we don't want
+                // a longer path with the same or more memory
+                for m in best_memory[current_path.len() + 1..].iter_mut() {
+                    *m = cmp::min(*m, mem);
+                }
+                skipped_results.insert(current_path.len(), (mem, current_path.clone()));
             }
             current_path.pop();
             // no sense in skipping here, because if it we could skip, we would
@@ -252,18 +257,41 @@ while let Some(step) = scheduler.next() {
     }
 }
 
-assert_eq!(
-    results,
-    vec![
-        (4, 3, vec![vec![0], vec![3], vec![1], vec![2]]),
-        (3, 3, vec![vec![0], vec![3], vec![1, 2]]),
-    ]
-);
+// we finally filter out all paths that are longer than some other path but don't have
+// less memory (in this case that is actually not required for skipper_results, but
+// sometimes it might be; anyway, we need it for the filtered_from_all down below)
 
-// Note that while in this example, we directly get the two optimal paths, in general,
-// one would need to filter the `results`, as we had filtered `all_results`, because we
-// are keeping paths in `results` even if we find a with the same length but less
-// memory. This can, of course, also be done directly in the loop above.
+fn final_filter(
+    num_bits: usize,
+    paths: HashMap<usize, (usize, Vec<Vec<usize>>)>,
+) -> HashMap<usize, (usize, Vec<Vec<usize>>)> {
+    let mut best_memory = vec![num_bits + 1; num_bits + 1];
+    let mut res: HashMap<usize, (usize, Vec<Vec<usize>>)> = HashMap::new();
+    for i in 0..best_memory.len() {
+        if let Some((mem, _)) = paths.get(&i) {
+            let m = best_memory[i];
+            if *mem < m {
+                res.insert(i, paths.get(&i).unwrap().clone());
+                for m in best_memory[i..].iter_mut() {
+                    *m = *mem;
+                }
+            }
+        }
+    }
+    res
+}
+
+let filtered_from_skipped_results = final_filter(num_bits, skipped_results);
+let filtered_from_all = final_filter(num_bits, optimal_for_each_length);
+
+assert_eq!(
+    filtered_from_skipped_results,
+    filtered_from_all,
+);
+assert_eq!(
+    filtered_from_skipped_results,
+    HashMap::from_iter([(3, (3, vec![vec![0], vec![3, 1], vec![2]]))]),
+);
 # }
 # #[cfg_attr(coverage_nightly, no_coverage)]
 # #[cfg(not(feature = "scheduler"))]

@@ -283,7 +283,11 @@ impl FocusIterator for PathGenerator<'_, Partitioner> {
     where
         Self: Sized,
     {
-        let (measuring, new_measurable_set) = self.measurable.next()?;
+        // let (measuring, new_measurable_set) = self.measurable.next()?;
+        let (new_measurable_set, measuring) = self.measurable.next()?;
+        if measuring.is_empty() {
+            return None;
+        }
         Some((
             // we know that the input is fine, because it is a partition of
             // self.measurable
@@ -339,9 +343,7 @@ impl MeasurableSet for Vec<usize> {
 impl MeasurableSet for Partition<Vec<usize>> {
     fn init(set: Vec<usize>) -> Self {
         let len = set.len();
-        let mut res = Partition::new(set, len);
-        res.next();
-        res
+        Partition::new(set, len)
     }
 
     fn set(&self) -> &[usize] {
@@ -407,11 +409,11 @@ mod tests {
         assert_eq!(
             get_all_paths(time),
             vec![
-                vec![vec![0], vec![3], vec![1], vec![2]],
-                vec![vec![0], vec![3], vec![2], vec![1]],
-                vec![vec![0], vec![3], vec![1, 2]],
-                vec![vec![0], vec![1], vec![3], vec![2]],
                 vec![vec![0], vec![3, 1], vec![2]],
+                vec![vec![0], vec![1], vec![3], vec![2]],
+                vec![vec![0], vec![3], vec![1, 2]],
+                vec![vec![0], vec![3], vec![2], vec![1]],
+                vec![vec![0], vec![3], vec![1], vec![2]],
             ]
         );
     }
@@ -425,13 +427,9 @@ mod tests {
 
         let mut buffer = DependencyBuffer::new(10);
 
-        for (n, &result) in ORDERED_BELL_NUMBERS.iter().enumerate() {
+        for (n, &result) in ORDERED_BELL_NUMBERS.iter().enumerate().skip(1) {
             let time = PathGenerator::<Partitioner>::from_dependency_graph(
-                if n == 0 {
-                    vec![]
-                } else {
-                    vec![(0..n).map(|i| (i, vec![])).collect()]
-                },
+                vec![(0..n).map(|i| (i, vec![])).collect()],
                 &mut buffer,
                 None,
             );
@@ -497,5 +495,5 @@ mod tests {
 // if measuring.is_empty() {
 //     return None;
 // }
-// and in new_partition we have to comment
-// measureable.next();
+// and in MeasurableSet::init we have to comment
+// res.next();

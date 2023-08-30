@@ -1,4 +1,5 @@
 use std::{
+    cmp,
     hash::BuildHasherDefault,
     mem,
     thread,
@@ -75,8 +76,8 @@ const MAX_OPS: usize = 200;
 // const MAX_LAYERS: usize = MAX_ORDER_RELATIONS;
 proptest! {
     #![proptest_config(Config {
+        // cases: 10,
         // cases: 1,
-        // cases: 100,
         // see comment in super::tracking
         failure_persistence: Some(Box::new(FileFailurePersistence::WithSource(
             "regressions",
@@ -135,10 +136,18 @@ fn roundtrip(ops: Vec<Operation>, edges: Edges, num_nodes: usize) {
         <Storage as Iterable>::iter_pairs(&circuit.storage),
         &measurements.0,
     );
+    // let dependency_graph: Vec<Vec<(usize, Vec<usize>)>> = vec![
+    //     dependency_graph
+    //         .into_iter()
+    //         .flatten()
+    //         .map(|(n, _)| (n, vec![]))
+    //         .collect(),
+    // ];
     let _dependency_graph = dependency_graph.clone();
 
     // println!("{:?}", dependency_graph);
     // println!("{:?}", dependency_graph.len());
+    // println!("{:?}", edges);
 
     let mut buffer = DependencyBuffer::new(num_nodes);
     let path_generator =
@@ -150,35 +159,24 @@ fn roundtrip(ops: Vec<Operation>, edges: Edges, num_nodes: usize) {
 
     let scheduler = Scheduler::new(path_generator.clone(), graph.clone());
 
-    let mut all_results = Vec::new();
-    let mut path = Vec::new();
+    let mut all_paths = Vec::new();
+    let mut this_path = Vec::new();
 
     for step in scheduler.clone() {
         match step {
-            Step::Forward(set) => path.push(set),
+            Step::Forward(measure_set) => this_path.push(measure_set),
             Step::Backward(leaf) => {
-                if let Some(mem) = leaf {
-                    all_results.push((path.len(), mem, path.clone()));
+                if let Some(max_mem) = leaf {
+                    all_paths.push((this_path.len(), max_mem, this_path.clone()));
                 }
-                path.pop();
+                this_path.pop();
             }
         }
     }
 
-    let mut optimal_paths: HashMap<usize, (usize, Vec<Vec<usize>>)> = HashMap::new();
-    for (len, mem, path) in all_results.iter() {
-        if let Some(optimal) = optimal_paths.get_mut(len) {
-            if optimal.0 > *mem {
-                *optimal = (*mem, path.to_vec());
-            }
-        } else {
-            optimal_paths.insert(*len, (*mem, path.to_vec()));
-        }
-    }
-
-    let mut skipper_results = Vec::new();
+    let mut skipper_results = HashMap::new();
     let mut path = Vec::new();
-    let mut predicates = vec![num_nodes + 1; num_nodes + 1];
+    let mut best_memory = vec![num_nodes + 1; num_nodes + 1];
     let mut scheduler = scheduler.into_iter();
 
     while let Some(step) = scheduler.next() {
@@ -192,7 +190,7 @@ fn roundtrip(ops: Vec<Operation>, edges: Edges, num_nodes: usize) {
                 } else {
                     path.len() + 2
                 };
-                if current.space().max_memory() >= predicates[minimum_time] {
+                if current.space().max_memory() >= best_memory[minimum_time] {
                     if scheduler.skip_current().is_err() {
                         break;
                     }
@@ -202,13 +200,63 @@ fn roundtrip(ops: Vec<Operation>, edges: Edges, num_nodes: usize) {
             }
             Step::Backward(leaf) => {
                 if let Some(mem) = leaf {
-                    predicates[path.len()] = mem;
-                    skipper_results.push((path.len(), mem, path.clone()));
+                    best_memory[path.len()] = mem;
+                    for m in best_memory[path.len() + 1..].iter_mut() {
+                        *m = cmp::min(*m, mem);
+                    }
+                    skipper_results.insert(path.len(), (mem, path.clone()));
                 }
                 path.pop();
             }
         }
     }
+
+    let mut filtered_all_paths: HashMap<usize, (usize, Vec<Vec<usize>>)> =
+        HashMap::new();
+    for (len, mem, path) in all_paths.iter() {
+        if let Some(optimal) = filtered_all_paths.get_mut(len) {
+            if optimal.0 > *mem {
+                *optimal = (*mem, path.to_vec());
+            }
+        } else {
+            filtered_all_paths.insert(*len, (*mem, path.to_vec()));
+        }
+    }
+
+    // filter out paths that are longer than other paths with the same memory
+    fn final_filter(
+        num_nodes: usize,
+        paths: HashMap<usize, (usize, Vec<Vec<usize>>)>,
+    ) -> HashMap<usize, (usize, Vec<Vec<usize>>)> {
+        let mut best_memory = vec![num_nodes + 1; num_nodes + 1];
+        let mut res: HashMap<usize, (usize, Vec<Vec<usize>>)> = HashMap::new();
+        for i in 0..best_memory.len() {
+            if let Some((mem, _)) = paths.get(&i) {
+                let m = best_memory[i];
+                if *mem < m {
+                    res.insert(i, paths.get(&i).unwrap().clone());
+                    for m in best_memory[i..].iter_mut() {
+                        *m = *mem;
+                    }
+                }
+            }
+        }
+        res
+    }
+
+    let filtered_skipper_results = final_filter(num_nodes, skipper_results.clone());
+    let filtered_filtered_all_paths =
+        final_filter(num_nodes, filtered_all_paths.clone());
+
+    // println!("{:?}", all_results);
+    // println!("{:?}", optimal_paths);
+    // println!("{:?}", skipper_results);
+
+    assert_eq!(
+        filtered_skipper_results, filtered_filtered_all_paths,
+        "\n{all_paths:?}\n{filtered_filtered_all_paths:?}\n{filtered_skipper_results:?\
+         }"
+    );
 
     let splitted_instructions = split_instructions(path_generator, 4);
 
@@ -290,26 +338,27 @@ fn roundtrip(ops: Vec<Operation>, edges: Edges, num_nodes: usize) {
     // check that there are no duplicate paths
     let mut all_results_as_set =
         HashSet::with_hasher(BuildHasherDefault::<FxHasher>::default());
-    for r in all_results {
+    for r in all_paths {
         assert!(all_results_as_set.insert(r));
     }
     assert_eq!(all_results_as_set, merged_results);
 
+    // let mut sorted_final = filtered_skipper_results.into_iter().collect::<Vec<_>>();
+    // sorted_final.sort_by_key(|(len, _)| *len);
+    // // let mut sorted_intermediate = skipper_results.into_iter().collect::<Vec<_>>();
+    // // sorted_intermediate.sort_by_key(|(len, _)| *len);
+    // // if sorted_final != sorted_intermediate {
+    // //     println!("AAAAAAAAAAAAAAAAAAAAAAAAAAAA");
+    // // }
     // println!("{:?}", _graph);
     // println!("{:?}", _dependency_graph);
-    // for r in skipper_results.iter() {
+    // // for r in sorted_intermediate.iter() {
+    // //     println!("{:?}", r);
+    // // }
+    // for r in sorted_final.iter() {
     //     println!("{:?}", r);
     // }
     // println!();
-
-    assert_eq!(
-        HashMap::from_iter(
-            skipper_results
-                .into_iter()
-                .map(|(len, mem, path)| (len, (mem, path)))
-        ),
-        optimal_paths
-    );
 
     //
 }
