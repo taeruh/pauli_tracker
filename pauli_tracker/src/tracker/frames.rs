@@ -290,6 +290,9 @@ where
     B: BooleanVector,
 {
     /// Pop the last tracked Pauli frame.
+    ///
+    /// If you do this to get all frames, you might want to use
+    /// [transpose_reverted](Frames::transpose_reverted).
     pub fn pop_frame<P: Pauli>(&mut self) -> Option<PauliString<P>> {
         if self.storage.is_empty() || self.frames_num == 0 {
             return None;
@@ -317,10 +320,30 @@ where
         }
     }
 
-    /// Transpose the frames, with reverted order.
+    /// Transpose the frames, with reverted order of the frames and sorted qubits.
     ///
     /// # Panics
     /// Panics if `num_qubits` is smaller than the number of tracked qubits.
+    ///
+    /// # Examples
+    /// ```
+    /// # #[cfg_attr(coverage_nightly, no_coverage)]
+    /// # fn main() {
+    /// # use pauli_tracker::{collection::NaiveVector, pauli, tracker::frames::Frames};
+    /// type PauliStack = pauli::PauliStack<Vec<bool>>;
+    /// assert_eq!(
+    ///     Frames::<NaiveVector<_>>::new_unchecked(vec![
+    ///         //               frame  X 01  Z 01              qubit
+    ///         PauliStack::try_from_str("01", "10").unwrap(), // 0
+    ///         PauliStack::try_from_str("10", "11").unwrap(), // 1
+    ///         PauliStack::try_from_str("01", "11").unwrap(), // 2
+    ///     ].into(), 2).transpose_reverted(3),
+    ///     vec![ //             qubit  X 012  Z 012              frame
+    ///         PauliStack::try_from_str("101", "011").unwrap(), // 1
+    ///         PauliStack::try_from_str("010", "111").unwrap(), // 0
+    ///     ]
+    /// );
+    /// # }
     pub fn transpose_reverted(mut self, num_qubits: usize) -> Vec<PauliStack<B>> {
         let mut ret = Vec::with_capacity(self.frames_num);
         while let Some(frame) = self.pop_frame() {
@@ -333,36 +356,6 @@ where
         ret
     }
 }
-
-// #[test]
-// fn foo() {
-//     type Storage = crate::collection::Map<PauliStack<Vec<bool>>>;
-//     let mut frames = Frames::<Storage>::init(3);
-//     let mut storage = Storage::with_capacity(3);
-//     frames.track_x(0);
-//     frames.cx(0, 1);
-//     frames.track_z(1);
-//     frames.measure_and_store(0, &mut storage).unwrap();
-//     frames.track_x(2);
-//     frames.measure_and_store_all(&mut storage);
-//     let frames = Frames::new_unchecked(storage, frames.frames_num());
-//     for stack in frames.as_storage().iter() {
-//         println!("{:?}", stack);
-//     }
-//     let mut transposed = frames.transpose_reverted(3);
-//     println!();
-//     for string in transposed.iter() {
-//         println!("{:?}", string);
-//     }
-//     println!();
-//     let mut current = transposed.pop().unwrap();
-//     println!("{:?}", current);
-//     current.xor_inplace(&transposed.pop().unwrap());
-//     println!("{:?}", current);
-//     println!("{:?}", current.get::<PauliTuple>(1));
-//     current.xor_inplace(&transposed.pop().unwrap());
-//     println!("{:?}", current);
-// }
 
 impl<S, B> Frames<S>
 where

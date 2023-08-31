@@ -77,7 +77,7 @@ tracker.cz(1, 2); // conjugate with a Control Z gate
 tracker.h(0); // conjugate with an H gate
 
 // let's get the frames (sorted into a Vec for convenience)
-let frames = tracker.into_storage().into_sorted_by_key();
+let frames = tracker.clone().into_storage().into_sorted_by_key();
 
 // what would we expect (calculate it by hand)?
 let mut expected =
@@ -98,9 +98,23 @@ expected[2].1.push(PauliTuple::new_y());
 // let's check it
 assert_eq!(frames, expected);
 
-// let's vary the example from above a little bit: Paulis are often induced as
-// corrections in MBQC; these corrections might effect the measurement basis of
-// following measurements; to get the final correction before a measurement we could add
+// Note that the frames-matrix has the qubits on the major axis and the frames on the
+// minor axis, for performance reasons while tracking. When the tracking is done, one
+// can tranpose the matrix, which is beneficial for certain applications, e.g., when
+// iteratively adding up the frames.
+assert_eq!(
+    tracker.transpose_reverted(3), // we need to pass in the number of qubits
+    vec![ //             qubit  X 012  Z 012  (tableau representation)
+        PauliStack::try_from_str("001", "011").unwrap(), // frame (1)
+        PauliStack::try_from_str("010", "111").unwrap(), // frame (0)
+    ]
+);
+// Note that the frames order is reverted, so that one can get the frames in order when
+// popping from the vector
+
+// Let's vary the example from above a little bit: Paulis are often induced as
+// corrections in MBQC. These corrections might effect the measurement basis of
+// following measurements. To get the final correction before a measurement we could add
 // the frames in `frames` from above, however, we can also do it directly with the
 // LiveTracker:
 
@@ -131,7 +145,8 @@ tracker.h(0);
 println!("{tracker:?}");
 
 // we can check whether the output of the live tracker aligns with the frames
-// tracker
+// tracker (in a real application one would probably do this by iteratively adding up
+// the frames with the help of Frames::transposed_reverted)
 let conditional_summed_frames: Vec<_> = frames
     .into_iter()
     .map(|(_, pauli_stack)| pauli_stack.sum_up(&measurements))
