@@ -39,10 +39,11 @@ documentation](https://docs.rs/pauli_tracker/#examples).
 There is no guarantee for a long-time support of a specific Rust version. Bumping the
 MSRV increments the minor SemVer version.
 
-## Contributing
+## Issues and Contributing
 
-Contributions are very welcome, e.g., if you find bugs or need additional Clifford
-gates. Check out the [guidelines](/CONTRIBUTING.md).
+Don't hold back with issues, I need some feedback at the current stage. Contributions
+are very welcome, e.g., if you find bugs or need additional Clifford gates. Check out
+the [guidelines](/CONTRIBUTING.md).
 
 ## How to cite
 

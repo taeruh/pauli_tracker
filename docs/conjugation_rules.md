@@ -87,12 +87,13 @@ of this section.
 ___
 ### Single qubit operations
 ___
-The Pauli gates $X = HSSH$, $Y = iHSSHSS$, $Z = SS$ (hermitian)
+The Pauli gates $I$, $X = HSSH$, $Y = iHSSHSS$, $Z = SS$ (hermitian)
 
 Rules:
 $$\begin{aligned}
-  XXX &= X; \qquad\,\,\,\,\, XZX = -X\\
-  ZXZ &= -X; \qquad ZZZ = Z\\
+  IXI &= X; \qquad\,\,\,\,\,\,\, IZI = Z\\
+  XXX &= X; \qquad\,\,\,\, XZX = -Z\\
+  ZXZ &= -X; \qquad\, ZZZ = Z\\
   YXY &= -X; \qquad YZY = -Z
 \end{aligned}$$
 ___

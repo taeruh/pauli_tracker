@@ -60,11 +60,11 @@ I hope the following list includes all steps ...
    `SINGLE_GENERATORS`/`DOUBLE_GENERATORS` (updating `N_SINGLES`/`N_DOUBLES`).
 6. In the `circuit` module: Add the gate to the `CliffordCircuit` trait, to the
    `impl_gates` macro and to the `single_gate!`/`double_gate!` macro call.
-7. In `tests/roundtrips/tracking.rs` add the gate to the `Operation` and to `prop_oneof`
-   call in `operation` similar to the other gates (the number before "=>" is the
-   probability (before normalization of the probabilities). In the `Instructor::apply`'s
-   match call, add the case similar to the other (normal) single/double qubit gate
-   cases.
+7. In `tests/roundtrips/tracking.rs` add the gate to the `Operation` enum and to
+   `prop_oneof` call in `operation` similar to the other gates (the number before "=>"
+   is the probability (before normalization of the probabilities). In the
+   `Instructor::apply`'s match call, add the case similar to the other (normal)
+   single/double qubit gate cases.
 
 [conventional_commits]: https://www.conventionalcommits.org
 [git-feature-branch]: https://www.atlassian.com/git/tutorials/comparing-workflows

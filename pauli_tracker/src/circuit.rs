@@ -38,6 +38,8 @@ pub trait CliffordCircuit {
     /// [RandomMeasurementCircuit].
     type Outcome;
 
+    /// Apply the I gate
+    fn id(&mut self, bit: usize);
     /// Apply the X gate
     fn x(&mut self, bit: usize);
     /// Apply the Y gate
@@ -96,7 +98,7 @@ macro_rules! double {
 
 macro_rules! impl_gates {
     () => {
-        single!(x, y, z, sx, sy, sz, sxdg, sydg, szdg, h, s, sdg, hxy, hyz,);
+        single!(id, x, y, z, sx, sy, sz, sxdg, sydg, szdg, h, s, sdg, hxy, hyz,);
         double!(cx, cz, cy, swap, iswap, iswapdg,);
     };
 }
@@ -304,7 +306,7 @@ impl<C, T, S> TrackedCircuit<C, T, S>
 where
     C: CliffordCircuit,
 {
-    apply_paulis!((x, "X"), (y, "Y"), (z, "Z"),);
+    apply_paulis!((id, "I"), (x, "X"), (y, "Y"), (z, "Z"),);
 
     /// Perform a Measurement on the circuit, returning the result.
     pub fn measure(&mut self, bit: usize) -> C::Outcome {

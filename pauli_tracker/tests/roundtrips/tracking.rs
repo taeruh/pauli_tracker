@@ -254,6 +254,7 @@ impl Instructor {
             // println!("{:?}", op);
 
             match *op {
+                Operation::I(b) => circuit.id(self.mem_idx(b)),
                 Operation::X(b) => circuit.x(self.mem_idx(b)),
                 Operation::Y(b) => circuit.y(self.mem_idx(b)),
                 Operation::Z(b) => circuit.z(self.mem_idx(b)),
@@ -484,6 +485,7 @@ impl ExtendCircuit for TrackedCircuit<RandomMeasurementCircuit, Live<PauliTuple>
 
 #[derive(Clone, Debug)]
 pub enum Operation {
+    I(usize),
     X(usize),
     Y(usize),
     Z(usize),
@@ -516,6 +518,7 @@ pub enum Operation {
 
 fn operation() -> impl Strategy<Value = Operation> {
     prop_oneof![
+        1 => any::<usize>().prop_map(Operation::I),
         1 => any::<usize>().prop_map(Operation::X),
         1 => any::<usize>().prop_map(Operation::Y),
         1 => any::<usize>().prop_map(Operation::Z),

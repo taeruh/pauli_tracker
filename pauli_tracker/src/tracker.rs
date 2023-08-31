@@ -151,6 +151,9 @@ pub trait Tracker {
     #[doc = double_doc!("Control Z")]
     fn cz(&mut self, bit_a: usize, bit_b: usize);
 
+    #[doc = single_doc!("I")]
+    /// The identity.
+    fn id(&mut self, _: usize) {}
     #[doc = single_doc!("X")]
     /// Note that it is just the identity.
     fn x(&mut self, _: usize) {}
@@ -319,13 +322,14 @@ mod tests {
         // the encoding is according to crate::pauli::tableau_encoding, i.e., 0=I, 2=X,
         // 3=Y, 1=Z
 
-        pub const N_SINGLES: usize = 14;
+        pub const N_SINGLES: usize = 15;
         const SINGLE_GENERATORS: [(&str, [u8; 2]); N_SINGLES] =
             // (name, result: [conjugate X, conjugate Z])
             [
                 ("H", [1, 2]),
                 ("S", [3, 1]),
                 ("SDG", [3, 1]),
+                ("I", [2, 1]),
                 ("X", [2, 1]),
                 ("Y", [2, 1]),
                 ("Z", [2, 1]),
@@ -345,6 +349,7 @@ mod tests {
                     <$tracker>::h,
                     <$tracker>::s,
                     <$tracker>::sdg,
+                    <$tracker>::id,
                     <$tracker>::x,
                     <$tracker>::y,
                     <$tracker>::z,
