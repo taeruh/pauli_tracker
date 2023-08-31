@@ -44,6 +44,7 @@ impl<T> BufferedVector<T> {
     }
 
     /// Wrap a [Vec] into a [BufferedVector].
+    #[deprecated(since="0.3.1", note="use `from` instead")]
     pub fn wrap(vec: Vec<T>) -> Self {
         Self(vec)
     }
