@@ -29,7 +29,7 @@ macro_rules! unwrap_or_compile_error {
 #[proc_macro_derive(ArgDispatch, attributes(arg_dispatch))]
 pub fn arg_dispatch(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
-    let (name, variants, serialized_variants) =
+    let (name, variants, normalized_variants) =
         unwrap_or_compile_error!(parse_input(&input));
 
     fn lit_str_from_meta(meta: &Meta) -> syn::Result<&LitStr> {
@@ -71,7 +71,7 @@ pub fn arg_dispatch(input: TokenStream) -> TokenStream {
         impl #name {
             fn dispatch(self) {
                 match self {
-                    #(#name::#variants => #dispatcher #serialized_variants(),)*
+                    #(#name::#variants => #dispatcher #normalized_variants(),)*
                     _ => (),
                 }
             }
@@ -88,12 +88,12 @@ fn parse_input<'a>(
 
     let name = &input.ident;
     let variants = data.variants.iter().map(|e| (&e.ident)).collect::<Vec<_>>();
-    let serialized_variants = variants
+    let normalized_variants = variants
         .clone()
         .into_iter()
         .map(|e| Ident::new(snake_case(e.to_string()).as_str(), e.span()));
 
-    Ok((name, variants, serialized_variants))
+    Ok((name, variants, normalized_variants))
 }
 
 fn unwrap_enum(input: &DeriveInput) -> syn::Result<&DataEnum> {

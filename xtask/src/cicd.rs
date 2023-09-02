@@ -61,7 +61,7 @@ pub fn fmt() {
 }
 // }}
 
-// test
+// {{ test
 pub fn standard() {
     println!("TEST: STANDARD");
     cargo!("+nightly", "update", "-Zdirect-minimal-versions");

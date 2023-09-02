@@ -7,7 +7,10 @@ members = [
   # "xtask",
   # "xtask/proc",
 ]
-
 default-members = [
   "pauli_tracker",
+]
+exclude = [
+  "xtask",
+  "xtask/proc",
 ]
