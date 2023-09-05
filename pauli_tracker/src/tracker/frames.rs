@@ -106,8 +106,10 @@ impl<S> Frames<S> {
     /// Create a new [Frames] instance with a given storage and number of frames.
     ///
     /// It does not check whether the storage is compatible with the number of frames.
-    /// If it is not, using the create instance might result in errors or panics. This
-    /// function is mainly useful to put some parts of a frames storage into a new one.
+    /// If it is not, i.e., if not all stacks have the same length and this length is
+    /// `frames_num`, using the create instance might result in logic errors and panics.
+    /// This function is mainly useful to put some parts of a frames storage into a new
+    /// one.
     pub fn new_unchecked(storage: S, frames_num: usize) -> Self {
         Self { storage, frames_num }
     }
@@ -122,7 +124,8 @@ impl<S> Frames<S> {
         self.storage
     }
 
-    /// Get the number of tracked frames.
+    /// Get the number of tracked frames, i.e., the length of the stacks in the inner
+    /// storage.
     pub fn frames_num(&self) -> usize {
         self.frames_num
     }
@@ -320,7 +323,8 @@ where
         }
     }
 
-    /// Transpose the frames, with reverted order of the frames and sorted qubits.
+    /// Transpose the frames, with reverted order of the frames and sorted qubits. The
+    /// results is a non-sparse matrix.
     ///
     /// # Panics
     /// Panics if `num_qubits` is smaller than the number of tracked qubits.
@@ -329,7 +333,8 @@ where
     /// ```
     /// # #[cfg_attr(coverage_nightly, no_coverage)]
     /// # fn main() {
-    /// # use pauli_tracker::{collection::NaiveVector, pauli, tracker::frames::Frames};
+    /// # use pauli_tracker::{collection::NaiveVector, pauli::{self, PauliTuple},
+    /// #     tracker::frames::Frames};
     /// type PauliStack = pauli::PauliStack<Vec<bool>>;
     /// assert_eq!(
     ///     Frames::<NaiveVector<_>>::new_unchecked(vec![
@@ -337,21 +342,25 @@ where
     ///         PauliStack::try_from_str("01", "10").unwrap(), // 0
     ///         PauliStack::try_from_str("10", "11").unwrap(), // 1
     ///         PauliStack::try_from_str("01", "11").unwrap(), // 2
-    ///     ].into(), 2).transpose_reverted(3),
-    ///     vec![ //             qubit  X 012  Z 012              frame
-    ///         PauliStack::try_from_str("101", "011").unwrap(), // 1
-    ///         PauliStack::try_from_str("010", "111").unwrap(), // 0
-    ///     ]
+    ///     ].into(), 2).transpose_reverted::<PauliTuple>(3),
+    ///     vec![ // qubit (X,Z)   0      1      2      frame
+    ///                     vec![(1,0), (0,1), (1,1)], // 1
+    ///                     vec![(0,1), (1,1), (0,1)], // 2
+    ///     ].into_iter().map(|frame| frame.into_iter().map(|(l, r)| 
+    ///         PauliTuple(l==1, r==1)).collect::<Vec<PauliTuple>>()).collect::<Vec<_>>()
     /// );
     /// # }
-    pub fn transpose_reverted(mut self, num_qubits: usize) -> Vec<PauliStack<B>> {
+    pub fn transpose_reverted<P: Pauli + Clone>(
+        mut self,
+        num_qubits: usize,
+    ) -> Vec<Vec<P>> {
         let mut ret = Vec::with_capacity(self.frames_num);
-        while let Some(frame) = self.pop_frame() {
-            let mut paulis = vec![PauliTuple::I; num_qubits];
+        while let Some(frame) = self.pop_frame::<P>() {
+            let mut paulis = vec![P::I; num_qubits];
             for (i, p) in frame {
                 paulis[i] = p;
             }
-            ret.push(PauliStack::from_iter(paulis));
+            ret.push(paulis);
         }
         ret
     }

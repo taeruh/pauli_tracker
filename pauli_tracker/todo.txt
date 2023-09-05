@@ -4,7 +4,8 @@
 
 ---------- release new major
 
-- include transposed_reverted into lib docs
+- an insert stack method for Frames which adopts its length to frames_num, or vice versa
+  if the stack's length is longer (resize all other stacks)
 
 - replace unreachable with unchecked_unreachable
 

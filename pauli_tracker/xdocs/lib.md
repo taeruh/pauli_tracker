@@ -103,7 +103,8 @@ assert_eq!(frames, expected);
 // can tranpose the matrix, which is beneficial for certain applications, e.g., when
 // iteratively adding up the frames.
 assert_eq!(
-    tracker.transpose_reverted(3), // we need to pass in the number of qubits
+    tracker.transpose_reverted::<PauliTuple>(3) // we need to pass in the number of qubits
+        .into_iter().map(|frame| PauliStack::from_iter(frame)).collect::<Vec<_>>(),
     vec![ //             qubit  X 012  Z 012  (tableau representation)
         PauliStack::try_from_str("001", "011").unwrap(), // frame (1)
         PauliStack::try_from_str("010", "111").unwrap(), // frame (0)
