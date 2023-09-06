@@ -6,9 +6,8 @@ pub struct RandomMeasurementCircuit {}
 
 impl CliffordCircuit for RandomMeasurementCircuit {
     type Outcome = bool;
-    impl_gates!();
+    impl_dummy_gates!();
     fn measure(&mut self, _: usize) -> bool {
         rand::random::<bool>()
-        // true
     }
 }

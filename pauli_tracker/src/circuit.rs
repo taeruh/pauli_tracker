@@ -84,22 +84,22 @@ pub trait CliffordCircuit {
     fn measure(&mut self, bit: usize) -> Self::Outcome;
 }
 
-macro_rules! single {
+macro_rules! single_dummy {
     ($($name:ident,)*) => {$(
         fn $name(&mut self, _: usize) {}
     )*};
 }
 
-macro_rules! double {
+macro_rules! double_dummy {
     ($($name:ident,)*) => {$(
         fn $name(&mut self, _: usize, _: usize) {}
     )*};
 }
 
-macro_rules! impl_gates {
+macro_rules! impl_dummy_gates {
     () => {
-        single!(id, x, y, z, sx, sy, sz, sxdg, sydg, szdg, h, s, sdg, hxy, hyz,);
-        double!(cx, cz, cy, swap, iswap, iswapdg,);
+        single_dummy!(id, x, y, z, sx, sy, sz, sxdg, sydg, szdg, h, s, sdg, hxy, hyz,);
+        double_dummy!(cx, cz, cy, swap, iswap, iswapdg,);
     };
 }
 

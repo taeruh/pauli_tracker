@@ -5,6 +5,6 @@ use super::CliffordCircuit;
 pub struct DummyCircuit {}
 impl CliffordCircuit for DummyCircuit {
     type Outcome = ();
-    impl_gates!();
+    impl_dummy_gates!();
     fn measure(&mut self, _: usize) {}
 }

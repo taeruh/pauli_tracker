@@ -380,7 +380,7 @@ assert_eq!(
 # fn main() {}
 ```
 As noted in the code above, our teleported T gate is a little bit naive. When looking
-into more details of the [paper], one can see that the measurement that we perform for
+into more details of this [paper], one can see that the measurement that we perform for
 the teleported T gate actually anti-commutes with the Z gate. Importantly, this is also
 true if we have some X corrections, because the X corrections would only change the
 angle in the measurement. This means that we do not have to change the measurement to

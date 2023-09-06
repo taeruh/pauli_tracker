@@ -346,7 +346,7 @@ where
     ///     vec![ // qubit (X,Z)   0      1      2      frame
     ///                     vec![(1,0), (0,1), (1,1)], // 1
     ///                     vec![(0,1), (1,1), (0,1)], // 2
-    ///     ].into_iter().map(|frame| frame.into_iter().map(|(l, r)| 
+    ///     ].into_iter().map(|frame| frame.into_iter().map(|(l, r)|
     ///         PauliTuple(l==1, r==1)).collect::<Vec<PauliTuple>>()).collect::<Vec<_>>()
     /// );
     /// # }

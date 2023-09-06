@@ -13,7 +13,9 @@ internally, [PauliDense] uses binary operations like '&', '^', etc. and [PauliEn
 a bunch of match statements.
 
 It probably depends very much on the situation which representation is best. We haven't
-performed any benchmarks. If needed one can easily create a custom type that implements
+performed any good benchmarks (a simple (naive) benchmark shows that it is maybe best
+to use [PauliDense] or [PauliTuple] during the tracking and convert it afterwards, if
+needed, into [PauliEnum]). If needed one can easily create a custom type that implements
 [Pauli].
 
 [PauliStack] is a stack for multiple Pauli operators, which is used in the

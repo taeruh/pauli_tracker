@@ -1,0 +1,8 @@
+# [build]
+# rustflags = [
+# "-C", "target-cpu=native",
+# ]
+
+# [profile.bench]
+# lto = true
+# codegen-units = 1
