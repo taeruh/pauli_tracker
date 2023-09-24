@@ -103,6 +103,9 @@ pub fn proptest() {
 // {{ safety
 pub fn miri() {
     println!("SAFETY: MIRI");
+    // the following problem cannot happen anymore, because xtask is not in the
+    // workspace anymore, but it's still good to know
+    //
     // something weird is happening here: when we do `cargo run` for this package,
     // miri starts to execute but fails with the error that we are not on nightly,
     // which is not true; we don't get this error if we directly execute the binary

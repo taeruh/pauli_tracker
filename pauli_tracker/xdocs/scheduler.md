@@ -1,6 +1,7 @@
 Analyse scheduling paths on a [graph state] (or similar) allowed by a [DependencyGraph].
 
-**This module is currently rather experimental.**
+**This module is currently rather experimental. It may be put into a separate crate in
+the future.**
 
 *The module is rather independent of of Pauli tracking. In general, one just needs a
 time ordering on the qubits, like a [DependencyGraph] (or have no time ordering at

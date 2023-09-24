@@ -3,9 +3,6 @@ resolver = "2"
 
 members = [
   "pauli_tracker",
-  # bad for `update -Zdirect-minimal-versions`
-  # "xtask",
-  # "xtask/proc",
 ]
 default-members = [
   "pauli_tracker",
