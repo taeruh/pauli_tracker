@@ -23,6 +23,6 @@ jobs:
         with:
           components: miri
       - name: cargo miri test
-        run: cargo miri test --all-features --all-targets
+        run: cargo miri test --all-features --lib --tests
       - name: cargo miri test docs
         run: cargo test --all-features --doc

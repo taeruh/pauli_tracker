@@ -115,7 +115,7 @@ pub fn miri() {
     // here is executed, cargo sees the +nightly, so it starts miri, however, it
     // does not set V to "nightly" and miri reads V so it thinks we are not on
     // nightly; note that we do not have that problem in the [check::docs] function
-    cargo!("+nightly", "miri", "test", "--all-features", "--all-targets");
+    cargo!("+nightly", "miri", "test", "--all-features", "--lib", "--tests");
     cargo!("+nightly", "miri", "test", "--all-features", "--doc");
 }
 // }}
