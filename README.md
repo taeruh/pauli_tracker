@@ -34,6 +34,11 @@ while simulating the circuit.
 For examples, please look into the the [crate
 documentation](https://docs.rs/pauli_tracker/#examples).
 
+## Related projects
+
+- [pauli_tracker_extern](https://github.com/QSI-BAQS/pauli_tracker_extern):
+  **work-in-progress**; partially export the API through a C library
+
 ## MSRV policy
 
 There is no guarantee for a long-time support of a specific Rust version. Bumping the
