@@ -395,8 +395,6 @@ mod tests {
     // we only check the basic functionality here, more complicated circuits are tested
     // in [super::circuit] to test the tracker and the circuit at once
 
-    #[cfg(feature = "bitvec")]
-    // #[cfg(feature = "bitvec_simd")]
     mod action_definition_check {
         use super::{
             super::*,
@@ -421,7 +419,7 @@ mod tests {
         // one-qubit and two-qubit actions, it's like a "TwoBitVec"; one could probably
         // implement that in connection with [Pauli]
 
-        type ThisTracker = Frames<BufferedVector<PauliStack<bitvec::vec::BitVec>>>;
+        type ThisTracker = Frames<BufferedVector<PauliStack<bit_vec::BitVec>>>;
         // type ThisTracker =
         //     Frames<Vector<crate::boolean_vector::bitvec_simd::SimdBitVec>>;
 

@@ -386,7 +386,8 @@ where
 
 #[cfg(test)]
 mod tests {
-    use bitvec::vec::BitVec;
+    // use bitvec::vec::BitVec;
+    use bit_vec::BitVec;
     use coverage_helper::test;
 
     use super::*;
