@@ -59,7 +59,7 @@ impl<T: BooleanVector> PauliStack<T> {
     ///
     /// # Examples
     /// ```
-    /// # #[cfg_attr(coverage_nightly, no_coverage)]
+    /// # #[cfg_attr(coverage_nightly, coverage(off))]
     /// # fn main() {
     /// # use pauli_tracker::pauli::PauliStack;
     /// assert_eq!(
@@ -97,7 +97,7 @@ impl<T: BooleanVector> PauliStack<T> {
     ///
     /// # Examples
     /// ```
-    /// # #[cfg_attr(coverage_nightly, no_coverage)]
+    /// # #[cfg_attr(coverage_nightly, coverage(off))]
     /// # fn main() {
     /// # use pauli_tracker::pauli::{Pauli, PauliTuple, PauliStack};
     /// let mut pauli = PauliStack::try_from_str("1", "").unwrap();
@@ -129,7 +129,7 @@ impl<T: BooleanVector> PauliStack<T> {
     ///
     /// # Examples
     /// ```
-    /// # #[cfg_attr(coverage_nightly, no_coverage)]
+    /// # #[cfg_attr(coverage_nightly, coverage(off))]
     /// # fn main() {
     /// # use pauli_tracker::pauli::{Pauli, PauliTuple, PauliStack};
     /// let mut pauli = PauliStack::<Vec<bool>>::try_from_str("01", "1").unwrap();
@@ -238,7 +238,7 @@ impl<T: BooleanVector> PauliStack<T> {
     ///
     /// # Examples
     /// ```
-    /// # #[cfg_attr(coverage_nightly, no_coverage)]
+    /// # #[cfg_attr(coverage_nightly, coverage(off))]
     /// # fn main() {
     /// # use pauli_tracker::{
     /// #    pauli::{PauliTuple, Pauli, PauliStack}, boolean_vector::BooleanVector};

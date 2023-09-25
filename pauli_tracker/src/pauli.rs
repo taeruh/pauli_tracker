@@ -68,7 +68,7 @@ pub trait Pauli {
     ///
     /// # Examples
     /// ```
-    /// # #[cfg_attr(coverage_nightly, no_coverage)]
+    /// # #[cfg_attr(coverage_nightly, coverage(off))]
     /// # fn main() {
     /// # use pauli_tracker::pauli::{Pauli, PauliDense};
     /// assert_eq!(PauliDense::new_product(false, false), PauliDense::new_i());
@@ -99,7 +99,7 @@ pub trait Pauli {
     ///
     /// # Examples
     /// ```
-    /// # #[cfg_attr(coverage_nightly, no_coverage)]
+    /// # #[cfg_attr(coverage_nightly, coverage(off))]
     /// # fn main() {
     /// # use pauli_tracker::pauli::{Pauli, PauliDense};
     /// let pauli = PauliDense::new_y();
@@ -111,7 +111,7 @@ pub trait Pauli {
     ///
     /// # Examples
     /// ```
-    /// # #[cfg_attr(coverage_nightly, no_coverage)]
+    /// # #[cfg_attr(coverage_nightly, coverage(off))]
     /// # fn main() {
     /// # use pauli_tracker::pauli::{Pauli, PauliDense};
     /// let pauli = PauliDense::new_y();
@@ -123,7 +123,7 @@ pub trait Pauli {
     ///
     /// # Examples
     /// ```
-    /// # #[cfg_attr(coverage_nightly, no_coverage)]
+    /// # #[cfg_attr(coverage_nightly, coverage(off))]
     /// # fn main() {
     /// # use pauli_tracker::pauli::{Pauli, PauliDense};
     /// let mut pauli = PauliDense::new_y();
@@ -136,7 +136,7 @@ pub trait Pauli {
     ///
     /// # Examples
     /// ```
-    /// # #[cfg_attr(coverage_nightly, no_coverage)]
+    /// # #[cfg_attr(coverage_nightly, coverage(off))]
     /// # fn main() {
     /// # use pauli_tracker::pauli::{Pauli, PauliDense};
     /// let mut pauli = PauliDense::new_y();

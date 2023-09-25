@@ -76,7 +76,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           submodules: true
-      - name: Install stable
+      - name: Install nightly
         uses: dtolnay/rust-toolchain@nightly
         with:
           components: llvm-tools-preview

@@ -546,7 +546,7 @@ mod tests {
             fn t_tele(&mut self, origin: usize, new: usize) -> bool;
         }
         impl TTele for TrackedCircuit<RandomMeasurementCircuit, Live<PauliDense>, ()> {
-            #[cfg_attr(coverage_nightly, no_coverage)]
+            #[cfg_attr(coverage_nightly, coverage(off))]
             fn t_tele(&mut self, origin: usize, new: usize) -> bool {
                 self.cx(origin, new);
                 self.move_z_to_z(origin, new);
@@ -620,7 +620,7 @@ mod tests {
                 (),
             >
         {
-            #[cfg_attr(coverage_nightly, no_coverage)]
+            #[cfg_attr(coverage_nightly, coverage(off))]
             fn t_tele(&mut self, origin: usize, new: usize) {
                 self.cx(origin, new);
                 self.move_z_to_z(origin, new);

@@ -331,7 +331,7 @@ where
     ///
     /// # Examples
     /// ```
-    /// # #[cfg_attr(coverage_nightly, no_coverage)]
+    /// # #[cfg_attr(coverage_nightly, coverage(off))]
     /// # fn main() {
     /// # use pauli_tracker::{collection::NaiveVector, pauli::{self, PauliTuple},
     /// #     tracker::frames::Frames};
@@ -429,7 +429,7 @@ mod tests {
 
             const ACTIONS: [Action; N_SINGLES] = utils::single_actions!(ThisTracker);
 
-            #[cfg_attr(coverage_nightly, no_coverage)]
+            #[cfg_attr(coverage_nightly, coverage(off))]
             fn runner(action: Action, result: SingleResults) {
                 let mut tracker: ThisTracker = Frames::init(1);
                 for input in (0..4).rev() {
@@ -465,7 +465,7 @@ mod tests {
 
             const ACTIONS: [Action; N_DOUBLES] = utils::double_actions!(ThisTracker);
 
-            #[cfg_attr(coverage_nightly, no_coverage)]
+            #[cfg_attr(coverage_nightly, coverage(off))]
             fn runner(action: Action, result: DoubleResults) {
                 let mut tracker: ThisTracker = Frames::init(2);
                 for pauli in (0..16).rev() {

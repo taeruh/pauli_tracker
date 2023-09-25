@@ -9,10 +9,10 @@
 //
 // (nightly) features, only for development
 #![cfg_attr(docsrs, feature(doc_cfg))]
-#![cfg_attr(coverage_nightly, feature(no_coverage))]
+#![cfg_attr(coverage_nightly, feature(coverage_attribute))]
 // cf .https://doc.rust-lang.org/rustdoc/write-documentation/documentation-tests.html (I
 // thought doc-test should capture the normal #! attributes?)
-#![cfg_attr(coverage_nightly, doc(test(attr(feature(no_coverage)))))]
+#![cfg_attr(coverage_nightly, doc(test(attr(feature(coverage_attribute)))))]
 //
 
 // some guidelines (should do a better contributing file ...):
@@ -36,14 +36,14 @@
 // set when the documentation is build
 //
 // the lines of the tests should not be included in the coverage, therefore, put
-// #[cfg_attr(coverage_nightly, no_coverage)] on every test function (except if the test
+// #[cfg_attr(coverage_nightly, coverage(off))] on every test function (except if the test
 // is ignore, e.g., proptest); also on closures (except if we are in a doc-test and it
 // is is a oneline closure in, for example, iter::map, and adding the annotation would
 // change the formatting) and functions that are exclusively used in the test (except we
 // really want coverage for them); this attribute does sadly not work with modules; to
 // make things easier one can `use coverage_helper::test` in the test modules and just
 // use the (modified) #[test] attribute; in doc-tests we always need to specify the main
-// function explicitly and put the ...no_coverage... attribute on it
+// function explicitly and put the ...coverage(off)... attribute on it
 //
 // tests are always run with --all--features; however, doc-tests should be under
 // cfg-features conditions if they use them (and this should also be documented) and
@@ -87,7 +87,7 @@ mod tests {
 
     use super::*;
 
-    #[cfg_attr(coverage_nightly, no_coverage)]
+    #[cfg_attr(coverage_nightly, coverage(off))]
     fn normal<T: Sized + Send + Sync + Unpin>() {}
 
     #[test]

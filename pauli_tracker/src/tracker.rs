@@ -403,7 +403,7 @@ mod tests {
         }
         pub(crate) use double_actions;
 
-        #[cfg_attr(coverage_nightly, no_coverage)]
+        #[cfg_attr(coverage_nightly, coverage(off))]
         pub fn single_check<T, R>(runner: R, actions: [SingleAction<T>; N_SINGLES])
         where
             T: Tracker,
@@ -420,7 +420,7 @@ mod tests {
             }
         }
 
-        #[cfg_attr(coverage_nightly, no_coverage)]
+        #[cfg_attr(coverage_nightly, coverage(off))]
         pub fn double_check<T, R>(runner: R, actions: [DoubleAction<T>; N_DOUBLES])
         where
             T: Tracker,
@@ -440,7 +440,7 @@ mod tests {
             }
         }
 
-        #[cfg_attr(coverage_nightly, no_coverage)]
+        #[cfg_attr(coverage_nightly, coverage(off))]
         pub fn single_init<T: From<PauliDense>>(input: u8) -> PauliString<T> {
             vec![(0, PauliDense::try_from(input).unwrap().into())]
         }
@@ -450,7 +450,7 @@ mod tests {
         const SECOND: u8 = 3; // = 0011
         const FIRST_SHIFT: u8 = 2;
 
-        #[cfg_attr(coverage_nightly, no_coverage)]
+        #[cfg_attr(coverage_nightly, coverage(off))]
         pub fn double_init<T: From<PauliDense>>(input: u8) -> PauliString<T> {
             vec![
                 (
@@ -463,7 +463,7 @@ mod tests {
             ]
         }
 
-        #[cfg_attr(coverage_nightly, no_coverage)]
+        #[cfg_attr(coverage_nightly, coverage(off))]
         pub fn double_output<T: Into<PauliDense>>(
             frame: impl IntoIterator<Item = (usize, T)>,
         ) -> (u8, u8) {
@@ -570,7 +570,7 @@ mod tests {
         type ActionS = SingleAction<DefaultTester>;
         type ActionD = DoubleAction<DefaultTester>;
 
-        #[cfg_attr(coverage_nightly, no_coverage)]
+        #[cfg_attr(coverage_nightly, coverage(off))]
         fn single_runner(action: ActionS, result: SingleResults) {
             for (input, check) in (0u8..).zip(result.1) {
                 let mut tracker = DefaultTester::init(2);
@@ -592,7 +592,7 @@ mod tests {
             utils::single_check(single_runner, actions);
         }
 
-        #[cfg_attr(coverage_nightly, no_coverage)]
+        #[cfg_attr(coverage_nightly, coverage(off))]
         fn double_runner(action: ActionD, result: DoubleResults) {
             for (input, check) in (0u8..).zip(result.1) {
                 let mut tracker = DefaultTester::init(2);

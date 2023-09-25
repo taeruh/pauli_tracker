@@ -276,7 +276,7 @@ mod tests {
     const GNW: [(usize, usize); 6] = [(8, 1), (8, 5), (8, 1), (1, 3), (3, 5), (5, 5)];
     const GMW: [(usize, usize); 6] = [(0, 1), (0, 2), (0, 1), (1, 3), (3, 2), (2, 2)];
 
-    #[cfg_attr(coverage_nightly, no_coverage)]
+    #[cfg_attr(coverage_nightly, coverage(off))]
     pub fn example_graph() -> GraphBuffer {
         //     1
         //   /  \

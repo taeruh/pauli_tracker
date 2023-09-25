@@ -50,7 +50,7 @@ pub trait BooleanVector:
     ///
     /// # Examples
     ///```
-    /// # #[cfg_attr(coverage_nightly, no_coverage)]
+    /// # #[cfg_attr(coverage_nightly, coverage(off))]
     /// # fn main() {
     /// use pauli_tracker::boolean_vector::BooleanVector;
     /// assert_eq!(Vec::<bool>::zeros(3), vec![false, false, false])
@@ -65,7 +65,7 @@ pub trait BooleanVector:
     ///
     /// # Examples
     ///```
-    /// # #[cfg_attr(coverage_nightly, no_coverage)]
+    /// # #[cfg_attr(coverage_nightly, coverage(off))]
     /// # fn main() {
     /// use pauli_tracker::boolean_vector::BooleanVector;
     /// let mut vec = vec![true, false];
@@ -81,7 +81,7 @@ pub trait BooleanVector:
     ///
     /// # Examples
     ///```
-    /// # #[cfg_attr(coverage_nightly, no_coverage)]
+    /// # #[cfg_attr(coverage_nightly, coverage(off))]
     /// # fn main() {
     /// use pauli_tracker::boolean_vector::BooleanVector;
     /// let mut vec = vec![true, false];
@@ -117,7 +117,7 @@ pub trait BooleanVector:
     ///
     /// # Examples
     ///```
-    /// # #[cfg_attr(coverage_nightly, no_coverage)]
+    /// # #[cfg_attr(coverage_nightly, coverage(off))]
     /// # fn main() {
     /// use pauli_tracker::boolean_vector::BooleanVector;
     /// let vec = vec![true, false];
@@ -138,7 +138,7 @@ pub trait BooleanVector:
     ///
     /// # Examples
     /// ```
-    /// # #[cfg_attr(coverage_nightly, no_coverage)]
+    /// # #[cfg_attr(coverage_nightly, coverage(off))]
     /// # fn main() {
     /// # use pauli_tracker::boolean_vector::BooleanVector;
     /// let bools = vec![true, false, true, false, true, false];

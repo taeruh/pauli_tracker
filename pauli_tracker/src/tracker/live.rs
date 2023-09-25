@@ -216,7 +216,7 @@ mod tests {
 
         type Action<P> = SingleAction<Live<P>>;
 
-        #[cfg_attr(coverage_nightly, no_coverage)]
+        #[cfg_attr(coverage_nightly, coverage(off))]
         fn runner<P: Pw>(action: Action<P>, result: SingleResults) {
             for (input, check) in (0u8..).zip(result.1) {
                 let mut tracker = Live::<P>::init(2);
@@ -232,7 +232,7 @@ mod tests {
             }
         }
 
-        #[cfg_attr(coverage_nightly, no_coverage)]
+        #[cfg_attr(coverage_nightly, coverage(off))]
         pub(super) fn run<P: Pw>() {
             let actions: [Action<P>; N_SINGLES] = utils::single_actions!(Live<P>);
             utils::single_check(runner, actions);
@@ -250,7 +250,7 @@ mod tests {
 
         type Action<P> = DoubleAction<Live<P>>;
 
-        #[cfg_attr(coverage_nightly, no_coverage)]
+        #[cfg_attr(coverage_nightly, coverage(off))]
         fn runner<P: Pw>(action: Action<P>, result: DoubleResults) {
             for (input, check) in (0u8..).zip(result.1) {
                 let mut tracker = Live::init(2);

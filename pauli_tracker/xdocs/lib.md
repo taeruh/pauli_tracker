@@ -43,7 +43,7 @@ general brief introduction to Pauli tracking is given in the repository's
 This examples gives a first introduction to the tracking mechanism. The example
 requires the [rand](https://crates.io/crates/rand) crate.
 ```rust
-# #[cfg_attr(coverage_nightly, no_coverage)]
+# #[cfg_attr(coverage_nightly, coverage(off))]
 # // "circuit" instead of "rand" because we do not export the "rand" feature, since we
 # // use it as dep:rand
 # #[cfg(feature = "circuit")] // we need it to activate the "rand" dep
@@ -154,7 +154,7 @@ let conditional_summed_frames: Vec<_> = frames
     .collect();
 assert_eq!(tracker.as_ref().0, conditional_summed_frames, "{measurements:?}");
 # }
-# #[cfg_attr(coverage_nightly, no_coverage)]
+# #[cfg_attr(coverage_nightly, coverage(off))]
 # #[cfg(not(feature = "circuit"))]
 # fn main() {}
 ```
@@ -164,7 +164,7 @@ This example introduces the
 [create_dependency_graph](tracker::frames::dependency_graph::create_dependency_graph)
 function that can be used to analyse measurement dependencies.
 ```rust
-# #[cfg_attr(coverage_nightly, no_coverage)]
+# #[cfg_attr(coverage_nightly, coverage(off))]
 # fn main() {
 # #[rustfmt::skip]
 use pauli_tracker::{
@@ -255,7 +255,7 @@ can be decomposed into Clifford + T gates and how T gates can be teleported.
 We use the [circuit] module and [bit_vec::BitVec], i.e., the example requires the
 features "circuit" and "bit-vec", as well as a dependency on the bit_vec crate.
 ```rust
-# #[cfg_attr(coverage_nightly, no_coverage)]
+# #[cfg_attr(coverage_nightly, coverage(off))]
 # #[cfg(all(feature = "circuit", feature = "bit-vec"))]
 # fn main() {
 # #[rustfmt::skip]
@@ -292,7 +292,7 @@ trait ExtendTrackedCircuit {
     fn teleported_t(&mut self, origin: usize, new: usize);
 }
 impl ExtendTrackedCircuit for TrackedCircuit<DummyCircuit, Frames, Storage> {
-    #[cfg_attr(coverage_nightly, no_coverage)]
+    #[cfg_attr(coverage_nightly, coverage(off))]
     fn teleported_t(&mut self, origin: usize, new: usize) {
         // this is from the linked paper, naively implement, assuming that we don't know
         // anything about the type of measurement, except that it realizes the T gate
@@ -375,7 +375,7 @@ assert_eq!(
     ]
 );
 # }
-# #[cfg_attr(coverage_nightly, no_coverage)]
+# #[cfg_attr(coverage_nightly, coverage(off))]
 # #[cfg(not(all(feature = "circuit", feature = "bit-vec")))]
 # fn main() {}
 ```
@@ -392,7 +392,7 @@ corrections from the teleported qubit and instead putting them onto the new qubi
 corrections, since the teleportation introduces a Z correction. This can be achieved
 with [Tracker::move_z_to_z](tracker::Tracker::move_z_to_z):
 ```rust
-# #[cfg_attr(coverage_nightly, no_coverage)]
+# #[cfg_attr(coverage_nightly, coverage(off))]
 # #[cfg(all(feature = "circuit", feature = "bit-vec"))]
 # fn main() {
 # use pauli_tracker::{
@@ -415,7 +415,7 @@ with [Tracker::move_z_to_z](tracker::Tracker::move_z_to_z):
 // ... same as before ...
 
 impl ExtendTrackedCircuit for TrackedCircuit<DummyCircuit, Frames<Storage>, Storage> {
-    #[cfg_attr(coverage_nightly, no_coverage)]
+    #[cfg_attr(coverage_nightly, coverage(off))]
     fn teleported_t(&mut self, origin: usize, new: usize) {
         self.tracker.new_qubit(new);
         self.cx(origin, new);
@@ -491,7 +491,7 @@ assert_eq!(
 );
 // -> only two layers instead of 5 layers!
 # }
-# #[cfg_attr(coverage_nightly, no_coverage)]
+# #[cfg_attr(coverage_nightly, coverage(off))]
 # #[cfg(not(all(feature = "circuit", feature = "bit-vec")))]
 # fn main() {}
 ```

@@ -368,7 +368,7 @@ mod tests {
         *,
     };
 
-    #[cfg_attr(coverage_nightly, no_coverage)]
+    #[cfg_attr(coverage_nightly, coverage(off))]
     pub fn example_ordering() -> DependencyGraph {
         // 0 --- 3 --- 2
         //  \
@@ -376,7 +376,7 @@ mod tests {
         vec![vec![(0, vec![])], vec![(3, vec![0]), (1, vec![0])], vec![(2, vec![3])]]
     }
 
-    #[cfg_attr(coverage_nightly, no_coverage)]
+    #[cfg_attr(coverage_nightly, coverage(off))]
     fn get_all_paths(
         generator: PathGenerator<'_, Partitioner>,
     ) -> Vec<Vec<Vec<usize>>> {

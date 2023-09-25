@@ -102,7 +102,7 @@ pub trait Init {
     ///
     /// # Example
     /// ```
-    /// # #[cfg_attr(coverage_nightly, no_coverage)]
+    /// # #[cfg_attr(coverage_nightly, coverage(off))]
     /// # fn main() {
     /// # use pauli_tracker::collection::{Init, Base, MappedVector};
     /// let collection = MappedVector::<i32>::init(2);

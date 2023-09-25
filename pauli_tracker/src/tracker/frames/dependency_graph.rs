@@ -38,7 +38,7 @@ pub type DependencyGraph = Vec<Vec<(usize, Vec<usize>)>>;
 ///
 /// # Examples
 /// ```
-/// # #[cfg_attr(coverage_nightly, no_coverage)]
+/// # #[cfg_attr(coverage_nightly, coverage(off))]
 /// # fn main() {
 /// use pauli_tracker::{
 ///     collection::BufferedVector,
@@ -152,7 +152,7 @@ where
 ///
 /// # Examples
 /// ```
-/// # #[cfg_attr(coverage_nightly, no_coverage)]
+/// # #[cfg_attr(coverage_nightly, coverage(off))]
 /// # fn main() {
 /// # use pauli_tracker::tracker::frames::dependency_graph::sort_layers_by_bits;
 /// let mut graph = vec![vec![(0, vec![])], vec![(3, vec![0]), (1, vec![0])]];

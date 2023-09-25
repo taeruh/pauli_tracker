@@ -39,7 +39,7 @@ project.
 
 ### Capturing all paths
 ```rust
-# #[cfg_attr(coverage_nightly, no_coverage)]
+# #[cfg_attr(coverage_nightly, coverage(off))]
 # #[cfg(feature = "scheduler")]
 # fn main() {
 # #[rustfmt::skip]
@@ -122,14 +122,14 @@ assert_eq!(
     ]
 );
 # }
-# #[cfg_attr(coverage_nightly, no_coverage)]
+# #[cfg_attr(coverage_nightly, coverage(off))]
 # #[cfg(not(feature = "scheduler"))]
 # fn main() {}
 ```
 
 ### Finding the optimal paths
 ```rust
-# #[cfg_attr(coverage_nightly, no_coverage)]
+# #[cfg_attr(coverage_nightly, coverage(off))]
 # #[cfg(feature = "scheduler")]
 # fn main() {
 use std::{cmp, collections::HashMap};
@@ -294,7 +294,7 @@ assert_eq!(
     HashMap::from_iter([(3, (3, vec![vec![0], vec![3, 1], vec![2]]))]),
 );
 # }
-# #[cfg_attr(coverage_nightly, no_coverage)]
+# #[cfg_attr(coverage_nightly, coverage(off))]
 # #[cfg(not(feature = "scheduler"))]
 # fn main() {}
 ```
