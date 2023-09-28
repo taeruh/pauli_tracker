@@ -92,7 +92,13 @@ impl<'l, T> PathGenerator<'l, T> {
     }
 
     /// Get a reference to currently the measurable set of qubits.
+    #[deprecated(since = "0.3.1", note = "use `measurable` instead")]
     pub fn measureable(&self) -> &T {
+        self.measurable()
+    }
+
+    /// Get a reference to currently the measurable set of qubits.
+    pub fn measurable(&self) -> &T {
         &self.measurable
     }
 

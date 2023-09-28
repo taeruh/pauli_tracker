@@ -324,7 +324,7 @@ where
     }
 
     /// Transpose the frames, with reverted order of the frames and sorted qubits. The
-    /// results is a non-sparse matrix.
+    /// result is a non-sparse matrix of Paulis.
     ///
     /// # Panics
     /// Panics if `num_qubits` is smaller than the number of tracked qubits.

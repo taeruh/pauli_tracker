@@ -23,7 +23,7 @@ pub trait Focus<I> {
     /// Like [focus](Self::focus), but mutates `self` in place.
     fn focus_inplace(&mut self, instruction: I) -> Result<(), Self::Error>;
 
-    /// Focus on the node described by `instruction`.
+    /// Focus on the node described by `instruction`/measureable_set.
     // often just {let mut new = self.clone(); new.focus_inplace(instruction)?; Ok(new)}
     // but we don't want the Clone bound here
     fn focus(&mut self, instruction: I) -> Result<Self, Self::Error>

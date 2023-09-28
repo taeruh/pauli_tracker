@@ -1,6 +1,7 @@
 - some focus functions might not need &mut self but only &self
 - xor_inplace -> BitXorAssign, and similar
 - universal bit ops, e.g., add "or" and "not"
+- remove measureable function for PathGenerator
 
 ---------- release new major
 
