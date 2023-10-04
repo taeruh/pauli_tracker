@@ -82,13 +82,19 @@ let mut dependency_buffer = DependencyBuffer::new(num_bits);
 let graph = Graph::new(&graph_buffer);
 let path_generator: PathGenerator::<Partitioner> =
     PathGenerator::from_dependency_graph(time_ordering, &mut dependency_buffer, None);
-// the Partitioner above as generic parameter will allow us to iterate over all paths;
-// if we would want to create the paths manually, we could use Vec<usize> instead
-
 // we could now generate paths with `path_generator` and feed them into `graph`; here
 // however, we wrap them into a Scheduler which basically does exactly that for us (if
 // one needs more flexibility one can use them separately)
 let scheduler = Scheduler::new(path_generator, graph);
+// the Partitioner above, as generic parameter, will allow us to iterate over all paths;
+// if we would want to create the paths manually, we could use Vec<usize> instead, and
+// for example, do something like the following to get the shortest path
+//    while !scheduler.time().measurable().is_empty() {
+//        let measurable_set = scheduler.time().measurable().clone();
+//        scheduler.focus_inplace(&measurable_set)?;
+//        println!("{:?}", measurable_set);
+//        println!("{:?}", scheduler.space().max_memory());
+//    }
 
 // by iterating over `scheduler` we can generate all results
 

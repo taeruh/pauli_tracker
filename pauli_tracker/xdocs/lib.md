@@ -211,9 +211,9 @@ assert_eq!(
 // tracked on measurement outcomes of the qubits 3,4 and 0, i.e.
 let map = [
     // describe the relation between frames and qubits
-    4, // frame (0) depends on the measurement on qubit 3
-    5, // frame (1) on 4
-    0, // frame (1) on 0
+    4, // frame (0) depends on the measurement on qubit W
+    5, // frame (1) on 5
+    0, // frame (2) on 0
 ];
 
 // we are interested in how many steps of parallel measurement we need to measure qubits
