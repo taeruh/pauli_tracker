@@ -33,12 +33,22 @@ pub type PauliString<T> = Vec<(usize, T)>;
 #[error("there's no Pauli stack for qubit {0}")]
 pub struct MissingBit(pub usize);
 
-macro_rules! single_doc {
+macro_rules! single_doc_standard {
     ($gate:literal) => {
         concat!(
             "Update the tracked frames according the ",
             $gate,
             " gate on qu`bit`."
+        )
+    };
+}
+macro_rules! single_doc_equivalent {
+    ($gate:literal, $equiv:literal) => {
+        concat!(
+            single_doc_standard!($gate),
+            " Equivalent to the ",
+            $equiv,
+            " gate."
         )
     };
 }
@@ -87,6 +97,15 @@ macro_rules! track_pauli {
     )*};
 }
 
+macro_rules! coset {
+    ($coset:ident, $coset_name:literal, $(($name:ident, $gate:literal),)*) => {$(
+        #[doc = single_doc_equivalent!($gate, $coset_name)]
+        fn $name(&mut self, bit: usize) {
+            self.$coset(bit);
+        }
+    )*};
+}
+
 /// The core API to track Paulis through a Clifford circuit.
 ///
 /// The implementors must ensure that they implement the methods correctly according
@@ -109,10 +128,14 @@ macro_rules! track_pauli {
 /// implement as `self.h(target); self.cz(control, target); self.h(target);`. This can
 /// probably be done more efficiently by directly implementing this method (it's for
 /// example trivial for [Tracker::swap]: three cnots vs one mem::swap). On the other
-/// hand, some default implementations are just one function call, e.g., [Tracker::sdg]
-/// is just `self.s(target);`, which is hopefully inlined (at least after lto); there's
-/// probably no need to implement them directly. The [conjugation-rules] document
-/// contains some useful operator identities.
+/// hand, the default implementations are making use of the fact that the update rules
+/// are the same per coset with respect to the Pauli group, e.g., [Tracker::sdg]
+/// is just `self.s(target);`, which is hopefully inlined (at least after lto). There's
+/// probably no need to implement them directly, but only to implement the canonical
+/// coset repepresentatives directly. For the single qubit gates, these are: I, S, H,
+/// SH, HS, SHS (these are all single qubit Cliffords up to Paulis and phases). For the
+/// double-qubit gates, the standard repepresentatives are: CZ, CX, CY, SWAP, iSWAP. The
+/// [conjugation-rules] document contains some useful operator identities.
 ///
 /// [conjugation-rules]: https://github.com/taeruh/pauli_tracker/blob/main/docs/conjugation_rules.md
 pub trait Tracker {
@@ -144,72 +167,53 @@ pub trait Tracker {
     track_pauli!((track_x, X), (track_y, Y), (track_z, Z),);
 
     // generators
-    #[doc = single_doc!("Hadamard")]
+    #[doc = single_doc_standard!("Hadamard")]
     fn h(&mut self, bit: usize);
-    #[doc = single_doc!("S")]
+    #[doc = single_doc_standard!("S")]
     fn s(&mut self, bit: usize);
     #[doc = double_doc!("Control Z")]
     fn cz(&mut self, bit_a: usize, bit_b: usize);
 
-    #[doc = single_doc!("I")]
-    /// The identity.
+    #[doc = single_doc_standard!("I")]
+    /// (The identity)
     fn id(&mut self, _: usize) {}
-    #[doc = single_doc!("X")]
-    /// Note that it is just the identity.
-    fn x(&mut self, _: usize) {}
-    #[doc = single_doc!("Y")]
-    /// Note that it is just the identity.
-    fn y(&mut self, _: usize) {}
-    #[doc = single_doc!("Z")]
-    /// Note that it is just the identity.
-    fn z(&mut self, _: usize) {}
+    coset!(id, "I", (x, "X"), (y, "Y"), (z, "Z"),);
 
-    #[doc = single_doc!("S^dagger")]
-    fn sdg(&mut self, bit: usize) {
-        self.s(bit);
-    }
+    coset!(
+        s,
+        "S",
+        (sdg, "S^dagger"),
+        (sz, "sqrt(Z)"),
+        (szdg, "sqrt(Z)^dagger"),
+        (hxy, "H^{xy}"),
+    );
+    coset!(h, "H", (sy, "sqrt(Y)"), (sydg, "sqrt(Y)^dagger"),);
 
-    #[doc = single_doc!("sqrt(X)")]
-    fn sx(&mut self, bit: usize) {
-        self.h(bit);
+    #[doc = single_doc_standard!("SH")]
+    fn sh(&mut self, bit: usize) {
         self.s(bit);
         self.h(bit);
     }
 
-    #[doc = single_doc!("sqrt(X)^dagger")]
-    fn sxdg(&mut self, bit: usize) {
-        self.sx(bit);
-    }
-
-    #[doc = single_doc!("sqrt(Y)")]
-    fn sy(&mut self, bit: usize) {
+    #[doc = single_doc_standard!("HS")]
+    fn hs(&mut self, bit: usize) {
         self.h(bit);
+        self.s(bit);
     }
 
-    #[doc = single_doc!("sqrt(Y)")]
-    fn sydg(&mut self, bit: usize) {
+    #[doc = single_doc_standard!("SHS")]
+    fn shs(&mut self, bit: usize) {
+        self.s(bit);
         self.h(bit);
-    }
-
-    #[doc = single_doc!("sqrt(Z)")]
-    fn sz(&mut self, bit: usize) {
         self.s(bit);
     }
-
-    #[doc = single_doc!("sqrt(Z)^dagger")]
-    fn szdg(&mut self, bit: usize) {
-        self.s(bit);
-    }
-
-    #[doc = single_doc!("H_xy")]
-    fn hxy(&mut self, bit: usize) {
-        self.s(bit);
-    }
-
-    #[doc = single_doc!("H_xy")]
-    fn hyz(&mut self, bit: usize) {
-        self.sx(bit);
-    }
+    coset!(
+        shs,
+        "SHS",
+        (sx, "sqrt(X)"),
+        (sxdg, "sqrt(X)^dagger"),
+        (hyz, "H_yz"),
+    );
 
     #[doc = double_doc!("Control X (Control Not)", control, target)]
     fn cx(&mut self, control: usize, target: usize) {
@@ -243,6 +247,7 @@ pub trait Tracker {
     }
 
     #[doc = double_doc!("iSwap^dagger")]
+    /// Equivalent to the iSwap gate.
     fn iswapdg(&mut self, bit_a: usize, bit_b: usize) {
         self.iswap(bit_a, bit_b);
     }
@@ -274,7 +279,7 @@ use unwrap_get_mut;
 
 // macro_rules! create_single {
 //     ($inner:ident) => {
-//         macro_rules! single {
+//         macro_rules! single_gate {
 //             ($$($$name:ident),*) => {$$(
 //                 fn $$name(&mut self, bit: usize) {
 //                     unwrap_get_mut!(self.$inner, bit, stringify!($$name)).$name()

@@ -145,7 +145,7 @@ $$
 ___
 The root Y gate ($\sqrt{Y} = \sqrt{i}HSS$)
 $$
-  \sqrt{Y} = \frac{1}{2}\begin{pmatrix}1+i&1-i\\1+i&1+i\end{pmatrix}
+  \sqrt{Y} = \frac{1}{2}\begin{pmatrix}1+i&-1-i\\1+i&1+i\end{pmatrix}
 $$
 Rules:
 $$
@@ -154,14 +154,14 @@ $$
 ___
 The $\sqrt{Y}^{\dagger}$ gate
 $$
-  \sqrt{Y} = \frac{1}{2}\begin{pmatrix}1-i&1+i\\1-i&1-i\end{pmatrix}
+  \sqrt{Y}^{\dagger} = \frac{1}{2}\begin{pmatrix}1-i&1-i\\-1+i&1-i\end{pmatrix}
 $$
 Rules:
 $$
   \sqrt{Y}X\sqrt{Y}^{\dagger} = -Z; \qquad \sqrt{Y}Z\sqrt{Y}^{\dagger} = X
 $$
 ___
-The XY-Hadamard gate $H^{xy}$ ($= \mathrm{e}^{i\pi/4}SHZH = (X + Y)/\sqrt{2}$) (swaps x
+The XY-Hadamard gate $H^{xy}$ ($= \mathrm{e}^{-i\pi/4}SHZH = (X + Y)/\sqrt{2}$) (swaps x
 and y axes) (hermitian)
 $$
   H^{xy} = \frac{1}{\sqrt{2}}\begin{pmatrix}0&1-i\\1+i&0\end{pmatrix}

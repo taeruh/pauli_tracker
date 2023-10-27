@@ -3,6 +3,8 @@
 - universal bit ops, e.g., add "or" and "not"
 - remove measureable function for PathGenerator
 
+- maybe change x<->10,z<->01 to x<->01,z<->10 (weyl)
+
 ---------- release new major
 
 - an insert stack method for Frames which adopts its length to frames_num, or vice versa
