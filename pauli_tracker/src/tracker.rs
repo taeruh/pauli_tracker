@@ -119,8 +119,8 @@ macro_rules! coset {
 /// For extensive examples, please refer to the [library documentation](crate#examples).
 ///
 /// The supported gates are also described in [conjugation-rules]. Note that all
-/// Clifford gates can be generated form [H](Tracker::h), [S](Tracker::s) and
-/// [CZ](Tracker::cz), cf [conjugation-rules].
+/// Clifford gates can be generated from [S](Tracker::s), [H](Tracker::h) and
+/// [CZ](Tracker::cz) (cf [conjugation-rules]).
 ///
 /// [^rust_analyzer_impl_members]: Using rust-analyzer's "implement members" feature
 /// inserts some weird looking docs, which may not compile. This is because we generate
@@ -137,8 +137,11 @@ macro_rules! coset {
 /// probably no need to implement them directly, but only to implement the canonical
 /// coset repepresentatives directly. For the single qubit gates, these are: I, S, H,
 /// SH, HS, SHS (these are all single qubit Cliffords up to Paulis and phases). For the
-/// double-qubit gates, the standard repepresentatives are: CZ, CX, CY, SWAP, iSWAP. The
-/// [conjugation-rules] document contains some useful operator identities.
+/// double-qubit gates, the standard representatives are: CZ, CX, CY, SWAP, iSWAP (these
+/// are NOT all two-qubits cosets (there are 720); we don't write our standard
+/// representatives in  S, H and CZ, because that would really get out of hand, instead
+/// we try to choose the most common gates). The [conjugation-rules] document contains
+/// some useful operator identities.
 ///
 /// [conjugation-rules]: https://github.com/taeruh/pauli_tracker/blob/main/docs/conjugation_rules.md
 pub trait Tracker {

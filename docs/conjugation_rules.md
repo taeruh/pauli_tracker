@@ -1,6 +1,10 @@
 # Conjugation of the Pauli group under Clifford operations
 
 *has to be viewed with katex*
+
+*an improved version is in progress, but I have to wait until the university reviewed
+some related work from me (otherwise, the related work is not going to pass because of
+self-plagiarism ...), which is hopefully done in December*
 ___
 
 This document captures all the [conjugation rules](#conjugation-of-the-pauli-gates) for

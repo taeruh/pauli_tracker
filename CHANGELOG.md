@@ -13,18 +13,25 @@ possible.
 ### Changed
 ### Deprecated
 ### Removed
+- `BufferedVector::wrap` and `NaiveVector::wrap` (use `from` instead).
+- `PathGenerator::measureable` (use `measurable` instead).
+- `Pauli::sx` and `PauliStack::sx` (use `shs` instead).
 ### Fixed
 ### Security
 
 ## [Unreleased]
 ### Added
 - Add `GraphBuffer::from_sparse`.
-- Add `Tracker::iswap`, `Tracker::iswapdg`, `Tracker::h_(xy,yz)`, `Tracker::cy`.
+- Add a bunch of gates.
 - Add `Frames::transpose_reverted`, `PauliStack::get`, `PauliStack::get_with_default`.
 ### Changed
 - **Possible Breaking Change**: Remove `FromIterator<PauliDense> for PauliStack<impl
   BooleanVector>` and add `FromIterator<impl Pauli> for PauliStack<impl BooleanVector>`.
+- Change the canonical coset representatives for the gates (cf. `Tracker` doc).
 ### Deprecated
+- `BufferedVector::wrap` and `NaiveVector::wrap` (use `from` instead).
+- `PathGenerator::measureable` (use `measurable` instead).
+- `Pauli::sx` and `PauliStack::sx` (use `shs` instead).
 ### Removed
 ### Fixed
 ### Security

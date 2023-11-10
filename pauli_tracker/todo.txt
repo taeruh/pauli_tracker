@@ -1,10 +1,9 @@
-- some focus functions might not need &mut self but only &self
-- xor_inplace -> BitXorAssign, and similar
-- universal bit ops, e.g., add "or" and "not"
-- remove measureable function for PathGenerator
-
 - change x<->10,z<->01 to x<->01,z<->10 (weyl) (and with that left<->right and all
   related stuff)
+
+- some focus functions might not need &mut self but only &self
+- replace xor_inplace with BitXorAssign, and similar
+- universal bit ops, e.g., add "or" and "not"
 
 - remove x,y,z in PauliStack impls
 
