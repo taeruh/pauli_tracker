@@ -1,6 +1,6 @@
 [package]
 name = "pauli_tracker"
-version = "0.3.1"
+version = "0.3.2-alpha.1"
 authors = ["Jannis Ruh <ruh.j81@gmail.com>"]
 
 edition = "2021"
@@ -12,6 +12,8 @@ repository = "https://github.com/taeruh/pauli_tracker"
 description = "A library to track Pauli gates through a Clifford circuit."
 keywords = ["quantum", "clifford", "mbqc"]
 categories = ["simulation"]
+
+readme = "../README.md"
 
 [lib]
 crate-type = ["lib"]
