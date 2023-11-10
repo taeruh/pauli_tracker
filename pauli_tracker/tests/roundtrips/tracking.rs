@@ -258,12 +258,52 @@ impl Instructor {
                 Operation::X(b) => circuit.x(self.mem_idx(b)),
                 Operation::Y(b) => circuit.y(self.mem_idx(b)),
                 Operation::Z(b) => circuit.z(self.mem_idx(b)),
-                Operation::Sx(b) => circuit.sx(self.mem_idx(b)),
-                Operation::Sy(b) => circuit.sy(self.mem_idx(b)),
+                Operation::S(b) => circuit.s(self.mem_idx(b)),
+                Operation::Sdg(b) => circuit.sdg(self.mem_idx(b)),
                 Operation::Sz(b) => circuit.sz(self.mem_idx(b)),
-                Operation::Sxdg(b) => circuit.sxdg(self.mem_idx(b)),
-                Operation::Sydg(b) => circuit.sydg(self.mem_idx(b)),
                 Operation::Szdg(b) => circuit.szdg(self.mem_idx(b)),
+                Operation::Hxy(b) => circuit.hxy(self.mem_idx(b)),
+                Operation::H(b) => circuit.h(self.mem_idx(b)),
+                Operation::Sy(b) => circuit.sy(self.mem_idx(b)),
+                Operation::Sydg(b) => circuit.sydg(self.mem_idx(b)),
+                Operation::SH(b) => circuit.sh(self.mem_idx(b)),
+                Operation::HS(b) => circuit.hs(self.mem_idx(b)),
+                Operation::SHS(b) => circuit.shs(self.mem_idx(b)),
+                Operation::Sx(b) => circuit.sx(self.mem_idx(b)),
+                Operation::Sxdg(b) => circuit.sxdg(self.mem_idx(b)),
+                Operation::Hyz(b) => circuit.hyz(self.mem_idx(b)),
+                Operation::Cz(a, b) => match self.double_mem_idx(a, b) {
+                    Some((a, b)) => circuit.cz(a, b),
+                    None => continue,
+                },
+                Operation::Cx(a, b) => match self.double_mem_idx(a, b) {
+                    Some((a, b)) => circuit.cx(a, b),
+                    None => continue,
+                },
+                Operation::Cy(a, b) => match self.double_mem_idx(a, b) {
+                    Some((a, b)) => circuit.cy(a, b),
+                    None => continue,
+                },
+                Operation::Swap(a, b) => match self.double_mem_idx(a, b) {
+                    Some((a, b)) => circuit.swap(a, b),
+                    None => continue,
+                },
+                Operation::ISwap(a, b) => match self.double_mem_idx(a, b) {
+                    Some((a, b)) => circuit.iswap(a, b),
+                    None => continue,
+                },
+                Operation::ISwapdg(a, b) => match self.double_mem_idx(a, b) {
+                    Some((a, b)) => circuit.iswapdg(a, b),
+                    None => continue,
+                },
+                Operation::Rz(b) => {
+                    let bit = self.mem_idx(b);
+                    measurements
+                        .store(bit, circuit.z_rotation_teleportation(bit, self.used));
+                    let pos_in_mem = self.idx(b);
+                    self.memory[pos_in_mem] = self.used;
+                    self.used += 1;
+                }
                 Operation::TeleportedX(a, b) => {
                     if let Some(pos_in_mem) = self.pauli_teleportation(
                         a,
@@ -296,44 +336,6 @@ impl Instructor {
                     ) {
                         self.memory.swap_remove(pos_in_mem % self.memory.len());
                     }
-                }
-
-                Operation::H(b) => circuit.h(self.mem_idx(b)),
-                Operation::Hxy(b) => circuit.hxy(self.mem_idx(b)),
-                Operation::Hyz(b) => circuit.hyz(self.mem_idx(b)),
-                Operation::S(b) => circuit.s(self.mem_idx(b)),
-                Operation::Sdg(b) => circuit.sdg(self.mem_idx(b)),
-                Operation::Cx(a, b) => match self.double_mem_idx(a, b) {
-                    Some((a, b)) => circuit.cx(a, b),
-                    None => continue,
-                },
-                Operation::Cy(a, b) => match self.double_mem_idx(a, b) {
-                    Some((a, b)) => circuit.cy(a, b),
-                    None => continue,
-                },
-                Operation::Cz(a, b) => match self.double_mem_idx(a, b) {
-                    Some((a, b)) => circuit.cz(a, b),
-                    None => continue,
-                },
-                Operation::Swap(a, b) => match self.double_mem_idx(a, b) {
-                    Some((a, b)) => circuit.swap(a, b),
-                    None => continue,
-                },
-                Operation::ISwap(a, b) => match self.double_mem_idx(a, b) {
-                    Some((a, b)) => circuit.iswap(a, b),
-                    None => continue,
-                },
-                Operation::ISwapdg(a, b) => match self.double_mem_idx(a, b) {
-                    Some((a, b)) => circuit.iswapdg(a, b),
-                    None => continue,
-                },
-                Operation::Rz(b) => {
-                    let bit = self.mem_idx(b);
-                    measurements
-                        .store(bit, circuit.z_rotation_teleportation(bit, self.used));
-                    let pos_in_mem = self.idx(b);
-                    self.memory[pos_in_mem] = self.used;
-                    self.used += 1;
                 }
                 Operation::Measure(b) => {
                     circuit.measure(self.mem_idx(b));
@@ -483,32 +485,36 @@ impl ExtendCircuit for TrackedCircuit<RandomMeasurementCircuit, Live<PauliTuple>
     }
 }
 
+#[allow(clippy::upper_case_acronyms)]
 #[derive(Clone, Debug)]
 pub enum Operation {
     I(usize),
     X(usize),
     Y(usize),
     Z(usize),
-    Sx(usize),
-    Sy(usize),
-    Sz(usize),
-    Sxdg(usize),
-    Sydg(usize),
-    Szdg(usize),
-    TeleportedX(usize, usize),
-    TeleportedY(usize, usize),
-    TeleportedZ(usize, usize),
-    H(usize),
-    Hxy(usize),
-    Hyz(usize),
     S(usize),
     Sdg(usize),
+    Sz(usize),
+    Szdg(usize),
+    Hxy(usize),
+    H(usize),
+    Sy(usize),
+    Sydg(usize),
+    SH(usize),
+    HS(usize),
+    SHS(usize),
+    Sx(usize),
+    Sxdg(usize),
+    Hyz(usize),
+    Cz(usize, usize),
     Cx(usize, usize),
     Cy(usize, usize),
-    Cz(usize, usize),
     Swap(usize, usize),
     ISwap(usize, usize),
     ISwapdg(usize, usize),
+    TeleportedX(usize, usize),
+    TeleportedY(usize, usize),
+    TeleportedZ(usize, usize),
     Rz(usize),
     Measure(usize),
     NewQubit(usize),
@@ -522,29 +528,32 @@ fn operation() -> impl Strategy<Value = Operation> {
         1 => any::<usize>().prop_map(Operation::X),
         1 => any::<usize>().prop_map(Operation::Y),
         1 => any::<usize>().prop_map(Operation::Z),
-        3 => any::<usize>().prop_map(Operation::Sx),
-        3 => any::<usize>().prop_map(Operation::Sy),
-        3 => any::<usize>().prop_map(Operation::Sz),
-        3 => any::<usize>().prop_map(Operation::Sxdg),
-        3 => any::<usize>().prop_map(Operation::Sydg),
-        3 => any::<usize>().prop_map(Operation::Szdg),
-        15 => (any::<usize>(), any::<usize>())
-                 .prop_map(|(a, b)| Operation::TeleportedX(a, b)),
-        15 => (any::<usize>(), any::<usize>())
-                 .prop_map(|(a, b)| Operation::TeleportedY(a, b)),
-        15 => (any::<usize>(), any::<usize>())
-                 .prop_map(|(a, b)| Operation::TeleportedZ(a, b)),
-        30 => any::<usize>().prop_map(Operation::H),
-        4 => any::<usize>().prop_map(Operation::Hxy),
-        4 => any::<usize>().prop_map(Operation::Hyz),
-        30 => any::<usize>().prop_map(Operation::S),
-        30 => any::<usize>().prop_map(Operation::Sdg),
+        15 => any::<usize>().prop_map(Operation::S),
+        15 => any::<usize>().prop_map(Operation::Sdg),
+        15 => any::<usize>().prop_map(Operation::Sz),
+        15 => any::<usize>().prop_map(Operation::Szdg),
+        5 => any::<usize>().prop_map(Operation::Hxy),
+        50 => any::<usize>().prop_map(Operation::H),
+        5 => any::<usize>().prop_map(Operation::Sy),
+        5 => any::<usize>().prop_map(Operation::Sydg),
+        5 => any::<usize>().prop_map(Operation::SH),
+        5 => any::<usize>().prop_map(Operation::HS),
+        5 => any::<usize>().prop_map(Operation::SHS),
+        5 => any::<usize>().prop_map(Operation::Sx),
+        5 => any::<usize>().prop_map(Operation::Sxdg),
+        5 => any::<usize>().prop_map(Operation::Hyz),
         30 => (any::<usize>(), any::<usize>()).prop_map(|(a, b)| Operation::Cx(a, b)),
         7 => (any::<usize>(), any::<usize>()).prop_map(|(a, b)| Operation::Cy(a, b)),
         30 => (any::<usize>(), any::<usize>()).prop_map(|(a, b)| Operation::Cz(a, b)),
         40 => (any::<usize>(), any::<usize>()).prop_map(|(a, b)| Operation::Swap(a, b)),
         5 => (any::<usize>(), any::<usize>()).prop_map(|(a, b)| Operation::ISwap(a, b)),
         5 => (any::<usize>(), any::<usize>()).prop_map(|(a, b)| Operation::ISwapdg(a, b)),
+        15 => (any::<usize>(), any::<usize>())
+                 .prop_map(|(a, b)| Operation::TeleportedX(a, b)),
+        15 => (any::<usize>(), any::<usize>())
+                 .prop_map(|(a, b)| Operation::TeleportedY(a, b)),
+        15 => (any::<usize>(), any::<usize>())
+                 .prop_map(|(a, b)| Operation::TeleportedZ(a, b)),
         100 => any::<usize>().prop_map(Operation::Rz),
         2 => any::<usize>().prop_map(Operation::Measure),
         2 => any::<usize>().prop_map(Operation::NewQubit),

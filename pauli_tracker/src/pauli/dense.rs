@@ -144,14 +144,26 @@ impl Pauli for PauliDense {
         self.xor(other);
     }
 
+    fn s(&mut self) {
+        self.storage ^= (self.storage & 2) >> 1;
+    }
     fn h(&mut self) {
         self.storage ^= (self.storage & 1) << 1;
         self.storage ^= (self.storage & 2) >> 1;
         self.storage ^= (self.storage & 1) << 1;
     }
-
-    fn s(&mut self) {
-        self.storage ^= (self.storage & 2) >> 1;
+    fn sh(&mut self) {
+        // cf. stack impl
+        self.h();
+        self.s();
+    }
+    fn hs(&mut self) {
+        // cf. stack impl
+        self.s();
+        self.h();
+    }
+    fn shs(&mut self) {
+        self.storage ^= (self.storage & 1) << 1;
     }
 
     fn sx(&mut self) {

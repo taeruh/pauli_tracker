@@ -12,6 +12,7 @@ use std::mem;
 
 use crate::{
     boolean_vector::BooleanVector,
+    clifford_helper,
     collection::{
         Base,
         Full,
@@ -28,6 +29,48 @@ use crate::{
     },
 };
 
+macro_rules! single_doc_standard {
+    ($gate:literal) => {
+        concat!("Apply the ", $gate, " gate on the qu`bit`.")
+    };
+}
+macro_rules! single_doc_equivalent {
+    ($gate:literal, $equiv:literal) => {
+        concat!(
+            single_doc_standard!($gate),
+            " Equivalent to the ",
+            $equiv,
+            " gate."
+        )
+    };
+}
+
+macro_rules! double_doc {
+    ($gate:literal) => {
+        double_doc!($gate, bit_a, bit_b)
+    };
+    ($gate:literal, $bit_a:ident, $bit_b:ident) => {
+        concat!(
+            "Apply the ",
+            $gate,
+            " on the `",
+            stringify!($bit_a),
+            "` and `",
+            stringify!($bit_b),
+            "` qubits."
+        )
+    };
+}
+
+macro_rules! coset {
+    ($coset:ident, $coset_name:literal, $(($name:ident, $gate:literal),)*) => {$(
+        #[doc = single_doc_equivalent!($gate, $coset_name)]
+        fn $name(&mut self, bit: usize) {
+            self.$coset(bit);
+        }
+    )*};
+}
+
 /// API for Clifford gates.
 ///
 /// We don't really care what the circuit is actually doing, except for possible
@@ -38,75 +81,17 @@ pub trait CliffordCircuit {
     /// [RandomMeasurementCircuit].
     type Outcome;
 
-    /// Apply the I gate
-    fn id(&mut self, bit: usize);
-    /// Apply the X gate
-    fn x(&mut self, bit: usize);
-    /// Apply the Y gate
-    fn y(&mut self, bit: usize);
-    /// Apply the Z gate
-    fn z(&mut self, bit: usize);
-    /// Apply the root X gate
-    fn sx(&mut self, bit: usize);
-    /// Apply the root Y gate
-    fn sy(&mut self, bit: usize);
-    /// Apply the root Z gate
-    fn sz(&mut self, bit: usize);
-    /// Apply the (root X)^dagger gate
-    fn sxdg(&mut self, bit: usize);
-    /// Apply the (root Y)^dagger gate
-    fn sydg(&mut self, bit: usize);
-    /// Apply the (root Z)^dagger gate
-    fn szdg(&mut self, bit: usize);
-    /// Apply the H gate
-    fn h(&mut self, bit: usize);
-    /// Apply the H_xy gate
-    fn hxy(&mut self, bit: usize);
-    /// Apply the H_yz gate
-    fn hyz(&mut self, bit: usize);
-    /// Apply the S gate
-    fn s(&mut self, bit: usize);
-    /// Apply the S^dagger gate
-    fn sdg(&mut self, bit: usize);
-    /// Apply the Control X (Control Not) gate
-    fn cx(&mut self, control: usize, target: usize);
-    /// Apply the Control Z gate
-    fn cz(&mut self, bit_a: usize, bit_b: usize);
-    /// Apply the Control Y gate
-    fn cy(&mut self, bit_a: usize, bit_b: usize);
-    /// Apply the Control SWAP gate
-    fn swap(&mut self, bit_a: usize, bit_b: usize);
-    /// Apply the Control iSWAP gate
-    fn iswap(&mut self, bit_a: usize, bit_b: usize);
-    /// Apply the Control iSWAP^dagger gate
-    fn iswapdg(&mut self, bit_a: usize, bit_b: usize);
+    clifford_helper::trait_gates!();
+
     /// Measure (unspecified)
     fn measure(&mut self, bit: usize) -> Self::Outcome;
 }
 
-macro_rules! single_dummy {
-    ($($name:ident,)*) => {$(
-        fn $name(&mut self, _: usize) {}
-    )*};
-}
-
-macro_rules! double_dummy {
-    ($($name:ident,)*) => {$(
-        fn $name(&mut self, _: usize, _: usize) {}
-    )*};
-}
-
-macro_rules! impl_dummy_gates {
-    () => {
-        single_dummy!(id, x, y, z, sx, sy, sz, sxdg, sydg, szdg, h, s, sdg, hxy, hyz,);
-        double_dummy!(cx, cz, cy, swap, iswap, iswapdg,);
-    };
-}
-
-mod dummy;
-pub use dummy::DummyCircuit;
-mod random_measurement;
-pub use random_measurement::RandomMeasurementCircuit;
+mod dummies;
+pub use dummies::{
+    DummyCircuit,
+    RandomMeasurementCircuit,
+};
 
 /// A Wrapper around a Clifford circuit (simulator) and a Pauli tracker.
 ///
@@ -134,95 +119,38 @@ pub struct TrackedCircuit<Circuit, Tracker, Storage> {
 
 // cf create_single comment in frames -> macro to generate macro when it is stable
 
-macro_rules! single_circuit {
-    (
-        $(#[doc = $doc:expr])*
-        $name:ident
-    ) => {
-        $(#[doc = $doc])*
-        pub fn $name(&mut self, bit: usize) {
-            self.circuit.$name(bit)
-        }
-    };
-}
-
-macro_rules! single_tracker {
-    (
-        $(#[doc = $doc:expr])*
-        $name:ident
-    ) => {
-        $(#[doc = $doc])*
-        pub fn $name(&mut self, bit: usize) {
-            self.tracker.$name(bit)
-        }
-    };
-}
-
-macro_rules! single_both {
-    (
-        $(#[doc = $doc:expr])*
-        $name:ident
-    ) => {
-        $(#[doc = $doc])*
-        pub fn $name(&mut self, bit: usize) {
-            self.circuit.$name(bit);
-            self.tracker.$name(bit)
-        }
-    };
-}
-
 macro_rules! track_paulis {
     ($(($name:ident, $gate:literal),)*) => {$(
-        single_tracker!(
-            /// Append a tracked
-            #[doc = $gate]
-            /// gate to the tracker.
-            $name
-        );
+        /// Append a tracked
+        #[doc = $gate]
+        /// gate to the tracker.
+        pub fn $name(&mut self, bit: usize) {
+            self.tracker.$name(bit)
+        }
     )*};
 }
 
 macro_rules! apply_paulis {
     ($(($name:ident, $gate:literal),)*) => {$(
-        single_circuit!(
-            /// Apply the
-            #[doc = $gate]
-            /// gate on the circuit (identity on the tracker).
-            $name
-        );
+        /// Apply the
+        #[doc = $gate]
+        /// gate on the circuit (identity on the tracker).
+        pub fn $name(&mut self, bit: usize) {
+            self.circuit.$name(bit)
+        }
     )*};
 }
 
 macro_rules! single_gate {
     ($(($name:ident, $gate:literal),)*) => {$(
-        single_both!(
-            /// Apply the
-            #[doc = $gate]
-            /// gate on the circuit and update the Pauli tracker accordingly.
-            $name
-        );
-    )*};
-}
-
-macro_rules! double_tracker {
-    (
-        $(#[doc = $doc:expr])*
-        $name:ident
-    ) => {
-        double_tracker!(
-            $(#[doc = $doc])*
-            $name, bit_a, bit_b
-        );
-    };
-    (
-        $(#[doc = $doc:expr])*
-        $name:ident, $bit_a:ident, $bit_b:ident
-    ) => {
-        $(#[doc = $doc])*
-        pub fn $name(&mut self, $bit_a: usize, $bit_b: usize) {
-            self.tracker.$name($bit_a, $bit_b)
+        /// Apply the
+        #[doc = $gate]
+        /// gate on the circuit and update the Pauli tracker accordingly.
+        pub fn $name(&mut self, bit: usize) {
+            self.circuit.$name(bit);
+            self.tracker.$name(bit)
         }
-    };
+    )*};
 }
 
 macro_rules! movements {
@@ -231,38 +159,16 @@ macro_rules! movements {
         $from_doc:literal,
         $to_doc:literal
     ),)*) => {$(
-        double_tracker!(
-            /// On the tracker, "move" the
-            #[doc=$from_doc]
-            /// Pauli stack from the `origin` qubit to the `destination` qubit,
-            /// transforming it to an
-            #[doc=$to_doc]
-            /// stack.
-            $name, source, destination
-        );
-    )*};
-}
-
-macro_rules! double_both {
-    (
-        $(#[doc = $doc:expr])*
-        $name:ident
-    ) => {
-        double_tracker!(
-            $(#[doc = $doc])*
-            $name, bit_a, bit_b
-        );
-    };
-    (
-        $(#[doc = $doc:expr])*
-        $name:ident, $bit_a:ident, $bit_b:ident
-    ) => {
-        $(#[doc = $doc])*
-        pub fn $name(&mut self, $bit_a: usize, $bit_b: usize) {
-            self.circuit.$name($bit_a, $bit_b);
-            self.tracker.$name($bit_a, $bit_b)
+        /// On the tracker, "move" the
+        #[doc=$from_doc]
+        /// Pauli stack from the `origin` qubit to the `destination` qubit,
+        /// transforming it to an
+        #[doc=$to_doc]
+        /// stack.
+        pub fn $name(&mut self, source: usize, destination: usize) {
+            self.tracker.$name(source, destination)
         }
-    };
+    )*};
 }
 
 macro_rules! double_gate {
@@ -270,14 +176,13 @@ macro_rules! double_gate {
         double_gate!($name, $gate, bit_a, bit_b);
     };
     ($name:ident, $gate:literal, $bit_a:ident, $bit_b:ident) => {
-        double_both!(
-            /// Apply the
-            #[doc = $gate]
-            /// gate on the circuit and update the Pauli tracker accordingly.
-            $name,
-            $bit_a,
-            $bit_b
-        );
+        /// Apply the
+        #[doc = $gate]
+        /// gate on the circuit and update the Pauli tracker accordingly.
+        pub fn $name(&mut self, $bit_a: usize, $bit_b: usize) {
+            self.circuit.$name($bit_a, $bit_b);
+            self.tracker.$name($bit_a, $bit_b)
+        }
     };
 }
 
@@ -320,16 +225,19 @@ where
     T: Tracker,
 {
     single_gate!(
-        (h, "H"),
         (s, "S"),
         (sdg, "SDG"),
-        (sx, "SX"),
-        (sy, "SY"),
         (sz, "SZ"),
-        (sxdg, "SXDG"),
-        (sydg, "SYDG"),
         (szdg, "SZDG"),
         (hxy, "H_xy"),
+        (h, "H"),
+        (sy, "SY"),
+        (sydg, "SYDG"),
+        (sh, "SH"),
+        (hs, "HS"),
+        (shs, "SHS"),
+        (sx, "SX"),
+        (sxdg, "SXDG"),
         (hyz, "H_yz"),
     );
 

@@ -49,7 +49,7 @@ I hope the following list includes all steps ...
    this case also do the following: Implement the method directly for the `Live`
    tracker, by calling `Pauli`s method (you probably just need to add it to the
    `single!` macro call). Implement a more efficient direct implementation in
-   `PauliEnum`'s, `PauliTuple`'s and `PauliStorage`'s `Pauli` implementation. Do it
+   `PauliEnum`'s, `PauliTuple`'s and `PauliDense`'s `Pauli` implementation. Do it
    analog for `PauliStack` and `Frames`, i.e., provide an efficient method
    implementation for `PauliStack` and call this function in `Frames` tracker
    implementation (`single!` macro ...).

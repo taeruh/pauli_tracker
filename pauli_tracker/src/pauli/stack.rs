@@ -214,16 +214,33 @@ impl<T: BooleanVector> PauliStack<T> {
     /// Apply Pauli Y, note that it is just the identity.
     pub fn y(&self) {}
 
-    /// Conjugate the PauliStack with the Hadamard gate ignoring phases.
-    pub fn h(&mut self) {
-        mem::swap(&mut self.left, &mut self.right);
-    }
     /// Conjugate the Paulistack with the S gate ignoring phases.
     pub fn s(&mut self) {
         self.right.xor_inplace(&self.left);
     }
+    /// Conjugate the PauliStack with the Hadamard gate ignoring phases.
+    pub fn h(&mut self) {
+        mem::swap(&mut self.left, &mut self.right);
+    }
+    /// Conjugate the Paulistack with the SH gate ignoring phases.
+    pub fn sh(&mut self) {
+        // this is just sh ... is there a simpler way?
+        mem::swap(&mut self.left, &mut self.right);
+        self.right.xor_inplace(&self.left);
+    }
+    /// Conjugate the Paulistack with the HS gate ignoring phases.
+    pub fn hs(&mut self) {
+        // this is just hs ... is there a simpler way?
+        self.right.xor_inplace(&self.left);
+        mem::swap(&mut self.left, &mut self.right);
+    }
+    /// Conjugate the Paulistack with the SHS gate ignoring phases.
+    pub fn shs(&mut self) {
+        self.left.xor_inplace(&self.right);
+    }
 
     /// Conjugate the Paulistack with the sqrt(X) gate ignoring phases.
+    #[deprecated(since = "0.3.1", note = "use `shs` instead")]
     pub fn sx(&mut self) {
         self.left.xor_inplace(&self.right);
     }

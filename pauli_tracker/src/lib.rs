@@ -69,6 +69,8 @@ pub mod boolean_vector;
 #[cfg_attr(docsrs, doc(cfg(feature = "circuit")))]
 pub mod circuit;
 
+pub(crate) mod clifford_helper;
+
 pub mod collection;
 
 #[cfg(feature = "scheduler")]

@@ -51,12 +51,24 @@ impl Pauli for PauliTuple {
         self.1 ^= other.1;
     }
 
+    fn s(&mut self) {
+        self.1 ^= self.0;
+    }
     fn h(&mut self) {
         mem::swap(&mut self.0, &mut self.1);
     }
-
-    fn s(&mut self) {
+    fn sh(&mut self) {
+        // cf. stack impl
+        mem::swap(&mut self.0, &mut self.1);
         self.1 ^= self.0;
+    }
+    fn hs(&mut self) {
+        // cf. stack impl
+        self.1 ^= self.0;
+        mem::swap(&mut self.0, &mut self.1);
+    }
+    fn shs(&mut self) {
+        self.0 ^= self.1;
     }
 
     fn sx(&mut self) {

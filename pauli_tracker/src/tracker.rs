@@ -19,7 +19,10 @@ adopt measurements correctly.
 
 use thiserror::Error;
 
-use crate::pauli::Pauli;
+use crate::{
+    clifford_helper,
+    pauli::Pauli,
+};
 
 /// A vector describing an encoded Pauli string.
 ///
@@ -38,7 +41,7 @@ macro_rules! single_doc_standard {
         concat!(
             "Update the tracked frames according the ",
             $gate,
-            " gate on qu`bit`."
+            " gate on the qu`bit`."
         )
     };
 }
@@ -166,91 +169,7 @@ pub trait Tracker {
 
     track_pauli!((track_x, X), (track_y, Y), (track_z, Z),);
 
-    // generators
-    #[doc = single_doc_standard!("Hadamard")]
-    fn h(&mut self, bit: usize);
-    #[doc = single_doc_standard!("S")]
-    fn s(&mut self, bit: usize);
-    #[doc = double_doc!("Control Z")]
-    fn cz(&mut self, bit_a: usize, bit_b: usize);
-
-    #[doc = single_doc_standard!("I")]
-    /// (The identity)
-    fn id(&mut self, _: usize) {}
-    coset!(id, "I", (x, "X"), (y, "Y"), (z, "Z"),);
-
-    coset!(
-        s,
-        "S",
-        (sdg, "S^dagger"),
-        (sz, "sqrt(Z)"),
-        (szdg, "sqrt(Z)^dagger"),
-        (hxy, "H^{xy}"),
-    );
-    coset!(h, "H", (sy, "sqrt(Y)"), (sydg, "sqrt(Y)^dagger"),);
-
-    #[doc = single_doc_standard!("SH")]
-    fn sh(&mut self, bit: usize) {
-        self.s(bit);
-        self.h(bit);
-    }
-
-    #[doc = single_doc_standard!("HS")]
-    fn hs(&mut self, bit: usize) {
-        self.h(bit);
-        self.s(bit);
-    }
-
-    #[doc = single_doc_standard!("SHS")]
-    fn shs(&mut self, bit: usize) {
-        self.s(bit);
-        self.h(bit);
-        self.s(bit);
-    }
-    coset!(
-        shs,
-        "SHS",
-        (sx, "sqrt(X)"),
-        (sxdg, "sqrt(X)^dagger"),
-        (hyz, "H_yz"),
-    );
-
-    #[doc = double_doc!("Control X (Control Not)", control, target)]
-    fn cx(&mut self, control: usize, target: usize) {
-        self.h(target);
-        self.cz(control, target);
-        self.h(target);
-    }
-
-    #[doc = double_doc!("Control Y", control, target)]
-    fn cy(&mut self, control: usize, target: usize) {
-        self.hyz(target);
-        self.cz(control, target);
-        self.hyz(target);
-    }
-
-    #[doc = double_doc!("Swap")]
-    fn swap(&mut self, bit_a: usize, bit_b: usize) {
-        self.cx(bit_a, bit_b);
-        self.cx(bit_b, bit_a);
-        self.cx(bit_a, bit_b);
-    }
-
-    #[doc = double_doc!("iSwap")]
-    fn iswap(&mut self, bit_a: usize, bit_b: usize) {
-        self.s(bit_b);
-        self.s(bit_a);
-        self.h(bit_a);
-        self.cx(bit_a, bit_b);
-        self.cx(bit_b, bit_a);
-        self.h(bit_b);
-    }
-
-    #[doc = double_doc!("iSwap^dagger")]
-    /// Equivalent to the iSwap gate.
-    fn iswapdg(&mut self, bit_a: usize, bit_b: usize) {
-        self.iswap(bit_a, bit_b);
-    }
+    clifford_helper::trait_gates!();
 
     movements!(
         (move_x_to_x, "X", "X"),
@@ -271,7 +190,6 @@ macro_rules! unwrap_get_mut {
             .unwrap_or_else(|| panic!("{}: qubit {} does not exist", $gate, $bit))
     };
 }
-
 use unwrap_get_mut;
 
 // that's not stable yet (https://github.com/rust-lang/rust/issues/83527), so we have
@@ -327,44 +245,50 @@ mod tests {
         // the encoding is according to crate::pauli::tableau_encoding, i.e., 0=I, 2=X,
         // 3=Y, 1=Z
 
-        pub const N_SINGLES: usize = 15;
+        pub const N_SINGLES: usize = 18;
         const SINGLE_GENERATORS: [(&str, [u8; 2]); N_SINGLES] =
             // (name, result: [conjugate X, conjugate Z])
             [
-                ("H", [1, 2]),
-                ("S", [3, 1]),
-                ("SDG", [3, 1]),
                 ("I", [2, 1]),
                 ("X", [2, 1]),
                 ("Y", [2, 1]),
                 ("Z", [2, 1]),
-                ("SX", [2, 3]),
-                ("SXDG", [2, 3]),
-                ("SY", [1, 2]),
-                ("SYDG", [1, 2]),
+                ("S", [3, 1]),
+                ("SDG", [3, 1]),
                 ("SZ", [3, 1]),
                 ("SZDG", [3, 1]),
                 ("H_xy", [3, 1]),
+                ("H", [1, 2]),
+                ("SY", [1, 2]),
+                ("SYDG", [1, 2]),
+                ("SH", [1, 3]),
+                ("HS", [3, 2]),
+                ("SHS", [2, 3]),
+                ("SX", [2, 3]),
+                ("SXDG", [2, 3]),
                 ("H_yz", [2, 3]),
             ];
 
         macro_rules! single_actions {
             ($tracker:ty) => {
                 [
-                    <$tracker>::h,
-                    <$tracker>::s,
-                    <$tracker>::sdg,
                     <$tracker>::id,
                     <$tracker>::x,
                     <$tracker>::y,
                     <$tracker>::z,
-                    <$tracker>::sx,
-                    <$tracker>::sxdg,
-                    <$tracker>::sy,
-                    <$tracker>::sydg,
+                    <$tracker>::s,
+                    <$tracker>::sdg,
                     <$tracker>::sz,
                     <$tracker>::szdg,
                     <$tracker>::hxy,
+                    <$tracker>::h,
+                    <$tracker>::sy,
+                    <$tracker>::sydg,
+                    <$tracker>::sh,
+                    <$tracker>::hs,
+                    <$tracker>::shs,
+                    <$tracker>::sx,
+                    <$tracker>::sxdg,
                     <$tracker>::hyz,
                 ]
             };
