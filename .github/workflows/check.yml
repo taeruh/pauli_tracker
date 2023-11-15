@@ -95,3 +95,17 @@ jobs:
           components: rustfmt
       - name: cargo fmt
         run: cargo fmt --check --package pauli_tracker
+
+  semver:
+    name: semver
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: true
+      - name: install stable
+        uses: dtolnay/rust-toolchain@stable
+      - name: install semver-checks
+        uses: obi1kenobi/cargo-semver-checks-action@v2
+      - name: cargo semver-checks
+        run: cargo semver-checks
