@@ -19,6 +19,8 @@ enum Job {
     ClippyBeta,
     Docs,
     Fmt,
+    Semver,
+    PublicDeps,
     Standard,
     Beta,
     OsCheck,

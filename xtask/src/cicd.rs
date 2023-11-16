@@ -1,4 +1,15 @@
-use std::process::Command;
+use std::{
+    env,
+    fs,
+    io::{
+        Read,
+        Seek,
+        SeekFrom,
+        Write,
+    },
+    path::PathBuf,
+    process::Command,
+};
 
 macro_rules! cargo {
     ($($arg:literal),*) => {
@@ -58,6 +69,55 @@ pub fn fmt() {
     println!("CHECK: FMT");
     // cargo fmt ignores workspace default-members
     cargo!("+nightly", "fmt", "--check", "--package", "pauli_tracker");
+}
+
+pub fn semver() {
+    println!("CHECK: SEMVER");
+    cargo!("semver-checks", "--package", "pauli_tracker");
+}
+
+pub fn public_deps() {
+    fn r#try() -> anyhow::Result<()> {
+        let dir: String = env::current_dir()?
+            .into_os_string()
+            .into_string()
+            .expect("problem reading OsString");
+        println!("{:?}", dir);
+        let idx = match dir.find("pauli_tracker") {
+            Some(idx) => idx,
+            None => {
+                println!("Execute this command in the repository.");
+                return Ok(());
+            }
+        };
+        let (repo_dir, _) = dir.split_at(idx);
+        let mut manifest_file = PathBuf::from(repo_dir);
+        manifest_file.push("pauli_tracker/pauli_tracker/Cargo_nightly.toml");
+        let manifest_nightly = fs::read(&manifest_file)?;
+        manifest_file.pop();
+        manifest_file.push("Cargo.toml");
+        let mut manifest =
+            fs::File::options().read(true).write(true).open(manifest_file)?;
+        let size = manifest.metadata().map(|m| m.len() as usize).ok();
+        let mut manifest_standard = Vec::with_capacity(size.unwrap_or(0));
+        manifest.read_to_end(&mut manifest_standard)?;
+        manifest.set_len(0)?;
+        manifest.seek(SeekFrom::Start(0))?;
+        manifest.write_all(&manifest_nightly)?;
+        cargo!(
+            ("RUSTFLAGS", "-Dwarnings"),
+            "+nightly",
+            "check",
+            "--package",
+            "pauli_tracker",
+            "--all-features"
+        );
+        manifest.set_len(0)?;
+        manifest.seek(SeekFrom::Start(0))?;
+        manifest.write_all(&manifest_standard)?;
+        Ok(())
+    }
+    r#try().expect("problem checking for public dependencies")
 }
 // }}
 
@@ -126,6 +186,8 @@ pub fn full() {
     os_check();
     docs();
     fmt();
+    semver();
+    public_deps();
     miri();
     beta();
     clippy_beta();

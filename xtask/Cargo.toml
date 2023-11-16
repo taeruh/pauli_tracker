@@ -5,8 +5,7 @@ authors = ["Jannis Ruh <ruh.j81@gmail.com>"]
 edition = "2021"
 description = "Common dev tasks"
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
-
 [dependencies]
+anyhow = "1.0.75"
 clap = { version = "4.3.0", features = ["derive"] }
 proc = { path = "proc", package = "xtask_proc" }

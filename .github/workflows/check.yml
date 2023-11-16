@@ -109,3 +109,17 @@ jobs:
         uses: obi1kenobi/cargo-semver-checks-action@v2
       - name: cargo semver-checks
         run: cargo semver-checks
+
+  public-deps:
+    name: public-deps
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: true
+      - name: install nightly
+        uses: dtolnay/rust-toolchain@nightly
+      - name: replace the manifest with the nightly manifest
+        run: cp pauli_tracker/Cargo_nightly.toml pauli_tracker/Cargo.toml
+      - name: cargo check
+        run: cargo check --all-features
