@@ -43,11 +43,11 @@ where
                         Some(&p) if p == i => {
                             subset.next();
                             Either::Left(e)
-                        }
+                        },
                         _ => Either::Right(e),
                     },
                 ))
-            }
+            },
             None => None,
         }
     }

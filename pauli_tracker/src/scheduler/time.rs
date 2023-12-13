@@ -228,7 +228,7 @@ impl<'l, T: MeasurableSet> PathGenerator<'l, T> {
                 *dependency_count -= 1;
                 if *dependency_count == 0 {
                     match deps.remove(bit) {
-                        Some(_) => {}
+                        Some(_) => {},
                         // already checked above with the get_mut
                         None => unreachable!(),
                     }
@@ -396,7 +396,7 @@ mod tests {
                         results.push(path.clone());
                     }
                     path.pop();
-                }
+                },
             }
         }
 

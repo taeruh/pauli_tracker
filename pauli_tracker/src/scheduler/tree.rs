@@ -115,12 +115,12 @@ impl<T: FocusIterator> Iterator for Sweep<T> {
             Some((new, mess)) => {
                 self.stack.push(mem::replace(&mut self.current, new));
                 Some(Step::Forward(mess))
-            }
+            },
             None => {
                 let at_end = self.current.at_leaf();
                 self.current = self.stack.pop()?;
                 Some(Step::Backward(at_end))
-            }
+            },
         }
     }
 }

@@ -154,9 +154,9 @@ impl<'l> Graph<'l> {
             state @ State::Sleeping => {
                 *state = State::InMemory;
                 self.current_memory += 1;
-            }
+            },
             State::InMemory => (),
-            State::Measured => {}
+            State::Measured => {},
         }
     }
 }
@@ -170,11 +170,11 @@ macro_rules! impl_measure {
                     // corrected later on in self.update_memory
                     self.current_memory += 1;
                     node.0 = State::Measured;
-                }
+                },
                 State::InMemory => node.0 = State::Measured,
                 State::Measured => {
                     return return_error!($check, bit);
-                }
+                },
             }
             for neighbor in node.1.iter() {
                 self.initialize(*neighbor);

@@ -115,7 +115,7 @@ impl<T: BooleanVector> PauliStack<T> {
         let right = self.right.len();
         match left.cmp(&right) {
             Ordering::Less => self.left.resize(right, false),
-            Ordering::Equal => {}
+            Ordering::Equal => {},
             Ordering::Greater => self.right.resize(left, false),
         }
         self.left.push(pauli.get_x());
@@ -149,7 +149,7 @@ impl<T: BooleanVector> PauliStack<T> {
             )),
             Ordering::Equal => {
                 Some(P::new_product(self.left.pop()?, self.right.pop()?))
-            }
+            },
             Ordering::Greater => Some(P::new_product(
                 match self.left.pop() {
                     Some(v) => v,

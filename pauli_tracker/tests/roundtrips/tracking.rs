@@ -206,7 +206,7 @@ fn check_graph(
                         "not sufficient: {e}\n{node:?}, {deps:?}, \
                          {measured:?}\n{graph:?}\n{storage:#?}"
                     ));
-                }
+                },
             }
             measured.insert(*node, ());
         }
@@ -303,7 +303,7 @@ impl Instructor {
                     let pos_in_mem = self.idx(b);
                     self.memory[pos_in_mem] = self.used;
                     self.used += 1;
-                }
+                },
                 Operation::TeleportedX(a, b) => {
                     if let Some(pos_in_mem) = self.pauli_teleportation(
                         a,
@@ -314,7 +314,7 @@ impl Instructor {
                     ) {
                         self.memory.swap_remove(pos_in_mem % self.memory.len());
                     }
-                }
+                },
                 Operation::TeleportedY(a, b) => {
                     if let Some(pos_in_mem) = self.pauli_teleportation(
                         a,
@@ -325,7 +325,7 @@ impl Instructor {
                     ) {
                         self.memory.swap_remove(pos_in_mem % self.memory.len());
                     }
-                }
+                },
                 Operation::TeleportedZ(a, b) => {
                     if let Some(pos_in_mem) = self.pauli_teleportation(
                         a,
@@ -336,14 +336,14 @@ impl Instructor {
                     ) {
                         self.memory.swap_remove(pos_in_mem % self.memory.len());
                     }
-                }
+                },
                 Operation::Measure(b) => {
                     circuit.measure(self.mem_idx(b));
                     self.memory.swap_remove(b % self.memory.len());
-                }
+                },
                 Operation::NewQubit(_) => {
                     Self::new_qubit(&mut self.memory, &mut self.used, circuit)
-                }
+                },
             }
         }
     }

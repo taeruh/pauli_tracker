@@ -109,7 +109,7 @@ where
             Ordering::Equal => {
                 self.0.push(value);
                 None
-            }
+            },
             Ordering::Greater => {
                 let diff = key - len;
                 self.0.try_reserve(diff).unwrap_or_else(|e| {
@@ -118,7 +118,7 @@ where
                 self.0.extend(iter::repeat(T::default()).take(diff));
                 self.0.push(value);
                 None
-            }
+            },
         }
     }
 

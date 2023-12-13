@@ -88,7 +88,7 @@ pub fn public_deps() {
             None => {
                 println!("Execute this command in the repository.");
                 return Ok(());
-            }
+            },
         };
         let (repo_dir, _) = dir.split_at(idx);
         let mut manifest_file = PathBuf::from(repo_dir);

@@ -7,10 +7,11 @@ chain_width = 67
 fn_call_width = 67
 struct_lit_width = 32
 struct_variant_width = 32
-# attr_fn_like_width = 68
 
 use_field_init_shorthand = true
 use_try_shorthand = true
+
+match_block_trailing_comma = true
 
 # unstable stuff, which is only used in a nightly toolchain (to use it either be in a
 # nightly toolchain or pass +nightly to rustfmt/cargo fmt

@@ -170,7 +170,7 @@ fn roundtrip(ops: Vec<Operation>, edges: Edges, num_nodes: usize) {
                     all_paths.push((this_path.len(), max_mem, this_path.clone()));
                 }
                 this_path.pop();
-            }
+            },
         }
     }
 
@@ -197,7 +197,7 @@ fn roundtrip(ops: Vec<Operation>, edges: Edges, num_nodes: usize) {
                 } else {
                     path.push(mess);
                 }
-            }
+            },
             Step::Backward(leaf) => {
                 if let Some(mem) = leaf {
                     best_memory[path.len()] = mem;
@@ -207,7 +207,7 @@ fn roundtrip(ops: Vec<Operation>, edges: Edges, num_nodes: usize) {
                     skipper_results.insert(path.len(), (mem, path.clone()));
                 }
                 path.pop();
-            }
+            },
         }
     }
 
@@ -287,12 +287,12 @@ fn roundtrip(ops: Vec<Operation>, edges: Edges, num_nodes: usize) {
                     let new = self.current.focus(&mess).unwrap();
                     self.stack.push(mem::replace(&mut self.current, new));
                     Some(Next::Mess(mess))
-                }
+                },
                 Step::Backward(at_leaf) => {
                     let res = at_leaf.and(Some(self.current.max_memory()));
                     self.current = self.stack.pop().unwrap();
                     Some(Next::Mem(res))
-                }
+                },
             }
         }
     }
@@ -310,13 +310,13 @@ fn roundtrip(ops: Vec<Operation>, edges: Edges, num_nodes: usize) {
                     match step {
                         Next::Mess(mess) => {
                             path.push(mess);
-                        }
+                        },
                         Next::Mem(mem) => {
                             if let Some(mem) = mem {
                                 results.push((path.len(), mem, path.clone()));
                             }
                             path.pop();
-                        }
+                        },
                     }
                 }
                 results
@@ -412,11 +412,11 @@ fn split_instructions(
                     match step {
                         Step::Backward(_) => {
                             init.pop();
-                        }
+                        },
                         step => {
                             init.push(step);
                             break;
-                        }
+                        },
                     }
                 }
 
@@ -426,11 +426,11 @@ fn split_instructions(
                 if num_done_tasks == num_normal_tasks {
                     paths_per_job += 1;
                 }
-            }
+            },
             step => {
                 task.push(step.clone());
                 init.push(step);
-            }
+            },
         }
     }
     res

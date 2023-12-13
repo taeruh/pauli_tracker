@@ -353,14 +353,14 @@ mod tests {
                         stack: PauliBitVec::try_from_str("0", "1").unwrap()
                     }
                 );
-            }
+            },
             MoveError::MissingBit(_) => panic!("wrong error"),
         }
         match circ.measure_and_store(2).1.unwrap_err() {
             MoveError::OverwriteStack(_) => panic!("wrong error"),
             MoveError::MissingBit(e) => {
                 assert_eq!(e, MissingBit(2));
-            }
+            },
         }
         circ.tracker.new_qubit(2);
         circ.tracker.new_qubit(3);

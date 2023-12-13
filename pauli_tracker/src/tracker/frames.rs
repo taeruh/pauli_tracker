@@ -218,7 +218,7 @@ where
                 Some(pauli) => {
                     pauli.left.set(self.frames_num, p.get_x());
                     pauli.right.set(self.frames_num, p.get_z());
-                }
+                },
                 None => continue,
             }
         }

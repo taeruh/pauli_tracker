@@ -112,7 +112,7 @@ impl Circuit {
                 5 => {
                     let (a, b) = double_idx(num_bits, &bit_dist, rng);
                     instructions.push(Cz(a, b))
-                }
+                },
                 6 => instructions.push(I(bit_dist.sample(rng))),
                 7 => instructions.push(X(bit_dist.sample(rng))),
                 8 => instructions.push(Y(bit_dist.sample(rng))),
@@ -129,42 +129,42 @@ impl Circuit {
                 19 => {
                     let (a, b) = double_idx(num_bits, &bit_dist, rng);
                     instructions.push(Cx(a, b))
-                }
+                },
                 20 => {
                     let (a, b) = double_idx(num_bits, &bit_dist, rng);
                     instructions.push(Cy(a, b))
-                }
+                },
                 21 => {
                     let (a, b) = double_idx(num_bits, &bit_dist, rng);
                     instructions.push(Swap(a, b))
-                }
+                },
                 22 => {
                     let (a, b) = double_idx(num_bits, &bit_dist, rng);
                     instructions.push(ISwap(a, b))
-                }
+                },
                 23 => {
                     let (a, b) = double_idx(num_bits, &bit_dist, rng);
                     instructions.push(ISwapdg(a, b))
-                }
+                },
                 24 => {
                     let (a, b) = double_idx(num_bits, &bit_dist, rng);
                     instructions.push(MoveXX(a, b))
-                }
+                },
                 25 => {
                     let (a, b) = double_idx(num_bits, &bit_dist, rng);
                     instructions.push(MoveXZ(a, b))
-                }
+                },
                 26 => {
                     let (a, b) = double_idx(num_bits, &bit_dist, rng);
                     instructions.push(MoveZX(a, b))
-                }
+                },
                 27 => {
                     let (a, b) = double_idx(num_bits, &bit_dist, rng);
                     instructions.push(MoveZZ(a, b))
-                }
+                },
                 _ => {
                     unreachable!()
-                }
+                },
             }
         }
         Self { num_bits, instructions }

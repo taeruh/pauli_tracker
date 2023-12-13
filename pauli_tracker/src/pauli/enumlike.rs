@@ -66,7 +66,7 @@ impl Pauli for PauliEnum {
     fn add(&mut self, other: Self) {
         match (*self, other) {
             (Self::I, _) => *self = other,
-            (_, Self::I) => {}
+            (_, Self::I) => {},
             (Self::X, Self::X) => *self = Self::I,
             (Self::X, Self::Y) => *self = Self::Z,
             (Self::X, Self::Z) => *self = Self::Y,
@@ -81,7 +81,7 @@ impl Pauli for PauliEnum {
 
     fn s(&mut self) {
         match *self {
-            Self::I => {}
+            Self::I => {},
             Self::X => *self = Self::Y,
             Self::Z => *self = Self::Z,
             Self::Y => *self = Self::X,
@@ -90,7 +90,7 @@ impl Pauli for PauliEnum {
 
     fn h(&mut self) {
         match *self {
-            Self::I => {}
+            Self::I => {},
             Self::X => *self = Self::Z,
             Self::Z => *self = Self::X,
             Self::Y => *self = Self::Y,
@@ -99,7 +99,7 @@ impl Pauli for PauliEnum {
 
     fn sh(&mut self) {
         match *self {
-            Self::I => {}
+            Self::I => {},
             Self::X => *self = Self::Z,
             Self::Z => *self = Self::Y,
             Self::Y => *self = Self::X,
@@ -108,7 +108,7 @@ impl Pauli for PauliEnum {
 
     fn hs(&mut self) {
         match *self {
-            Self::I => {}
+            Self::I => {},
             Self::X => *self = Self::Y,
             Self::Z => *self = Self::X,
             Self::Y => *self = Self::Z,
@@ -117,7 +117,7 @@ impl Pauli for PauliEnum {
 
     fn shs(&mut self) {
         match *self {
-            Self::I => {}
+            Self::I => {},
             Self::X => *self = Self::X,
             Self::Z => *self = Self::Y,
             Self::Y => *self = Self::Z,
@@ -126,7 +126,7 @@ impl Pauli for PauliEnum {
 
     fn sx(&mut self) {
         match *self {
-            Self::I => {}
+            Self::I => {},
             Self::X => *self = Self::X,
             Self::Z => *self = Self::Y,
             Self::Y => *self = Self::Z,
@@ -135,8 +135,8 @@ impl Pauli for PauliEnum {
 
     fn xpx(&mut self, other: &Self) {
         match (*self, *other) {
-            (_, Self::I) => {}
-            (_, Self::Z) => {}
+            (_, Self::I) => {},
+            (_, Self::Z) => {},
             (Self::I, Self::X) => *self = Self::X,
             (Self::I, Self::Y) => *self = Self::X,
             (Self::X, Self::X) => *self = Self::I,
@@ -150,8 +150,8 @@ impl Pauli for PauliEnum {
 
     fn xpz(&mut self, other: &Self) {
         match (*self, *other) {
-            (_, Self::I) => {}
-            (_, Self::X) => {}
+            (_, Self::I) => {},
+            (_, Self::X) => {},
             (Self::I, Self::Z) => *self = Self::X,
             (Self::I, Self::Y) => *self = Self::X,
             (Self::X, Self::Z) => *self = Self::I,
@@ -165,8 +165,8 @@ impl Pauli for PauliEnum {
 
     fn zpx(&mut self, other: &Self) {
         match (*self, *other) {
-            (_, Self::I) => {}
-            (_, Self::Z) => {}
+            (_, Self::I) => {},
+            (_, Self::Z) => {},
             (Self::I, Self::X) => *self = Self::Z,
             (Self::I, Self::Y) => *self = Self::Z,
             (Self::X, Self::X) => *self = Self::Y,
@@ -180,8 +180,8 @@ impl Pauli for PauliEnum {
 
     fn zpz(&mut self, other: &Self) {
         match (*self, *other) {
-            (_, Self::I) => {}
-            (_, Self::X) => {}
+            (_, Self::I) => {},
+            (_, Self::X) => {},
             (Self::I, Self::Z) => *self = Self::Z,
             (Self::I, Self::Y) => *self = Self::Z,
             (Self::X, Self::Z) => *self = Self::Y,
@@ -215,16 +215,16 @@ impl Pauli for PauliEnum {
         if x {
             match self {
                 Self::I => *self = Self::X,
-                Self::X => {}
-                Self::Y => {}
+                Self::X => {},
+                Self::Y => {},
                 Self::Z => *self = Self::Y,
             }
         } else {
             match self {
-                Self::I => {}
+                Self::I => {},
                 Self::X => *self = Self::I,
                 Self::Y => *self = Self::Z,
-                Self::Z => {}
+                Self::Z => {},
             }
         }
     }
@@ -234,13 +234,13 @@ impl Pauli for PauliEnum {
             match self {
                 Self::I => *self = Self::Z,
                 Self::X => *self = Self::Y,
-                Self::Y => {}
-                Self::Z => {}
+                Self::Y => {},
+                Self::Z => {},
             }
         } else {
             match self {
-                Self::I => {}
-                Self::X => {}
+                Self::I => {},
+                Self::X => {},
                 Self::Y => *self = Self::X,
                 Self::Z => *self = Self::I,
             }
