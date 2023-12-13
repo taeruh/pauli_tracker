@@ -68,4 +68,4 @@ I hope the following list includes all steps ...
 
 [conventional_commits]: https://www.conventionalcommits.org
 [git-feature-branch]: https://www.atlassian.com/git/tutorials/comparing-workflows
-[conjugation-rules]: ./docs/conjugation_rules.md
+[conjugation-rules]: ./docs/conjugation_rules.pdf

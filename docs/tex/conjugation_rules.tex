@@ -1,0 +1,396 @@
+% when compiling this document and pushing, ensure that all the intermediate files are
+% not pushed, e.g., set up the latex compiler to put everything in the output directory
+% (which is ignored) or use overleaf and copy the source and pdf file
+
+\documentclass[a4paper,english]{scrartcl}
+\input{header}
+
+\addbibresource{literature.bib}
+
+\begin{document}
+
+\thispagestyle{plain}
+\vspace*{-1cm}
+\noindent%
+\begin{minipage}[t]{.7\textwidth}
+  {\LARGE\scshape Conjugating Paulis with Cliffords}\\[0.2em]
+\end{minipage}%
+\begin{minipage}[t]{0.3\textwidth}
+  \strut\hfill%
+  \today%
+\end{minipage}%
+
+\tableofcontents
+
+\addsec{Introduction}
+
+In this document we explicitly list the conjugation rules of Clifford operators on Pauli
+operators. \Cref{s"preliminaries} contains the basics for a rigorous description and
+\cref{s"conjagating_paulis} the lists the conjugation rules, making use of the relation
+between Clifford operators and the symplectic group, which directly represents how the
+library is implemented.
+
+\section{Preliminaries}\label{s"preliminaries}
+
+In this section we document some well known properties of Pauli operator and Clifford
+operators. It is maybe unnecessary technical, but I think this way it ensures clarity.
+\begin{definition}\label{.computational_basis}
+For an index set $I$, with $\abs{I} = n \in \N$, let $\w(\er{0}_i, \er{1}_i)$ be an
+orthonormal basis of $\bh_{,i} \cong \C^2$ and $\sigma : \bc{0, \ldots, n-1} \to I$
+bijective. The states
+\begin{equation}
+  \bigotimes_{i \in I} \er{x_i}_i \eqqcolon \er{x_{\sigma(n-1)} \ldots x_{\sigma(0)}}
+  \eqqcolon \er{x} \quad \text{with }\; x = \sum_{i=0}^{n-1}x_{\sigma(i)}2^i
+\end{equation}
+for $x_i \in \bc{0, 1}$, $i \in I$ ($x \in \bc{0, \ldots, 2^{n}-1}$), define the
+standard orthonormal computational basis of $\bh_n = \bigotimes_{i \in I} \bh_{,i} \cong
+\C^{2^n}$. For $n = 0$, we just have the state $\er{0}$.\\ For \en*[m, n] we define
+the canonical matrix representation
+\begin{equation}
+  \mathrm{mat}_{m,n} : \ls\w(\bh_m, \bh_n) \to \C^{2^m \times 2^n},\; A \mapsto
+  \matp{
+  \are{0}[A][0] & \cdots & \are{0}[A][2^m-1]\\
+  \vdots & & \vdots\\
+  \are{2^n-1}[A][0] & \cdots & \are{2^n-1}[A][2^m-1]
+  }\,.
+\end{equation}
+\end{definition}
+\begin{remark}\label{.label_freedom}
+The freedom of $\sigma$ just means that we can relabel and resort the qubits, in a
+closed context, which will be handy later on. However, usually, the index set is just
+$\bc{0, \ldots n-1}$, \en*, (maybe shifted by $1$, depending on the context) and when we
+define operators we will always choose the identity for $\sigma$, i.e., the qubits are
+sorted from highest to lowest (left to right), if not otherwise said.
+\end{remark}
+\begin{definition_proposition}
+Let $\M_n(R)$ be the multiplicative monoid of all $n \times n$ matrices over a ring $R$,
+\en, and $\GL_n(R) \subseteq \M_n(R)$ the group of invertible matrices. We define the
+conjugation action of $\GL_n(R)$ on $\M_n(R)$ via
+\begin{equation}
+  * : \GL_n(R) \times \M_n(R) \to \M_n(R),\; (A, B) \mapsto A*B = ABA\ui \;.
+\end{equation}
+For all $A \in \GL_n(R)$, the mapping
+\begin{equation}
+  \inn_A : M_n(R) \to \M_n(R),\; B \mapsto A * B
+\end{equation}
+is an automorphism of the $\M_n(R)$.
+\end{definition_proposition}
+\begin{definition}
+We define $\U\w(\C^n)$, \en, to be the multiplicative group of unitary
+operators on $\C^n$, and write $\U\w(n) = \U\w(\C^n)$.
+\end{definition}
+\begin{definition}
+The Pauli operators are defined by
+\begin{equation}
+  X = \matp{0&1\\1&0}\;, \qquad
+  Y = \matp{0&-i\\i&0}\;, \qquad
+  Z = \matp{1&0\\0&-1}\;.
+\end{equation}
+Alternatively, we write $\sigma_x = \sigma_1 = X, \sigma_y = \sigma_2 = Y, \sigma_z =
+\sigma_3 = Z$ (sometimes with upper indices), respectively, and set $\bm{\sigma} =
+\w(\sigma_x\;\, \sigma_y\;\, \sigma_z)\ut$. We also consider the identity as Pauli
+operator and set $\sigma_0 = \1$. Usually, when indexing $\sigma$ with Latin indices, we
+count from $1$ to $3$, and when using Greek indices we count from $0$ to $3$.
+\end{definition}
+\begin{definition}
+Let \en. The unitary infinite Pauli group $\uip_n \leq \GL\w(\bh_n)$ is defined by
+\begin{equation}
+  \uip_n = \set{u \, \bigotimes_{j = 1}^n \sigma_{\mu_j}}{\mu_j \in \bc{0, \ldots,
+  3};\, u \in \U(1)} \;.
+\end{equation}
+\end{definition}
+\begin{definition}
+Let \en. The unitary infinite Clifford group $\uic_n \leq \U\w(\bh_n)$ is the normalizer
+of the Pauli group, i.e., $\uic_n * \uip_n = \uip_n$.
+\end{definition}
+\begin{definition}
+Let \en. We define the quotient groups
+\begin{equation}
+  \ouip_n = \uip/\U(1)\;, \quad \ouic_n = \uic/\U(1)\;.
+\end{equation}
+and set $\gpr_n$ and $\gcr_n$ to be sets of representatives, respectively.
+\end{definition}
+\begin{proposition}
+A unitary $U \in \U\w(\bigotimes_{i = 1}^n \w(\C^2)_i)$, \en, is uniquely defined, up to
+a phase, by its conjugation of the Pauli operators $X_1, Z_1, \ldots X_n, Z_n$.
+\end{proposition}
+\begin{proposition}\label{.tableau_description}
+Let \en. $\ouip_n$ is isomorph to the abelian group $\overline{H\w(\Z_2^n)} =
+\w(\Z_2^n \times \Z_2^n, +)$ with the standard addition via
+\begin{align}
+  \otau: \w(\Z_2^n \times \Z_2^n) &\to \ouip_n,\\ (z, x) &\mapsto \bigotimes_{j=1}^n
+  \overline{Z}_j^{z_j} \overline{X}_j^{x_j}\;.
+\end{align}
+\end{proposition}
+\begin{theorem}[\cite{bolt_clifford_stuff_1, bolt_clifford_stuff_2}]
+Let \en. The Clifford group, up to Pauli operators, is isomorph to the symplectic group,
+i.e.,
+\begin{equation}
+  \ouic_n/\ouip_n \cong \Sp_{2n}\w(\Z_2)\;,
+\end{equation}
+where $\Sp_{2n}\w(\Z_2)$ is the symplectic group of the $\Z_2^{2n}$ vector space with
+respect to the $\smatp{0&\1\\-\1&0}$ symplectic form. More specifically, the isomorphism
+is defined by
+\begin{equation}
+  \kappa : \ouic_n/\ouip_n \to \Sp_{2n}\w(\Z_2), \; \overline{g}\oip_n \mapsto S_g =
+  \otau\ui \circ \inn_g \circ \otau\;,
+\end{equation}
+% where $\otau$ is defined as in \cref{.quotient_tableau_description}.
+\end{theorem}
+\begin{corollary}
+The number of Clifford operators modulo Pauli operators is given by
+\begin{equation}
+  \abs{\ouic_n/\ouip_n} = 2^{n^2} \prod_{i=1}^n\w(2^{2i} - 1)
+\end{equation}
+\end{corollary}
+\begin{theorem}
+Let \en. Then it is
+\begin{equation}
+  \uic_n = \groupset{u, H_i, S_i, \cz[ij]}{u \in \U(1);\; i, j \in \bc{1, \ldots n}; \;
+  i \neq j}\;.
+\end{equation}
+\end{theorem}
+
+\section{Conjugating Paulis}\label{s"conjagating_paulis}
+
+\begin{remark}
+Note that is sufficient to calculate the conjugation rules of representatives of
+$\ouic_n/\ouip_n$, \en, since Pauli operators only change the phase factor of the result
+(which is trivial to calculate).
+\end{remark}
+
+\subsection{Single qubit Cliffords}
+
+\begin{proposition}
+The following mappings list all elements of $\ouic_1/\ouip_1$ (representatives) and
+explicitly describe the isomorphism $\ouic_1/\ouip_1 \cong \Sp_{2}\w(\F_2)$.
+\begin{table}[H]\label{t"single_qubit_isomorphism}
+\center
+\caption
+[Explicit description of the $\ouic_1/\ouip_1 \cong \Sp_{2}\w(\F_2)$ isomophism for
+every element]
+{Explicit description of the $\ouic_1/\ouip_1 \cong \Sp_{2}\w(\F_2)$ isomophism for every
+element: The second column specifies the element in $\ouic_1/\ouip_1$ with respect to
+the generators $S$ and $H$. The first column shows the matrix description of the
+canonical representatives. The third column shows the symplectic matrix according to the
+isomorphism. The fourth column contains the additional phases one has when conjugating
+with representatives (left for conjugating $Z$, right for conjugating $X$).}
+\begin{tabular}{lccr}
+  \toprule
+  repr. & $\ouic_1/\ouip_1$ & $\Sp_{2}\w(\F_2)$ & phase\\
+  \midrule
+  $\matp{1&0\\0&1}$ & $\1$ & $\matp{1&0\\0&1}$ & $\matp{1&1}$\\
+  \midrule
+  $\matp{1&0\\0&i}$ & $S$ & $\matp{1&1\\0&1}$ & $\matp{1&-i}$\\
+  \midrule
+  $\matp{1&1\\1&-1}$ & $H$ & $\matp{0&1\\1&0}$ & $\matp{1&1}$\\
+  \midrule
+  $\matp{1&1\\i&-i}\frac{1}{\sqrt{2}}$ & $SH$ & $\matp{1&1\\1&0}$ & $\matp{-i&1}$\\
+  \midrule
+  $\matp{1&i\\1&-i}\frac{1}{\sqrt{2}}$ & $HS$ & $\matp{0&1\\1&1}$ & $\matp{1&i}$\\
+  \midrule
+  $\matp{1&i\\i&1}\frac{1}{\sqrt{2}}$ & $SHS$ & $\matp{1&0\\1&1}$ & $\matp{-i&1}$\\
+  \bottomrule
+\end{tabular}
+\end{table}
+\end{proposition}
+\begin{proof}
+We calculate the according conjugations with the representatives:
+\begin{align}
+  S*Z &= Z\\
+  S*X &= Y = -iZX\\
+  H*Z &= X\\
+  H*X &= Z\\
+  SH*Z &= S*X = -iZX\\
+  SH*X &= S*Z = Z\\
+  HS*Z &= H*Z = X\\
+  HS*X &= -iH*ZX = iZX\\
+  SHS*Z &= S*X = -iZX\\
+  SHS*X &= iS*ZX = X
+\end{align}
+\end{proof}
+\begin{remark}
+In the following we list some typical Clifford gates and how they relate to the
+representative elements of $\ouic_1/\ouip_1$ ($H^{ab}$ denotes the hermitian change from
+the eigenbasis of $a$ to the eigenbasis of $b$, $a, b \in \bc{X, Y, Z}$):
+\begin{align}
+  S\ur &= SZ = \matp{1&0\\0&-i}\\
+  HSH &= \sqrt{i}SHS = \frac{1}{\sqrt{2}}\matp{\sqrt{i}&\sqrt{-i}\\\sqrt{-i}&\sqrt{i}}\\
+  \sqrt{X} &= HSH = \sqrt{i}SHS = \frac{1}{2}\matp{1+i&1-i\\1-i&1+i}\\
+  \sqrt{X}\ur &= HSZH = HSHX = \sqrt{i}SHSX = \frac{1}{2}\matp{1-i&1+i\\1+i&1-i}\\
+  \sqrt{Y} &= \sqrt{i}HZ = \frac{1}{2}\matp{1+i&-1-i\\1+i&1+i}\\
+  \sqrt{Y}\ur &= \sqrt{-i}ZH = \sqrt{-i}HX = \frac{1}{2}\matp{1-i&1-i\\-1+i&1-i}\\
+  H^{xy} &= \ee^{-i\pi/4}SX = \frac{1}{\sqrt{2}}\matp{0&1-i\\1+i&0}\\
+  H^{yz} &= SHSZ = \frac{1}{\sqrt{2}}\matp{1&-i\\i&-1}\\
+\end{align}
+Sorted according to \cref{t"single_qubit_isomorphism} we have the following $24$
+single qubit Clifford operators:
+\begin{align}
+  \begin{array}{llll}
+    \1 = \1 & \1X = X & \1Y = Y & \1Z = Z\\
+    S = S & SX = \sqrt{i}H^{xy} & SY = . & SZ = S\ur\\
+    H = H & HX =\sqrt{i}\sqrt{Y}\ur & HY = . & HZ = \sqrt{-i}\sqrt{Y}\\
+    SH = . & SHX = . & SHY = . & SHZ = .\\
+    HS = . & HSX = . & HSY = . & HSZ = .\\
+    SHS = \sqrt{-i}\sqrt{X} & SHSX = \sqrt{-i}\sqrt{X}\ur & SHSY = . & SHSZ = H^{yz}
+  \end{array}
+\end{align}
+\end{remark}
+
+\subsection{Two qubit Cliffords}
+
+\begin{remark}
+For the single qubit Cliffords, it made sense to define a set of canonical
+representatives through the generators $S$ and $H$ (since there are only $6$ up to
+Paulis). Doing the same thing for two qubit Cliffords gets out of hands; the generator
+strings would be just too long. Instead we try to choose the most common ones.
+\end{remark}
+\begin{proposition}
+The following mappings list some elements of
+$\left.\w(\ouic_2/\ouip_2)\middle\backslash\w(\ouic_1/\ouip_1)\right.$ (representatives)
+and explicitly describe the isomorphism $\ouic_2/\ouip_2 \cong \Sp_{4}\w(\F_2)$.
+\begin{table}[H]\label{t"two_qubit_isomorphism}
+\center
+\caption
+[Explicit description of the $\ouic_2/\ouip_2 \cong \Sp_{4}\w(\F_2)$ isomophism for some
+elements]
+{Explicit description of the $\ouic_2/\ouip_2 \cong \Sp_{4}\w(\F_2)$ isomophism for some
+element: cf. \cref{t"single_qubit_isomorphism}. We defined in
+\cref{.computational_basis,.label_freedom,.tableau_description} uniquely how we
+represent the operators in matrix form: For the repr. matrix the sorted basis is
+$\w(\er{0}_2\er{0}_1, \er{0}_2\er{1}_1, \er{1}_2\er{0}_1, \er{1}_2\er{1}_1)$ and for the
+symplectic matrix it is $\w(Z_1, Z_2, X_1, X_2)$, under the according isomorphism,
+respectively.}
+\begin{tabular}{lccr}
+  \toprule
+  repr. & $\ouic_2/\ouip_2$ & $\Sp_{4}\w(\F_2)$ & phase\\
+  \midrule
+  $\matp{1&0&0&0\\0&1&0&0\\0&0&1&0\\0&0&0&-1}$ & $\cz$ &
+  $\matp{1&0&0&1\\0&1&1&0\\0&0&1&0\\0&0&0&1}$ & $\matp{1&1&1&1}$\\
+  \midrule
+  $\matp{1&0&0&0\\0&1&0&0\\0&0&0&1\\0&0&1&0}$ & $\cx_{21}$ &
+  $\matp{1&0&0&0\\1&1&0&0\\0&0&1&1\\0&0&0&1}$ & $\matp{1&1&1&1}$\\
+  \midrule
+  $\matp{1&0&0&0\\0&1&0&0\\0&0&0&-i\\0&0&i&0}$ & $\cy_{21}$ &
+  $\matp{1&0&0&1\\1&1&1&0\\0&0&1&1\\0&0&0&1}$ & $\matp{1&1&1&-i}$\\
+  \midrule
+  $\matp{1&0&0&0\\0&0&1&0\\0&1&0&0\\0&0&0&1}$ & $\Swap$ &
+  $\matp{0&1&0&0\\1&0&0&0\\0&0&0&1\\0&0&1&0}$ & $\matp{1&1&1&1}$\\
+  \midrule
+  $\matp{1&0&0&0\\0&0&i&0\\0&i&0&0\\0&0&0&1}$ & $\iSwap$ &
+  $\matp{0&1&1&1\\1&0&1&1\\0&0&0&1\\0&0&1&0}$ & $\matp{1&1&-i&-i}$\\
+  \bottomrule
+\end{tabular}
+\end{table}
+\end{proposition}
+\begin{proof}
+In the following we set define \en[c, t], s.t., $c > t$, i.e., $c=2$ and $t=1$. When we
+use \en[a, b] as indices, the order does not matter. We
+calculate the according conjugations with the representatives (we also use
+\cref{.more_identities}):
+\begin{align}
+  \cz_{ab}*X_b &= \matp{1&0\\0&Z} \matp{X&0\\0&X} \matp{1&0\\0&Z} =
+  \matp{X&0\\0&-X} = Z_aX_b\\
+  %
+  \cx_{ct}*Z_t &= \matp{1&0\\0&X} \matp{Z&0\\0&Z} \matp{1&0\\0&X} =
+  \matp{Z&0\\0&-Z} = Z_tZ_c\\
+  \cx_{ct}*Z_c &= \matp{1&0\\0&X} \matp{1&0\\0&-1} \matp{1&0\\0&X} =
+  \matp{1&0\\0&-1} = Z_c\\
+  \cx_{ct}*X_t &= \matp{1&0\\0&X} \matp{X&0\\0&X} \matp{1&0\\0&X} =
+  \matp{X&0\\0&X} = X_t\\
+  \cx_{ct}*X_c &= \matp{1&0\\0&X} \matp{0&1\\1&0} \matp{1&0\\0&X} =
+  \matp{0&X\\X&0} = X_tX_c\\
+  %
+  \cy_{ct}*Z_t &= \ldots = Z_tZ_c\\
+  \cy_{ct}*Z_c &= \ldots = Z_c\\
+  \cy_{ct}*X_t &= i\cy_{ct}*Z_tY_t = \ldots = X_tZ_c\\
+  \cy_{ct}*X_c &= i\cy_{ct}*Z_cY_c = \ldots = -iZ_tX_tX_c\\
+  %
+  \Swap_{ab}Z_a &= (\cx_{ab} * \cx_{ba}) * Z_a = \cx_{ab} \cx_{ba} * (\cx_{ab} * Z_a)\\
+  &= \cx_{ab} * (\cx_{ba} * Z_a) = \cx_{ab} * Z_a Z_b = Z_b\\
+  \Swap_{ab}X_b &= \ldots = X_a\\
+  %
+  \iSwap_{ab} * Z_a &= H_b \cx_{ba} \cx_{ab} H_a S_a S_b * Z_a\\
+  &= H_b \cx_{ba} \cx_{ab} * X_a = H_b \cx_{ba} * X_a X_b = H_b * X_b = Z_b\\
+  \iSwap_{ab} * X_a &= H_b \cx_{ba} \cx_{ab} H_a S_a S_b * X_a = -iH_b \cx_{ba} \cx_{ab}
+  H_a * Z_aX_a\\
+  &= iH_b \cx_{ba} * Z_aX_aX_b = iH_b * Z_aZ_bX_b = -i Z_aZ_bX_b
+\end{align}
+\end{proof}
+\begin{remark}
+In the following we list some other typical Clifford gates which only differ by Pauli
+operators:
+\begin{align}
+  \w(\iSwap)\ur = \iSwap Z_1Z_2 = \matp{1&0&0&0\\0&0&-i&0\\0&-i&0&0\\0&0&0&1}\;.
+\end{align}
+\end{remark}
+
+\subsection{Other operations provided by the library}
+
+The library also provides other operations, which are not conjugations, like the moving
+Paulis from one qubit to another. We define the operation $\mathrm{move\_x\_to\_x}_{sd}$
+to move the $X$ Pauli on the qubit $s$ to the qubit $d$. Analog we define "x to z", "z
+to x" and "z to z". They are all homomorphisms, which is why it makes sense to use just
+like Clifford operations when tracking Paulis. This operations are often useful in an
+MBQC related context where they can be used to move dependencies (cf.
+\hr{https://docs.rs/pauli_tracker/latest/pauli_tracker/}[how the T
+telportation is optimized in the ``Streamed tracking'' section here])
+\begin{definition}
+In the following we define the action of the ``move'' operations.
+\begin{table}[H]\label{t"move_operations}
+\center
+\caption[Move operations of Pauli operators]{Move operations of Pauli operators. The
+operations are linear defined on the basis $\bc{Z_s, X_s, Z_d, X_d}$ (under the $\otau$
+isomorph) for some \en[s, d].}
+\begin{tabular}{lr}
+  \toprule
+  name & operation\\
+  \midrule
+  $\mathrm{move\_z\_to\_z}_{sd}$ & $\begin{array}{ccc}
+    Z_s&\mapsto&Z_d\\X_s&\mapsto&X_s\\Z_d&\mapsto&Z_d\\X_d&\mapsto&X_d\end{array}$\\
+  \midrule
+  $\mathrm{move\_z\_to\_x}_{sd}$ & $\begin{array}{ccc}
+    Z_s&\mapsto&X_d\\X_s&\mapsto&X_s\\Z_d&\mapsto&Z_d\\X_d&\mapsto&X_d\end{array}$\\
+  \midrule
+  $\mathrm{move\_x\_to\_z}_{sd}$ & $\begin{array}{ccc}
+    Z_s&\mapsto&Z_s\\X_s&\mapsto&Z_d\\Z_d&\mapsto&Z_d\\X_d&\mapsto&X_d\end{array}$\\
+  \midrule
+  $\mathrm{move\_x\_to\_x}_{sd}$ & $\begin{array}{ccc}
+    Z_s&\mapsto&Z_s\\X_s&\mapsto&X_d\\Z_d&\mapsto&Z_d\\X_d&\mapsto&X_d\end{array}$\\
+  \bottomrule
+\end{tabular}
+\end{table}
+\end{definition}
+
+\appendix
+
+\section{Other useful stuff}
+
+\begin{proposition}\label{.more_identities}
+Here are some more operator identities:
+\begin{align}
+  \cx_{ct} &= H_t * \cz_{ct} = H_t * \cz_{tc}\\
+  \cy_{ct} &= H^{yz}_t * \cz_{ct} = H^{yz}_t * \cz_{tc}\\
+  \Swap_{ab} &= \cx_{ab} * \cx_{ba}\\
+  \iSwap_{ab} &= H_b \cx_{ba} \cx_{ab} H_a S_a S_b
+\end{align}
+\end{proposition}
+\begin{proof}
+\begin{align}
+  H_t * \cz_{ct} &= \matp{H&0\\0&H} \matp{1&0\\0&Z} \matp{H&0\\0&H} \matp{1&0\\0&X} =
+  \cx_{ct}\\
+  %
+  \cx_{ab} * \cx_{ba}&= \matp{1&0\\0&X} \matp{1&0&0&0\\0&0&0&1\\0&0&1&0\\0&1&0&0}
+  \matp{1&0\\0&X} = \matp{1&0\\0&X} \matp{1&0&0&0\\0&0&1&0\\0&0&0&1\\0&1&0&0} =
+  \Swap_{ab}\\
+  %
+  2H_b\cx_{ba}\cx_{ab}H_aS_aS_b &=
+  \matp{1&0&0&1\\1&0&0&-1\\0&1&1&0\\0&-1&1&0} \matp{1&1\\X&-X} \matp{S&0\\0&iS}\\
+  &= \matp{1&0&0&1\\1&0&0&-1\\0&1&1&0\\0&-1&1&0}
+  \matp{1&0&i&0\\0&i&0&-1\\0&i&0&1\\1&0&-i&0} = \matp{2&0&0&0\\0&0&2i&0\\0&2i&0&0\\0&0&0&2} = 2 \iSwap
+\end{align}
+\end{proof}
+
+\printbibliography
+
+\end{document}

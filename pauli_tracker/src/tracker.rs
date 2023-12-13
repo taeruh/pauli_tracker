@@ -143,7 +143,8 @@ macro_rules! coset {
 /// we try to choose the most common gates). The [conjugation-rules] document contains
 /// some useful operator identities.
 ///
-/// [conjugation-rules]: https://github.com/taeruh/pauli_tracker/blob/main/docs/conjugation_rules.md
+/// [conjugation-rules]:
+/// https://github.com/taeruh/pauli_tracker/blob/main/docs/conjugation_rules.pdf
 pub trait Tracker {
     /// The storage type used to store the tracked Paulis for each qubit, e.g.,
     /// [PauliStack](crate::pauli::PauliStack) for the [Frames](frames::Frames) tracker or
@@ -240,7 +241,7 @@ mod tests {
         pub type SingleAction<T> = fn(&mut T, usize);
         pub type DoubleAction<T> = fn(&mut T, usize, usize);
 
-        // the following expected results are proven in ./docs/conjugation_rules.md
+        // the following expected results are proven in ./docs/conjugation_rules.pdf
         //
         // instead of writing out all the SingleResults and DoubleResults, we make use
         // of homomorphy and just define the results on a basis

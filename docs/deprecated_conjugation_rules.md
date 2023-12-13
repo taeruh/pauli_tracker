@@ -1,5 +1,8 @@
 # Conjugation of the Pauli group under Clifford operations
 
+**this document is deprecated; we still keep it around for some time because it may
+contain some useful stuff we forget to put into the new document**
+
 *has to be viewed with katex*
 
 *an improved version is in progress, but I have to wait until the university reviewed
@@ -175,7 +178,7 @@ $$
   H^{xy}XH^{xy} = iXZ; \qquad H^{xy}ZH^{xy} = -Z
 $$
 ___
-The YZ-Hadamard gate $H^{yz}$ ($= \mathrm{e}^{-i\pi/4}ZHSH = (Y + Z)/\sqrt{2}$) (swaps y
+The YZ-Hadamard gate $H^{yz}$ ($= \mathrm{e}^{i\pi/4}ZHSH = (Y + Z)/\sqrt{2}$) (swaps y
 and z axes) (hermitian)
 $$
   H^{yz} = \frac{1}{\sqrt{2}}\begin{pmatrix}1&-i\\i&-1\end{pmatrix}
@@ -381,9 +384,9 @@ $$\begin{aligned}
 
   \mathrm{CZ}_{ab}X_b\mathrm{CZ}_{ab} &=
   \begin{pmatrix}1&0\\0&Z\end{pmatrix}
-  \begin{pmatrix}1&0\\0&X\end{pmatrix}
+  \begin{pmatrix}X&0\\0&X\end{pmatrix}
   \begin{pmatrix}1&0\\0&Z\end{pmatrix} =
-  \begin{pmatrix}1&0\\0&-X\end{pmatrix} = Z_aX_b\\
+  \begin{pmatrix}X&0\\0&-X\end{pmatrix} = Z_aX_b\\
 
   \mathrm{CX}_{ct}X_t\mathrm{CX}_{ct} &=
   \begin{pmatrix}1&0\\0&X\end{pmatrix}
@@ -502,8 +505,8 @@ $$\begin{aligned}
   \sqrt{Y} &= \sqrt{i}HSS \propto HZ \propto ZH\\
   \sqrt{Y}^{2} &= Y = iHSSHSS \propto HSSHSS \propto SSHSSH\\
   \sqrt{Y}^{\dagger} &= \sqrt{Y}^{-1}\\
-  H^{xy} &= \mathrm{e}^{i\pi/4}SHZH\\
-  H^{yz} &= \mathrm{e}^{-i\pi/4}ZHSH\\
+  H^{xy} &= \mathrm{e}^{-i\pi/4}SHZH\\
+  H^{yz} &= \mathrm{e}^{i\pi/4}ZHSH\\
 
   \mathrm{CX}_{tc} &= H_c \mathrm{CZ}_{ct} H_c\\
   \mathrm{CX}_{ct} &= H_t \mathrm{CZ}_{ct} H_t\\
@@ -544,7 +547,7 @@ $$\begin{aligned}
   2ZHSH &=
   \begin{pmatrix}1&1\\-1&1\end{pmatrix}
   \begin{pmatrix}1&1\\i&-i\end{pmatrix} =
-  \begin{pmatrix}1+i&1-i\\-1+i&-1-i\end{pmatrix} = 2H^{xy}(1+i)/\sqrt{2}\\
+  \begin{pmatrix}1+i&1-i\\-1+i&-1-i\end{pmatrix} = 2H^{yz}(1+i)/\sqrt{2}\\
 
   H_t \mathrm{CZ}_{ct} H_t &=
   \begin{pmatrix}H&0\\0&H\end{pmatrix}

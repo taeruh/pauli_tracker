@@ -1,0 +1,367 @@
+\KOMAoptions{
+  headlines=2.1,
+  captions=tableheading,
+  DIV=17,
+  toc=bib,
+  toc=listof,
+  toc=sectionentrywithdots,
+  listof=flat,  
+  headings=optiontohead,
+}
+\addtokomafont{disposition}{\mdseries\slshape}
+\addtokomafont{sectionentry}{\rmfamily\mdseries\normalfont}
+\addtokomafont{section}{\Large}
+\addtokomafont{subsection}{\Large}
+\addtokomafont{subsubsection}{\large}
+\addtokomafont{descriptionlabel}{\ttfamily}
+\addtokomafont{footnote}{\slshape}
+\addtokomafont{footnotelabel}{\bfseries}
+\addtokomafont{footnotereference}{\bfseries}
+\addtokomafont{itemizelabel}{\bfseries}
+\addtokomafont{labelitemi}{\bfseries}
+\addtokomafont{labelinglabel}{\bfseries}
+\addtokomafont{labelingseparator}{\rmfamily}
+\addtokomafont{pageheadfoot}{\slshape}
+\addtokomafont{caption}{\slshape}
+\addtokomafont{captionlabel}{\upshape\bfseries}
+\RedeclareSectionCommand[tocnumwidth=1.30em]{section}
+\RedeclareSectionCommand[tocnumwidth=2.05em, tocindent=1.3em]{subsection}
+\RedeclareSectionCommand[tocnumwidth=2.80em, tocindent=3.35em]{subsubsection}
+\DeclareTOCStyleEntry[beforeskip=3pt plus .2pt]{section}{section}
+\setcounter{secnumdepth}{3}
+\setcounter{tocdepth}{3}
+\RequirePackage{setspace}
+\setstretch{1.065}
+\setlength{\parindent}{0.4cm}
+\setlength{\parskip}{0.07cm plus 0.013cm minus 0.06cm}
+\RequirePackage[autooneside=false]{scrlayer-scrpage}
+\pagestyle{scrheadings}
+\clearpairofpagestyles
+\addtokomafont{pageheadfoot}{\small}
+\renewcommand*{\sectionmarkformat}{}
+\automark[subsection]{section}
+\automark*[subsubsection]{}
+\ihead{\leftmark}
+\ohead{\ifthenelse{\equal{\leftmark}{\rightmark}}{}{\rightmark}}
+\cfoot*{\pagemark}
+\KOMAoptions{headsepline=0.1pt}
+\AfterEndEnvironment{figure}{\noindent\ignorespaces}
+\AfterEndEnvironment{table}{\noindent\ignorespaces}
+
+\RequirePackage[T1]{fontenc}
+\RequirePackage{lmodern}
+\RequirePackage{babel}
+\RequirePackage{microtype}
+\binoppenalty=700
+\brokenpenalty=10000
+\clubpenalty=10000
+\displaywidowpenalty=10000
+\exhyphenpenalty=1000
+\floatingpenalty=20000
+\hyphenpenalty=60
+\interlinepenalty=0
+\linepenalty=10
+\postdisplaypenalty=0
+\predisplaypenalty=10000
+\relpenalty=500
+\widowpenalty=10000
+\interfootnotelinepenalty=10000
+\frenchspacing    
+\RequirePackage[shortcuts]{extdash}
+
+\RequirePackage[
+  style=nature_custom,
+  citestyle=numeric-comp,
+  isbn=false,
+  sorting=none,
+]{biblatex}
+\RequirePackage{csquotes}   % for language specific quotation in literature
+% (must be loaded after, e.g., scrreprt)
+
+\RequirePackage{xcolor}
+\definecolor{urlcol}{RGB}{0, 102, 204}
+\RequirePackage{hyperref}
+\hypersetup{colorlinks=true,urlcolor=urlcol,linkcolor=black,citecolor=blue,breaklinks}
+\RequirePackage{enumitem}
+\setenumerate{listparindent=\parindent,label=(\alph*)}
+\RequirePackage{float}
+\RequirePackage{booktabs}
+\heavyrulewidth=1.1pt
+
+\RequirePackage{mathtools} % has to be loaded before cleveref
+\usepackage{amsthm} % load before cleveref for proper referencing
+\RequirePackage[english,capitalize]{cleveref}
+\newtheoremstyle{standard}{1.0ex}{1.5ex}{\slshape}{}{\bfseries}{}{.7em}{}
+\newtheoremstyle{statement}{1.0ex}{1.5ex}{\itshape}{}{\bfseries}{}{.7em}{}
+% this has to be defined after cleveref for proper referencing
+\theoremstyle{standard}
+\newtheorem{definition}{Definition}[subsection]
+\newtheorem{remark}[definition]{Remark}
+\theoremstyle{statement}
+\newtheorem{definition_proposition}[definition]{Definition and Proposition}
+\newtheorem{lemma}[definition]{Lemma}
+\newtheorem{proposition}[definition]{Proposition}
+\newtheorem{proposition_definition}[definition]{Proposition and Definition}
+\newtheorem{corollary}[definition]{Corollary}
+\newtheorem{theorem}[definition]{Theorem}
+\makeatletter
+\renewenvironment{proof}[1][\proofname]{%
+  \par%
+  \vspace{-1.9ex}%
+  \pushQED{\qed}%
+  \normalfont\topsep1\p@\@plus1\p@\relax%
+  \trivlist%
+  \item[\hskip\labelsep\itshape#1\@addpunct{.}]%
+  \ignorespaces%
+}{\popQED\endtrivlist\@endpefalse}
+\newenvironment{interrupted_proof}[1][\proofname]{%
+  \par%
+  \pushQED{\qed}%
+  \normalfont \topsep1\p@\@plus1\p@\relax%
+  \trivlist%
+  \item[\hskip\labelsep \itshape #1\@addpunct{.}]%
+  \ignorespaces%
+}{\popQED\endtrivlist\@endpefalse}
+\AfterEndEnvironment{definition}{\@doendpe}
+\AfterEndEnvironment{lemma}{\@doendpe}
+\AfterEndEnvironment{proposition}{\@doendpe}
+\AfterEndEnvironment{proposition_definition}{\@doendpe}
+\AfterEndEnvironment{corollary}{\@doendpe}
+\AfterEndEnvironment{theorem}{\@doendpe}
+\AfterEndEnvironment{proof}{\@doendpe}
+\AfterEndEnvironment{interrupted_proof}{\@doendpe}
+\makeatother
+\crefname{section}{Sec.}{Secs.}%
+\crefname{appendix}{App.}{Apps.}%
+\crefname{definition}{Def.}{Defs.}%
+\crefname{remark}{Rem.}{Rems.}%
+\crefname{definition_proposition}{Def.}{Defs.}%
+\crefname{lemma}{Lem.}{Lems.}%
+\crefname{proposition}{Prop.}{Props.}%
+\crefname{proposition_definition}{Prop.}{Props.}%
+\crefname{corollary}{Cor.}{Cors.}%
+\crefname{theorem}{Thm.}{Thms}%
+\Crefname{section}{Section}{Sections}%
+\Crefname{appendix}{Appendix}{Appendices}%
+\Crefname{definition_proposition}{Definition}{Definitions}%
+\Crefname{proposition}{Proposition}{Propositions}%
+\Crefname{theorem}{Theorem}{Theorems}%
+
+\RequirePackage{amssymb}
+\RequirePackage{siunitx}
+\RequirePackage{tensor}
+\RequirePackage{icomma}
+\RequirePackage{bm}
+\usepackage{IEEEtrantools}
+\RequirePackage{dsfont}
+\RequirePackage{isomath}
+\RequirePackage[scr=rsfs]{mathalpha}
+\DeclareFontFamily{U}{BOONDOX-cal}{\skewchar\font=45}
+\DeclareFontShape{U}{BOONDOX-cal}{m}{n}{
+  <-> s*[1.08] BOONDOX-r-cal}{}
+\DeclareFontShape{U}{BOONDOX-cal}{b}{n}{
+  <-> s*[1.08] BOONDOX-b-cal}{}
+\DeclareMathAlphabet{\mathboondox}{U}{BOONDOX-cal}{m}{n}
+\SetMathAlphabet{\mathboondox}{bold}{U}{BOONDOX-cal}{b}{n}
+\DeclareFontFamily{U}{dutchcal}{\skewchar\font=45}
+\DeclareFontShape{U}{dutchcal}{m}{n}{
+  <-> \mathalfa@calscaled  dutchcal-r}{}
+\DeclareFontShape{U}{dutchcal}{b}{n}{
+  <-> \mathalfa@calscaled  dutchcal-b}{}
+\DeclareMathAlphabet{\mathdutchcal}{U}{dutchcal}{m}{n}
+\SetMathAlphabet{\mathdutchcal}{bold}{U}{dutchcal}{b}{n}
+
+\RequirePackage{xparse}
+\RequirePackage{xspace}
+
+% use the following commands, or their shortcuts below, instead of manually settting
+% parentheses, braces, ...; they have better typesetting
+\DeclarePairedDelimiter\Parenthesis{\lparen}{\rparen}
+\DeclarePairedDelimiter\Brackets{\lbrack}{\rbrack}
+\DeclarePairedDelimiter\Braces{\lbrace}{\rbrace}
+\DeclarePairedDelimiter\AbsoluteValue{\lvert}{\rvert}
+\DeclarePairedDelimiter\Norm{\lVert}{\rVert}
+\DeclarePairedDelimiter\Bra{\langle}{\rvert}
+\DeclarePairedDelimiter\Ket{\lvert}{\rangle}
+\DeclarePairedDelimiter\BraKet{\langle}{\rangle}
+\DeclarePairedDelimiterX\BraKetTwo[2]{\langle}{\rangle}{%
+  #1\delimsize\vert\mathopen{}#2%
+}
+\DeclarePairedDelimiterX\BraKetThree[3]{\langle}{\rangle}{%
+  #1\delimsize\vert\mathopen{}#2%
+  \delimsize\vert\mathopen{}#3%
+}
+\DeclarePairedDelimiterX\BraKetTwoStar[2]{\langle}{\rangle}{%
+  #1\nonscript\,\delimsize\vert\nonscript\,\mathopen{}#2}
+\DeclarePairedDelimiterX\BraKetThreeStar[3]{\langle}{\rangle}{%
+  #1\nonscript\,\delimsize\vert\nonscript\,\mathopen{}#2\nonscript\,%
+  \delimsize\vert\nonscript\,\mathopen{}#3%
+}
+\DeclarePairedDelimiter\DotDot{.}{.}
+\DeclarePairedDelimiter\ParenthesisDot{\lparen}{.}
+\DeclarePairedDelimiter\DotParenthesis{.}{\rparen}
+\DeclarePairedDelimiter\BraceDot{\lbrace}{.}
+\DeclarePairedDelimiter\DotBrace{.}{\rbrace}
+\DeclarePairedDelimiter\ParenthesisBracket{\lparen}{\rbrack}
+\DeclarePairedDelimiter\BracketParenthesis{\lbrack}{\rparen}
+\DeclarePairedDelimiterX\SetVerticalLine[2]{\lbrace}{\rbrace}{%
+  #1\nonscript\:\delimsize\vert\allowbreak\nonscript\:\mathopen{}#2%
+}
+\DeclarePairedDelimiterX\SetColon[2]{\lbrace}{\rbrace}{%
+  #1\nonscript\::\allowbreak\nonscript\:\mathopen{}#2%
+}
+\DeclarePairedDelimiterX\GroupSetVerticalLine[2]{\langle}{\rangle}{%
+  #1\nonscript\:\delimsize\vert\allowbreak\nonscript\:\mathopen{}#2%
+}
+\DeclarePairedDelimiterX\GroupSetColon[2]{\langle}{\rangle}{%
+  #1\nonscript\::\allowbreak\nonscript\:\mathopen{}#2%
+}
+% shortcuts
+\NewDocumentCommand\pa{sm}{\IfBooleanTF{#1}{\Parenthesis{#2}}{\Parenthesis*{#2}}}
+\NewDocumentCommand\bk{sm}{\IfBooleanTF{#1}{\Brackets{#2}}{\Brackets*{#2}}}
+\NewDocumentCommand\bc{sm}{\IfBooleanTF{#1}{\Braces{#2}}{\Braces*{#2}}}
+\NewDocumentCommand\abs{sm}{\IfBooleanTF{#1}{\AbsoluteValue{#2}}{\AbsoluteValue*{#2}}}
+\NewDocumentCommand\norm{sm}{\IfBooleanTF{#1}{\Norm{#2}}{\Norm*{#2}}}
+\NewDocumentCommand\dotdot{sm}{\IfBooleanTF{#1}{\DotDot{#2}}{\DotDot*{#2}}}
+\NewDocumentCommand\padot{sm}{\IfBooleanTF{#1}{\ParenthesisDot{#2}}{\ParenthesisDot*{#2}}}
+\NewDocumentCommand\dotpa{sm}{\IfBooleanTF{#1}{\DotParenthesis{#2}}{\DotParenthesis*{#2}}}
+\NewDocumentCommand\bcdot{sm}{\IfBooleanTF{#1}{\BraceDot{#2}}{\BraceDot*{#2}}}
+\NewDocumentCommand\dotbc{sm}{\IfBooleanTF{#1}{\DotBrace{#2}}{\DotBrace*{#2}}}
+\NewDocumentCommand\bkpa{sm}{\IfBooleanTF{#1}{\BracketParenthesis{#2}}%
+  {\BracketParenthesis*{#2}}}
+\NewDocumentCommand\pabk{sm}{\IfBooleanTF{#1}{\ParenthesisBracket{#2}}%
+  {\ParenthesisBracket*{#2}}}
+\NewDocumentCommand\bra{smd""}{%
+  \IfBooleanTF{#1}{\Bra{#2}\IfValueTF{#3}{_{#3}}{}}{\Bra*{#2}\IfValueTF{#3}{_{#3}}{}}%
+}
+\NewDocumentCommand\ket{smd""}{%
+  \IfBooleanTF{#1}{\Ket{#2}\IfValueTF{#3}{_{#3}}{}}{\Ket*{#2}\IfValueTF{#3}{_{#3}}{}}%
+}
+\NewDocumentCommand\braket{smd""ood""d>>}{%
+  {}\IfValueTF{#7}{_{\IfValueTF{#3}{#3}{#7}}}{\IfValueTF{#3}{_{#3}}{}}%
+  \IfBooleanTF{#1}%
+  {%
+    \IfValueTF{#4}{\IfValueTF{#5}{\BraKetThree{#2}{#4}{#5}}{\BraKetTwo{#2}{#4}}}%
+    {\BraKet{#2}}%
+  }%
+  {%
+    \IfValueTF{#4}{\IfValueTF{#5}{\BraKetThreeStar*{#2}{#4}{#5}}{\BraKetTwoStar*{#2}{#4}}}%
+    {\BraKet*{#2}}%
+  }%
+  \IfValueTF{#7}{_{\IfValueTF{#6}{#6}{#7}}}{\IfValueTF{#6}{_{#6}}{}}%
+}
+\NewDocumentCommand\ketbra{smd""od""d>>}{%
+  \IfBooleanTF{#1}%
+  {%
+    \Ket{#2}\IfValueTF{#6}{_{\IfValueTF{#3}{#3}{#6}}}%
+    {\IfValueTF{#3}{_{#3}}{}}\!\Bra*{\IfValueTF{#4}{#4}{#2}}%
+  }%
+  {%
+    \Ket*{#2}\IfValueTF{#6}{_{\IfValueTF{#3}{#3}{#6}}}%
+    {\IfValueTF{#3}{_{#3}}{}}\!\Bra*{\IfValueTF{#4}{#4}{#2}}%
+  }%
+  \IfValueTF{#6}{_{\IfValueTF{#5}{#5}{#6}}}{\IfValueTF{#5}{_{#5}}{}}%
+}
+\let\Set\SetVerticalLine % \let\Set\SetColon as alternative
+\let\GroupSet\GroupSetVerticalLine
+\newcommand\set[2]{\Set*{#1}{#2}}
+\newcommand\groupset[2]{\GroupSet*{#1}{#2}}
+% subequation and align in one
+\newenvironment{subalign}{\subequations\align}{\endalign\endsubequations}
+% matrices
+\newcommand\mat[1]{\begin{matrix}#1\end{matrix}}
+\newcommand\matp[1]{\begin{pmatrix}#1\end{pmatrix}}
+\newcommand\matb[1]{\begin{bmatrix}#1\end{vmatrix}}
+\newcommand\matB[1]{\begin{Bmatrix}#1\end{Bmatrix}}
+\newcommand\matv[1]{\begin{vmatrix}#1\end{vmatrix}}
+\newcommand\matV[1]{\begin{Vmatrix}#1\end{Vmatrix}}
+\newcommand\smat[1]{\begin{smallmatrix}#1\end{smallmatrix}}
+\newcommand\smatp[1]{\Parenthesis*{\begin{smallmatrix}#1\end{smallmatrix}}}
+
+\newcommand\minusset{\!\setminus\!}
+
+% now some specific definitions and shortcuts we are using
+\DeclareMathOperator\tr{Tr}
+\DeclareMathOperator\id{id}
+% Hilbert space, basis, ..
+\newcommand*\hi{\mathcal{H}} % hilbert
+\newcommand*\ba{\mathcal{B}} % basis
+\newcommand*\ls{\mathscr{L}} % linear stetig
+% \newcommand*\LL{\mathcal{L}}
+\newcommand*\bh{\mathboondox{Q}} % for qubits space / (b)inary (h)ilbert
+\newcommand*\de{\mathboondox{D}} % density operator/matrix
+
+% Some common sets, groups, ...
+\newcommand*\N{\mathbb{N}}
+\newcommand*\No{\mathbb{N}_0}
+\newcommand*\Z{\mathbb{Z}}
+\newcommand*\Q{\mathbb{Q}}
+\newcommand*\R{\mathbb{R}}
+\newcommand*\C{\mathbb{C}}
+\newcommand*\F{\mathbb{F}}
+\newcommand*\K{\mathbb{K}}
+\newcommand*\M{\mathrm{M}}
+\newcommand*\U{\mathrm{U}}
+\newcommand*\SU{\mathrm{SU}}
+\newcommand*\GL{\mathrm{GL}}
+\newcommand*\Sp{\mathrm{Sp}}
+
+% correct space when writing equations over multiple lines
+\newcommand*\eqspace{\mathrel{\phantom{=}}}
+
+% common notations, that may take an argument or not
+\NewDocumentCommand\order{o}{\mathcal{O}\IfValueTF{#1}{\pa{#1}}{}}
+\let\olddim\dim
+\RenewDocumentCommand\dim{o}{\olddim\IfValueTF{#1}{\pa{#1}}{}}
+\NewDocumentCommand\aut{m}{\mathrm{Aut}\pa{#1}}
+\NewDocumentCommand\cen{o}{\mathrm{Z}\IfValueTF{#1}{\pa{#1}}{}}
+\NewDocumentCommand\ces{od""}{\mathrm{C}\IfValueTF{#2}{_{#2}}{}\IfValueTF{#1}{\pa{#1}}{}}
+\NewDocumentCommand\nos{od""}{\mathrm{N}\IfValueTF{#2}{_{#2}}{}\IfValueTF{#1}{\pa{#1}}{}}
+% \NewDocumentCommand\nos{om}{\mathrm{N}\IfValueTF{#1}{_{#1}}{}\pa{#2}}
+
+% other
+\newcommand*\ee{\mathrm{e}}
+\let\da\dagger
+\newcommand*\ur{^\dagger}
+\newcommand\ts{\intercal} % fix that for consistency \newcommand\ts{T}
+\newcommand*\ut{^\ts}
+\newcommand*\ui{^{-1}}
+\newcommand*\inn{\mathrm{inn}}
+\newcommand*\1{\mathds{1}}
+\newcommand*\E{\mathcal{E}} % "big varepsilon"
+\newcommand*\cc{\mathrm{c.c.}}
+\newcommand*\hc{\mathrm{h.c.}}
+
+% some specific shortcuts
+\NewDocumentCommand\w{sr()}{\IfBooleanTF{#1}{\Parenthesis{#2}}{\Parenthesis*{#2}}}
+\let\er\ket
+\let\ar\bra
+\let\era\ketbra
+\let\are\braket
+\NewDocumentCommand\en{so}{%
+$\IfValueTF{#2}{#2}{n} \in \mathbb{N}\IfBooleanTF{#1}{_0}{}$\xspace%
+}
+\NewDocumentCommand\hr{mo}{\href{#1}{\IfValueTF{#2}{#2}{#1}}}
+
+% specific quantum computing stuff
+\NewDocumentCommand\cz{o}{\mathrm{CZ}\IfValueTF{#1}{_{#1}}{}}
+\NewDocumentCommand\cx{o}{\mathrm{CX}\IfValueTF{#1}{_{#1}}{}}
+\NewDocumentCommand\cy{o}{\mathrm{CY}\IfValueTF{#1}{_{#1}}{}}
+\NewDocumentCommand\Swap{o}{\mathrm{SWAP}\IfValueTF{#1}{_{#1}}{}}
+\NewDocumentCommand\iSwap{o}{\mathrm{iSWAP}\IfValueTF{#1}{_{#1}}{}}
+% Pauli and Clifford group
+\newcommand*\gp{\mathcal{P}}
+\newcommand*\op{\overline{\mathcal{P}}}
+\newcommand*\ip{\mathdutchcal{P}}
+\newcommand*\uip{\hat{\mathdutchcal{P}}}
+\newcommand*\oip{\overline{\mathdutchcal{P}}}
+\newcommand*\ouip{\overline{\hat{\mathdutchcal{P}}}}
+\newcommand*\gpr{\mathrm{P}}
+\newcommand*\gc{\mathcal{C}}
+\newcommand*\oc{\overline{\mathcal{C}}}
+\newcommand*\ic{\mathdutchcal{C}}
+\newcommand*\uic{\hat{\mathdutchcal{C}}}
+\newcommand*\oic{\overline{\mathdutchcal{C}}}
+\newcommand*\ouic{\overline{\hat{\mathdutchcal{C}}}}
+\newcommand*\gcr{\mathrm{C}} % Clifford group representatives
+\newcommand*\otau{\overline{\tau}}
