@@ -28,8 +28,10 @@ impl Frames {
         Self(LibFrames::init(len))
     }
 
-    fn new_qubit(&mut self, bit: usize) {
-        self.0.new_qubit(bit);
+    fn new_qubit(&mut self, bit: usize) -> Option<(Vec<usize>, Vec<usize>)> {
+        self.0
+            .new_qubit(bit)
+            .map(|p| (p.left.into_vec(), p.right.into_vec()))
     }
 
     fn to_py_dict(&self) -> HashMap<usize, (Vec<usize>, Vec<usize>)> {

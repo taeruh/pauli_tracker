@@ -61,21 +61,32 @@ impl<S> AsRef<S> for Live<S> {
     }
 }
 
-impl<T> Live<T> {
+impl<S> Live<S> {
     /// Creates a new [Live] tracker with the given storage.
-    pub fn new(storage: T) -> Self {
+    pub fn new(storage: S) -> Self {
         Self { storage }
     }
 
     /// Returns the inner storage.
-    pub fn into(self) -> T {
+    #[deprecated(since = "0.3.2", note = "use `into_storage` instead")]
+    pub fn into(self) -> S {
         self.storage
+    }
+
+    /// Convert the object into the underlining storage.
+    pub fn into_storage(self) -> S {
+        self.storage
+    }
+
+    /// Reference the underlining storage.
+    pub fn as_storage(&self) -> &S {
+        &self.storage
     }
 }
 
-impl<T: Init> Init for Live<T> {
+impl<S: Init> Init for Live<S> {
     fn init(len: usize) -> Self {
-        Self { storage: T::init(len) }
+        Self { storage: S::init(len) }
     }
 }
 
@@ -83,14 +94,14 @@ impl<S, T> Live<S>
 where
     S: Base<TB = T>,
 {
-    /// Returns a mutable reference to `bit`s Pauli; [None] if `bit` is not present.
-    pub fn get_mut(&mut self, bit: usize) -> Option<&mut T> {
-        self.storage.get_mut(bit)
-    }
-
     /// Returns a reference to `bit`s Pauli; [None] if `bit` is not present.
     pub fn get(&self, bit: usize) -> Option<&T> {
         self.storage.get(bit)
+    }
+
+    /// Returns a mutable reference to `bit`s Pauli; [None] if `bit` is not present.
+    pub fn get_mut(&mut self, bit: usize) -> Option<&mut T> {
+        self.storage.get_mut(bit)
     }
 }
 
@@ -315,7 +326,7 @@ mod tests {
             ]
         );
         let mut tracker = super::Live::new(Map::<PauliEnum>::from_iter(
-            tracker.into().into_iter().map(|(k, v)| (k, v.into())),
+            tracker.into_storage().into_iter().map(|(k, v)| (k, v.into())),
         ));
         assert_eq!(tracker.measure(0), Ok(PauliEnum::Y));
         assert_eq!(tracker.new_qubit(0), None);

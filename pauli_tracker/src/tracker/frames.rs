@@ -79,7 +79,7 @@ pub struct OverwriteStack<T> {
 
 impl<Storage> AsRef<Storage> for Frames<Storage> {
     fn as_ref(&self) -> &Storage {
-        self.as_storage()
+        &self.storage
     }
 }
 
@@ -114,7 +114,7 @@ impl<S> Frames<S> {
         Self { storage, frames_num }
     }
 
-    /// Get the underlining storage.
+    /// Reference the underlining storage.
     pub fn as_storage(&self) -> &S {
         &self.storage
     }

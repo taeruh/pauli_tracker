@@ -21,8 +21,10 @@ possible.
 
 ## [Unreleased]
 ### Added
+- Add `Live::as_storage`
 ### Changed
 ### Deprecated
+- `Live::into` (use `into_storage` instead)
 ### Removed
 ### Fixed
 - `Live::measure` now actually removes the qubit instead of just cloning it.
