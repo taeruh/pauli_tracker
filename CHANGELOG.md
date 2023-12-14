@@ -21,6 +21,15 @@ possible.
 
 ## [Unreleased]
 ### Added
+### Changed
+### Deprecated
+### Removed
+### Fixed
+- `Live::measure` now actually removes the qubit instead of just cloning it.
+### Security
+
+## [0.3.1] - 2023-10-10
+### Added
 - Add `GraphBuffer::from_sparse`.
 - Add a bunch of gates.
 - Add `Frames::transpose_reverted`, `PauliStack::get`, `PauliStack::get_with_default`.
@@ -36,7 +45,7 @@ possible.
 ### Fixed
 ### Security
 
-## [0.3.0] + 2023-08-11
+## [0.3.0] - 2023-08-11
 There's a fairly big number of breaking changes. I'm sure that I'm not listing all of
 them, but hopefully the most important ones.
 ### Added
@@ -99,7 +108,7 @@ them, but hopefully the most important ones.
 - Fix `impl FromIterator<bool> for SimdBitVec`; it was not working at all.
 ### Security
 
-## [0.2.2] + 2023-06-23
+## [0.2.2] - 2023-06-23
 ### Added
 - Add `sort_layers_by_bits` function.
 - Add `pauli::encoding` constants.
@@ -158,7 +167,8 @@ them, but hopefully the most important ones.
 
 ## [0.1.0] - 2023-06-01
 
-[Unreleased]: https://github.com/taeruh/pauli_tracker/compare/v0.3.0...HEAD
+[Unreleased]: https://github.com/taeruh/pauli_tracker/compare/v0.3.1...HEAD
+[0.3.1]: https://github.com/taeruh/pauli_tracker/compare/v0.3.0...v0.3.1
 [0.3.0]: https://github.com/taeruh/pauli_tracker/compare/v0.2.2...v0.3.0
 [0.2.2]: https://github.com/taeruh/pauli_tracker/compare/v0.2.1...v0.2.2
 [0.2.1]: https://github.com/taeruh/pauli_tracker/compare/v0.2.0...v0.2.1

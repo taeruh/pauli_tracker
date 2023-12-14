@@ -184,7 +184,7 @@ where
     }
 
     fn measure(&mut self, bit: usize) -> Result<Self::Stack, MissingBit> {
-        self.get_mut(bit).ok_or(MissingBit(bit)).cloned()
+        self.storage.remove(bit).ok_or(MissingBit(bit))
     }
 }
 
