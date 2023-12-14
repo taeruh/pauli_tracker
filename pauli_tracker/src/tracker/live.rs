@@ -83,13 +83,12 @@ impl<S, T> Live<S>
 where
     S: Base<TB = T>,
 {
-    /// Returns a mutable reference to an element at index. Returns [None] if out of
-    /// bounds.
+    /// Returns a mutable reference to `bit`s Pauli; [None] if `bit` is not present.
     pub fn get_mut(&mut self, bit: usize) -> Option<&mut T> {
         self.storage.get_mut(bit)
     }
 
-    /// Returns a reference to an element at index. Returns [None] if out of bounds.
+    /// Returns a reference to `bit`s Pauli; [None] if `bit` is not present.
     pub fn get(&self, bit: usize) -> Option<&T> {
         self.storage.get(bit)
     }
@@ -170,13 +169,13 @@ where
         t.xpx(c);
     }
 
-    fn swap(&mut self, control: usize, target: usize) {
-        let (a, b) = unwrap_get_two_mut!(self.storage, control, target, "swap");
+    fn swap(&mut self, bit_a: usize, bit_b: usize) {
+        let (a, b) = unwrap_get_two_mut!(self.storage, bit_a, bit_b, "swap");
         mem::swap(a, b)
     }
 
-    fn iswap(&mut self, control: usize, target: usize) {
-        let (a, b) = unwrap_get_two_mut!(self.storage, control, target, "swap");
+    fn iswap(&mut self, bit_a: usize, bit_b: usize) {
+        let (a, b) = unwrap_get_two_mut!(self.storage, bit_a, bit_b, "swap");
         mem::swap(a, b);
         let copy = a.get_x() ^ b.get_x();
         a.set_z(a.get_z() ^ copy);

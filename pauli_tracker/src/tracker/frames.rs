@@ -253,13 +253,13 @@ where
         // default implementation
     }
 
-    fn swap(&mut self, control: usize, target: usize) {
-        let (a, b) = unwrap_get_two_mut!(self.storage, control, target, "swap");
+    fn swap(&mut self, bit_a: usize, bit_b: usize) {
+        let (a, b) = unwrap_get_two_mut!(self.storage, bit_a, bit_b, "swap");
         mem::swap(a, b)
     }
 
-    fn iswap(&mut self, control: usize, target: usize) {
-        let (a, b) = unwrap_get_two_mut!(self.storage, control, target, "swap");
+    fn iswap(&mut self, bit_a: usize, bit_b: usize) {
+        let (a, b) = unwrap_get_two_mut!(self.storage, bit_a, bit_b, "swap");
         mem::swap(a, b);
         // after a <-> b
         // aln = alo
