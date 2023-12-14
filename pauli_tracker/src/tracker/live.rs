@@ -193,7 +193,10 @@ mod tests {
 
     use super::*;
     use crate::{
-        collection::BufferedVector,
+        collection::{
+            BufferedVector,
+            Map,
+        },
         pauli::{
             PauliDense,
             PauliEnum,
@@ -300,7 +303,7 @@ mod tests {
         assert_eq!(tracker.new_qubit(1), None);
         tracker.track_y(0);
         assert_eq!(tracker.as_ref().0, vec![PauliTuple::Y, PauliTuple::I]);
-        assert_eq!(tracker.measure(0), Ok(PauliTuple::Y));
+        assert_eq!(tracker.get(0), Some(&PauliTuple::Y));
         assert_eq!(tracker.new_qubit(3), None);
         assert_eq!(
             *tracker.as_ref().0,
@@ -311,6 +314,11 @@ mod tests {
                 PauliTuple::new_i()
             ]
         );
+        let mut tracker = super::Live::new(Map::<PauliEnum>::from_iter(
+            tracker.into().into_iter().map(|(k, v)| (k, v.into())),
+        ));
+        assert_eq!(tracker.measure(0), Ok(PauliEnum::Y));
+        assert_eq!(tracker.new_qubit(0), None);
     }
 
     //
