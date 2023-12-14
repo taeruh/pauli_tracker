@@ -1,5 +1,6 @@
 target
-
+output
+.venv
 Cargo.lock
 
 # personal development config and caches

@@ -10,4 +10,5 @@ default-members = [
 exclude = [
   "xtask",
   "xtask/proc",
+  "python_lib",
 ]

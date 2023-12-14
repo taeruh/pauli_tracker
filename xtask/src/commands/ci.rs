@@ -7,10 +7,10 @@ use clap::{
 };
 use proc::ArgDispatch;
 
-use crate::cicd;
+mod jobs;
 
 #[derive(Clone, Copy, ValueEnum, ArgDispatch)]
-#[arg_dispatch(module = "cicd")]
+#[arg_dispatch(module = "jobs")]
 enum Job {
     Full,
     Hack,
@@ -29,7 +29,6 @@ enum Job {
     Miri,
 }
 
-#[inline]
 pub fn cli() -> Command {
     Command::new(crate::commands::command_name(file!()))
         .arg(
@@ -40,6 +39,7 @@ pub fn cli() -> Command {
                 .help("Run specified test"),
         )
         .arg_required_else_help(true)
+        .about("Run CI jobs")
 }
 
 pub fn run(args: &mut ArgMatches) {

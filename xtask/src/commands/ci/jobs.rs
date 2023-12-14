@@ -11,12 +11,14 @@ use std::{
     process::Command,
 };
 
+use crate::commands;
+
 macro_rules! cargo {
     ($($arg:literal),*) => {
-        crate::cicd::_cargo([$($arg),*])
+        crate::commands::ci::jobs::_cargo([$($arg),*])
     };
     ($(($key:literal,$value:literal),)+ $($arg:literal),*) => {
-        crate::cicd::_cargo_envs([$($arg),*], [$(($key, $value)),*])
+        crate::commands::ci::jobs::_cargo_envs([$($arg),*], [$(($key, $value)),*])
     };
 }
 
@@ -77,6 +79,7 @@ pub fn semver() {
 }
 
 pub fn public_deps() {
+    println!("CHECK: PUBLIC_DEPS");
     fn r#try() -> anyhow::Result<()> {
         let dir: String = env::current_dir()?
             .into_os_string()
@@ -199,20 +202,12 @@ pub fn full() {
 }
 
 fn _cargo<const N: usize>(args: [&str; N]) {
-    spawn(Command::new("cargo").args(args));
+    commands::spawn(Command::new("cargo").args(args));
 }
 
 fn _cargo_envs<const N: usize, const M: usize>(
     args: [&str; N],
     envs: [(&str, &str); M],
 ) {
-    spawn(Command::new("cargo").args(args).envs(envs));
-}
-
-fn spawn(command: &mut Command) {
-    command
-        .spawn()
-        .expect("failed to spawn cargo command")
-        .wait()
-        .expect("failed to wait for cargo command");
+    commands::spawn(Command::new("cargo").args(args).envs(envs));
 }

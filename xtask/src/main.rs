@@ -1,7 +1,7 @@
 use xtask::commands;
 
 macro_rules! run {
-    ($( $command:ident),*) => {
+    ($($command:ident,)*) => {
         let (name, mut args) = commands::build()
             .get_matches()
             .remove_subcommand()
@@ -16,5 +16,5 @@ macro_rules! run {
 }
 
 fn main() {
-    run!(ci);
+    run!(ci, python_lib,);
 }
