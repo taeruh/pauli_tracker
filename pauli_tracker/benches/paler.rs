@@ -208,7 +208,7 @@ impl Circuit {
             }
         }
         let mut ret = vec![PauliReturn::default(); self.num_bits];
-        for (idx, pauli) in tracker.into().into_iter() {
+        for (idx, pauli) in tracker.into_storage().into_iter() {
             ret[idx] = pauli.into();
         }
         ret

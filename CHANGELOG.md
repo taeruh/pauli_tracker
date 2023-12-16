@@ -27,7 +27,8 @@ possible.
 - `Live::into` (use `into_storage` instead)
 ### Removed
 ### Fixed
-- `Live::measure` now actually removes the qubit instead of just cloning it.
+- `Live::measure` now actually removes the qubit instead of just cloning it (for the
+old effect of `measure`, do something like `get(...).copied`). 
 ### Security
 
 ## [0.3.1] - 2023-10-10
