@@ -21,7 +21,8 @@ possible.
 
 ## [Unreleased]
 ### Added
-- Add `Live::as_storage`
+- Add `Live::as_storage`.
+- Add `Frames::get`.
 ### Changed
 ### Deprecated
 - `Live::into` (use `into_storage` instead)

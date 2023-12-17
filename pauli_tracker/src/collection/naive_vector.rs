@@ -23,8 +23,8 @@ use crate::slice_extension::GetTwoMutSlice;
 ///
 /// Similar to [BufferedVector](super::BufferedVector), with the major difference that
 /// there are no buffers and no runtime checks. This means, a `remove` is always a
-/// **pop** and an `insert` is always a **push**. It's only it useful if bits are
-/// inserted and removed in order.
+/// **pop** and an `insert` is always a **push**. It's only useful if bits are
+/// inserted and removed at the end (otherwise it errors).
 #[derive(Debug, Clone, Default, PartialEq, Eq, PartialOrd, Ord, Hash)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct NaiveVector<T>(pub Vec<T>);

@@ -140,6 +140,13 @@ impl<S: Init> Init for Frames<S> {
     }
 }
 
+impl<S: Base<TB = T>, T> Frames<S> {
+    /// Returns a reference to `bit`s Pauli stack; [None] if `bit` is not present.
+    pub fn get(&self, bit: usize) -> Option<&T> {
+        self.storage.get(bit)
+    }
+}
+
 macro_rules! single {
     ($($name:ident,)*) => {$(
         fn $name(&mut self, bit: usize) {
