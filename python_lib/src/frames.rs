@@ -1,60 +1,49 @@
-use std::collections::HashMap;
-
-use bitvec::vec::BitVec;
-use lib::{
-    collection::Init,
-    pauli::{
-        self,
-    },
-    tracker::{
-        frames,
-        Tracker,
-    },
+use pyo3::{
+    PyResult,
+    Python,
 };
 
-use super::Map;
+use crate::Module;
 
-type PauliStack = pauli::PauliStack<BitVec>;
-type Storage = Map<PauliStack>;
-type LibFrames = frames::Frames<Storage>;
+// Tracker and Init must be in scope for the macro to work.
+macro_rules! impl_frames {
+    ($storage:ty, $gentype:expr) => {
+        type LibFrames = lib::tracker::frames::Frames<$storage>;
 
-#[pyo3::pyclass]
-pub struct Frames(LibFrames);
+        #[doc = $gentype]
+        #[pyo3::pyclass(subclass)]
+        pub struct Frames(LibFrames);
 
-#[pyo3::pymethods]
-impl Frames {
-    #[new]
-    fn init(len: usize) -> Self {
-        Self(LibFrames::init(len))
-    }
+        #[pyo3::pymethods]
+        impl Frames {
+            #[new]
+            fn init(len: usize) -> Self {
+                Self(LibFrames::init(len))
+            }
 
-    fn new_qubit(&mut self, bit: usize) -> Option<(Vec<usize>, Vec<usize>)> {
-        self.0
-            .new_qubit(bit)
-            .map(|p| (p.left.into_vec(), p.right.into_vec()))
-    }
+            /// Create a new qubit in the tracker, returning the old Pauli stack if the
+            /// qubit was already initialized.
+            fn new_qubit(&mut self, bit: usize) -> Option<(Vec<usize>, Vec<usize>)> {
+                self.0
+                    .new_qubit(bit)
+                    .map(|p| (p.left.into_vec(), p.right.into_vec()))
+            }
+        }
 
-    fn to_py_dict(&self) -> HashMap<usize, (Vec<usize>, Vec<usize>)> {
-        self.0
-            .clone()
-            .into_storage()
-            .into_iter()
-            .map(|(b, p)| (b, (p.left.into_vec(), p.right.into_vec())))
-            .collect()
-    }
+        crate::impl_helper::impl_passes!(Frames);
+    };
 }
 
-single_pass!(
-    Frames, track_x, track_y, track_z, id, x, y, z, s, sdg, sz, szdg, hxy, h, sh, hs,
-    shs, sx, sxdg, hyz,
-);
-double_pass!(Frames, cz, swap, iswap, iswapdg,);
-double_pass_named_bits!(
-    Frames,
-    (cx, control, target),
-    (cy, control, target),
-    (move_z_to_z, source, destination),
-    (move_z_to_x, source, destination),
-    (move_x_to_z, source, destination),
-    (move_x_to_x, source, destination),
-);
+pub mod map;
+pub mod vec;
+
+pub fn add_module(py: Python<'_>, parent_module: &Module) -> PyResult<()> {
+    let _ = parent_module;
+    let module = Module::new(py, "frames", parent_module.path.clone())?;
+
+    map::add_module(py, &module)?;
+    vec::add_module(py, &module)?;
+
+    parent_module.add_submodule(py, module)?;
+    Ok(())
+}

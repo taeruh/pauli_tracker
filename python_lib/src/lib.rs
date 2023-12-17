@@ -1,57 +1,54 @@
-use std::hash::BuildHasherDefault;
+use std::ops::Deref;
 
-use lib::collection;
 use pyo3::{
     types::PyModule,
     PyResult,
     Python,
 };
-use rustc_hash::FxHasher;
 
-type Map<T> = collection::Map<T, BuildHasherDefault<FxHasher>>;
+struct Module<'m> {
+    pymodule: &'m PyModule,
+    path: String,
+}
 
-// need to put the whole impl block into the macro because macros are expanded from
-// outside to inside (we need the functions to be expanded before the pymethods macro
-// kicks in)
-macro_rules! single_pass {
-    ($type:ty, $($name:ident,)*) => {
-        #[pyo3::pymethods]
-        impl $type {
-            $(
-                fn $name(&mut self, bit: usize) {
-                    self.0.$name(bit);
-                }
-            )*
-        }
-    };
+impl<'m> Module<'m> {
+    fn new(py: Python<'m>, name: &str, mut path: String) -> PyResult<Self> {
+        path.push_str(format!(".{}", name).as_str());
+        Ok(Self {
+            pymodule: PyModule::new(py, name)?,
+            path,
+        })
+    }
+
+    fn add_submodule(&self, py: Python<'_>, submodule: Self) -> PyResult<()> {
+        self.pymodule.add_submodule(submodule.pymodule)?;
+        py.import("sys")?
+            .getattr("modules")?
+            .set_item(submodule.path, submodule.pymodule)?;
+        // submodule.pymodule.setattr("__name__", "live")?;
+        Ok(())
+    }
 }
-macro_rules! double_pass_named_bits {
-    ($type:ty, $(($name:ident, $bit_a:ident, $bit_b:ident),)*) => {
-        #[pyo3::pymethods]
-        impl $type {
-            $(
-                fn $name(&mut self, $bit_a: usize, $bit_b: usize) {
-                    self.0.$name($bit_a, $bit_b);
-                }
-            )*
-        }
-    };
+
+impl Deref for Module<'_> {
+    type Target = PyModule;
+    fn deref(&self) -> &Self::Target {
+        self.pymodule
+    }
 }
-macro_rules! double_pass {
-    ($type:ty, $($name:ident,)*) => {
-        double_pass_named_bits! ($type, $(($name, bit_a, bit_b),)*);
-    };
-}
+
+mod impl_helper;
 
 mod frames;
-use frames::Frames;
 mod live;
-use live::Live;
 
-/// The Pauli Tracker
 #[pyo3::pymodule]
-fn pauli_tracker(_py: Python, m: &PyModule) -> PyResult<()> {
-    m.add_class::<Live>()?;
-    m.add_class::<Frames>()?;
+fn _pauli_tracker(py: Python, module: &PyModule) -> PyResult<()> {
+    let module = Module {
+        pymodule: module,
+        path: "pauli_tracker._pauli_tracker".to_string(),
+    };
+    live::add_module(py, &module)?;
+    frames::add_module(py, &module)?;
     Ok(())
 }

@@ -1,69 +1,64 @@
-use std::collections::HashMap;
-
-use lib::{
-    collection::Init,
-    pauli::PauliDense,
-    tracker::{
-        live,
-        Tracker,
-    },
-};
 use pyo3::{
-    exceptions::PyValueError,
     PyResult,
+    Python,
 };
 
-use super::Map;
+use crate::Module;
 
-type Storage = Map<PauliDense>;
-type LibLive = live::Live<Storage>;
+// Tracker and Init must be in scope for the macro to work.
+macro_rules! impl_live {
+    ($storage:ty, $gentype:expr) => {
+        type LibLive = lib::tracker::live::Live<$storage>;
 
-#[pyo3::pyclass]
-pub struct Live(LibLive);
+        #[doc = $gentype]
+        #[pyo3::pyclass(subclass)]
+        pub struct Live(LibLive);
 
-#[pyo3::pymethods]
-impl Live {
-    #[new]
-    fn init(len: usize) -> Self {
-        Self(LibLive::init(len))
-    }
+        #[pyo3::pymethods]
+        impl Live {
+            #[new]
+            fn init(len: usize) -> Self {
+                Self(LibLive::init(len))
+            }
 
-    fn new_qubit(&mut self, bit: usize) -> Option<u8> {
-        self.0.new_qubit(bit).map(|p| p.into())
-    }
+            /// Create a new qubit in the tracker, returning the old Pauli if the qubit
+            /// was already initialized.
+            fn new_qubit(&mut self, bit: usize) -> Option<u8> {
+                self.0.new_qubit(bit).map(|p| p.tableau_encoding())
+            }
 
-    fn to_py_dict(&self) -> HashMap<usize, u8> {
-        self.0
-            .clone()
-            .into()
-            .into_iter()
-            .map(|(k, v)| (k, v.into()))
-            .collect()
-    }
+            /// Remove a qubit in the tracker, returning the according Pauli and
+            /// erroring if the qubit was not initialized.
+            fn measure(&mut self, bit: usize) -> pyo3::PyResult<u8> {
+                match self.0.measure(bit) {
+                    Ok(p) => Ok(p.into()),
+                    Err(b) => {
+                        Err(pyo3::exceptions::PyValueError::new_err(format!("{b}")))
+                    },
+                }
+            }
 
-    fn measure(&mut self, bit: usize) -> PyResult<u8> {
-        match self.0.measure(bit) {
-            Ok(p) => Ok(p.into()),
-            Err(b) => Err(PyValueError::new_err(format!("{b}"))),
+            /// Get the Pauli of a qubit in the tracker, returning None if the qubit was
+            /// not initialized.
+            fn get(&self, bit: usize) -> Option<u8> {
+                self.0.get(bit).map(|p| p.tableau_encoding())
+            }
         }
-    }
 
-    fn get(&self, bit: usize) -> Option<u8> {
-        self.0.get(bit).map(|p| p.storage())
-    }
+        crate::impl_helper::impl_passes!(Live);
+    };
 }
 
-single_pass!(
-    Live, track_x, track_y, track_z, id, x, y, z, s, sdg, sz, szdg, hxy, h, sh, hs,
-    shs, sx, sxdg, hyz,
-);
-double_pass!(Live, cz, swap, iswap, iswapdg,);
-double_pass_named_bits!(
-    Live,
-    (cx, control, target),
-    (cy, control, target),
-    (move_z_to_z, source, destination),
-    (move_z_to_x, source, destination),
-    (move_x_to_z, source, destination),
-    (move_x_to_x, source, destination),
-);
+mod map;
+mod vec;
+
+pub fn add_module(py: Python<'_>, parent_module: &Module) -> PyResult<()> {
+    let _ = parent_module;
+    let module = Module::new(py, "live", parent_module.path.clone())?;
+
+    map::add_module(py, &module)?;
+    vec::add_module(py, &module)?;
+
+    parent_module.add_submodule(py, module)?;
+    Ok(())
+}
