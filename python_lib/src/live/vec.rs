@@ -53,7 +53,7 @@ impl Live {
 
     #[doc = doc::transform!()]
     #[allow(clippy::wrong_self_convention)]
-    fn into_py_array_recurse(&self) -> Vec<u8> {
+    fn into_py_array_recursive(&self) -> Vec<u8> {
         self.0
             .clone()
             .into_storage()

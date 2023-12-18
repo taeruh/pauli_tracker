@@ -38,6 +38,28 @@ an exception describing `E` on failure in Python.
 documentation here (stub files maybe sooner when pyo3 can generate them
 automatically).*
 
+**Example usage**
+
+.. code-block:: python
+
+   from pauli_tracker.live.map import Live
+
+   # Pauli encoding: 0 -> I, 1 -> Z, 2 -> X, 3 -> Y
+
+   tracker = Live(3)  # initialize the tracker with 3 qubits
+   tracker.track_x(0)  # track an X Pauli on qubit 0
+   tracker.track_y(1)  # track an Y Pauli on qubit 0
+   tracker.h(0)  # apply a Hadamard gate on qubit 0
+   tracker.cx(1, 2)  # apply a CNOT gate on control qubit 1 and target qubit 2
+   print(tracker.measure(0).tableau_encoding())  # measure qubit 0
+   tracker.new_qubit(4)  # add a new qubit at label 4
+   # transform the whole opaque type into a standard Python type
+   print(tracker.into_py_dict_recursive())
+
+For more examples of how the Pauli tracking works, please take a look at `Rust example
+code`_ (although not everything is exposed in this wrapper, but it should still give a
+good idea about how things work).
+
 **Caution**
 
 For all classes we define the *magic __new__* method and not the *magic __init__* method
@@ -52,6 +74,8 @@ the subclass' *magic __init__*). But all this shouldn't matter, I hope, since bo
 
 .. _pauli_tracker crate:
    https://docs.rs/pauli_tracker/latest/pauli_tracker
+.. _Rust example code:
+   https://docs.rs/pauli_tracker/latest/pauli_tracker/#examples
 .. _pyo3:
    https://github.com/PyO3/pyo3
 .. _maturin:

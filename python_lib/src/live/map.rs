@@ -55,7 +55,7 @@ impl Live {
 
     #[doc = crate::impl_helper::doc::transform!()]
     #[allow(clippy::wrong_self_convention)]
-    fn into_py_dict_recurse(&self) -> HashMap<usize, u8> {
+    fn into_py_dict_recursive(&self) -> HashMap<usize, u8> {
         self.0
             .clone()
             .into_storage()

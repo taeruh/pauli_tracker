@@ -53,7 +53,7 @@ impl Frames {
 
     #[doc = doc::transform!()]
     #[allow(clippy::wrong_self_convention)]
-    fn into_py_array_recurse(&self) -> Vec<(Vec<usize>, Vec<usize>)> {
+    fn into_py_array_recursive(&self) -> Vec<(Vec<usize>, Vec<usize>)> {
         self.0
             .clone()
             .into_storage()

@@ -1,5 +1,5 @@
 [package]
-name = "python_lib"
+name = "pauli_tracker"
 version = "0.1.0"
 edition = "2021"
 rust-version = "1.65.0" # needed for pauli_vector (1.56 for pyo3)

@@ -58,7 +58,7 @@ impl Frames {
 
     #[doc = doc::transform!()]
     #[allow(clippy::wrong_self_convention)]
-    fn into_py_dict_recurse(&self) -> HashMap<usize, (Vec<usize>, Vec<usize>)> {
+    fn into_py_dict_recursive(&self) -> HashMap<usize, (Vec<usize>, Vec<usize>)> {
         self.0
             .clone()
             .into_storage()
