@@ -21,13 +21,13 @@ use crate::{
         doc,
         links,
     },
+    pauli::PauliStack,
     Module,
 };
 
 type Map<T> = collection::Map<T, BuildHasherDefault<FxHasher>>;
 
-type PauliStack = pauli::PauliStack<BitVec>;
-type Storage = Map<PauliStack>;
+type Storage = Map<pauli::PauliStack<BitVec>>;
 impl_frames!(
     Storage,
     concat!(
@@ -46,7 +46,19 @@ impl_frames!(
 #[pyo3::pymethods]
 impl Frames {
     #[doc = doc::transform!()]
-    fn to_py_dict(&self) -> HashMap<usize, (Vec<usize>, Vec<usize>)> {
+    #[allow(clippy::wrong_self_convention)]
+    fn into_py_dict(&self) -> HashMap<usize, PauliStack> {
+        self.0
+            .clone()
+            .into_storage()
+            .into_iter()
+            .map(|(b, p)| (b, PauliStack(p)))
+            .collect()
+    }
+
+    #[doc = doc::transform!()]
+    #[allow(clippy::wrong_self_convention)]
+    fn into_py_dict_recurse(&self) -> HashMap<usize, (Vec<usize>, Vec<usize>)> {
         self.0
             .clone()
             .into_storage()

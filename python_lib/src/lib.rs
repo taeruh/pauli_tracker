@@ -41,6 +41,7 @@ mod impl_helper;
 
 mod frames;
 mod live;
+mod pauli;
 
 #[pyo3::pymodule]
 fn _pauli_tracker(py: Python, module: &PyModule) -> PyResult<()> {
@@ -48,7 +49,10 @@ fn _pauli_tracker(py: Python, module: &PyModule) -> PyResult<()> {
         pymodule: module,
         path: "pauli_tracker._pauli_tracker".to_string(),
     };
+
     live::add_module(py, &module)?;
     frames::add_module(py, &module)?;
+    pauli::add_module(py, &module)?;
+
     Ok(())
 }

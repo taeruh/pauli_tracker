@@ -22,11 +22,12 @@ extensions = [
     "sphinx.ext.viewcode",
     "sphinx.ext.napoleon",
     "sphinx_autodoc_typehints",
-    "sphinx_rtd_dark_mode",
+    "sphinx_rtd_theme",
 ]
 
 autosummary_generate = True
 autosummary_imported_members = True
+# autoclass_content = "both"
 html_show_sourcelink = False  # remove 'view source code' at the top of the page
 templates_path = ["_templates"]
 exclude_patterns = ["_build", "_templates"]
@@ -43,6 +44,6 @@ if not on_rtd:  # only import and set the theme if we're building docs locally
 
     html_theme = "sphinx_rtd_theme"
     html_theme_path = [sphinx_rtd_theme.get_html_theme_path()]
-default_dark_mode = True
+html_css_files = ["readthedocs_custom.css"]
 
 html_static_path = ["_static"]

@@ -7,8 +7,8 @@ use lib::{
     collection,
     collection::Init,
     pauli::{
+        self,
         Pauli,
-        PauliDense,
     },
     tracker::Tracker,
 };
@@ -20,12 +20,13 @@ use rustc_hash::FxHasher;
 
 use crate::{
     impl_helper::links,
+    pauli::PauliDense,
     Module,
 };
 
 type Map<T> = collection::Map<T, BuildHasherDefault<FxHasher>>;
 
-type Storage = Map<PauliDense>;
+type Storage = Map<pauli::PauliDense>;
 impl_live!(
     Storage,
     concat!(
@@ -42,12 +43,24 @@ impl_live!(
 #[pyo3::pymethods]
 impl Live {
     #[doc = crate::impl_helper::doc::transform!()]
-    fn to_py_dict(&self) -> HashMap<usize, u8> {
+    #[allow(clippy::wrong_self_convention)]
+    fn into_py_dict(&self) -> HashMap<usize, PauliDense> {
         self.0
             .clone()
-            .into()
+            .into_storage()
             .into_iter()
-            .map(|(k, v)| (k, v.tableau_encoding()))
+            .map(|(b, p)| (b, PauliDense(p)))
+            .collect()
+    }
+
+    #[doc = crate::impl_helper::doc::transform!()]
+    #[allow(clippy::wrong_self_convention)]
+    fn into_py_dict_recurse(&self) -> HashMap<usize, u8> {
+        self.0
+            .clone()
+            .into_storage()
+            .into_iter()
+            .map(|(b, p)| (b, p.tableau_encoding()))
             .collect()
     }
 }

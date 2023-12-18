@@ -4,8 +4,8 @@ use lib::{
         NaiveVector,
     },
     pauli::{
+        self,
         Pauli,
-        PauliDense,
     },
     tracker::Tracker,
 };
@@ -19,10 +19,11 @@ use crate::{
         doc,
         links,
     },
+    pauli::PauliDense,
     Module,
 };
 
-type LiveStorage = NaiveVector<PauliDense>;
+type LiveStorage = NaiveVector<pauli::PauliDense>;
 impl_live!(
     LiveStorage,
     concat!(
@@ -39,10 +40,23 @@ impl_live!(
 #[pyo3::pymethods]
 impl Live {
     #[doc = doc::transform!()]
-    fn to_py_array(&self) -> Vec<u8> {
+    #[allow(clippy::wrong_self_convention)]
+    fn into_py_array(&self) -> Vec<PauliDense> {
         self.0
             .clone()
-            .into()
+            .into_storage()
+            .0
+            .into_iter()
+            .map(PauliDense)
+            .collect()
+    }
+
+    #[doc = doc::transform!()]
+    #[allow(clippy::wrong_self_convention)]
+    fn into_py_array_recurse(&self) -> Vec<u8> {
+        self.0
+            .clone()
+            .into_storage()
             .0
             .into_iter()
             .map(|p| p.tableau_encoding())

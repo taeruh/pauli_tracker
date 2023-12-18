@@ -38,6 +38,18 @@ an exception describing `E` on failure in Python.
 documentation here (stub files maybe sooner when pyo3 can generate them
 automatically).*
 
+**Caution**
+
+For all classes we define the *magic __new__* method and not the *magic __init__* method
+(that's what `pyo3`_ does). However, we still define a *normal __init__* method for
+documentation purposes (docstrings on __new__ doesn't seem to work properly ...?). This
+method does nothing. It is not called when constructing objects with the standard
+constructor syntax. However, it is called when explictily calling *__init__*, e.g., when
+doing something like `super().__init__()` in a subclass' *magic init*. In that case, the
+*magic __init__* method is not called, I think (but *magic __new__* is still called in
+the subclass' *magic __init__*). But all this shouldn't matter, I hope, since both,
+*magic __init__* and *normal __init__* do nothing.
+
 .. _pauli_tracker crate:
    https://docs.rs/pauli_tracker/latest/pauli_tracker
 .. _pyo3:

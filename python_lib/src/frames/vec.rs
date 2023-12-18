@@ -17,11 +17,11 @@ use crate::{
         doc,
         links,
     },
+    pauli::PauliStack,
     Module,
 };
 
-type PauliStack = pauli::PauliStack<BitVec>;
-type Storage = NaiveVector<PauliStack>;
+type Storage = NaiveVector<pauli::PauliStack<BitVec>>;
 impl_frames!(
     Storage,
     concat!(
@@ -40,7 +40,20 @@ impl_frames!(
 #[pyo3::pymethods]
 impl Frames {
     #[doc = doc::transform!()]
-    fn to_py_array(&self) -> Vec<(Vec<usize>, Vec<usize>)> {
+    #[allow(clippy::wrong_self_convention)]
+    fn into_py_array(&self) -> Vec<PauliStack> {
+        self.0
+            .clone()
+            .into_storage()
+            .0
+            .into_iter()
+            .map(PauliStack)
+            .collect()
+    }
+
+    #[doc = doc::transform!()]
+    #[allow(clippy::wrong_self_convention)]
+    fn into_py_array_recurse(&self) -> Vec<(Vec<usize>, Vec<usize>)> {
         self.0
             .clone()
             .into_storage()

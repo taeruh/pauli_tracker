@@ -12,26 +12,40 @@ macro_rules! impl_live {
 
         #[doc = $gentype]
         #[pyo3::pyclass(subclass)]
-        pub struct Live(LibLive);
+        pub struct Live(pub LibLive);
 
         #[pyo3::pymethods]
         impl Live {
             #[new]
-            fn init(len: usize) -> Self {
+            #[pyo3(signature = (len=0))]
+            fn __new__(len: usize) -> Self {
                 Self(LibLive::init(len))
             }
 
+            /// Create a new Live tracker.
+            ///
+            /// Args:
+            ///     len (int): The number of qubits to track
+            ///
+            /// Returns:
+            ///     Live: The new Live tracker
+            #[pyo3(text_signature = "(self, len=0)")]
+            fn __init__(&mut self, _len: usize) {}
+
             /// Create a new qubit in the tracker, returning the old Pauli if the qubit
             /// was already initialized.
-            fn new_qubit(&mut self, bit: usize) -> Option<u8> {
-                self.0.new_qubit(bit).map(|p| p.tableau_encoding())
+            fn new_qubit(&mut self, bit: usize) -> Option<crate::pauli::PauliDense> {
+                self.0.new_qubit(bit).map(crate::pauli::PauliDense)
             }
 
             /// Remove a qubit in the tracker, returning the according Pauli and
             /// erroring if the qubit was not initialized.
-            fn measure(&mut self, bit: usize) -> pyo3::PyResult<u8> {
+            fn measure(
+                &mut self,
+                bit: usize,
+            ) -> pyo3::PyResult<crate::pauli::PauliDense> {
                 match self.0.measure(bit) {
-                    Ok(p) => Ok(p.into()),
+                    Ok(p) => Ok(crate::pauli::PauliDense(p)),
                     Err(b) => {
                         Err(pyo3::exceptions::PyValueError::new_err(format!("{b}")))
                     },
@@ -40,8 +54,8 @@ macro_rules! impl_live {
 
             /// Get the Pauli of a qubit in the tracker, returning None if the qubit was
             /// not initialized.
-            fn get(&self, bit: usize) -> Option<u8> {
-                self.0.get(bit).map(|p| p.tableau_encoding())
+            fn get(&self, bit: usize) -> Option<crate::pauli::PauliDense> {
+                self.0.get(bit).map(|p| crate::pauli::PauliDense(p.clone()))
             }
         }
 

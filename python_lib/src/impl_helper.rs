@@ -117,9 +117,7 @@ pub mod doc {
         () =>
             {
 r"Return and transform the internal Rust data representation into the according Python
-representation.
-
-This may be costly, since it copies the data."
+representation."
             }
     }
     pub(crate) use transform;
