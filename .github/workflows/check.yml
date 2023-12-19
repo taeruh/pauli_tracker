@@ -97,7 +97,7 @@ jobs:
         with:
           components: rustfmt
       - name: cargo fmt
-        run: cargo fmt --check --package pauli_tracker
+        run: cargo fmt --check
 
   semver:
     name: semver
@@ -123,6 +123,6 @@ jobs:
       - name: install nightly
         uses: dtolnay/rust-toolchain@nightly
       - name: replace the manifest with the nightly manifest
-        run: cp pauli_tracker/Cargo_nightly.toml pauli_tracker/Cargo.toml
+        run: cp Cargo_nightly.toml Cargo.toml
       - name: cargo check
         run: cargo check --all-features
