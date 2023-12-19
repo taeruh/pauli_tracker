@@ -8,6 +8,9 @@ on:
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref || github.run_id }}
   cancel-in-progress: true
+defaults:
+  run:
+    working-directory: ./pauli_tracker
 
 jobs:
 
