@@ -110,6 +110,8 @@ jobs:
         uses: dtolnay/rust-toolchain@stable
       - name: install semver-checks
         uses: obi1kenobi/cargo-semver-checks-action@v2
+        with:
+          manifest-path: ./pauli_tracker/Crate.toml
       - name: cargo semver-checks
         run: cargo semver-checks
 
