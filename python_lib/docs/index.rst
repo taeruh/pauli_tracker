@@ -10,8 +10,7 @@ Welcome to pauli_tracker's documentation!
 library).**
 
 Only the essential functionality is exposed in this wrapper, but for most use cases,
-this should be sufficient. If you need more functionality, it is fairly easy to
-use Rust from Python with the help of `pyo3`_ and `maturin`_.
+this should be sufficient.
 
 *If you think something should be included in this wrapper here, please open an
 issue or a pull request on the* `GitHub repository`_.*
@@ -78,8 +77,6 @@ the subclass' *magic __init__*). But all this shouldn't matter, I hope, since bo
    https://docs.rs/pauli_tracker/latest/pauli_tracker/#examples
 .. _pyo3:
    https://github.com/PyO3/pyo3
-.. _maturin:
-   https://github.com/PyO3/maturin
 .. _GitHub repository:
    https://github.com/taeruh/pauli_tracker
 .. _Tracker:

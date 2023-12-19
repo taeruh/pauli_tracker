@@ -4,6 +4,7 @@
 [![Documentation](https://docs.rs/pauli_tracker/badge.svg)](https://docs.rs/pauli_tracker/)
 [![Codecov](https://codecov.io/github/taeruh/pauli_tracker/coverage.svg?branch=main)](https://codecov.io/gh/taeruh/pauli_tracker)
 [![Dependency status](https://deps.rs/repo/github/taeruh/pauli_tracker/status.svg)](https://deps.rs/repo/github/taeruh/pauli_tracker)
+(Rust crate)
 
 A library to track Pauli frames through a Clifford circuit with measurements.
 
@@ -20,10 +21,12 @@ For more details about the Pauli and Clifford groups and Pauli tracking, please 
 into the literature, e.g.,:
   - [Software Pauli Tracking for Quantum Computation](https://arxiv.org/abs/1401.5872v1)
   - [Stim: a fast stabilizer circuit simulator](https://arxiv.org/abs/2103.02202)
+  - standard quantum textbooks
   - ...
 
 [Conjugation rules](./docs/conjugation_rules.pdf) lists the conjugation rules for the
-Clifford operations provided by the library (with proofs).
+Clifford operations provided by the library (with proofs) and also contains some useful
+theory related to Pauli tracking.
 
 ## What this library does
 
@@ -31,18 +34,27 @@ This library does **not** provide a full quantum simulator. Instead it only prov
 tools to track the Pauli operators through the circuit, while building up the circuit or
 while simulating the circuit.
 
-For examples, please look into the the [crate
-documentation](https://docs.rs/pauli_tracker/#examples).
+The project is foremost a Rust library providing the [pauli_tracker
+crate](./pauli_tracker). It's a generic and hopefully flexible library which allows you
+to choose different core data structures fitted to the problem you want to solve.
+
+However, we also have [Python package](./python_lib) that wraps the basic functionality
+for easy use from Python, and a [C wrapper](./c_lib) exporting partially exporting the
+API in form of a compiled C library. Note that both wrappers might randomly miss some
+important functionality because we just forgot it. In that case, please open an issue or
+a pull request if you need it.
+
+## Examples
+
+For example code, please look into the [crate
+documentation](https://docs.rs/pauli_tracker/#examples) and maybe also at the [Python
+documenation](to_be_filled_out).
 
 ## Related projects
 
-- [pauli_tracker_extern](https://github.com/QSI-BAQS/pauli_tracker_extern):
-  **work-in-progress**; partially export the API through a C library
-
-## MSRV policy
-
-There is no guarantee for a long-time support of a specific Rust version. Bumping the
-MSRV increments the minor SemVer version.
+- https://github.com/taeruh/mbqc_scheduling: Using the Pauli tracking information to
+  solve the scheduling problem in measurement-based quantum computing, that is, when to
+  initialize and measure which qubit for space-time optimality.
 
 ## Issues and Contributing
 

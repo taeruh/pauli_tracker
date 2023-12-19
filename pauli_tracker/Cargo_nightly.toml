@@ -23,10 +23,10 @@ license = "MIT OR Apache-2.0"
 
 repository = "https://github.com/taeruh/pauli_tracker"
 description = "A library to track Pauli gates through a Clifford circuit."
-keywords = ["quantum", "clifford", "mbqc"]
+keywords = ["quantum", "clifford", "pauli", "mbqc"]
 categories = ["simulation"]
 
-readme = "../README.md"
+readme = "./README.md"
 
 [lib]
 crate-type = ["lib"]

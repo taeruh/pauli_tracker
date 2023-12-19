@@ -6,9 +6,9 @@ Pull requests (PRs)
 
 - Create draft pull requests and change the status to ready when the PR is ready.
 - PRs must should certain automated CI checks. You can use the local xtask crate to check
-  them before commiting (`./target/debug/xtask ci --help`, `xtask/README.md`), however,
-  note that the local coverage report might be different to the remote CI coverage
-  report (don't know how to fix that).
+  them before commiting (`xtask ci --help`, cf. [xtask-README](./xtask/README.md)),
+  however, note that the local coverage report might be different to the remote CI
+  coverage report (don't know how to fix that).
 - Try to include tests.
 - Use a [feature branch][git-feature-branch] instead of the master branch.
 
@@ -33,11 +33,11 @@ more valuable. The general structure is:
 ### Adding more Clifford gates to the tracker
 
 In the following list, you may only do the first item, and then ask for help from the
-developer, if you don't want to get into the source code. However, note that this may
-take of course more time (and implementing it is usually just some simple boilerplate
-code).
+developer (this list is also for ourselves to remember all steps), if you don't want to
+get into the source code. However, note that this may take of course more time (and
+implementing it is usually just some simple boilerplate code).
 
-I hope the following list includes all steps ...
+*I hope the following list includes all steps ...*
 
 1. Proof the mapping in [conjugation-rules] as it is done for the other gates (i.e.,
    show how it can be represented through the Clifford generators (or gates derive from
@@ -53,8 +53,8 @@ I hope the following list includes all steps ...
    analog for `PauliStack` and `Frames`, i.e., provide an efficient method
    implementation for `PauliStack` and call this function in `Frames` tracker
    implementation (`single!` macro ...).
-4. If the method is not trivial, but more than qubit is involved, also implement the method
-   directly, and more efficiently, for the `Live` and the `Frames` tracker.
+4. If the method is not trivial, but more than one qubit is involved, also implement the
+   method directly, and more efficiently, for the `Live` and the `Frames` tracker.
 5. In `tracker::tests::utils` add the method to the `single_actions`/`double_actions`
    macro and the expected results, based on the proof in (1.), to the
    `SINGLE_GENERATORS`/`DOUBLE_GENERATORS` (updating `N_SINGLES`/`N_DOUBLES`).
@@ -65,7 +65,10 @@ I hope the following list includes all steps ...
    is the probability (before normalization of the probabilities). In the
    `Instructor::apply`'s match call, add the case similar to the other (normal)
    single/double qubit gate cases.
+8. Add an entry to [TODO-list] in the Gate implementation section (for the Python and C
+   wrappers).
 
 [conventional_commits]: https://www.conventionalcommits.org
 [git-feature-branch]: https://www.atlassian.com/git/tutorials/comparing-workflows
 [conjugation-rules]: ./docs/conjugation_rules.pdf
+[TODO-list]: ./TODO.md

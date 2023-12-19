@@ -1,0 +1,7 @@
+clang
+-Wall
+-Wextra
+-pedantic
+%cpp %hpp -std=c++20
+-Iinclude/example_usage
+-I../output

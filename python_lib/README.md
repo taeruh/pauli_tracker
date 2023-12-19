@@ -1,12 +1,19 @@
 # Python wrapper around pauli_tracker
 
-This Python package is a wrapper around [pauli_tracker crate](../pauli_tracker/) exporting the
-basic functionality.
+This Python package is a wrapper around [pauli_tracker crate](../pauli_tracker/)
+exporting the basic functionality.
 
 When using this package, please also look at the
 [documentation](https://docs.rs/pauli_tracker/latest/pauli_tracker/) of the Rust crate
 (additionally to Python package's documentation) in parallel since it is much more
 extensive about how the Pauli tracking works.
+
+If some essential functionality is missing, because we just forgot to implement, please
+open an issue or pull request (cf [contributing](../CONTRIBUTING.md)). If you need more
+functionality, it is fairly easy to use Rust from Python with the help of
+[pyo3](https://github.com/PyO3/pyo3) and [maturin](https://github.com/PyO3/maturin).
+However, because of [this problem](#caution), you probably want to clone this repo and
+extend it.
 
 ## Examples
 
