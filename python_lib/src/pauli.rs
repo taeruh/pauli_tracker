@@ -36,7 +36,7 @@ impl PauliDense {
     ///     storage (int): The tableau encoding
     ///
     /// Returns:
-    ///     PauliDense: The new PauliDense
+    ///     PauliDense:
     #[pyo3(text_signature = "(self, storage=0)")]
     fn __init__(&mut self, _storage: u8) {}
 
@@ -65,7 +65,7 @@ impl PauliTuple {
     ///     z (bool): The Z component
     ///
     /// Returns:
-    ///     PauliTuple: The new PauliTuple
+    ///     PauliTuple:
     #[pyo3(text_signature = "(self, x=False, z=False)")]
     fn __init__(&mut self, _x: bool, _z: bool) {}
 
@@ -74,6 +74,9 @@ impl PauliTuple {
     }
 
     #[doc = doc::transform!()]
+    ///
+    /// Returns:
+    ///     tuple[bool, bool]:
     #[allow(clippy::wrong_self_convention)]
     fn into_py_tuple(&self) -> (bool, bool) {
         (self.0.0, self.0.1)
@@ -88,6 +91,9 @@ pub struct PauliStack(pub pauli::PauliStack<BitVec>);
 #[pyo3::pymethods]
 impl PauliStack {
     #[doc = doc::transform!()]
+    ///
+    /// Returns:
+    ///     tuple[list[int], list[int]]:
     #[allow(clippy::wrong_self_convention)]
     fn into_py_tuple(&self) -> (Vec<usize>, Vec<usize>) {
         (self.0.left.clone().into_vec(), self.0.right.clone().into_vec())

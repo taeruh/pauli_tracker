@@ -52,7 +52,7 @@ pub(crate) fn serialization_not_supported<T>(
     )))
 }
 
-macro_rules! shared_impl {
+macro_rules! tracker_impl {
     ($type:ty) => {
         crate::impl_helper::single_pass!(
             $type, track_x, track_y, track_z, id, x, y, z, s, sdg, sz, szdg, hxy, h,
@@ -68,7 +68,16 @@ macro_rules! shared_impl {
             (move_x_to_z, source, destination),
             (move_x_to_x, source, destination),
         );
+    };
+}
 
+pub(crate) use double_pass;
+pub(crate) use double_pass_named_bits;
+pub(crate) use single_pass;
+pub(crate) use tracker_impl;
+
+macro_rules! serde {
+    ($type:ty) => {
         #[pyo3::pymethods]
         impl $type {
             /// Serialize the internal data structure.
@@ -152,11 +161,7 @@ macro_rules! shared_impl {
         }
     };
 }
-
-pub(crate) use double_pass;
-pub(crate) use double_pass_named_bits;
-pub(crate) use shared_impl;
-pub(crate) use single_pass;
+pub(crate) use serde;
 
 pub mod links {
     macro_rules! live {

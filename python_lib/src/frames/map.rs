@@ -46,6 +46,9 @@ impl_frames!(
 #[pyo3::pymethods]
 impl Frames {
     #[doc = doc::transform!()]
+    ///
+    /// Returns:
+    ///     dict[int, PauliStack]:
     #[allow(clippy::wrong_self_convention)]
     fn into_py_dict(&self) -> HashMap<usize, PauliStack> {
         self.0
@@ -57,6 +60,9 @@ impl Frames {
     }
 
     #[doc = doc::transform!()]
+    ///
+    /// Returns:
+    ///     dict[int, tuple[list[int], list[int]]]:
     #[allow(clippy::wrong_self_convention)]
     fn into_py_dict_recursive(&self) -> HashMap<usize, (Vec<usize>, Vec<usize>)> {
         self.0

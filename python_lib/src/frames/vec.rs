@@ -40,6 +40,9 @@ impl_frames!(
 #[pyo3::pymethods]
 impl Frames {
     #[doc = doc::transform!()]
+    ///
+    /// Returns:
+    ///     list[PauliStack]:
     #[allow(clippy::wrong_self_convention)]
     fn into_py_array(&self) -> Vec<PauliStack> {
         self.0
@@ -52,6 +55,9 @@ impl Frames {
     }
 
     #[doc = doc::transform!()]
+    ///
+    /// Returns:
+    ///     list[tuple[list[int], list[int]]]:
     #[allow(clippy::wrong_self_convention)]
     fn into_py_array_recursive(&self) -> Vec<(Vec<usize>, Vec<usize>)> {
         self.0

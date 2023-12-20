@@ -1,9 +1,33 @@
+use lib::tracker::frames::dependency_graph;
 use pyo3::{
     PyResult,
     Python,
 };
 
-use crate::Module;
+use crate::{
+    impl_helper::{
+        self,
+        doc,
+    },
+    Module,
+};
+
+#[pyo3::pyclass(subclass)]
+struct DependencyGraph(pub dependency_graph::DependencyGraph);
+
+#[pyo3::pymethods]
+impl DependencyGraph {
+    #[doc = doc::transform!()]
+    ///
+    /// Returns:
+    ///     list[list[tuple[int, list[int]]]]:
+    #[allow(clippy::wrong_self_convention)]
+    fn into_py_graph(&self) -> dependency_graph::DependencyGraph {
+        self.0.clone()
+    }
+}
+
+impl_helper::serde!(DependencyGraph);
 
 // Tracker and Init must be in scope for the macro to work.
 macro_rules! impl_frames {
@@ -28,7 +52,7 @@ macro_rules! impl_frames {
             ///     len (int): The number of qubits to track
             ///
             /// Returns:
-            ///     Frames: The new Frames tracker
+            ///     Frames:
             #[pyo3(text_signature = "(self, len=0)")]
             fn __init__(&mut self, _len: usize) {}
 
@@ -57,9 +81,49 @@ macro_rules! impl_frames {
             fn get(&self, bit: usize) -> Option<crate::pauli::PauliStack> {
                 self.0.get(bit).map(|p| crate::pauli::PauliStack(p.clone()))
             }
+
+            /// This is just create_dependency_graph_ as a method.
+            ///
+            /// If you directly want to turn it into a Python type, use
+            /// :func:`create_py_dependency_graph`, because this avoids cloning the
+            /// graph (which would happen when calling
+            /// :func:`~pauli_tracker.frames.DependencyGraph.into_py_graph`).
+            ///
+            /// Returns:
+            ///     DependencyGraph:
+            ///
+            /// .. _create_dependency_graph:
+            ///    https://docs.rs/pauli_tracker/latest/pauli_tracker/tracker/frames/dependency_graph/fn.create_dependency_graph.html
+            fn create_dependency_graph(
+                &self,
+                map: Vec<usize>,
+            ) -> crate::frames::DependencyGraph {
+                crate::frames::DependencyGraph(
+                    lib::tracker::frames::dependency_graph::create_dependency_graph(
+                        lib::collection::Iterable::iter_pairs(self.0.as_storage()),
+                        &map,
+                    ),
+                )
+            }
+
+            /// Like :func:`create_dependency_graph`, but directly returns the graph as
+            /// a Python type.
+            ///
+            /// Returns:
+            ///     list[list[tuple[int, list[int]]]]:
+            fn create_py_dependency_graph(
+                &self,
+                map: Vec<usize>,
+            ) -> lib::tracker::frames::dependency_graph::DependencyGraph {
+                lib::tracker::frames::dependency_graph::create_dependency_graph(
+                    lib::collection::Iterable::iter_pairs(self.0.as_storage()),
+                    &map,
+                )
+            }
         }
 
-        crate::impl_helper::shared_impl!(Frames);
+        crate::impl_helper::tracker_impl!(Frames);
+        crate::impl_helper::serde!(Frames);
     };
 }
 
@@ -72,6 +136,7 @@ pub fn add_module(py: Python<'_>, parent_module: &Module) -> PyResult<()> {
 
     map::add_module(py, &module)?;
     vec::add_module(py, &module)?;
+    module.add_class::<DependencyGraph>()?;
 
     parent_module.add_submodule(py, module)?;
     Ok(())

@@ -28,7 +28,7 @@ macro_rules! impl_live {
             ///     len (int): The number of qubits to track
             ///
             /// Returns:
-            ///     Live: The new Live tracker
+            ///     Live:
             #[pyo3(text_signature = "(self, len=0)")]
             fn __init__(&mut self, _len: usize) {}
 
@@ -59,7 +59,8 @@ macro_rules! impl_live {
             }
         }
 
-        crate::impl_helper::shared_impl!(Live);
+        crate::impl_helper::tracker_impl!(Live);
+        crate::impl_helper::serde!(Live);
     };
 }
 

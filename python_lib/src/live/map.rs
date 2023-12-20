@@ -43,6 +43,9 @@ impl_live!(
 #[pyo3::pymethods]
 impl Live {
     #[doc = crate::impl_helper::doc::transform!()]
+    ///
+    /// Returns:
+    ///     dict[int, PauliDense]:
     #[allow(clippy::wrong_self_convention)]
     fn into_py_dict(&self) -> HashMap<usize, PauliDense> {
         self.0
@@ -54,6 +57,9 @@ impl Live {
     }
 
     #[doc = crate::impl_helper::doc::transform!()]
+    ///
+    /// Returns:
+    ///     dict[int, int]:
     #[allow(clippy::wrong_self_convention)]
     fn into_py_dict_recursive(&self) -> HashMap<usize, u8> {
         self.0

@@ -40,6 +40,9 @@ impl_live!(
 #[pyo3::pymethods]
 impl Live {
     #[doc = doc::transform!()]
+    ///
+    /// Returns:
+    ///     list[PauliDense]:
     #[allow(clippy::wrong_self_convention)]
     fn into_py_array(&self) -> Vec<PauliDense> {
         self.0
@@ -52,6 +55,9 @@ impl Live {
     }
 
     #[doc = doc::transform!()]
+    ///
+    /// Returns:
+    ///     list[int]:
     #[allow(clippy::wrong_self_convention)]
     fn into_py_array_recursive(&self) -> Vec<u8> {
         self.0

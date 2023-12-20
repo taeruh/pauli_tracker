@@ -15,18 +15,18 @@ use crate::{
 /// qubits on which the node qubit depends.
 pub type DependencyGraph = Vec<Vec<(usize, Vec<usize>)>>;
 
-/// Sort the `frames`' qubits according to the induced dependencies by the frames (row
-/// through the PauliStacks).
+/// Sort the `frames_storage`'s qubits according to the induced dependencies by the
+/// frames (row through the PauliStacks).
 ///
-/// Each frame in `frames` maps to a qubit number in `map`; frame(i) -> `map`\[i\]. If a
-/// qubit's Pauli stack has non-zero elements in a frame(i), the qubit is assumed to
-/// depend on `map`\[i\].
+/// Each frame in `frames_storage` maps to a qubit number in `map`; frame(i) ->
+/// `map`\[i\]. If a qubit's Pauli stack has non-zero elements in a frame(i), the qubit
+/// is assumed to depend on `map`\[i\].
 ///
 /// Dependencies that are already covered by later dependencies, i.e., dependencies that
 /// are in a higher layer, are removed. For example if 0 depends on 1 and 2 but 1 also
 /// depends on 2, then 2 is not listed in the dependencies of 0.
 ///
-/// Note that while the sorting is deterministic, up to `frames`' storage's Iterator
+/// Note that while the sorting is deterministic, up to `frames_storage`'s Iterator
 /// implementation, the output might not be sorted as expected, since nodes are swapped
 /// around for better efficiency.
 ///
@@ -62,7 +62,10 @@ pub type DependencyGraph = Vec<Vec<(usize, Vec<usize>)>>;
 /// );
 /// # }
 /// ```
-pub fn create_dependency_graph<'l, I, B>(frames: I, map: &[usize]) -> DependencyGraph
+pub fn create_dependency_graph<'l, I, B>(
+    frames_storage: I,
+    map: &[usize],
+) -> DependencyGraph
 where
     I: IntoIterator<Item = (usize, &'l PauliStack<B>)>,
     B: BooleanVector + 'l,
@@ -74,7 +77,7 @@ where
 
     // the first loop filters the dependencies and searches for qubits with no
     // dependencies
-    for (bit, stack) in frames {
+    for (bit, stack) in frames_storage {
         let mut deps: Vec<usize> = Vec::new();
 
         let max = stack.left.len().max(stack.right.len());

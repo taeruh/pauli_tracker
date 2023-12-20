@@ -4,3 +4,5 @@ The `Frames
 
 This tracker when building up a circuit. It trackes all Pauli frames in a big matrix.
 """
+
+from pauli_tracker._pauli_tracker.frames import DependencyGraph
