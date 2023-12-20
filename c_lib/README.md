@@ -32,23 +32,22 @@ same is applies to the [imp_api] helper crate (see below).
 If the provided functionality is not enough, or if the used naming convention for
 explicit generics is too annoying, check out the next section.
 
-The [example_usage](./example_usage) directory contains a basic example using the
-library from C++. Enabling cross language LTO might be a little bit tricky (cf.
-[lto](#cross-language-lto)); we don't do it per default, compare the commented lines in
-the makefiles for the release builds).
+The [example_usage] directory contains a basic example using the library from C++.
+Enabling cross language LTO might be a little bit tricky (cf. [lto]); we don't do it per
+default, compare the commented lines in the makefiles for the release builds).
 
 ## Building your own library
 
 The core Rust library [pauli_tracker crate] is highly generic; this feature is however
 lost when creating a C API. Instead we have to implement more or less the same
-boilerplate for every explicit type. This is where the two helper crates in
-[builder](./builder) come in useful: [impl_api] can be used to automatically implement
-many of those boilerplate things automatically via macros. The [gen_bind] crate (a
-wrapper around [cbindgen]) can then be used to automatically generate the corresponding
-C header files (it can also generate C++, and Cython headers, but they might need manual
-adjustments). Check out their documentation (run `cargo doc --open` in the correspinding
-directories) and how we use them in [pauli_tracker_clib] (the wrapper around
-[pauli_tracker crate]) and [generate_bindings](./generate_bindings).
+boilerplate for every explicit type. This is where the two helper crates in [builder]
+come in useful: [impl_api] can be used to automatically implement many of those
+boilerplate things automatically via macros. The [gen_bind] crate (a wrapper around
+[cbindgen]) can then be used to automatically generate the corresponding C header files
+(it can also generate C++, and Cython headers, but they might need manual adjustments).
+Check out their documentation (run `cargo doc --open` in the correspinding directories)
+and how we use them in [pauli_tracker_clib] (the wrapper around [pauli_tracker crate])
+and [generate_bindings].
 
 You can use this to build your own library similar to how we do it. You don't have to
 copy what is already provided; just build an additional library and link to both. In
@@ -114,10 +113,14 @@ clang -flto= -fuse-ld=path/to/lld -L path/to/rust/lib -l"rust-lib" <other_stuff>
 ```
 Also, compare the commented lines in the makefiles for the release builds.
 
-[pauli_tracker crate]: ../pauli_tracker/
-[pauli_tracker_clib]: ./pauli_tracker_clib/
-[gen_bind]: ./builder/gen_bind
+[builder]: ./builder
 [cbindgen]: https://github.com/mozilla/cbindgen
+[example_usage]: ./example_usage
+[generate_bindings]: ./generate_bindings
+[gen_bind]: ./builder/gen_bind
 [imp_api]: ./builder/impl_api/
 [linker-plugin-lto]: https://doc.rust-lang.org/rustc/linker-plugin-lto.html
 [lld-linker]: https://lld.llvm.org/
+[lto]: #cross-language-lto
+[pauli_tracker_clib]: ./pauli_tracker_clib/
+[pauli_tracker crate]: ../pauli_tracker/

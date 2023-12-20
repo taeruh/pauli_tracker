@@ -5,10 +5,11 @@
 [![Codecov](https://codecov.io/github/taeruh/pauli_tracker/coverage.svg?branch=main)](https://codecov.io/gh/taeruh/pauli_tracker)
 [![Dependency status](https://deps.rs/repo/github/taeruh/pauli_tracker/status.svg)](https://deps.rs/repo/github/taeruh/pauli_tracker)
 
-This is the main library of the pauli\_tracker project, cf. the [main
-README](https://github.com/taeruh/pauli_tracker/README.md).
+This is the main library of the pauli\_tracker project, cf. the [main README].
 
 ## MSRV policy
 
 There is no guarantee for a long-time support of a specific Rust version. Bumping the
 MSRV increments the minor SemVer version.
+
+[main README]: https://github.com/taeruh/pauli_tracker/README.md

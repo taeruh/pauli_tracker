@@ -28,7 +28,7 @@ if __name__ == "__main__":
     # print(tracker.serialize.__doc__)
     # print(tracker.deserialize.__doc__)
 
-    # tracker.serialize("foo.json", "bincode")
+    tracker.serialize("output/foo.json", "bincode")
 
     tracker = Frames(3)
     tracker.track_y(1)
@@ -36,12 +36,12 @@ if __name__ == "__main__":
     a = tracker.get(0)
     print(tracker.into_py_array_recursive())  # bitvectors!
     print(a.sum_up([True] * 3).into_py_tuple())
-    # tracker.serialize("bar.json", "bincode")
-    # new_tracker = Frames.deserialize("bar.json", "bincode")
+    tracker.serialize("output/bar.json", "bincode")
+    new_tracker = Frames.deserialize("output/bar.json", "bincode")
     # print(new_tracker.into_py_array_recursive())
 
     dep_graph = tracker.create_dependency_graph([0, 1])
-    dep_graph.serialize("bar.json")
+    dep_graph.serialize("output/bar.json")
     dep_graph = dep_graph.into_py_graph()
     print(dep_graph)
     print(tracker.create_py_dependency_graph([0, 1]))
