@@ -9,7 +9,7 @@ name = "pauli_tracker"
 crate-type = ["cdylib"]
 
 [dependencies]
-pyo3 = { version = "0.19.0", features = ["multiple-pymethods"] }
+pyo3 = { version = "0.19.0", features = ["multiple-pymethods", "abi3-py38"] }
 # lib = { package = "pauli_tracker", version = "0.3.1", features = ["bitvec"] }
 lib = { package = "pauli_tracker", version = "0.3.2-alpha.1", features = ["serde", "bitvec"], git = "https://github.com/taeruh/pauli_tracker" }
 rustc-hash = "1.1.0"
