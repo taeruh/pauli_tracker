@@ -1,11 +1,11 @@
 # Changelog
+
 All notable changes to this project will be documented in this file, as best as
 possible.
 
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
+The format is based on [Keep a Changelog].
 
-We try to follow the [SemVer](https://semver.org/) rules, specifically 
-[Cargo guidelines](https://doc.rust-lang.org/cargo/reference/semver.html), as best as
+We try to follow the [SemVer] rules, specifically [Cargo guidelines], as best as
 possible.
 
 ## [Future major bump]
@@ -178,3 +178,7 @@ them, but hopefully the most important ones.
 [0.2.1]: https://github.com/taeruh/pauli_tracker/compare/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/taeruh/pauli_tracker/compare/v0.1.1...v0.2.0
 [0.1.1]: https://github.com/taeruh/pauli_tracker/compare/v0.1.0...v0.1.1
+
+[Cargo guidelines]: https://doc.rust-lang.org/cargo/reference/semver.html
+[Keep a Changelog]: https://keepachangelog.com/en/1.0.0/
+[SemVer]: https://semver.org/

@@ -20,14 +20,13 @@ steps.
 # Performance
 
 There are lots of possible scheduling paths, in the worst case the number of possible
-paths is given by the
-[ordered Bell number](https://en.wikipedia.org/wiki/Ordered_Bell_number). Therefore,
-if the task is to find the optimal path, under some metric, doing this by checking all
-possible paths might scale very, very badly. The [Sweep] iterator in [tree] tries to
-reduce that scaling by keeping track of its states to reduce the number of redundant
-calculations (this comes at the cost of memory, but this cost is scaling linearly), and
-a [skipping method](Sweep::skip_current) to skip states that are known to be not
-interesting. However, the scaling can still be very, very bad.
+paths is given by the [ordered Bell number]. Therefore, if the task is to find the
+optimal path, under some metric, doing this by checking all possible paths might scale
+very, very badly. The [Sweep] iterator in [tree] tries to reduce that scaling by keeping
+track of its states to reduce the number of redundant calculations (this comes at the
+cost of memory, but this cost is scaling linearly), and a [skipping method] to skip
+states that are known to be not interesting. However, the scaling can still be very,
+very bad.
 
 Saying that, if you have a high number of qubits, you might not want to use this module,
 but it might still be useful for testing purposes.
@@ -311,10 +310,11 @@ We don't provide explicit methods to generate the paths in parallel, however, it
 done by "simply" splitting the iterations. In case of the [Sweep] iterators, one can,
 for example, set different initial states per thread. One can also first calculate all
 paths with the [PathGenerator], split them up, and then instruct [Graph] with them. In
-the
-[scheduling-proptest](https://github.com/taeruh/pauli_tracker/blob/main/pauli_tracker/tests/roundtrips/scheduling.rs)
-is some messy code which does exactly that (the `split_instructions` function and the
-code after that function call).
+the [scheduling-proptest] is some messy code which does exactly that (the
+`split_instructions` function and the code after that function call).
 
-[graph state]: https://en.wikipedia.org/wiki/Graph_state
 [DependencyGraph]: crate::tracker::frames::dependency_graph::DependencyGraph
+[graph state]: https://en.wikipedia.org/wiki/Graph_state
+[ordered Bell number]: https://en.wikipedia.org/wiki/Ordered_Bell_number
+[scheduling-proptest]: https://github.com/taeruh/pauli_tracker/blob/main/pauli_tracker/tests/roundtrips/scheduling.rs
+[skipping method]: Sweep::skip_current

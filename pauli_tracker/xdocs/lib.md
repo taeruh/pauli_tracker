@@ -1,11 +1,11 @@
 A library to track Pauli frames through a Clifford circuit with measurements. A
 general brief introduction to Pauli tracking is given in the repository's
-[README](https://github.com/taeruh/pauli_tracker).
+[README].
 
 # Crate features
 
 * **serde**
-  Support [serde](https://docs.rs/serde/latest/serde/) the main data types.
+  Support [serde] the main data types.
 * **circuit**
   Includes the [circuit] module which contains tools to combine the Pauli tracking
   mechanism with a circuit simulator/description.
@@ -13,35 +13,26 @@ general brief introduction to Pauli tracking is given in the repository's
   Includes the [scheduler] module that can be used to analyze the process of
   initializing and measuring qubits in a graph state (or similar), restricted by a
   certain time ordering, which is for example, capture by a
-  [Frames](tracker::frames::Frames) Pauli tracker. If you purely want to do some Pauli
-  tracking this module is completely irrelevant. The module is currently rather
-  experimental.
+  [Frames] Pauli tracker. If you purely want to do some Pauli tracking this module is
+  completely irrelevant. The module is currently rather experimental.
 * **bitvec**
-  Implement [BooleanVector](boolean_vector::BooleanVector) for
-  [bitvec::vec::BitVec](https://docs.rs/bitvec/latest/bitvec/vec/struct.BitVec.html)
-  (extern crate). Note that we do not export any types of
-  [bitvec](https://docs.rs/bitvec/latest/bitvec/index.html); you need to depend on
-  it manually to use its types.
+  Implement [BooleanVector] for [bitvec::vec::BitVec] (extern crate). Note that we do
+  not export any types of [bitvec]; you need to depend on it manually to use its types.
 * **bit-vec**
-  Implement [BooleanVector](boolean_vector::BooleanVector) for [bit_vec::BitVec] (extern
-  crate). Note that we do not export any types of
-  [bit-vec](https://docs.rs/bit-vec/latest/bit_vec/index.html); you need to depend
-  on it manually to use its types.
+  Implement [BooleanVector] for [bit_vec::BitVec] (extern crate). Note that we do not
+  export any types of [bit-vec]; you need to depend on it manually to use its types.
 * **bitvec_simd**
-  Implement [BooleanVector](boolean_vector::BooleanVector) for wrapper
-  [SimdBitVec](boolean_vector::bitvec_simd::SimdBitVec) around
-  [bitvec_simd::BitVec](https://docs.rs/bitvec_simd/latest/bitvec_simd/type.BitVec.html)
+  Implement [BooleanVector] for wrapper [SimdBitVec] around [bitvec_simd::BitVec]
   (extern crate). Note that while this bit-vector implementation uses SIMD operations
-  (if available), it also uses the crate
-  [smallvec](https://docs.rs/smallvec/1.10.0/smallvec/) for its inner storage. That
-  may be not memory efficient for the Pauli tracking since the storage is fairly big.
+  (if available), it also uses the crate [smallvec] for its inner storage. That may be
+  not memory efficient for the Pauli tracking since the storage is fairly big.
 
 # Examples
 
 ### A first idea
 
 This examples gives a first introduction to the tracking mechanism. The example
-requires the [rand](https://crates.io/crates/rand) crate.
+requires the [rand] crate.
 ```rust
 # #[cfg_attr(coverage_nightly, coverage(off))]
 # // "circuit" instead of "rand" because we do not export the "rand" feature, since we
@@ -160,9 +151,8 @@ assert_eq!(tracker.as_ref().0, conditional_summed_frames, "{measurements:?}");
 ```
 
 ### The dependency graph
-This example introduces the
-[create_dependency_graph](tracker::frames::dependency_graph::create_dependency_graph)
-function that can be used to analyse measurement dependencies.
+This example introduces the [create_dependency_graph] function that can be used to
+analyse measurement dependencies.
 ```rust
 # #[cfg_attr(coverage_nightly, coverage(off))]
 # fn main() {
@@ -390,7 +380,7 @@ can do this directly in the Pauli tracker: Flipping the sign of the measurement 
 depending on the previous measurements, is equivalent to completely removing the Z
 corrections from the teleported qubit and instead putting them onto the new qubit as Z
 corrections, since the teleportation introduces a Z correction. This can be achieved
-with [Tracker::move_z_to_z](tracker::Tracker::move_z_to_z):
+with [Tracker::move_z_to_z]:
 ```rust
 # #[cfg_attr(coverage_nightly, coverage(off))]
 # #[cfg(all(feature = "circuit", feature = "bit-vec"))]
@@ -496,5 +486,18 @@ assert_eq!(
 # fn main() {}
 ```
 
+[bitvec]: https://docs.rs/bitvec/latest/bitvec/index.html
+[bitvec_simd::BitVec]: https://docs.rs/bitvec_simd/latest/bitvec_simd/type.BitVec.html
+[bitvec::vec::BitVec]: https://docs.rs/bitvec/latest/bitvec/vec/struct.BitVec.html
 [bit_vec::BitVec]: https://docs.rs/bit-vec/latest/bit_vec/struct.BitVec.html
+[bit-vec]: https://docs.rs/bit-vec/latest/bit_vec/index.html
+[BooleanVector]: boolean_vector::BooleanVector
+[create_dependency_graph]: tracker::frames::dependency_graph::create_dependency_graph
+[Frames]: tracker::frames::Frames
 [paper]: https://arxiv.org/abs/2209.07345v2
+[rand]: https://crates.io/crates/rand
+[README]: https://github.com/taeruh/pauli_tracker
+[serde]: https://docs.rs/serde/latest/serde/
+[SimdBitVec]: boolean_vector::bitvec_simd::SimdBitVec
+[smallvec]: https://docs.rs/smallvec/1.10.0/smallvec/
+[Tracker::move_z_to_z]: tracker::Tracker::move_z_to_z

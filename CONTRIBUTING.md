@@ -1,14 +1,14 @@
 Contributing
-======================
+============
 
 Pull requests (PRs)
----------------------
+-------------------
 
 - Create draft pull requests and change the status to ready when the PR is ready.
 - PRs must should certain automated CI checks. You can use the local xtask crate to check
-  them before commiting (`xtask ci --help`, cf. [xtask-README](./xtask/README.md)),
-  however, note that the local coverage report might be different to the remote CI
-  coverage report (don't know how to fix that).
+  them before commiting (`xtask ci --help`, cf. [xtask-README]), however, note that the
+  local coverage report might be different to the remote CI coverage report (don't know
+  how to fix that).
 - Try to include tests.
 - Use a [feature branch][git-feature-branch] instead of the master branch.
 
@@ -17,7 +17,7 @@ Pull requests (PRs)
 Follow the [conventional commits guidelines][conventional_commits] to make the git logs
 more valuable. The general structure is:
 ```
-<type>([optional scope]): <short-description>
+[optional type([optional scope]): ]<short-description>
 
 [optional body]
 
@@ -68,7 +68,8 @@ implementing it is usually just some simple boilerplate code).
 8. Add an entry to [TODO-list] in the Gate implementation section (for the Python and C
    wrappers).
 
+[conjugation-rules]: ./docs/conjugation_rules.pdf
 [conventional_commits]: https://www.conventionalcommits.org
 [git-feature-branch]: https://www.atlassian.com/git/tutorials/comparing-workflows
-[conjugation-rules]: ./docs/conjugation_rules.pdf
 [TODO-list]: ./TODO.md
+[xtask-README]: ./xtask/README.md
