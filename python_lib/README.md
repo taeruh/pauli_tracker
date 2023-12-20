@@ -25,3 +25,6 @@ examples](https://docs.rs/pauli_tracker/latest/pauli_tracker/#examples).
 
 Trying to build a Rust-Python package depending on this crate will probably not work
 because of [#1444](https://github.com/PyO3/pyo3/issues/1444).
+
+The API of the underling Rust crate is not stable (but the Python Package follows
+SemVer).

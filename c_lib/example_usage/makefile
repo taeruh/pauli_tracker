@@ -22,7 +22,7 @@ debug_deps := $(debug_objs:.o=.d)
 
 
 pauli_tracker := pauli_tracker_clib
-pauli_tracker_directory := ../output
+pauli_tracker_directory := ../dist
 
 pauli_tracker_static := -Wl,-Bstatic -l$(pauli_tracker) -Wl,-Bdynamic
 pauli_tracker_dynamic := -l$(pauli_tracker) -Wl,-rpath=$(pauli_tracker_directory)

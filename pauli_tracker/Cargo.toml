@@ -18,6 +18,8 @@ categories = ["simulation"]
 
 readme = "./README.md"
 
+exclude = ["Cargo_nightly.toml", "todo.txt", "xtask"]
+
 [lib]
 crate-type = ["lib"]
 

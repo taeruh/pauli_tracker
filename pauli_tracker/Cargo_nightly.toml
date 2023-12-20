@@ -22,11 +22,14 @@ rust-version = "1.65.0"
 license = "MIT OR Apache-2.0"
 
 repository = "https://github.com/taeruh/pauli_tracker"
+
 description = "A library to track Pauli gates through a Clifford circuit."
 keywords = ["quantum", "clifford", "pauli", "mbqc"]
 categories = ["simulation"]
 
 readme = "./README.md"
+
+exclude = ["Cargo_nightly.toml", "todo.txt", "xtask"]
 
 [lib]
 crate-type = ["lib"]

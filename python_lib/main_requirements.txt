@@ -1,0 +1,9 @@
+Package                  Version
+------------------------ -------
+maturin                  1.4.0
+pauli_tracker            0.1.0
+pip                      23.3.2
+setuptools               69.0.2
+sphinx-autodoc-typehints 1.25.2
+sphinx-rtd-theme         2.0.0
+twine                    4.0.2

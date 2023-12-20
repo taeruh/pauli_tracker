@@ -1,18 +1,18 @@
 # if you cannot run makefiles, you need to do the equivalent of the following:
-# mkdir output
+# mkdir dist
 # # for the library
 # cd pauli_tracker_clib
 # cargo build --release
 # cd ..
-# cp pauli_tracker_clib/target/release/libpauli_tracker_clib.so output/ # for dynamic
-# cp pauli_tracker_clib/target/release/libpauli_tracker_clib.a output/  # for static
+# cp pauli_tracker_clib/target/release/libpauli_tracker_clib.so dist/ # for dynamic
+# cp pauli_tracker_clib/target/release/libpauli_tracker_clib.a dist/  # for static
 # # for the header
 # cd generate_bindings
 # cargo run
 # cd ..
-# cp generate_bindings/output/pauli_tracker.h output/
+# cp generate_bindings/dist/pauli_tracker.h output/
 
-output := output
+output := dist
 lib = libpauli_tracker_clib
 lib_path = pauli_tracker_clib/target/release/$(lib)
 libs = $(lib_path).a $(lib_path).so
@@ -48,7 +48,7 @@ $(header_path): FORCE
 clean:
 	rm -rf $(output)
 	(cd pauli_tracker_clib && cargo clean)
-	(cd generate_bindings && cargo clean && rm -rf output)
+	(cd generate_bindings && cargo clean && rm -rf $(output))
 
 
 FORCE:

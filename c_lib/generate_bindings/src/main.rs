@@ -11,7 +11,7 @@ fn main() {
         "pauli_tracker_clib",
         GeneratorConfig::new()
             .crate_dir("../pauli_tracker_clib")
-            .output_dir("output")
+            .output_dir("dist")
             .header_name("pauli_tracker"),
         // cf. comments in pauli_tracker_lib/src/boolean_vector.rs
         // .includes(["pauli_tracker", "bitvec"]),

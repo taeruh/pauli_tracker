@@ -1,5 +1,5 @@
-target
 output
+target
 dist
 .venv
 __pycache__
