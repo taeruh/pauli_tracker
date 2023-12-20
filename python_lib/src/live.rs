@@ -59,7 +59,7 @@ macro_rules! impl_live {
             }
         }
 
-        crate::impl_helper::impl_passes!(Live);
+        crate::impl_helper::shared_impl!(Live);
     };
 }
 

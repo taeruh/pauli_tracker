@@ -59,7 +59,7 @@ macro_rules! impl_frames {
             }
         }
 
-        crate::impl_helper::impl_passes!(Frames);
+        crate::impl_helper::shared_impl!(Frames);
     };
 }
 

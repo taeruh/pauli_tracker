@@ -25,6 +25,11 @@ if __name__ == "__main__":
     a = tracker.get(1)
     print(a.tableau_encoding())
 
+    # print(tracker.serialize.__doc__)
+    # print(tracker.deserialize.__doc__)
+
+    # tracker.serialize("foo.json", "bincode")
+
     tracker = Frames(3)
     tracker.track_y(0)
     tracker.track_y(1)
@@ -32,3 +37,7 @@ if __name__ == "__main__":
     a = tracker.get(0)
     print(tracker.into_py_array_recursive())  # bitvectors!
     print(a.sum_up([True] * 3).into_py_tuple())
+    # tracker.serialize("bar.json", "bincode")
+    # new_tracker = Frames.deserialize("bar.json", "bincode")
+    # print(new_tracker.into_py_array_recursive())
+
