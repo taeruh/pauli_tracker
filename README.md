@@ -6,7 +6,8 @@
 [![Dependency status](https://deps.rs/repo/github/taeruh/pauli_tracker/status.svg)](https://deps.rs/repo/github/taeruh/pauli_tracker)
 (Rust crate)
 
-A library to track Pauli frames through a Clifford circuit with measurements.
+A library to track Pauli frames, i.e., Pauli operators, through a Clifford circuit with
+measurements.
 
 ## What is Pauli tracking
 
@@ -15,7 +16,7 @@ that, in a circuit which consists only of Clifford operators and measurements, t
 gates can be "pushed" to the end of the circuit, just before the measurements. The
 benefit of this is that the Pauli gates don't have to be executed on a quantum computer
 and can instead be accounted for by post-processing of the measurement outcomes. The
-whole process is very similar to stabilzer simulations.
+whole process is very similar to stabilizer simulations.
 
 For more details about the Pauli and Clifford groups and Pauli tracking, please look
 into the literature, e.g.,:
@@ -48,7 +49,7 @@ a pull request if you need it.
 
 For example code, please look into the [crate
 documentation](https://docs.rs/pauli_tracker/#examples) and maybe also at the [Python
-documenation](to_be_filled_out).
+documentation](to_be_filled_out).
 
 ## Related projects
 
