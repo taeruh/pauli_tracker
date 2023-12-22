@@ -71,7 +71,6 @@ impl Live {
 }
 
 pub fn add_module(py: Python<'_>, parent_module: &Module) -> PyResult<()> {
-    let _ = parent_module;
     let module = Module::new(py, "vec", parent_module.path.clone())?;
 
     module.add_class::<Live>()?;

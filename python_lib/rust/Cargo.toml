@@ -1,5 +1,5 @@
 [package]
-name = "pauli_tracker_py_lib"
+name = "_lib"
 version = "0.1.0"
 authors = ["Jannis Ruh <ruh.j81@gmail.com>"]
 
@@ -19,7 +19,7 @@ readme = "../README.md"
 exclude = ["makefile", "test.py", "xtask"]
 
 [lib]
-name = "pauli_tracker"
+name = "_lib"
 crate-type = ["cdylib"]
 
 [dependencies]
