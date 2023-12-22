@@ -5,7 +5,7 @@ This module is a very simplified version of the `original pauli module
 <https://docs.rs/pauli_tracker/latest/pauli_tracker/pauli/index.html>`_ at the moment.
 """
 
-from pauli_tracker._pauli_tracker.pauli import PauliDense, PauliTuple, PauliStack
+from pauli_tracker._lib.pauli import PauliDense, PauliTuple, PauliStack
 
 
 class TableauEncoding:

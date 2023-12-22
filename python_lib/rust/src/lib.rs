@@ -25,7 +25,6 @@ impl<'m> Module<'m> {
         py.import("sys")?
             .getattr("modules")?
             .set_item(submodule.path, submodule.pymodule)?;
-        // submodule.pymodule.setattr("__name__", "live")?;
         Ok(())
     }
 }
@@ -44,10 +43,10 @@ mod live;
 mod pauli;
 
 #[pyo3::pymodule]
-fn _pauli_tracker(py: Python, module: &PyModule) -> PyResult<()> {
+fn _lib(py: Python, module: &PyModule) -> PyResult<()> {
     let module = Module {
         pymodule: module,
-        path: "pauli_tracker._pauli_tracker".to_string(),
+        path: "pauli_tracker._lib".to_string(),
     };
 
     live::add_module(py, &module)?;

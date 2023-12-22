@@ -13,6 +13,7 @@ cmd [ \
     --interpreter ${py}/python \
     --compatibility manylinux_2_28_x86_64 \
     --release \
+    --out dist \
     --sdist \
   ; done" \
 ]

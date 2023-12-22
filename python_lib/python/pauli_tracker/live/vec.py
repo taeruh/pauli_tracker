@@ -5,4 +5,4 @@
 <https://docs.rs/pauli_tracker/latest/pauli_tracker/collection/struct.NaiveVector.html>`_>
 """
 
-from pauli_tracker._pauli_tracker.live.vec import Live
+from pauli_tracker._lib.live.vec import Live

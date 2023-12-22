@@ -14,7 +14,7 @@ description = "PyO3 wrapper for the pauli_tracker crate."
 keywords = ["quantum", "clifford", "pauli", "mbqc"]
 categories = ["simulation"]
 
-readme = "./README.md"
+readme = "../README.md"
 
 exclude = ["makefile", "test.py", "xtask"]
 
