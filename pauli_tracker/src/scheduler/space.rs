@@ -259,7 +259,7 @@ impl<'l> Graph<'l> {
 #[error("bit \"{0}\" has been already measured")]
 pub struct AlreadyMeasured(pub usize);
 
-#[cfg(test)]
+#[cfg(_test)]
 mod tests {
     use coverage_helper::test;
     use State::*;

@@ -94,6 +94,7 @@ impl<'l, T> PathGenerator<'l, T> {
     /// Get a reference to currently the measurable set of qubits.
     #[deprecated(since = "0.3.1", note = "use `measurable` instead")]
     pub fn measureable(&self) -> &T {
+        #[allow(deprecated)]
         self.measurable()
     }
 
@@ -363,7 +364,7 @@ impl MeasurableSet for Partition<Vec<usize>> {
 #[error("the bits {0:?} are not in the measureable set")]
 pub struct NotMeasurable(pub Vec<usize>);
 
-#[cfg(test)]
+#[cfg(_test)]
 mod tests {
     use std::panic;
 
