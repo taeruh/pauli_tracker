@@ -1,7 +1,8 @@
-Analyse scheduling paths on a [graph state] (or similar) allowed by a [DependencyGraph].
+**This module is deprecated and will no longer be maintained (except from making it
+compile). With the next major version bump it will be removed. Use the `scheduler`
+module from the mbqc_scheduling library in the [mbqc_scheduling project] instead.**
 
-**This module is currently rather experimental. It may be put into a separate crate in
-the future.**
+Analyse scheduling paths on a [graph state] (or similar) allowed by a [DependencyGraph].
 
 *The module is rather independent of of Pauli tracking. In general, one just needs a
 time ordering on the qubits, like a [DependencyGraph] (or have no time ordering at
@@ -315,6 +316,7 @@ the [scheduling-proptest] is some messy code which does exactly that (the
 
 [DependencyGraph]: crate::tracker::frames::dependency_graph::DependencyGraph
 [graph state]: https://en.wikipedia.org/wiki/Graph_state
+[mbqc_scheduling project]: https://github.com/taeruh/mbqc_scheduling/tree/main/mbqc_scheduling
 [ordered Bell number]: https://en.wikipedia.org/wiki/Ordered_Bell_number
 [scheduling-proptest]: https://github.com/taeruh/pauli_tracker/blob/main/pauli_tracker/tests/roundtrips/scheduling.rs
 [skipping method]: Sweep::skip_current

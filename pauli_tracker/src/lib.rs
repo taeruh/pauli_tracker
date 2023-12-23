@@ -73,6 +73,12 @@ pub(crate) mod clifford_helper;
 
 pub mod collection;
 
+#[deprecated(
+    since = "0.3.2",
+    note = "use the `scheduler` module from the mbqc_scheduling library in the \
+    [mbqc_scheduling project]\
+    (https://github.com/taeruh/mbqc_scheduling/tree/main/mbqc_scheduling)"
+)]
 #[cfg(feature = "scheduler")]
 #[cfg_attr(docsrs, doc(cfg(feature = "scheduler")))]
 pub mod scheduler;
@@ -108,24 +114,12 @@ mod tests {
         normal::<pauli::PauliStack<()>>();
         normal::<pauli::PauliTuple>();
         normal::<pauli::stack::BitCharError>();
-        normal::<scheduler::Scheduler<()>>();
-        normal::<scheduler::space::AlreadyMeasured>();
-        normal::<scheduler::space::Graph>();
-        normal::<scheduler::space::GraphBuffer>();
-        normal::<scheduler::time::DependencyBuffer>();
-        normal::<scheduler::time::NotMeasurable>();
-        normal::<scheduler::time::PathGenerator<()>>();
-        normal::<scheduler::tree::EmptyStack>();
-        normal::<scheduler::tree::Sweep<()>>();
         normal::<tracker::MissingBit>();
         normal::<tracker::frames::Frames<()>>();
         normal::<tracker::frames::OverwriteStack<()>>();
         normal::<tracker::live::Live<()>>();
         // Enums
         normal::<pauli::PauliEnum>();
-        normal::<scheduler::InstructionError>();
-        normal::<scheduler::space::State>();
-        normal::<scheduler::tree::Step<(), ()>>();
         normal::<tracker::frames::MoveError<()>>();
     }
 }

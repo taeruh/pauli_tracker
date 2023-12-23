@@ -6,7 +6,8 @@ __pycache__
 python_lib/python/**/*.so
 _build
 _autosummary
-Cargo.lock
+pauli_tracker/Cargo.lock
+c_lib/builder/*/Cargo.lock
 
 # personal development config and caches
 .tmux-session

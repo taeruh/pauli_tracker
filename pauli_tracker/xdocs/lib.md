@@ -12,9 +12,9 @@ general brief introduction to Pauli tracking is given in the repository's
 * **scheduler**
   Includes the [scheduler] module that can be used to analyze the process of
   initializing and measuring qubits in a graph state (or similar), restricted by a
-  certain time ordering, which is for example, capture by a
-  [Frames] Pauli tracker. If you purely want to do some Pauli tracking this module is
-  completely irrelevant. The module is currently rather experimental.
+  certain time ordering, which is for example, capture by a [Frames] Pauli tracker. If
+  you purely want to do some Pauli tracking this module is completely irrelevant. The
+  module is currently rather experimental.
 * **bitvec**
   Implement [BooleanVector] for [bitvec::vec::BitVec] (extern crate). Note that we do
   not export any types of [bitvec]; you need to depend on it manually to use its types.

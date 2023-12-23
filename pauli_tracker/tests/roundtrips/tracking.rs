@@ -80,7 +80,7 @@ proptest! {
     }
 }
 
-// Given some operations, we perform the pauli tracking with Frames and create the
+// given some operations, we perform the pauli tracking with Frames and create the
 // dependency graph. This graph is checked whether it doesn't promise something wrong
 // and whether it is optimal. Then we also track Paulis via LiveVector and check
 // whether the results are compatible with results from Frames
