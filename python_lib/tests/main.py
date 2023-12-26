@@ -41,8 +41,7 @@ if __name__ == "__main__":
     # print(new_tracker.into_py_array_recursive())
 
     dep_graph = tracker.create_dependency_graph([0, 1])
-    dep_graph.serialize("output/bar.json")
+    # dep_graph.serialize("output/bar.json")
     dep_graph = dep_graph.into_py_graph()
     print(dep_graph)
     print(tracker.create_py_dependency_graph([0, 1]))
-

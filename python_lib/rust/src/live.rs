@@ -59,8 +59,8 @@ macro_rules! impl_live {
             }
         }
 
-        crate::impl_helper::tracker_impl!(Live);
-        crate::impl_helper::serde!(Live);
+        crate::impl_helper::tracker::tracker_impl!(Live);
+        crate::impl_helper::serialization::serde!(Live);
     };
 }
 

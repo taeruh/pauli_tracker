@@ -27,7 +27,7 @@ impl DependencyGraph {
     }
 }
 
-impl_helper::serde!(DependencyGraph);
+impl_helper::serialization::serde!(DependencyGraph);
 
 // Tracker and Init must be in scope for the macro to work.
 macro_rules! impl_frames {
@@ -122,8 +122,8 @@ macro_rules! impl_frames {
             }
         }
 
-        crate::impl_helper::tracker_impl!(Frames);
-        crate::impl_helper::serde!(Frames);
+        crate::impl_helper::tracker::tracker_impl!(Frames);
+        crate::impl_helper::serialization::serde!(Frames);
     };
 }
 
