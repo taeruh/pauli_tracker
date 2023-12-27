@@ -1,7 +1,10 @@
 use std::{
     error,
     fmt,
-    fs::File,
+    fs::{
+        self,
+        File,
+    },
     io::{
         self,
         Read,
@@ -59,6 +62,9 @@ pub trait Serde {
         path: P,
         value: &T,
     ) -> Result<(), DeserializeFileError<Self::Error>> {
+        if let Some(parent) = path.as_ref().parent() {
+            fs::create_dir_all(parent).map_err(DeserializeFileError::File)?;
+        }
         let file = File::create(path).map_err(DeserializeFileError::File)?;
         self.write(file, value).map_err(DeserializeFileError::Deserialize)
     }
