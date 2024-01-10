@@ -273,11 +273,7 @@ mod tests {
                 for (input, check) in (0u8..).zip(checks) {
                     pauli.set_storage(input);
                     (action.0)(&mut pauli, flag);
-                    assert_eq!(
-                        pauli.storage, check,
-                        "{}, {}, {}",
-                        action.1, input, flag
-                    );
+                    assert_eq!(pauli.storage, check, "{}, {}, {}", action.1, input, flag);
                 }
             }
         }

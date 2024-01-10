@@ -147,9 +147,7 @@ impl<T: BooleanVector> PauliStack<T> {
                     None => unreachable!(),
                 },
             )),
-            Ordering::Equal => {
-                Some(P::new_product(self.left.pop()?, self.right.pop()?))
-            },
+            Ordering::Equal => Some(P::new_product(self.left.pop()?, self.right.pop()?)),
             Ordering::Greater => Some(P::new_product(
                 match self.left.pop() {
                     Some(v) => v,

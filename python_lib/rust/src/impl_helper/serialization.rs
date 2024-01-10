@@ -58,9 +58,7 @@ macro_rules! serde {
             ) -> pyo3::PyResult<Self> {
                 let format =
                     utils::serialization::Dynamic::try_from(serialization_format)
-                        .map_err(
-                            crate::impl_helper::serialization::deserialize_error,
-                        )?;
+                        .map_err(crate::impl_helper::serialization::deserialize_error)?;
                 format
                     .read_file(file_path)
                     .map(Self)

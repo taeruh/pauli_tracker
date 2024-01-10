@@ -380,10 +380,7 @@ where
 {
     /// Measure all qubits and put the according stack of Paulis into `storage`, i.e.,
     /// do [Frames::measure_and_store] for all qubits.
-    pub fn measure_and_store_all(
-        &mut self,
-        storage: &mut impl Base<TB = PauliStack<B>>,
-    ) {
+    pub fn measure_and_store_all(&mut self, storage: &mut impl Base<TB = PauliStack<B>>) {
         for (bit, pauli) in
             // mem::replace(&mut self.storage, S::init(0, PauliStack::default()))
             mem::take(&mut self.storage).into_iter()
@@ -480,9 +477,8 @@ mod tests {
                 }
                 (action)(&mut tracker, 0, 1);
                 for (input, check) in (0u8..).zip(result.1) {
-                    let output = utils::double_output(
-                        tracker.pop_frame::<PauliDense>().unwrap(),
-                    );
+                    let output =
+                        utils::double_output(tracker.pop_frame::<PauliDense>().unwrap());
                     assert_eq!(output, check, "{}, {}", result.0, input);
                 }
             }

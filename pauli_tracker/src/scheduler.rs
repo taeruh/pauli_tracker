@@ -106,11 +106,7 @@ impl FocusIterator for Scheduler<'_, Partitioner> {
     }
 
     fn at_leaf(&self) -> Option<Self::LeafItem> {
-        self.time
-            .measurable()
-            .set()
-            .is_empty()
-            .then_some(self.space.max_memory())
+        self.time.measurable().set().is_empty().then_some(self.space.max_memory())
     }
 }
 

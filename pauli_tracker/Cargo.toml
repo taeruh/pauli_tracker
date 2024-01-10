@@ -27,7 +27,13 @@ crate-type = ["lib"]
 scheduler = ["dep:rustc-hash"]
 circuit = ["dep:rand"]
 experimental = []
-serde = ["dep:serde", "hashbrown/serde", "bitvec?/serde", "bitvec_simd?/use_serde", "bit-vec?/serde"]
+serde = [
+  "dep:serde",
+  "hashbrown/serde",
+  "bitvec?/serde",
+  "bitvec_simd?/use_serde",
+  "bit-vec?/serde",
+]
 
 # about the specified dependency version:
 # - we use the newest major version if possible: if we expose an item from a dependency,

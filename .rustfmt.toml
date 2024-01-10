@@ -1,9 +1,9 @@
 edition = "2021"
 newline_style = "Native"
 
-max_width = 88
+max_width = 90
 use_small_heuristics = "Max"
-chain_width = 67
+chain_width = 74
 fn_call_width = 67
 struct_lit_width = 32
 struct_variant_width = 32

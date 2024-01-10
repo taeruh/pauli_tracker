@@ -342,8 +342,7 @@ mod tests {
             T: Tracker,
             R: Fn(SingleAction<T>, SingleResults),
         {
-            for (action, result_generator) in actions.into_iter().zip(SINGLE_GENERATORS)
-            {
+            for (action, result_generator) in actions.into_iter().zip(SINGLE_GENERATORS) {
                 let mut results = [0; 4];
                 for (i, r) in results.iter_mut().enumerate() {
                     *r = (if (i & 2) > 0 { result_generator.1[0] } else { 0 })
@@ -359,8 +358,7 @@ mod tests {
             T: Tracker,
             R: Fn(DoubleAction<T>, DoubleResults),
         {
-            for (action, result_generator) in actions.into_iter().zip(DOUBLE_GENERATORS)
-            {
+            for (action, result_generator) in actions.into_iter().zip(DOUBLE_GENERATORS) {
                 let mut results = [(0, 0); 16];
                 for (i, r) in (0..).zip(results.iter_mut()) {
                     let a = if (i & 8) > 0 { result_generator.1[0] } else { (0, 0) };
@@ -388,9 +386,7 @@ mod tests {
             vec![
                 (
                     0,
-                    PauliDense::try_from((input & FIRST) >> FIRST_SHIFT)
-                        .unwrap()
-                        .into(),
+                    PauliDense::try_from((input & FIRST) >> FIRST_SHIFT).unwrap().into(),
                 ),
                 (1, PauliDense::try_from(input & SECOND).unwrap().into()),
             ]

@@ -45,10 +45,7 @@ use crate::slice_extension::GetTwoMutSlice;
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[cfg_attr(feature = "serde", serde(from = "_MappedVector<T>"))]
 #[cfg_attr(feature = "serde", serde(into = "_MappedVector<T>"))]
-#[cfg_attr(
-    feature = "serde",
-    serde(bound(serialize = "T: Clone + Serialize, S: Clone"))
-)]
+#[cfg_attr(feature = "serde", serde(bound(serialize = "T: Clone + Serialize, S: Clone")))]
 #[cfg_attr(
     feature = "serde",
     serde(bound(deserialize = "T: for<'a> Deserialize<'a>, S: Default + BuildHasher"))

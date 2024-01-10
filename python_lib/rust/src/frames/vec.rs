@@ -45,13 +45,7 @@ impl Frames {
     ///     list[PauliStack]:
     #[allow(clippy::wrong_self_convention)]
     fn into_py_array(&self) -> Vec<PauliStack> {
-        self.0
-            .clone()
-            .into_storage()
-            .0
-            .into_iter()
-            .map(PauliStack)
-            .collect()
+        self.0.clone().into_storage().0.into_iter().map(PauliStack).collect()
     }
 
     #[doc = doc::transform!()]

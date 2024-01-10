@@ -38,15 +38,15 @@ where
         match self.iter.next() {
             Some(subset) => {
                 let mut subset = subset.into_iter().peekable();
-                Some(self.set.clone().into_iter().enumerate().partition_map(
-                    |(i, e)| match subset.peek() {
+                Some(self.set.clone().into_iter().enumerate().partition_map(|(i, e)| {
+                    match subset.peek() {
                         Some(&p) if p == i => {
                             subset.next();
                             Either::Left(e)
                         },
                         _ => Either::Right(e),
-                    },
-                ))
+                    }
+                }))
             },
             None => None,
         }

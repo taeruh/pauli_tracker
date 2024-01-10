@@ -145,11 +145,7 @@ impl<'l, T: MeasurableSet> PathGenerator<'l, T> {
             }
         }
 
-        fn resolve(
-            bit: usize,
-            rest: &[Vec<(usize, Vec<usize>)>],
-            look: &mut Dependents,
-        ) {
+        fn resolve(bit: usize, rest: &[Vec<(usize, Vec<usize>)>], look: &mut Dependents) {
             let mut dependents = Vec::new();
             for layer in rest {
                 for (dep, deps) in layer {
@@ -384,9 +380,7 @@ mod tests {
     }
 
     #[cfg_attr(coverage_nightly, coverage(off))]
-    fn get_all_paths(
-        generator: PathGenerator<'_, Partitioner>,
-    ) -> Vec<Vec<Vec<usize>>> {
+    fn get_all_paths(generator: PathGenerator<'_, Partitioner>) -> Vec<Vec<Vec<usize>>> {
         let mut results = Vec::new();
         let mut path = Vec::new();
         for step in generator {
@@ -467,11 +461,7 @@ mod tests {
             .is_err()
         );
 
-        let map = map
-            .iter()
-            .enumerate()
-            .map(|(i, &e)| (e, i))
-            .collect::<HashMap<_, _>>();
+        let map = map.iter().enumerate().map(|(i, &e)| (e, i)).collect::<HashMap<_, _>>();
 
         let mut time = PathGenerator::<Partitioner>::from_dependency_graph(
             dependency_graph,

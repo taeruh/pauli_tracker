@@ -34,8 +34,8 @@ macro_rules! double_pass {
 macro_rules! tracker_impl {
     ($type:ty) => {
         crate::impl_helper::tracker::single_pass!(
-            $type, track_x, track_y, track_z, id, x, y, z, s, sdg, sz, szdg, hxy, h,
-            sh, hs, shs, sx, sxdg, hyz,
+            $type, track_x, track_y, track_z, id, x, y, z, s, sdg, sz, szdg, hxy, h, sh,
+            hs, shs, sx, sxdg, hyz,
         );
         crate::impl_helper::tracker::double_pass!($type, cz, swap, iswap, iswapdg,);
         crate::impl_helper::tracker::double_pass_named_bits!(
