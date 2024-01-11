@@ -4,17 +4,4 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-# # If PR gets accepted, change this to `cbindgen = "0.25.0"`, put the following in here
-# #
-# # [patch.crates-io]
-# # cbindgen = { git = "https://github.com/taeruh/cbindgen.git", branch = "support_unwind_abi" }
-# #
-# # and put the following in docs/c.md:
-# #
-# # **Note**: We are currently patching [cbindgen] so that it supports "C-unwind" (cf.
-# # `Cargo.toml` file; you need to include this patch in your own `Cargo.toml` too).
-# #
-# # When version 0.25.0 of cbindgen is released, remove the patch and the comment in
-# # docs/c.md
-# cbindgen = { git = "https://github.com/taeruh/cbindgen.git", branch = "support_unwind_abi" }
-cbindgen = "0.24.5"
+cbindgen = "0.26.0"
