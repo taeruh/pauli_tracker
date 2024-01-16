@@ -7,7 +7,7 @@ rust_source := $(shell find rust/src -type f -name "*") \
 python_source := $(shell find python/src -type f -name "*.py" -o -name "*.pyi")
 source := $(rust_source) $(python_source)
 
-all: dist/.stamp
+package: dist/.stamp
 
 dist/.stamp: target/.image.stamp pyproject.toml $(source) | target/
 	sudo chown -R "0:0" target
@@ -19,6 +19,12 @@ dist/.stamp: target/.image.stamp pyproject.toml $(source) | target/
 target/.image.stamp: Dockerfile | target/
 	sudo docker build --network=host -t manylinux .
 	touch $@
+
+update_docs:
+	maturin develop
+	(cd docs; rm -rf _build _autosummary; make html)
+	cp -R docs/_build/html/. ../docs/python_lib
+	rm -r ../docs/python_lib/_sources
 
 clean:
 	rm target/.image.stamp dist -rf

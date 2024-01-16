@@ -16,6 +16,12 @@ because of [#1444], you probably want to clone this repo and extend it.
 
 Please look at this [Python example] and also at these [Rust examples]. 
 
+## Building
+
+The package has to be build with [maturin]. The `make package` commands builds it through
+a docker container such that it is compatible with manylinux\_2\_28\_x86\_64 for Python >=
+3.8.
+
 ## Caution
 
 Trying to build a Rust-Python package depending on this the underlying Rust create here
