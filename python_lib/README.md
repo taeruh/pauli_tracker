@@ -43,7 +43,7 @@ SemVer).
 
 [crate's documentation]: https://docs.rs/pauli_tracker/latest/pauli_tracker/
 [contributing]: https://github.com/taeruh/pauli_tracker/blob/main/CONTRIBUTING.md
-[latest build]: https://github.com/taeruh/pauli_tracker/actions/runs/7538212166
+[latest build]: https://github.com/taeruh/pauli_tracker/actions/runs/7548055481
 [manilinux]: https://github.com/pypa/manylinux
 [maturin]: https://github.com/PyO3/maturin
 [pauli_tracker crate]: https://github.com/taeruh/pauli_tracker/tree/main/pauli_tracker
