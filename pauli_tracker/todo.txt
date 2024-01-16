@@ -1,16 +1,16 @@
-- change x<->10,z<->01 to x<->01,z<->10 (weyl) (and with that left<->right and all
+- maybe change x<->10,z<->01 to x<->01,z<->10 (weyl) (and with that left<->right and all
   related stuff)
 
-- some focus functions might not need &mut self but only &self
 - replace xor_inplace with BitXorAssign, and similar
 - universal bit ops, e.g., add "or" and "not"
 
-- remove x,y,z in PauliStack impls
+- maybe remove x,y,z in PauliStack impls
 
 - remove deprecated stuff
 
 ---------- release new major
 
+- inline some stuff
 
 - an insert stack method for Frames which adopts its length to frames_num, or vice versa
   if the stack's length is longer (resize all other stacks)

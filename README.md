@@ -20,9 +20,9 @@ whole process is very similar to stabilizer simulations.
 
 For more details about the Pauli and Clifford groups and Pauli tracking, please look
 into the literature, e.g.,:
+  - standard quantum textbooks
   - [Software Pauli Tracking for Quantum Computation] 
   - [Stim: a fast stabilizer circuit simulator]
-  - standard quantum textbooks
   - ...
 
 [Conjugation rules] lists the conjugation rules for the Clifford operations provided by
@@ -31,9 +31,9 @@ tracking.
 
 ## What this library does
 
-This library does **not** provide a full quantum simulator. Instead it only provides
-tools to track the Pauli operators through the circuit, while building up the circuit or
-while simulating the circuit.
+This library does **not** provide a quantum simulator. Instead it only provides tools to
+track the Pauli operators through the circuit, while building up the circuit or while
+simulating the circuit.
 
 The project is foremost a Rust library providing the [pauli_tracker crate]. It's a
 generic and hopefully flexible library which allows you to choose different core data
@@ -42,8 +42,8 @@ structures fitted to the problem you want to solve.
 However, we also have [Python package] that wraps the basic functionality for easy use
 from Python, and a [C wrapper] exporting partially exporting the API in form of a
 compiled C library. Note that both wrappers might randomly miss some important
-functionality because we just forgot it. In that case, please open an issue or a pull
-request if you need it.
+functionality because we just forgot to wrap it. In that case, please open an issue or a
+pull request if you need it.
 
 ## Examples
 
@@ -52,9 +52,9 @@ For example code, please look into the [crate documentation] and maybe also at t
 
 ## Related projects
 
-- https://github.com/taeruh/mbqc_scheduling: Using the Pauli tracking information to
-  solve the scheduling problem in measurement-based quantum computing, that is, when to
-  initialize and measure which qubit for space-time optimality.
+- [mbqc_scheduling](https://github.com/taeruh/mbqc_scheduling): Using the Pauli tracking
+information to solve the scheduling problem in measurement-based quantum computing, that
+is, when to initialize and measure which qubit for space-time optimality.
 
 ## Issues and Contributing
 
