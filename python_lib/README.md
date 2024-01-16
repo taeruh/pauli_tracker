@@ -1,11 +1,11 @@
 # Python wrapper around pauli_tracker
 
-This Python package is a wrapper around [pauli_tracker crate] exporting the basic
+This Python package is a wrapper around the [pauli_tracker crate] exporting the basic
 functionality.
 
 When using this package, please also look at the [crate's documentation] of the Rust
-crate (additionally to [Python package's documentation] of course) in parallel since it is
-much more extensive about how the Pauli tracking works.
+crate (additionally to the [Python package's documentation] of course) in parallel since
+it is much more extensive about how the Pauli tracking works.
 
 If some essential functionality is missing, because we just forgot to implement it, please
 open an issue or pull request (cf [contributing]). If you need more functionality, it is
@@ -35,11 +35,11 @@ commands is in the `dist` directory.
 
 ## Caution
 
-Trying to build a Rust-Python package depending on this the underlying Rust create here
-will probably not work because of [#1444].
+Trying to build a Rust-Python package depending on the underlying Rust create here will
+probably not work because of [#1444].
 
-The API of the underling Rust crate is not stable (but the Python package follows
-SemVer).
+The API of the underling Rust crate is not stable (but the Python package will follow
+SemVer as soon as it is published on PyPI).
 
 [crate's documentation]: https://docs.rs/pauli_tracker/latest/pauli_tracker/
 [contributing]: https://github.com/taeruh/pauli_tracker/blob/main/CONTRIBUTING.md
