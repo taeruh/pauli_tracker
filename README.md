@@ -79,7 +79,7 @@ See [LICENSE-APACHE](LICENSE-APACHE) and [LICENSE-MIT](LICENSE-MIT).
 [crate documentation]: https://docs.rs/pauli_tracker/#examples
 [C wrapper]: https://github.com/taeruh/pauli_tracker/blob/main/c_lib
 [pauli_tracker crate]: https://github.com/taeruh/pauli_tracker/blob/main/pauli_tracker
-[Python documentation]: to_be_filled_out
+[Python documentation]: https://taeruh.github.io/pauli_tracker/
 [Python package]: https://github.com/taeruh/pauli_tracker/blob/main/python_lib
 [Software Pauli Tracking for Quantum Computation]: https://arxiv.org/abs/1401.5872v1
 [Stim: a fast stabilizer circuit simulator]: https://arxiv.org/abs/2103.02202
