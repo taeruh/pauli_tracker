@@ -10,7 +10,8 @@ this should be sufficient.
 *If you think something should be included in this wrapper here, please open an
 issue or a pull request on the* `GitHub repository`_.*
 
-**How to read this documentation**
+How to read this documentation
+------------------------------
 
 Since this is just a wrapper the documentation is very sparse and we mostly refer to
 the documentation of the `pauli_tracker crate`_. It is recommended to have at least
@@ -32,7 +33,8 @@ an exception describing `E` on failure in Python.
 documentation here (stub files maybe sooner when pyo3 can generate them
 automatically).*
 
-**Example usage**
+Example usage
+-------------
 
 .. code-block:: python
 
@@ -51,10 +53,11 @@ automatically).*
    print(tracker.into_py_dict_recursive())
 
 For more examples of how the Pauli tracking works, please take a look at `Rust example
-code`_ (although not everything is exposed in this wrapper, but it should still give a
-good idea about how things work).
+code`_ (although not everything is exposed in this wrapper (yet), but it should still give
+a good idea about how things work).
 
-**Caution**
+Caution
+-------
 
 For all classes we define the *magic __new__* method and not the *magic __init__* method
 (that's what `pyo3`_ does). However, we still define a *normal __init__* method for

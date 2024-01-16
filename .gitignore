@@ -11,5 +11,6 @@ c_lib/builder/*/Cargo.lock
 
 # personal development config and caches
 .tmux-session
+.task.mk
 Session.vim
 .ccls-cache

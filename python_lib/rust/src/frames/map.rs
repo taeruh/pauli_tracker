@@ -76,9 +76,7 @@ impl Frames {
 
 pub fn add_module(py: Python<'_>, parent_module: &Module) -> PyResult<()> {
     let module = Module::new(py, "map", parent_module.path.clone())?;
-
     module.add_class::<Frames>()?;
-
     parent_module.add_submodule(py, module)?;
     Ok(())
 }

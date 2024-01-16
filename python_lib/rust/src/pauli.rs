@@ -106,11 +106,9 @@ impl PauliStack {
 
 pub fn add_module(py: Python<'_>, parent_module: &Module) -> PyResult<()> {
     let module = Module::new(py, "pauli", parent_module.path.clone())?;
-
     module.add_class::<PauliDense>()?;
     module.add_class::<PauliTuple>()?;
     module.add_class::<PauliStack>()?;
-
     parent_module.add_submodule(py, module)?;
     Ok(())
 }

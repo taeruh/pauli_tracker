@@ -48,10 +48,8 @@ fn _lib(py: Python, module: &PyModule) -> PyResult<()> {
         pymodule: module,
         path: "pauli_tracker._lib".to_string(),
     };
-
     live::add_module(py, &module)?;
     frames::add_module(py, &module)?;
     pauli::add_module(py, &module)?;
-
     Ok(())
 }

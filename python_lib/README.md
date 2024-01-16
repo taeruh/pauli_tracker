@@ -7,7 +7,7 @@ When using this package, please also look at the [crate's documentation] of the 
 crate (additionally to Python package's documentation) in parallel since it is much more
 extensive about how the Pauli tracking works.
 
-If some essential functionality is missing, because we just forgot to implement, please
+If some essential functionality is missing, because we just forgot to implement it, please
 open an issue or pull request (cf [contributing]). If you need more functionality, it is
 fairly easy to use Rust from Python with the help of [pyo3] and [maturin]. However,
 because of [#1444], you probably want to clone this repo and extend it.
@@ -18,8 +18,8 @@ Please look at this [Python example] and also at these [Rust examples].
 
 ## Caution
 
-Trying to build a Rust-Python package depending on this crate will probably not work
-because of [#1444].
+Trying to build a Rust-Python package depending on this the underlying Rust create here
+will probably not work because of [#1444].
 
 The API of the underling Rust crate is not stable (but the Python package follows
 SemVer).

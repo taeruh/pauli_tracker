@@ -69,10 +69,8 @@ mod vec;
 
 pub fn add_module(py: Python<'_>, parent_module: &Module) -> PyResult<()> {
     let module = Module::new(py, "live", parent_module.path.clone())?;
-
     map::add_module(py, &module)?;
     vec::add_module(py, &module)?;
-
     parent_module.add_submodule(py, module)?;
     Ok(())
 }
