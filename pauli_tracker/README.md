@@ -13,4 +13,4 @@ general information.
 There is no guarantee for a long-time support of a specific Rust version. Bumping the
 MSRV increments the minor SemVer version.
 
-[root README]: https://github.com/taeruh/pauli_tracker/README.md
+[root README]: https://github.com/taeruh/pauli_tracker/blob/main/README.md
