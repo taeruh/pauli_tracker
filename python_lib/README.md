@@ -20,7 +20,8 @@ Please look at this [Python example] and also at these [Rust examples].
 
 The package has to be build with [maturin]. The `make package` commands builds it through
 a docker container such that it is compatible with manylinux\_2\_28\_x86\_64 for Python >=
-3.8.
+3.8. With `make update_docs` the documentation can be build. The output of both make
+commands is in the `dist` directory.
 
 ## Caution
 

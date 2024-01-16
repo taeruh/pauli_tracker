@@ -4,7 +4,7 @@ SHELL := /usr/bin/dash
 
 rust_source := $(shell find rust/src -type f -name "*") \
 							 rust/Cargo.toml rust/Cargo.lock
-python_source := $(shell find python/src -type f -name "*.py" -o -name "*.pyi")
+python_source := $(shell find python/pauli_tracker -type f -name "*.py" -o -name "*.pyi")
 source := $(rust_source) $(python_source)
 
 package: dist/.stamp
@@ -20,11 +20,11 @@ target/.image.stamp: Dockerfile | target/
 	sudo docker build --network=host -t manylinux .
 	touch $@
 
-update_docs:
+update_docs: dist/
 	maturin develop
 	(cd docs; rm -rf _build _autosummary; make html)
-	cp -R docs/_build/html/. ../docs/python_lib
-	rm -r ../docs/python_lib/_sources
+	cp -R docs/_build/html/. dist/docs
+	rm -r dist/docs/_sources
 
 clean:
 	rm target/.image.stamp dist -rf
