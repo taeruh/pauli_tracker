@@ -1,0 +1,69 @@
+# uploading the packages as artifacts here is only a temporary solution until I upload
+# them in a package to pypi or add them as assets attached release tags
+
+name: pypackage
+on:
+  push:
+    branches: [py_releases]
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref || github.run_id }}
+  cancel-in-progress: true
+defaults:
+  run:
+    working-directory: ./python_lib
+
+jobs:
+
+  linux-wheels:
+    runs-on: ubuntu-latest
+    container: quay.io/pypa/manylinux_2_28_x86_64
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: true
+      - name: Install stable rust
+        uses: dtolnay/rust-toolchain@stable
+        # regarding --all-features: cf. comment in python_lib/Dockerfile
+      - name: Build wheels
+        run: |
+          /opt/python/cp311-cp311/bin/pip install maturin
+          /opt/python/cp311-cp311/bin/maturin build \
+            --interpreter /opt/python/cp311-cp311/bin/python \
+            --release \
+            --compatibility manylinux_2_28_x86_64 \
+            --all-features
+          for py in /opt/python/cp3{8,9,10,11,12}*/bin; do
+            ${py}/pip install maturin
+            ${py}/maturin build \
+              --interpreter ${py}/python \
+              --release
+          done
+      - uses: actions/upload-artifact@v3
+        with:
+          name: linux-wheels
+          path: python_lib/target/wheels
+
+  osx-and-windows-wheels:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        # for whatever reason, 3.10 turns into 3.1
+        python-version: [8, 9, 10, 11, 12]
+        os: [macos-latest, windows-latest]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: true
+      - name: Install stable rust
+        uses: dtolnay/rust-toolchain@stable
+      - uses: actions/setup-python@v5
+        with:
+          python-version: 3.${{ matrix.python-version }}
+      - name: Build wheels
+        run: |
+          python -m pip install maturin
+          maturin build --release
+      - uses: actions/upload-artifact@v3
+        with:
+          name: ${{ matrix.os }}-3.${{ matrix.python-version }}-wheel
+          path: python_lib/target/wheels
