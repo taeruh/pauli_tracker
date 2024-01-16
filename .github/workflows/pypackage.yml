@@ -38,7 +38,7 @@ jobs:
               --interpreter ${py}/python \
               --release
           done
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           name: linux-wheels
           path: python_lib/target/wheels
@@ -63,7 +63,7 @@ jobs:
         run: |
           python -m pip install maturin
           maturin build --release
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.os }}-3.${{ matrix.python-version }}-wheel
           path: python_lib/target/wheels
