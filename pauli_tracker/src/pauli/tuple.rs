@@ -71,10 +71,6 @@ impl Pauli for PauliTuple {
         self.0 ^= self.1;
     }
 
-    fn sx(&mut self) {
-        self.0 ^= self.1;
-    }
-
     fn xpx(&mut self, other: &Self) {
         self.0 ^= other.0;
     }

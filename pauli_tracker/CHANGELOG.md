@@ -13,9 +13,6 @@ possible.
 ### Changed
 ### Deprecated
 ### Removed
-- `BufferedVector::wrap` and `NaiveVector::wrap` (use `from` instead).
-- `PathGenerator::measureable` (use `measurable` instead).
-- `Pauli::sx` and `PauliStack::sx` (use `shs` instead).
 ### Fixed
 ### Security
 
@@ -24,6 +21,10 @@ possible.
 ### Changed
 ### Deprecated
 ### Removed
+- **Breaking Change**: Remove the `scheduler` module.
+- **Breaking Change**: Remove `BufferedVector::wrap` and `NaiveVector::wrap` (use `from`
+instead), as well as `PathGenerator::measureable` (use `measurable` instead). `Pauli::sx`
+and `PauliStack::sx` (use `shs` instead).
 ### Fixed
 ### Security
 

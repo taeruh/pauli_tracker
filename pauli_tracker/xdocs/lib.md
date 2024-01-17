@@ -9,12 +9,6 @@ general brief introduction to Pauli tracking is given in the repository's
 * **circuit**
   Includes the [circuit] module which contains tools to combine the Pauli tracking
   mechanism with a circuit simulator/description.
-* **scheduler**
-  Includes the [scheduler] module that can be used to analyze the process of
-  initializing and measuring qubits in a graph state (or similar), restricted by a
-  certain time ordering, which is for example, capture by a [Frames] Pauli tracker. If
-  you purely want to do some Pauli tracking this module is completely irrelevant. The
-  module is currently rather experimental.
 * **bitvec**
   Implement [BooleanVector] for [bitvec::vec::BitVec] (extern crate). Note that we do
   not export any types of [bitvec]; you need to depend on it manually to use its types.
@@ -347,11 +341,11 @@ assert_eq!(
 circ.measure_and_store_all();
 // to make the assert work we need a storage with an determinitic iterator; you probably
 // don't need to do this in a real application
-let storage = BufferedVector::wrap(
+let storage = BufferedVector::from(
     circ.storage.into_sorted_by_key()
     .into_iter()
     .map(|(_, stack)| stack)
-    .collect()
+    .collect::<Vec<_>>()
 );
 // now the graph:
 assert_eq!(
@@ -461,11 +455,11 @@ assert_eq!(
 );
 
 # circ.measure_and_store_all();
-# let storage = BufferedVector::wrap(
+# let storage = BufferedVector::from(
 #     circ.storage.into_sorted_by_key()
 #       .into_iter()
 #       .map(|(_, stack)| stack)
-#       .collect()
+#       .collect::<Vec<_>>()
 # );
 // ...
 

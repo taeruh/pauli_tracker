@@ -13,7 +13,7 @@ cargo-features = ["public-dependency"]
 
 [package]
 name = "pauli_tracker"
-version = "0.3.3-alpha.1"
+version = "0.4.0-alpha.1"
 authors = ["Jannis Ruh <ruh.j81@gmail.com>"]
 
 edition = "2021"
@@ -35,7 +35,6 @@ exclude = ["Cargo_nightly.toml", "todo.txt", "xtask"]
 crate-type = ["lib"]
 
 [features]
-scheduler = ["dep:rustc-hash"]
 circuit = ["dep:rand"]
 experimental = []
 serde = [
@@ -55,7 +54,6 @@ bitvec = { version = "1.0.1", optional = true, public = true }
 bitvec_simd = { version = "0.20.0", optional = true, public = true }
 bit-vec = { version = "0.6.2", optional = true, public = true }
 rand = { version = "0.8.0", optional = true }
-rustc-hash = { version = "1.0.1", optional = true }
 
 [package.metadata.docs.rs]
 all-features = true
@@ -66,6 +64,7 @@ criterion = "0.5.1"
 proptest = "1.2.0"
 coverage-helper = "0.2.0"
 rand_pcg = "0.3.1"
+rustc-hash = { version = "1.0.1" }
 
 [[bench]]
 name = "paler"

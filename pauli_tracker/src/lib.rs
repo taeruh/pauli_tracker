@@ -73,16 +73,6 @@ pub(crate) mod clifford_helper;
 
 pub mod collection;
 
-#[deprecated(
-    since = "0.3.2",
-    note = "use the `scheduler` module from the mbqc_scheduling library in the \
-    [mbqc_scheduling project]\
-    (https://github.com/taeruh/mbqc_scheduling/tree/main/mbqc_scheduling)"
-)]
-#[cfg(feature = "scheduler")]
-#[cfg_attr(docsrs, doc(cfg(feature = "scheduler")))]
-pub mod scheduler;
-
 pub mod pauli;
 
 mod slice_extension;

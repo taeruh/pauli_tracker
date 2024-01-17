@@ -67,12 +67,6 @@ impl<S> Live<S> {
         Self { storage }
     }
 
-    /// Returns the inner storage.
-    #[deprecated(since = "0.3.2", note = "use `into_storage` instead")]
-    pub fn into(self) -> S {
-        self.storage
-    }
-
     /// Convert the object into the underlining storage.
     pub fn into_storage(self) -> S {
         self.storage

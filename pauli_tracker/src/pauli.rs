@@ -86,18 +86,20 @@ pub trait Pauli {
     /// Conjugate the Pauli with the H gate ignoring phases.
     fn h(&mut self);
     /// Conjugate the Pauli with the SH gate ignoring phases.
-    fn sh(&mut self);
-    /// Conjugate the Pauli with the HS gate ignoring phases.
-    fn hs(&mut self);
-    /// Conjugate the Pauli with the SHS gate ignoring phases.
-    fn shs(&mut self);
-
-    /// Conjugate the Pauli with the sqrt(X) gate ignoring phases.
-    #[deprecated(since = "0.3.1", note = "use `shs` instead")]
-    fn sx(&mut self) {
+    fn sh(&mut self) {
         self.h();
         self.s();
+    }
+    /// Conjugate the Pauli with the HS gate ignoring phases.
+    fn hs(&mut self) {
+        self.s();
         self.h();
+    }
+    /// Conjugate the Pauli with the SHS gate ignoring phases.
+    fn shs(&mut self) {
+        self.s();
+        self.h();
+        self.s();
     }
 
     plus!((xpx, X, X), (xpz, X, Z), (zpx, Z, X), (zpz, Z, Z),);

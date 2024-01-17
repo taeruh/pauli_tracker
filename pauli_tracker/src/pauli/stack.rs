@@ -237,12 +237,6 @@ impl<T: BooleanVector> PauliStack<T> {
         self.left.xor_inplace(&self.right);
     }
 
-    /// Conjugate the Paulistack with the sqrt(X) gate ignoring phases.
-    #[deprecated(since = "0.3.1", note = "use `shs` instead")]
-    pub fn sx(&mut self) {
-        self.left.xor_inplace(&self.right);
-    }
-
     /// Multiply the Paulis, i.e., summing them up mod 2 in the tableau representation,
     /// with a `filter`, neglecting any phases. An element `e` is filtered if `filter[i]
     /// = true` where `i` is `e`'s index in [iter_vals](BooleanVector::iter_vals).

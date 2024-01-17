@@ -42,12 +42,6 @@ impl<T> NaiveVector<T> {
     pub fn with_capacity(capacity: usize) -> Self {
         Self(Vec::with_capacity(capacity))
     }
-
-    /// Wrap a [Vec] into a [NaiveVector].
-    #[deprecated(since = "0.3.1", note = "use `from` instead")]
-    pub fn wrap(vec: Vec<T>) -> Self {
-        Self(vec)
-    }
 }
 
 impl<T> From<Vec<T>> for NaiveVector<T> {
