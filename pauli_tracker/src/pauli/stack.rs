@@ -203,15 +203,6 @@ impl<T: BooleanVector> PauliStack<T> {
 
     // we can define the action of local gates
 
-    // Pauli gates don't do anything; we just include them for completeness and since it
-    // might be more convenient to have them on the caller side
-    /// Apply Pauli X, note that it is just the identity.
-    pub fn x(&self) {}
-    /// Apply Pauli Z, note that it is just the identity.
-    pub fn z(&self) {}
-    /// Apply Pauli Y, note that it is just the identity.
-    pub fn y(&self) {}
-
     /// Conjugate the Paulistack with the S gate ignoring phases.
     pub fn s(&mut self) {
         self.right.xor_inplace(&self.left);
