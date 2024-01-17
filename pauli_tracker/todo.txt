@@ -8,6 +8,8 @@
 
 - remove deprecated stuff
 
+- change DependencyGraph to PartialTimeOrdering
+
 ---------- release new major
 
 - inline some stuff

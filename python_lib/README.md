@@ -22,9 +22,9 @@ Until the wrapper is released as a package on PyPI, you can download it from the
 of the Github actions that have "pypackage" as workflow, e.g., from the [latest build].
 Just choose the right build for your OS and Python version (for Linux, the builds for the
 different Python versions are all bundled in the "linux-wheels" artifact; they are all
-build for manylinux\_2\_28\_x86\_64, cf [manylinux]; they also contain an abi3 build for
-Python>=3.8). You may have to unzip the artifact. Then you can install the package with
-`pip install <path-to-whl-file>`.
+build for manylinux\_2\_28\_x86\_64, cf [manylinux]; the artifact also contains an abi3
+build for Python>=3.8). You may have to unzip the artifact. Then you can install the
+package with `pip install <path-to-whl-file>`.
 
 ## Manually Building
 
@@ -38,13 +38,15 @@ commands is in the `dist` directory.
 Trying to build a Rust-Python package depending on the underlying Rust create here will
 probably not work because of [#1444].
 
+## SemVer
+
 The API of the underling Rust crate is not stable (but the Python package will follow
 SemVer as soon as it is published on PyPI).
 
 [crate's documentation]: https://docs.rs/pauli_tracker/latest/pauli_tracker/
 [contributing]: https://github.com/taeruh/pauli_tracker/blob/main/CONTRIBUTING.md
 [latest build]: https://github.com/taeruh/pauli_tracker/actions/runs/7548055481
-[manilinux]: https://github.com/pypa/manylinux
+[manylinux]: https://github.com/pypa/manylinux
 [maturin]: https://github.com/PyO3/maturin
 [pauli_tracker crate]: https://github.com/taeruh/pauli_tracker/tree/main/pauli_tracker
 [pyo3]: https://github.com/PyO3/pyo3

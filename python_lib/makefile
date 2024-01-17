@@ -25,6 +25,7 @@ update_docs: dist/
 	(cd docs; rm -rf _build _autosummary; make html)
 	cp -R docs/_build/html/. dist/docs
 	rm -r dist/docs/_sources
+	touch dist/docs/.nojekyll
 
 clean:
 	rm target/.image.stamp dist -rf
