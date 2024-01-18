@@ -16,7 +16,9 @@ that, in a circuit which consists only of Clifford operators and measurements, t
 gates can be "pushed" to the end of the circuit, just before the measurements. The
 benefit of this is that the Pauli gates don't have to be executed on a quantum computer
 and can instead be accounted for by post-processing of the measurement outcomes. The
-whole process is very similar to stabilizer simulations.
+whole process is very similar to stabilizer simulations. Additionally, the information
+captured by doing the Pauli tracking during compilation can be used for certain
+optimizations in measurement-based quantum computing (MBQC).
 
 For more details about the Pauli and Clifford groups and Pauli tracking, please look
 into the literature, e.g.,:
@@ -32,7 +34,7 @@ tracking.
 ## What this library does
 
 This library does **not** provide a quantum simulator. Instead it only provides tools to
-track the Pauli operators through the circuit, while building up the circuit or while
+track the Pauli operators through the circuit, while compiling the circuit or while
 simulating the circuit.
 
 The project is foremost a Rust library providing the [pauli_tracker crate]. It's a
@@ -41,8 +43,7 @@ structures fitted to the problem you want to solve.
 
 However, we also have [Python package] that wraps the basic functionality for easy use
 from Python. Note that this wrapper might randomly miss some important functionality
-because we just forgot to wrap it. In that case, please open an issue or a pull request if
-you need it.
+because we just forgot to wrap it. In that case, please open an issue or a pull request.
 
 ## Examples
 
@@ -52,8 +53,8 @@ For example code, please look into the [crate documentation] and maybe also at t
 ## Related projects
 
 - [mbqc_scheduling](https://github.com/taeruh/mbqc_scheduling): Using the Pauli tracking
-information to solve the scheduling problem in measurement-based quantum computing, that
-is, when to initialize and measure which qubit for space-time optimality.
+information to solve a scheduling problem in measurement-based quantum computing, that
+is, when to initialize and when to measure which qubit for space-time optimality.
 
 ## Issues and Contributing
 

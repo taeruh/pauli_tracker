@@ -4,12 +4,11 @@ Contributing
 Pull requests (PRs)
 -------------------
 
-- Create draft pull requests and change the status to ready when the PR is ready.
-- PRs must should certain automated CI checks. You can use the local xtask crate to check
+- PRs must should pass the CI checks. You can use the local xtask crate to check
   them before commiting (`xtask ci --help`, cf. [xtask-README]), however, note that the
   local coverage report might be different to the remote CI coverage report (don't know
   how to fix that).
-- Try to include tests.
+- Try to include tests if appropriate.
 - Use a [feature branch][git-feature-branch] instead of the master branch.
 
 ### Commit messages
@@ -65,11 +64,10 @@ implementing it is usually just some simple boilerplate code).
    is the probability (before normalization of the probabilities). In the
    `Instructor::apply`'s match call, add the case similar to the other (normal)
    single/double qubit gate cases.
-8. Add an entry to [TODO-list] in the Gate implementation section (for the Python and C
-   wrappers).
+8. Add the gate to the Python wrapper (it's probably sufficient to just add it to the
+   `tracker_impl` macro in `python_lib/src/impl_helper/tracker.rs`).
 
 [conjugation-rules]: ./docs/conjugation_rules.pdf
 [conventional_commits]: https://www.conventionalcommits.org
 [git-feature-branch]: https://www.atlassian.com/git/tutorials/comparing-workflows
-[TODO-list]: ./TODO.md
 [xtask-README]: ./xtask/README.md

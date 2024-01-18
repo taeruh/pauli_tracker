@@ -102,7 +102,7 @@ assert_eq!(
 // corrections in MBQC. These corrections might effect the measurement basis of
 // following measurements. To get the final correction before a measurement we could add
 // the frames in `frames` from above, however, we can also do it directly with the
-// LiveTracker:
+// Live tracker:
 
 let mut tracker = Live::init(3); // initialize the tracker with three qubits
 
