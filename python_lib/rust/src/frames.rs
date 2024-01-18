@@ -13,7 +13,7 @@ use crate::{
 };
 
 #[pyo3::pyclass(subclass)]
-/// This is just the `opaque PartialOrderGraph
+/// This is just `PartialOrderGraph
 /// <https://docs.rs/pauli_tracker/latest/pauli_tracker/tracker/frames/induced_order/type.PartialOrderGraph.html>`_.
 /// Use :meth:`into_py_graph` to turn it into a Python type.
 struct PartialOrderGraph(pub induced_order::PartialOrderGraph);

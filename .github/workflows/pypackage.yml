@@ -3,14 +3,17 @@
 
 name: pypackage
 on:
-  push:
-    branches: [py_releases]
+  workflow_dispatch:
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref || github.run_id }}
   cancel-in-progress: true
 defaults:
   run:
     working-directory: ./python_lib
+permissions:
+  contents: read
+  id-token: write
+  pages: write
 
 jobs:
 
@@ -82,10 +85,12 @@ jobs:
           python-version: 3.11
       - name: Build the docs
         run: |
+          python -m venv venv
+          source venv/bin/activate
           pip install maturin sphinx sphinx-rtd-theme sphinx-autodoc-typehints
           make update_docs
       - uses: actions/upload-pages-artifact@v3
         with:
-          path: "pauli_tracker/python_lib/dist/docs"
+          path: "python_lib/dist/docs"
       - name: Deploy to pages
         uses: actions/deploy-pages@v4
