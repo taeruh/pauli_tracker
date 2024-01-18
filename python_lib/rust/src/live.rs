@@ -30,7 +30,7 @@ macro_rules! impl_live {
             /// Returns:
             ///     Live:
             #[pyo3(text_signature = "(self, len=0)")]
-            fn __init__(&mut self, _len: usize) {}
+            fn __init__(&self, _len: usize) {}
 
             /// Create a new qubit in the tracker, returning the old Pauli if the qubit
             /// was already initialized.

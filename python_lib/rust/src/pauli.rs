@@ -38,7 +38,7 @@ impl PauliDense {
     /// Returns:
     ///     PauliDense:
     #[pyo3(text_signature = "(self, storage=0)")]
-    fn __init__(&mut self, _storage: u8) {}
+    fn __init__(&self, _storage: u8) {}
 
     fn tableau_encoding(&self) -> u8 {
         self.0.tableau_encoding()
@@ -53,21 +53,21 @@ pub struct PauliTuple(pub pauli::PauliTuple);
 #[pyo3::pymethods]
 impl PauliTuple {
     #[new]
-    #[pyo3(signature = (x=false, z=false))]
-    fn __new__(x: bool, z: bool) -> Self {
-        PauliTuple(pauli::PauliTuple(x, z))
+    #[pyo3(signature = (z=false, x=false))]
+    fn __new__(z: bool, x: bool) -> Self {
+        PauliTuple(pauli::PauliTuple(z, x))
     }
 
     /// Create a new PauliTuple from a tableau encoding.
     ///
     /// Args:
-    ///     x (bool): The X component
     ///     z (bool): The Z component
+    ///     x (bool): The X component
     ///
     /// Returns:
     ///     PauliTuple:
-    #[pyo3(text_signature = "(self, x=False, z=False)")]
-    fn __init__(&mut self, _x: bool, _z: bool) {}
+    #[pyo3(text_signature = "(self, z=False, x=False)")]
+    fn __init__(&self, _x: bool, _z: bool) {}
 
     fn tableau_encoding(&self) -> u8 {
         self.0.tableau_encoding()
@@ -96,7 +96,7 @@ impl PauliStack {
     ///     tuple[list[int], list[int]]:
     #[allow(clippy::wrong_self_convention)]
     fn into_py_tuple(&self) -> (Vec<usize>, Vec<usize>) {
-        (self.0.left.clone().into_vec(), self.0.right.clone().into_vec())
+        (self.0.z.clone().into_vec(), self.0.x.clone().into_vec())
     }
 
     fn sum_up(&self, filter: Vec<bool>) -> PauliTuple {

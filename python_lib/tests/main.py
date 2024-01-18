@@ -40,15 +40,13 @@ if __name__ == "__main__":
     new_tracker = Frames.deserialize("output/bar.json", "bincode")
     # print(new_tracker.into_py_array_recursive())
 
-    dep_graph = tracker.create_dependency_graph([0, 1])
+    dep_graph = tracker.get_ordering([0, 1])
     # dep_graph.serialize("output/bar.json")
     dep_graph = dep_graph.into_py_graph()
     print(dep_graph)
-    print(tracker.create_py_dependency_graph([0, 1]))
+    print(tracker.get_py_ordering([0, 1]))
 
     tracker = Frames.deserialize("output/hey.json")
-    dep_graph = tracker.create_dependency_graph(
-        [3, 4, 5, 6, 7, 8, 2, 10, 11, 12, 1, 14]
-    )
+    dep_graph = tracker.get_ordering([3, 4, 5, 6, 7, 8, 2, 10, 11, 12, 1, 14])
     print(dep_graph.into_py_graph())
     dep_graph.serialize("output/graph.json")

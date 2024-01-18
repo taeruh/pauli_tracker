@@ -1,4 +1,4 @@
-use lib::tracker::frames::dependency_graph;
+use lib::tracker::frames::induced_ordering;
 use pyo3::{
     PyResult,
     Python,
@@ -13,21 +13,38 @@ use crate::{
 };
 
 #[pyo3::pyclass(subclass)]
-struct DependencyGraph(pub dependency_graph::DependencyGraph);
+/// This is just the `opaque PartialOrderingGraph
+/// <https://docs.rs/pauli_tracker/latest/pauli_tracker/tracker/frames/induced_ordering/type.PartialOrderingGraph.html>`_.
+/// Use :meth:`into_py_graph` to turn it into a Python type.
+struct PartialOrderingGraph(pub induced_ordering::PartialOrderingGraph);
 
 #[pyo3::pymethods]
-impl DependencyGraph {
+impl PartialOrderingGraph {
+    #[new]
+    fn __new__(graph: induced_ordering::PartialOrderingGraph) -> Self {
+        Self(graph)
+    }
+
+    /// Create a new PartialOrderingGraph.
+    ///
+    /// Args:
+    ///     graph (list[list[tuple[int, list[int]]]]): The graph to wrap.
+    ///
+    /// Returns:
+    ///     PartialOrderingGraph:
+    fn __init__(&self, _graph: induced_ordering::PartialOrderingGraph) {}
+
     #[doc = doc::transform!()]
     ///
     /// Returns:
     ///     list[list[tuple[int, list[int]]]]:
     #[allow(clippy::wrong_self_convention)]
-    fn into_py_graph(&self) -> dependency_graph::DependencyGraph {
+    fn into_py_graph(&self) -> induced_ordering::PartialOrderingGraph {
         self.0.clone()
     }
 }
 
-impl_helper::serialization::serde!(DependencyGraph);
+impl_helper::serialization::serde!(PartialOrderingGraph);
 
 // Tracker and Init must be in scope for the macro to work.
 macro_rules! impl_frames {
@@ -54,7 +71,7 @@ macro_rules! impl_frames {
             /// Returns:
             ///     Frames:
             #[pyo3(text_signature = "(self, len=0)")]
-            fn __init__(&mut self, _len: usize) {}
+            fn __init__(&self, _len: usize) {}
 
             /// Create a new qubit in the tracker, returning the old Pauli stack if the
             /// qubit was already initialized.
@@ -82,40 +99,40 @@ macro_rules! impl_frames {
                 self.0.get(bit).map(|p| crate::pauli::PauliStack(p.clone()))
             }
 
-            /// This is just create_dependency_graph_ as a method.
+            /// This is just get_ordering_ as a method.
             ///
             /// If you directly want to turn it into a Python type, use
-            /// :func:`create_py_dependency_graph`, because this avoids cloning the
+            /// :func:`get_py_ordering`, because this avoids cloning the
             /// graph (which would happen when calling
-            /// :func:`~pauli_tracker.frames.DependencyGraph.into_py_graph`).
+            /// :func:`~pauli_tracker.frames.PartialOrderingGraph.into_py_graph`).
             ///
             /// Returns:
-            ///     DependencyGraph:
+            ///     PartialOrderingGraph:
             ///
-            /// .. _create_dependency_graph:
-            ///    https://docs.rs/pauli_tracker/latest/pauli_tracker/tracker/frames/dependency_graph/fn.create_dependency_graph.html
-            fn create_dependency_graph(
+            /// .. _get_ordering:
+            ///    https://docs.rs/pauli_tracker/latest/pauli_tracker/tracker/frames/induced_ordering/fn.get_ordering.html
+            fn get_ordering(
                 &self,
                 map: Vec<usize>,
-            ) -> crate::frames::DependencyGraph {
-                crate::frames::DependencyGraph(
-                    lib::tracker::frames::dependency_graph::create_dependency_graph(
+            ) -> crate::frames::PartialOrderingGraph {
+                crate::frames::PartialOrderingGraph(
+                    lib::tracker::frames::induced_ordering::get_ordering(
                         lib::collection::Iterable::iter_pairs(self.0.as_storage()),
                         &map,
                     ),
                 )
             }
 
-            /// Like :func:`create_dependency_graph`, but directly returns the graph as
+            /// Like :func:`get_ordering`, but directly returns the graph as
             /// a Python type.
             ///
             /// Returns:
             ///     list[list[tuple[int, list[int]]]]:
-            fn create_py_dependency_graph(
+            fn get_py_ordering(
                 &self,
                 map: Vec<usize>,
-            ) -> lib::tracker::frames::dependency_graph::DependencyGraph {
-                lib::tracker::frames::dependency_graph::create_dependency_graph(
+            ) -> lib::tracker::frames::induced_ordering::PartialOrderingGraph {
+                lib::tracker::frames::induced_ordering::get_ordering(
                     lib::collection::Iterable::iter_pairs(self.0.as_storage()),
                     &map,
                 )
@@ -134,7 +151,7 @@ pub fn add_module(py: Python<'_>, parent_module: &Module) -> PyResult<()> {
     let module = Module::new(py, "frames", parent_module.path.clone())?;
     map::add_module(py, &module)?;
     vec::add_module(py, &module)?;
-    module.add_class::<DependencyGraph>()?;
+    module.add_class::<PartialOrderingGraph>()?;
     parent_module.add_submodule(py, module)?;
     Ok(())
 }

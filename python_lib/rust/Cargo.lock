@@ -209,9 +209,7 @@ dependencies = [
 
 [[package]]
 name = "pauli_tracker"
-version = "0.3.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7fab79f8836b8dbf0e360a7a6bbbef76453cc3eb39c4f8efb90447257c3a3b27"
+version = "0.4.0-alpha.2"
 dependencies = [
  "bit-vec",
  "bitvec",
