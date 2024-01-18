@@ -26,8 +26,8 @@ crate-type = ["cdylib"]
 utils = { path = "../utils" }
 pyo3 = { version = "0.20.0", features = ["multiple-pymethods"] }
 # lib = { package = "pauli_tracker", version = "0.3.2", features = ["serde", "bitvec"] }
-# lib = { package = "pauli_tracker", version = "0.4.0-alpha.2", features = ["serde", "bitvec"], git = "https://github.com/taeruh/pauli_tracker" }
-lib = { package = "pauli_tracker", version = "0.4.0-alpha.2", features = ["serde", "bitvec"], path = "../../pauli_tracker" }
+lib = { package = "pauli_tracker", version = "0.4.0-alpha.2", features = ["serde", "bitvec"], git = "https://github.com/taeruh/pauli_tracker" }
+# lib = { package = "pauli_tracker", version = "0.4.0-alpha.2", features = ["serde", "bitvec"], path = "../../pauli_tracker" }
 rustc-hash = "1.1.0"
 bitvec = "1.0.1"
 

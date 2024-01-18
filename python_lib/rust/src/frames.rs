@@ -111,10 +111,7 @@ macro_rules! impl_frames {
             ///
             /// .. _get_order:
             ///    https://docs.rs/pauli_tracker/latest/pauli_tracker/tracker/frames/induced_order/fn.get_order.html
-            fn get_order(
-                &self,
-                map: Vec<usize>,
-            ) -> crate::frames::PartialOrderGraph {
+            fn get_order(&self, map: Vec<usize>) -> crate::frames::PartialOrderGraph {
                 crate::frames::PartialOrderGraph(
                     lib::tracker::frames::induced_order::get_order(
                         lib::collection::Iterable::iter_pairs(self.0.as_storage()),
