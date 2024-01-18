@@ -1,5 +1,5 @@
 /*!
-The main content of this module is the [create_dependency_graph] function that can be
+The main content of this module is the [get_ordering] function that can be
 used to define a time ordering induced by the tracked frames.
 */
 
@@ -8,12 +8,16 @@ use crate::{
     pauli::PauliStack,
 };
 
-/// A layered graph, describing the how the qubits depend on each other.
+/// A layered graph, describing the partial (time) ordering of the qubits.
 ///
-/// Each layer l_i = DependencyGraph\[i\] consist of an vector of tuples, where the
-/// first tuple element is the node qubits and the second tuple element contains all
-/// qubits on which the node qubit depends.
-pub type DependencyGraph = Vec<Vec<(usize, Vec<usize>)>>;
+/// Each layer l_i = PartialOrderingGraph\[i\] consist of a vector of tuples, where the
+/// first tuple element is the node qubit and the second tuple element contains the
+/// qubits which are lower ordered than the node qubit (the dependencies of the node
+/// qubit). However, transitivity is skipped, e.g., if we have 0 > 1 > 2, then we list
+/// only 1 as dependency of 0, since the information 0 > 2 is already covered in 0 > 1 and
+/// 1 > 2. The layering gives some global information: A node in layer l_i has at least
+/// one dependency in layer l_{i-1}.
+pub type PartialOrderingGraph = Vec<Vec<(usize, Vec<usize>)>>;
 
 /// Sort the `frames_storage`'s qubits according to the induced dependencies by the
 /// frames (row through the PauliStacks).
@@ -21,10 +25,6 @@ pub type DependencyGraph = Vec<Vec<(usize, Vec<usize>)>>;
 /// Each frame in `frames_storage` maps to a qubit number in `map`; frame(i) ->
 /// `map`\[i\]. If a qubit's Pauli stack has non-zero elements in a frame(i), the qubit
 /// is assumed to depend on `map`\[i\].
-///
-/// Dependencies that are already covered by later dependencies, i.e., dependencies that
-/// are in a higher layer, are removed. For example if 0 depends on 1 and 2 but 1 also
-/// depends on 2, then 2 is not listed in the dependencies of 0.
 ///
 /// Note that while the sorting is deterministic, up to `frames_storage`'s Iterator
 /// implementation, the output might not be sorted as expected, since nodes are swapped
@@ -43,7 +43,7 @@ pub type DependencyGraph = Vec<Vec<(usize, Vec<usize>)>>;
 /// use pauli_tracker::{
 ///     collection::BufferedVector,
 ///     pauli::PauliStack,
-///     tracker::frames::dependency_graph::create_dependency_graph,
+///     tracker::frames::induced_ordering,
 /// };
 /// let storage = BufferedVector::from(vec![
 ///     PauliStack::<Vec<bool>>::try_from_str("", "").unwrap(),
@@ -53,7 +53,7 @@ pub type DependencyGraph = Vec<Vec<(usize, Vec<usize>)>>;
 /// ]);
 /// let map = vec![0, 3];
 /// assert_eq!(
-///     create_dependency_graph(&storage, &map),
+///     induced_ordering::get_ordering(&storage, &map),
 ///     vec![
 ///         vec![(0, vec![])],
 ///         vec![(3, vec![0]), (1, vec![0])],
@@ -62,10 +62,7 @@ pub type DependencyGraph = Vec<Vec<(usize, Vec<usize>)>>;
 /// );
 /// # }
 /// ```
-pub fn create_dependency_graph<'l, I, B>(
-    frames_storage: I,
-    map: &[usize],
-) -> DependencyGraph
+pub fn get_ordering<'l, I, B>(frames_storage: I, map: &[usize]) -> PartialOrderingGraph
 where
     I: IntoIterator<Item = (usize, &'l PauliStack<B>)>,
     B: BooleanVector + 'l,
@@ -151,20 +148,20 @@ where
     graph
 }
 
-/// Sort the nodes in a layer of `graph` according to their qubit number.
+/// Sort the nodes in a layer of the `graph` according to their qubit number.
 ///
 /// # Examples
 /// ```
 /// # #[cfg_attr(coverage_nightly, coverage(off))]
 /// # fn main() {
-/// # use pauli_tracker::tracker::frames::dependency_graph::sort_layers_by_bits;
+/// # use pauli_tracker::tracker::frames::induced_ordering::sort_layers_by_bits;
 /// let mut graph = vec![vec![(0, vec![])], vec![(3, vec![0]), (1, vec![0])]];
 /// sort_layers_by_bits(&mut graph);
 ///
 /// assert_eq!(graph, vec![vec![(0, vec![])], vec![(1, vec![0]), (3, vec![0])],]);
 /// # }
 /// ```
-pub fn sort_layers_by_bits(graph: &mut DependencyGraph) {
+pub fn sort_layers_by_bits(graph: &mut PartialOrderingGraph) {
     for layer in graph {
         layer.sort_by_key(|(bit, _)| *bit)
     }

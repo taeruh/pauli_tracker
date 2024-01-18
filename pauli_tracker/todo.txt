@@ -2,10 +2,6 @@
 
 ---------- release new major
 
-- replace xor_inplace with BitXorAssign, and similar
-- universal bit ops, e.g., add "or" and "not"
-
-- change DependencyGraph to PartialTimeOrderin
 
 ---------- release new major
 

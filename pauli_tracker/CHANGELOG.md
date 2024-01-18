@@ -23,6 +23,9 @@ possible.
 - **Breaking Change**: Swapped entries int `PauliTuple`.
 - **Breaking Change**: Swapped args in `Pauli::new_product` and
 `PauliStack::try_from_str`.
+- **Breaking Change**: Rename `dependency_graph` to `induced_ordering`,
+`create_dependency_graph` to `get_ordering` and `DependencyGraph` to
+`PartialOrderingGraph`.
 ### Deprecated
 ### Removed
 - **Breaking Change**: Remove the `scheduler` module.

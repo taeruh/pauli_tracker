@@ -9,12 +9,11 @@ tracked Pauli to being copied, moved, swaped, ... within the frame. The frames o
 multiple tracked Paulis are stacked up, not effectiving each other; this is the main
 difference to the [Live] tracker, which adds up the frames.
 
-When using this tracer, you probably only want to track Paulis, via the `track_x/y/z`
-methods, induced by non-deterministic measurements, and account for other Paulis simply
-through the `x/y/z` methods (since these methods do literally nothing, you can actually
-ignore them). This is because this tracker is used to analyze the dependency induced by
-the measurements. To track Paulis during the actual execution of a circuit, the [Live]
-tracker is more useful.
+When using this tracker, you probably only want to track Paulis induced by
+non-deterministic measurements via the `track_x/y/z` methods (and track fixed Paulis with
+the [Live] tracker if needed). This is because this tracker is used to analyze the
+dependencies induced by the measurements in form of a time ordering. To track Paulis
+during the actual execution of a circuit, the [Live] tracker is more useful.
 
 [Live]: super::live::Live
 */
@@ -48,8 +47,7 @@ use crate::{
     },
 };
 
-// pub mod storage;
-pub mod dependency_graph;
+pub mod induced_ordering;
 
 /// A container of multiple Pauli frames that implements [Tracker].
 ///

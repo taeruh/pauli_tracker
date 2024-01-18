@@ -78,7 +78,7 @@ expected[1].1.push(PauliTuple::new_z());
 expected[2].1.push(PauliTuple::new_y());
 // }}
 // (creating `expected` can be faster achieved with PauliStack::try_from_str, e.g., as in
-// the example "The dependency graph")
+// the example "The time ordering")
 
 // let's check it
 assert_eq!(frames, expected);
@@ -144,8 +144,8 @@ assert_eq!(tracker.as_ref().0, conditional_summed_frames, "{measurements:?}");
 # fn main() {}
 ```
 
-### The dependency graph
-This example introduces the [create_dependency_graph] function that can be used to
+### The time ordering (of measurements)
+This example introduces the [induced_ordering] module that can be used to
 analyse measurement dependencies.
 ```rust
 # #[cfg_attr(coverage_nightly, coverage(off))]
@@ -154,7 +154,7 @@ analyse measurement dependencies.
 use pauli_tracker::{
     collection::{BufferedVector, Iterable, Init},
     pauli::{self, Pauli},
-    tracker::{Tracker, frames::{self, dependency_graph}},
+    tracker::{Tracker, frames::{self, induced_ordering}},
 };
 type BoolVec = Vec<bool>;
 type PauliStack = pauli::PauliStack<BoolVec>;
@@ -201,8 +201,8 @@ let map = [
 ];
 
 // we are interested in how many steps of parallel measurement we need to measure qubits
-// "0" to "4"; this can be figured out with the dependency graph:
-let graph = dependency_graph::create_dependency_graph(
+// "0" to "4"; this can be figured out with the time ordering graph:
+let graph = induced_ordering::get_ordering(
     Iterable::iter_pairs(tracker.as_storage()), &map);
 
 // in this case the graph is already sorted according to the node numbers, but that is
@@ -247,7 +247,7 @@ use pauli_tracker::{
     circuit::{CliffordCircuit, DummyCircuit, TrackedCircuit},
     collection::{Map, BufferedVector, Iterable, Full, Init},
     pauli::{self, Pauli},
-    tracker::{Tracker, frames::{self, dependency_graph}},
+    tracker::{Tracker, frames::{self, induced_ordering}},
 };
 
 type BoolVec = bit_vec::BitVec;
@@ -336,7 +336,7 @@ assert_eq!(
     circ.storage.sort_by_key()
 );
 
-// let's view the dependency graph: we need to do some prework
+// let's take a look at the time ordering graph; we need to do some prework to do that:
 // first put everything into the storage
 circ.measure_and_store_all();
 // to make the assert work we need a storage with an determinitic iterator; you probably
@@ -349,7 +349,7 @@ let storage = BufferedVector::from(
 );
 // now the graph:
 assert_eq!(
-    dependency_graph::create_dependency_graph(Iterable::iter_pairs(&storage), &map),
+    induced_ordering::get_ordering(Iterable::iter_pairs(&storage), &map),
     vec![
         vec![(0, vec![]), (1, vec![]), (2, vec![])],
         vec![(5, vec![2]), (4, vec![1, 2])],
@@ -383,7 +383,7 @@ with [Tracker::move_z_to_z]:
 #     pauli::{self, Pauli},
 #     circuit::{CliffordCircuit, DummyCircuit, TrackedCircuit},
 #     collection::{Map, BufferedVector, Iterable, Full, Init},
-#     tracker::{Tracker, frames::{Frames, dependency_graph}},
+#     tracker::{Tracker, frames::{Frames, induced_ordering}},
 # };
 # type BoolVec = bit_vec::BitVec;
 # type PauliStack = pauli::PauliStack<BoolVec>;
@@ -464,7 +464,7 @@ assert_eq!(
 // ...
 
 assert_eq!(
-    dependency_graph::create_dependency_graph(&storage, &map),
+    induced_ordering::get_ordering(&storage, &map),
     vec![
         vec![
             (0, vec![]), (1, vec![]), (2, vec![]),
@@ -486,7 +486,7 @@ assert_eq!(
 [bit_vec::BitVec]: https://docs.rs/bit-vec/latest/bit_vec/struct.BitVec.html
 [bit-vec]: https://docs.rs/bit-vec/latest/bit_vec/index.html
 [BooleanVector]: boolean_vector::BooleanVector
-[create_dependency_graph]: tracker::frames::dependency_graph::create_dependency_graph
+[induced_ordering]: tracker::frames::induced_ordering
 [Frames]: tracker::frames::Frames
 [paper]: https://arxiv.org/abs/2209.07345v2
 [rand]: https://crates.io/crates/rand

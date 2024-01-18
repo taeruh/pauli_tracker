@@ -27,9 +27,9 @@ use pauli_tracker::{
     },
     tracker::{
         frames::{
-            dependency_graph::{
+            induced_ordering::{
                 self,
-                DependencyGraph,
+                PartialOrderingGraph,
             },
             Frames,
         },
@@ -98,7 +98,7 @@ fn roundtrip(init: usize, ops: Vec<Operation>) {
     circuit.tracker.measure_and_store_all(&mut circuit.storage);
 
     if !measurements.0.is_empty() {
-        let graph = dependency_graph::create_dependency_graph(
+        let graph = induced_ordering::get_ordering(
             <Storage as Iterable>::iter_pairs(&circuit.storage),
             &measurements.0,
         );
@@ -135,7 +135,7 @@ fn roundtrip(init: usize, ops: Vec<Operation>) {
 
 // {{ helpers to perform the checks
 fn check_graph(
-    graph: &DependencyGraph,
+    graph: &PartialOrderingGraph,
     storage: &Storage,
     measurements: &[usize],
 ) -> Result<(), String> {
@@ -167,8 +167,8 @@ fn check_graph(
             }
         }
         let pauli = storage.get(node).expect("node does not exist");
-        // we explicitly do not xor(left, right), because that's what we are doing
-        // in the create_dependency_graph function; here we keep it as simple is
+        // we explicitly do not use xor(left, right), because that's what we are doing
+        // in the get_ordering function; here we keep it as simple is
         // possible
         // println!("{:?}", pauli.z);
         for dep in pauli.z.iter_vals().enumerate() {

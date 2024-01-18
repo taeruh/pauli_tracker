@@ -317,7 +317,7 @@ mod tests {
         },
         tracker::{
             frames::{
-                dependency_graph,
+                induced_ordering,
                 Frames,
             },
             live,
@@ -588,8 +588,7 @@ mod tests {
 
         // println!("{:#?}", rest);
 
-        let _graph =
-            dependency_graph::create_dependency_graph(&rest, &[0, 1, 2, 4, 5, 7, 8]);
+        let _graph = induced_ordering::get_ordering(&rest, &[0, 1, 2, 4, 5, 7, 8]);
         // println!("{:?}", graph);
         // println!("{:?}", graph.len());
     }
