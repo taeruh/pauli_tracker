@@ -250,27 +250,28 @@ mod tests {
         // 3=Y, 1=Z
 
         pub const N_SINGLES: usize = 18;
+        #[rustfmt::skip]
         const SINGLE_GENERATORS: [(&str, [u8; 2]); N_SINGLES] =
-            // (name, result: [conjugate X, conjugate Z])
+            // (name, result: [conjugate Z, conjugate X])
             [
-                ("I", [2, 1]),
-                ("X", [2, 1]),
-                ("Y", [2, 1]),
-                ("Z", [2, 1]),
-                ("S", [3, 1]),
-                ("SDG", [3, 1]),
-                ("SZ", [3, 1]),
-                ("SZDG", [3, 1]),
-                ("H_xy", [3, 1]),
-                ("H", [1, 2]),
-                ("SY", [1, 2]),
-                ("SYDG", [1, 2]),
-                ("SH", [1, 3]),
-                ("HS", [3, 2]),
-                ("SHS", [2, 3]),
-                ("SX", [2, 3]),
-                ("SXDG", [2, 3]),
-                ("H_yz", [2, 3]),
+                ("I",    [1, 2]),
+                ("X",    [1, 2]),
+                ("Y",    [1, 2]),
+                ("Z",    [1, 2]),
+                ("S",    [1, 3]),
+                ("SDG",  [1, 3]),
+                ("SZ",   [1, 3]),
+                ("SZDG", [1, 3]),
+                ("H_xy", [1, 3]),
+                ("H",    [2, 1]),
+                ("SY",   [2, 1]),
+                ("SYDG", [2, 1]),
+                ("SH",   [3, 1]),
+                ("HS",   [2, 3]),
+                ("SHS",  [3, 2]),
+                ("SX",   [3, 2]),
+                ("SXDG", [3, 2]),
+                ("H_yz", [3, 2]),
             ];
 
         macro_rules! single_actions {
@@ -300,22 +301,24 @@ mod tests {
         pub(crate) use single_actions;
 
         pub const N_DOUBLES: usize = 10;
+        #[rustfmt::skip]
         const DOUBLE_GENERATORS: [(&str, [(u8, u8); 4]); N_DOUBLES] = [
-            // (name, result: [conjugate X1, conjugate Z1, conjugate X2, conjugate Z2])
-            // the left tuple entry of the results belongs to the first qubit in the
-            // function call and the right entry to the second one
-            ("cz", [(2, 1), (1, 0), (1, 2), (0, 1)]),
-            ("cx", [(2, 2), (1, 0), (0, 2), (1, 1)]),
-            ("cy", [(2, 3), (1, 0), (1, 2), (1, 1)]),
-            ("swap", [(0, 2), (0, 1), (2, 0), (1, 0)]),
-            ("iswap", [(1, 3), (0, 1), (3, 1), (1, 0)]),
-            ("iswapdg", [(1, 3), (0, 1), (3, 1), (1, 0)]),
+            //+ (name, result: [conjugate Z1, conjugate Z2, conjugate X1, conjugate X2])
+            // the left tuple entry of the results belongs to the second qubit (q0) in the
+            // function call and the right entry to the first one (q1), i.e., q1 controls
+            // q0
+            ("cz",          [(1, 0), (0, 1), (2, 1), (1, 2)]),
+            ("cx",          [(1, 1), (0, 1), (2, 0), (2, 2)]),
+            ("cy",          [(1, 1), (0, 1), (2, 1), (3, 2)]),
+            ("swap",        [(0, 1), (1, 0), (0, 2), (2, 0)]),
+            ("iswap",       [(0, 1), (1, 0), (1, 3), (3, 1)]),
+            ("iswapdg",     [(0, 1), (1, 0), (1, 3), (3, 1)]),
             // these here are not conjugations with unitary operators, however it still
             // works, because the move operation is a homomorphism
-            ("move_x_to_x", [(0, 2), (1, 0), (0, 2), (0, 1)]),
-            ("move_x_to_z", [(0, 1), (1, 0), (0, 2), (0, 1)]),
-            ("move_z_to_x", [(2, 0), (0, 2), (0, 2), (0, 1)]),
-            ("move_z_to_z", [(2, 0), (0, 1), (0, 2), (0, 1)]),
+            ("move_x_to_x", [(1, 0), (0, 1), (2, 0), (2, 0)]),
+            ("move_x_to_z", [(1, 0), (0, 1), (2, 0), (1, 0)]),
+            ("move_z_to_x", [(1, 0), (2, 0), (2, 0), (0, 2)]),
+            ("move_z_to_z", [(1, 0), (1, 0), (2, 0), (0, 2)]),
         ];
 
         macro_rules! double_actions {
@@ -345,8 +348,8 @@ mod tests {
             for (action, result_generator) in actions.into_iter().zip(SINGLE_GENERATORS) {
                 let mut results = [0; 4];
                 for (i, r) in results.iter_mut().enumerate() {
-                    *r = (if (i & 2) > 0 { result_generator.1[0] } else { 0 })
-                        ^ (if (i & 1) > 0 { result_generator.1[1] } else { 0 })
+                    *r = (if (i & 1) > 0 { result_generator.1[0] } else { 0 })
+                        ^ (if (i & 2) > 0 { result_generator.1[1] } else { 0 })
                 }
                 (runner)(action, (result_generator.0, results))
             }
@@ -361,10 +364,11 @@ mod tests {
             for (action, result_generator) in actions.into_iter().zip(DOUBLE_GENERATORS) {
                 let mut results = [(0, 0); 16];
                 for (i, r) in (0..).zip(results.iter_mut()) {
-                    let a = if (i & 8) > 0 { result_generator.1[0] } else { (0, 0) };
-                    let b = if (i & 4) > 0 { result_generator.1[1] } else { (0, 0) };
-                    let c = if (i & 2) > 0 { result_generator.1[2] } else { (0, 0) };
-                    let d = if (i & 1) > 0 { result_generator.1[3] } else { (0, 0) };
+                    // cf. the masks below in double_init
+                    let a = if (i & 1) > 0 { result_generator.1[0] } else { (0, 0) };
+                    let b = if (i & 2) > 0 { result_generator.1[2] } else { (0, 0) };
+                    let c = if (i & 4) > 0 { result_generator.1[1] } else { (0, 0) };
+                    let d = if (i & 8) > 0 { result_generator.1[3] } else { (0, 0) };
                     *r = (a.0 ^ b.0 ^ c.0 ^ d.0, a.1 ^ b.1 ^ c.1 ^ d.1)
                 }
                 (runner)(action, (result_generator.0, results))
@@ -376,19 +380,20 @@ mod tests {
             vec![(0, PauliDense::try_from(input).unwrap().into())]
         }
 
-        // masks to decode p in 0..16 into two paulis and vice versa
-        const FIRST: u8 = 12; // = 1100
-        const SECOND: u8 = 3; // = 0011
-        const FIRST_SHIFT: u8 = 2;
-
         #[cfg_attr(coverage_nightly, coverage(off))]
         pub fn double_init<T: From<PauliDense>>(input: u8) -> PauliString<T> {
+            // masks to decode p in 0..16 into two paulis and vice versa
+            const SECOND: u8 = 12; // = 1100
+            const FIRST: u8 = 3; // = 0011
+            const SECOND_SHIFT: u8 = 2;
             vec![
                 (
-                    0,
-                    PauliDense::try_from((input & FIRST) >> FIRST_SHIFT).unwrap().into(),
+                    1,
+                    PauliDense::try_from((input & SECOND) >> SECOND_SHIFT)
+                        .unwrap()
+                        .into(),
                 ),
-                (1, PauliDense::try_from(input & SECOND).unwrap().into()),
+                (0, PauliDense::try_from(input & FIRST).unwrap().into()),
             ]
         }
 
@@ -426,6 +431,7 @@ mod tests {
             },
         };
 
+        #[derive(Debug)]
         struct DefaultTester {
             paulis: Map<PauliDense>,
             skip_it: bool,
@@ -505,12 +511,11 @@ mod tests {
                 let mut tracker = DefaultTester::init(2);
                 tracker.track_pauli_string(utils::single_init(input));
                 (action)(&mut tracker, 0);
+                let computed = tracker.paulis.get(&0).unwrap().storage();
                 assert_eq!(
-                    tracker.paulis.get(&0).unwrap().storage(),
-                    check,
-                    "{}, {}",
-                    result.0,
-                    input
+                    computed, check,
+                    "gate: {}, input: {}, expected: {}, computed: {}",
+                    result.0, input, check, computed
                 );
             }
         }
@@ -526,13 +531,17 @@ mod tests {
             for (input, check) in (0u8..).zip(result.1) {
                 let mut tracker = DefaultTester::init(2);
                 tracker.track_pauli_string(utils::double_init(input));
-                (action)(&mut tracker, 0, 1);
+                (action)(&mut tracker, 1, 0);
                 if tracker.skip_it {
                     tracker.skip_it = false;
                     return;
                 }
-                let output = utils::double_output(tracker.paulis);
-                assert_eq!(output, check, "{}, {}", result.0, input);
+                let computed = utils::double_output(tracker.paulis);
+                assert_eq!(
+                    computed, check,
+                    "{}, {}, {:?}, {:?}",
+                    result.0, input, check, computed
+                );
             }
         }
 

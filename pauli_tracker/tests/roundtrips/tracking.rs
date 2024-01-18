@@ -170,11 +170,11 @@ fn check_graph(
         // we explicitly do not xor(left, right), because that's what we are doing
         // in the create_dependency_graph function; here we keep it as simple is
         // possible
-        // println!("{:?}", pauli.left);
-        for dep in pauli.left.iter_vals().enumerate() {
+        // println!("{:?}", pauli.z);
+        for dep in pauli.z.iter_vals().enumerate() {
             check(dep, measured, measurements).map_err(|e| format!("left: {e}"))?
         }
-        for dep in pauli.right.iter_vals().enumerate() {
+        for dep in pauli.x.iter_vals().enumerate() {
             check(dep, measured, measurements).map_err(|e| format!("right: {e}"))?
         }
         Ok(())

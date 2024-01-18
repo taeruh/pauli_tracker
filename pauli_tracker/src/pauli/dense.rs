@@ -136,8 +136,8 @@ macro_rules! const_pauli {
 impl Pauli for PauliDense {
     const_pauli!(I, X, Y, Z,);
 
-    fn new_product(x: bool, z: bool) -> Self {
-        Self { storage: x.left() ^ z.right() }
+    fn new_product(z: bool, x: bool) -> Self {
+        Self { storage: z.z() ^ x.x() }
     }
 
     fn add(&mut self, other: Self) {
@@ -166,7 +166,6 @@ impl Pauli for PauliDense {
         self.storage ^= (self.storage & 1) << 1;
     }
 
-
     fn xpx(&mut self, other: &Self) {
         self.xor_u8(other.xmask());
     }
@@ -192,13 +191,13 @@ impl Pauli for PauliDense {
     }
 
     fn set_x(&mut self, x: bool) {
-        self.storage &= x.left() | 1;
-        self.storage |= x.left();
+        self.storage &= x.x() | 1;
+        self.storage |= x.x();
     }
 
     fn set_z(&mut self, z: bool) {
-        self.storage &= z.right() | 2;
-        self.storage |= z.right();
+        self.storage &= z.z() | 2;
+        self.storage |= z.z();
     }
 
     fn tableau_encoding(&self) -> u8 {
@@ -239,15 +238,15 @@ impl Display for PauliDense {
 // just to effectively have an impl bool to make things more convenient here; the
 // disadvantage is that we cannot define the methods to be const but we don't need that
 trait ResolvePauli {
-    fn left(self) -> u8;
-    fn right(self) -> u8;
+    fn z(self) -> u8;
+    fn x(self) -> u8;
 }
 impl ResolvePauli for bool {
-    fn left(self) -> u8 {
-        (self as u8) << 1
-    }
-    fn right(self) -> u8 {
+    fn z(self) -> u8 {
         self as u8
+    }
+    fn x(self) -> u8 {
+        (self as u8) << 1
     }
 }
 

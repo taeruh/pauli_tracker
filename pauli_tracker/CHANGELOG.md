@@ -19,6 +19,10 @@ possible.
 ## [Unreleased]
 ### Added
 ### Changed
+- **Breaking Change**: Rename "left/right" to "x/z".
+- **Breaking Change**: Swapped entries int `PauliTuple`.
+- **Breaking Change**: Swapped args in `Pauli::new_product` and
+`PauliStack::try_from_str`.
 ### Deprecated
 ### Removed
 - **Breaking Change**: Remove the `scheduler` module.

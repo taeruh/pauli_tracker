@@ -91,8 +91,8 @@ assert_eq!(
     tracker.transpose_reverted::<PauliTuple>(3) // we need to pass in the number of qubits
         .into_iter().map(|frame| PauliStack::from_iter(frame)).collect::<Vec<_>>(),
     vec![ //             qubit  X 012  Z 012  (tableau representation)
-        PauliStack::try_from_str("001", "011").unwrap(), // frame (1)
-        PauliStack::try_from_str("010", "111").unwrap(), // frame (0)
+        PauliStack::try_from_str("011", "001").unwrap(), // frame (1)
+        PauliStack::try_from_str("111", "010").unwrap(), // frame (0)
     ]
 );
 // Note that the frames order is reverted, so that one can get the frames in order when
@@ -182,9 +182,9 @@ assert_eq!(
     tracker.as_storage().sort_by_key(),
     vec![
         // tableau representation:      X      Z   (the columns are the frames)
-        (0, &PauliStack::try_from_str("100", "000").unwrap()),
-        (1, &PauliStack::try_from_str("111", "100").unwrap()),
-        (2, &PauliStack::try_from_str("010", "110").unwrap()),
+        (0, &PauliStack::try_from_str("000", "100").unwrap()),
+        (1, &PauliStack::try_from_str("100", "111").unwrap()),
+        (2, &PauliStack::try_from_str("110", "010").unwrap()),
         (3, &PauliStack::try_from_str("000", "000").unwrap()),
         (4, &PauliStack::try_from_str("000", "000").unwrap()),
         (5, &PauliStack::try_from_str("000", "000").unwrap()),
@@ -314,9 +314,9 @@ let map = [0, 1, 2, 4, 5, 7, 8];
 // these are the three output qubits
 assert_eq!(
     vec![
-        (3, &PauliStack::try_from_str("0000000", "1101010").unwrap()),
-        (6, &PauliStack::try_from_str("0000000", "0001111").unwrap()),
-        (9, &PauliStack::try_from_str("0000001", "0000000").unwrap()),
+        (3, &PauliStack::try_from_str("1101010", "0000000").unwrap()),
+        (6, &PauliStack::try_from_str("0001111", "0000000").unwrap()),
+        (9, &PauliStack::try_from_str("0000000", "0000001").unwrap()),
     ],
     circ.tracker.as_storage().sort_by_key()
 );
@@ -328,10 +328,10 @@ assert_eq!(
         (0, &PauliStack::try_from_str("", "").unwrap()),
         (1, &PauliStack::try_from_str("0", "0").unwrap()),
         (2, &PauliStack::try_from_str("00", "00").unwrap()),
-        (4, &PauliStack::try_from_str("000", "011").unwrap()),
-        (5, &PauliStack::try_from_str("0000", "0010").unwrap()),
-        (7, &PauliStack::try_from_str("00000", "00001").unwrap()),
-        (8, &PauliStack::try_from_str("000000", "000001").unwrap())
+        (4, &PauliStack::try_from_str("011", "000").unwrap()),
+        (5, &PauliStack::try_from_str("0010", "0000").unwrap()),
+        (7, &PauliStack::try_from_str("00001", "00000").unwrap()),
+        (8, &PauliStack::try_from_str("000001", "000000").unwrap())
     ],
     circ.storage.sort_by_key()
 );
@@ -434,9 +434,9 @@ impl ExtendTrackedCircuit for TrackedCircuit<DummyCircuit, Frames<Storage>, Stor
 // the output qubits
 assert_eq!(
     vec![
-        (3, &PauliStack::try_from_str("0000000", "1001110").unwrap()),
-        (6, &PauliStack::try_from_str("0000000", "0101101").unwrap()),
-        (9, &PauliStack::try_from_str("0010111", "0000000").unwrap()),
+        (3, &PauliStack::try_from_str("1001110", "0000000").unwrap()),
+        (6, &PauliStack::try_from_str("0101101", "0000000").unwrap()),
+        (9, &PauliStack::try_from_str("0000000", "0010111").unwrap()),
     ],
     circ.tracker.as_storage().sort_by_key()
 );
@@ -444,12 +444,12 @@ assert_eq!(
 assert_eq!(
     vec![
         (0, &PauliStack::try_from_str("", "").unwrap()),
-        (1, &PauliStack::try_from_str("0", "").unwrap()),
-        (2, &PauliStack::try_from_str("00", "").unwrap()),
-        (4, &PauliStack::try_from_str("000", "").unwrap()),
-        (5, &PauliStack::try_from_str("0000", "").unwrap()),
-        (7, &PauliStack::try_from_str("00000", "").unwrap()),
-        (8, &PauliStack::try_from_str("000000", "").unwrap())
+        (1, &PauliStack::try_from_str("", "0").unwrap()),
+        (2, &PauliStack::try_from_str("", "00").unwrap()),
+        (4, &PauliStack::try_from_str("", "000").unwrap()),
+        (5, &PauliStack::try_from_str("", "0000").unwrap()),
+        (7, &PauliStack::try_from_str("", "00000").unwrap()),
+        (8, &PauliStack::try_from_str("", "000000").unwrap())
     ],
     circ.storage.sort_by_key()
 );

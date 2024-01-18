@@ -72,11 +72,11 @@ pub trait Pauli {
     /// # fn main() {
     /// # use pauli_tracker::pauli::{Pauli, PauliDense};
     /// assert_eq!(PauliDense::new_product(false, false), PauliDense::new_i());
-    /// assert_eq!(PauliDense::new_product(false, true), PauliDense::new_z());
-    /// assert_eq!(PauliDense::new_product(true, false), PauliDense::new_x());
+    /// assert_eq!(PauliDense::new_product(false, true), PauliDense::new_x());
+    /// assert_eq!(PauliDense::new_product(true, false), PauliDense::new_z());
     /// assert_eq!(PauliDense::new_product(true, true), PauliDense::new_y());
     /// # }
-    fn new_product(x: bool, z: bool) -> Self;
+    fn new_product(z: bool, x: bool) -> Self;
 
     /// Add the `other` Pauli to `self` in place.
     fn add(&mut self, other: Self);
@@ -175,7 +175,7 @@ impl From<PauliEnum> for PauliDense {
 }
 impl From<PauliTuple> for PauliDense {
     fn from(pauli: PauliTuple) -> Self {
-        Self::new_product(pauli.get_x(), pauli.get_z())
+        Self::new_product(pauli.get_z(), pauli.get_x())
     }
 }
 
@@ -192,12 +192,12 @@ impl From<PauliTuple> for PauliEnum {
 
 impl From<PauliDense> for PauliTuple {
     fn from(pauli: PauliDense) -> Self {
-        Self::new_product(pauli.get_x(), pauli.get_z())
+        Self::new_product(pauli.get_z(), pauli.get_x())
     }
 }
 impl From<PauliEnum> for PauliTuple {
     fn from(pauli: PauliEnum) -> Self {
-        Self::new_product(pauli.get_x(), pauli.get_z())
+        Self::new_product(pauli.get_z(), pauli.get_x())
     }
 }
 

@@ -80,14 +80,14 @@ where
     for (bit, stack) in frames_storage {
         let mut deps: Vec<usize> = Vec::new();
 
-        let max = stack.left.len().max(stack.right.len());
-        let mut left = stack.left.clone();
-        left.resize(max, false);
-        let mut right = stack.right.clone();
-        right.resize(max, false);
-        left.or_inplace(&right);
+        let max = stack.z.len().max(stack.x.len());
+        let mut z = stack.z.clone();
+        z.resize(max, false);
+        let mut x = stack.x.clone();
+        x.resize(max, false);
+        z.or_inplace(&x);
 
-        for (dep, flag) in left.iter_vals().enumerate() {
+        for (dep, flag) in z.iter_vals().enumerate() {
             if flag {
                 deps.push(map[dep]);
             }

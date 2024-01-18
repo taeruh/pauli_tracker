@@ -162,7 +162,7 @@ macro_rules! movements {
         $to_side:ident,
         $from_doc:literal,
         $to_doc:literal
-    )),*) => {$(
+    ),)*) => {$(
         /// "Move" the
         #[doc=$from_doc]
         /// Pauli stack from the `origin` qubit to to `destination` qubit, transforming
@@ -223,8 +223,8 @@ where
         for (i, p) in string {
             match self.storage.get_mut(i) {
                 Some(pauli) => {
-                    pauli.left.set(self.frames_num, p.get_x());
-                    pauli.right.set(self.frames_num, p.get_z());
+                    pauli.z.set(self.frames_num, p.get_z());
+                    pauli.x.set(self.frames_num, p.get_x());
                 },
                 None => continue,
             }
@@ -235,27 +235,27 @@ where
     single!(s, h, sh, hs, shs,);
     fn cz(&mut self, bit_a: usize, bit_b: usize) {
         let (a, b) = unwrap_get_two_mut!(self.storage, bit_a, bit_b, "cz");
-        a.right.xor_inplace(&b.left);
-        b.right.xor_inplace(&a.left);
+        a.z.xor_inplace(&b.x);
+        b.z.xor_inplace(&a.x);
     }
 
     fn cx(&mut self, control: usize, target: usize) {
         let (c, t) = unwrap_get_two_mut!(self.storage, control, target, "cx");
-        t.left.xor_inplace(&c.left);
-        c.right.xor_inplace(&t.right);
+        t.x.xor_inplace(&c.x);
+        c.z.xor_inplace(&t.z);
     }
 
     fn cy(&mut self, control: usize, target: usize) {
-        let (c, t) = unwrap_get_two_mut!(self.storage, control, target, "cx");
-        // (c)ontrol, (t)arget, (l)eft, (r)ight, (o)ld, (n)ew
-        // crn = cro + tro + tlo
-        // cln = clo
-        // trn = tro + clo
-        // tln = tlo + clo
-        c.right.xor_inplace(&t.right);
-        c.right.xor_inplace(&t.left);
-        t.right.xor_inplace(&c.left);
-        t.left.xor_inplace(&c.left);
+        let (c, t) = unwrap_get_two_mut!(self.storage, control, target, "cy");
+        // (c)ontrol, (t)arget, z, x, (o)ld, (n)ew
+        // tzn = tzo + cxo
+        // txn = txo + cxo
+        // czn = tzo + czo + txo
+        // cxn = cxo
+        c.z.xor_inplace(&t.z);
+        c.z.xor_inplace(&t.x);
+        t.z.xor_inplace(&c.x);
+        t.x.xor_inplace(&c.x);
         // this has the same number of (xor_inplace)(xor_inplace) operations as the
         // default implementation
     }
@@ -266,27 +266,22 @@ where
     }
 
     fn iswap(&mut self, bit_a: usize, bit_b: usize) {
-        let (a, b) = unwrap_get_two_mut!(self.storage, bit_a, bit_b, "swap");
+        let (a, b) = unwrap_get_two_mut!(self.storage, bit_a, bit_b, "iswap");
+        // something smarter here ...?
         mem::swap(a, b);
-        // after a <-> b
-        // aln = alo
-        // bln = blo
-        // arn = aro + blo + alo
-        // brn = bro + blo + alo
-        a.right.xor_inplace(&a.left);
-        a.right.xor_inplace(&b.left);
-        b.right.xor_inplace(&a.left);
-        b.right.xor_inplace(&b.left);
-        // as in the Live implementation, we could save one xor_inplace by saving
-        // a.left ^ b.left in a temporary variable, but it's not clear whether that
-        // would be faster
+        a.z.xor_inplace(&b.x);
+        a.z.xor_inplace(&a.x);
+        b.z.xor_inplace(&b.x);
+        b.z.xor_inplace(&a.x);
+        // as in the Live implementation, we could save one xor_inplace by saving a.x ^
+        // b.x in a temporary variable, but it's not clear whether that would be faster
     }
 
     movements!(
-        (move_x_to_x, left, left, "X", "X"),
-        (move_x_to_z, left, right, "X", "Z"),
-        (move_z_to_x, right, left, "Z", "X"),
-        (move_z_to_z, right, right, "Z", "Z")
+        (move_z_to_z, z, z, "Z", "Z"),
+        (move_z_to_x, z, x, "Z", "X"),
+        (move_x_to_z, x, z, "X", "Z"),
+        (move_x_to_x, x, x, "X", "X"),
     );
 
     fn measure(&mut self, bit: usize) -> Result<PauliStack<B>, MissingBit> {
@@ -345,16 +340,16 @@ where
     /// type PauliStack = pauli::PauliStack<Vec<bool>>;
     /// assert_eq!(
     ///     Frames::<NaiveVector<_>>::new_unchecked(vec![
-    ///         //               frame  X 01  Z 01              qubit
-    ///         PauliStack::try_from_str("01", "10").unwrap(), // 0
-    ///         PauliStack::try_from_str("10", "11").unwrap(), // 1
-    ///         PauliStack::try_from_str("01", "11").unwrap(), // 2
+    ///         //               frame  Z 12  X 12              qubit
+    ///         PauliStack::try_from_str("10", "01").unwrap(), // 0
+    ///         PauliStack::try_from_str("11", "10").unwrap(), // 1
+    ///         PauliStack::try_from_str("11", "01").unwrap(), // 2
     ///     ].into(), 2).transpose_reverted::<PauliTuple>(3),
-    ///     vec![ // qubit (X,Z)   0      1      2      frame
-    ///                     vec![(1,0), (0,1), (1,1)], // 1
-    ///                     vec![(0,1), (1,1), (0,1)], // 2
-    ///     ].into_iter().map(|frame| frame.into_iter().map(|(l, r)|
-    ///         PauliTuple(l==1, r==1)).collect::<Vec<PauliTuple>>()).collect::<Vec<_>>()
+    ///     vec![ // qubit (Z, X)   0       1       2      frame
+    ///                     vec![(0, 1), (1, 0), (1, 1)], // 2
+    ///                     vec![(1, 0), (1, 1), (1, 0)], // 1
+    ///     ].into_iter().map(|frame| frame.into_iter().map(|(z, x)|
+    ///         PauliTuple(z==1, x==1)).collect::<Vec<PauliTuple>>()).collect::<Vec<_>>()
     /// );
     /// # }
     pub fn transpose_reverted<P: Pauli + Clone>(
@@ -444,18 +439,17 @@ mod tests {
                 }
                 (action)(&mut tracker, 0);
                 for (input, check) in (0u8..).zip(result.1) {
+                    let computed = tracker
+                        .pop_frame::<PauliDense>()
+                        .unwrap()
+                        .first()
+                        .unwrap()
+                        .1
+                        .storage();
                     assert_eq!(
-                        tracker
-                            .pop_frame::<PauliDense>()
-                            .unwrap()
-                            .first()
-                            .unwrap()
-                            .1
-                            .storage(),
-                        check,
-                        "{}, {}",
-                        result.0,
-                        input
+                        computed, check,
+                        "gate: {}, input: {}, expected: {}, computed: {}",
+                        result.0, input, check, computed
                     );
                 }
             }
@@ -475,11 +469,15 @@ mod tests {
                 for pauli in (0..16).rev() {
                     tracker.track_pauli_string(utils::double_init(pauli));
                 }
-                (action)(&mut tracker, 0, 1);
+                (action)(&mut tracker, 1, 0);
                 for (input, check) in (0u8..).zip(result.1) {
-                    let output =
+                    let computed =
                         utils::double_output(tracker.pop_frame::<PauliDense>().unwrap());
-                    assert_eq!(output, check, "{}, {}", result.0, input);
+                    assert_eq!(
+                        computed, check,
+                        "gate: {}, input: {}, expected: {:?}, computed: {:?}",
+                        result.0, input, check, computed
+                    );
                 }
             }
 

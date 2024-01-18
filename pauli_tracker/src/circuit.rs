@@ -350,7 +350,7 @@ mod tests {
                     e,
                     OverwriteStack {
                         bit: 2,
-                        stack: PauliBitVec::try_from_str("0", "1").unwrap()
+                        stack: PauliBitVec::try_from_str("1", "0").unwrap()
                     }
                 );
             },
@@ -397,7 +397,7 @@ mod tests {
         circ.track_z(1);
 
         assert_eq!(
-            vec![(1, PauliBitVec::try_from_str("0", "1").unwrap())],
+            vec![(1, PauliBitVec::try_from_str("1", "0").unwrap())],
             circ.tracker.into_storage().into_sorted_by_key()
         );
         assert_eq!(vec![(0, PauliBitVec::new())], circ.storage.into_sorted_by_key());
@@ -412,31 +412,54 @@ mod tests {
         };
 
         circ.cx(0, 2);
+        // -----
         circ.measure_and_store(0).1.unwrap();
+        //  ----
         circ.track_z(2);
+        //  izii
         circ.h(1);
+        //  izii
         circ.cx(1, 2);
+        //  zzii
         circ.cx(2, 3);
+        //  zzii
         circ.measure_and_store(2).1.unwrap();
+        //  z ii
         circ.track_z(3);
+        //  z ii
+        //  i zi
         circ.cx(1, 4);
+        //  z ii
+        //  i zi
         circ.measure_and_store(1).1.unwrap();
+        //    ii
+        //    zi
         circ.track_z(4);
+        //    ii
+        //    zi
+        //    iz
         circ.cx(4, 3);
+        //    ii
+        //    zz
+        //    iz
         circ.h(4);
+        //    ii
+        //    zx
+        //    ix
 
         assert_eq!(
             vec![
-                (3, PauliSimdBitVec::try_from_str("000", "010").unwrap()),
-                (4, PauliSimdBitVec::try_from_str("011", "000").unwrap())
+                (3, PauliSimdBitVec::try_from_str("010", "000").unwrap()),
+                (4, PauliSimdBitVec::try_from_str("000", "011").unwrap())
             ],
             circ.tracker.into_storage().into_sorted_by_key()
         );
+
         assert_eq!(
             vec![
                 (0, PauliSimdBitVec::new()),
-                (1, PauliSimdBitVec::try_from_str("00", "10").unwrap()),
-                (2, PauliSimdBitVec::try_from_str("0", "1").unwrap())
+                (1, PauliSimdBitVec::try_from_str("10", "00").unwrap()),
+                (2, PauliSimdBitVec::try_from_str("1", "0").unwrap())
             ],
             circ.storage.into_sorted_by_key()
         );

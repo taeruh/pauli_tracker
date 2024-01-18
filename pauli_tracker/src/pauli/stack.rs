@@ -30,12 +30,10 @@ use crate::boolean_vector::BooleanVector;
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq, PartialOrd, Ord, Hash)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct PauliStack<T /* : BooleanVector */> {
-    /// The bits representing the left qubit on the left-hand side in the tableau
-    /// representation, i.e., X
-    pub left: T,
-    /// The bits representing the left qubit on the left-hand side in the tableau
-    /// representation, i.e., Z
-    pub right: T,
+    /// The Z Pauli mask, i.e., the bits flagging whether there's a Z Pauli.
+    pub z: T,
+    /// The X Pauli mask, i.e., the bits flagging whether there's a X Pauli.
+    pub x: T,
 }
 
 /// The Error when one tries to parse a char into a bool.
@@ -49,11 +47,11 @@ pub struct BitCharError {
 impl<T: BooleanVector> PauliStack<T> {
     /// Create a new empty [PauliStack].
     pub fn new() -> Self {
-        Self { left: T::new(), right: T::new() }
+        Self { z: T::new(), x: T::new() }
     }
 
-    /// Create a [PauliStack] from two strings. `left` (`right`) corresponds to
-    /// [PauliStack]s `left` (`right`) field.
+    /// Create a [PauliStack] from two strings. `z` (`x`) corresponds to
+    /// [PauliStack]s `z` (`x`) field.
     ///
     /// Errors if the strings do not consist only of '0' and '1' characters.
     ///
@@ -65,13 +63,13 @@ impl<T: BooleanVector> PauliStack<T> {
     /// assert_eq!(
     ///     PauliStack::<Vec<bool>>::try_from_str("01", "10"),
     ///     Ok(PauliStack::<Vec<bool>> {
-    ///         left: vec![false, true],
-    ///         right: vec![true, false]
+    ///         z: vec![false, true],
+    ///         x: vec![true, false]
     ///     })
     /// )
     /// # }
     /// ```
-    pub fn try_from_str(left: &str, right: &str) -> Result<Self, BitCharError> {
+    pub fn try_from_str(z: &str, x: &str) -> Result<Self, BitCharError> {
         fn to_bool(c: char) -> Result<bool, BitCharError> {
             match c.to_digit(2) {
                 Some(d) => Ok(d == 1),
@@ -79,20 +77,20 @@ impl<T: BooleanVector> PauliStack<T> {
             }
         }
         Ok(Self {
-            left: left.chars().flat_map(to_bool).collect(),
-            right: right.chars().flat_map(to_bool).collect(),
+            z: z.chars().flat_map(to_bool).collect(),
+            x: x.chars().flat_map(to_bool).collect(),
         })
     }
 
-    /// Create a new [PauliStack] with both sides `left` and `right` initialized with
-    /// `len` 0/false elements.
+    /// Create a new [PauliStack] with both masks, `z` and `x` initialized with `len`
+    /// 0/false elements.
     pub fn zeros(len: usize) -> Self {
         let zero = T::zeros(len);
-        Self { left: zero.clone(), right: zero }
+        Self { z: zero.clone(), x: zero }
     }
 
-    /// Push a new [Pauli] onto the Pauli stack. If one part of the stack, i.e, `left`
-    /// or `right`, is shorter than the other, it is filled up with `false/0` to have the
+    /// Push a new [Pauli] onto the Pauli stack. If one part of the stack, i.e, `z`
+    /// or `x`, is shorter than the other, it is filled up with `false/0` to have the
     /// same length, before the `pauli` is pushed.
     ///
     /// # Examples
@@ -100,58 +98,57 @@ impl<T: BooleanVector> PauliStack<T> {
     /// # #[cfg_attr(coverage_nightly, coverage(off))]
     /// # fn main() {
     /// # use pauli_tracker::pauli::{Pauli, PauliTuple, PauliStack};
-    /// let mut pauli = PauliStack::try_from_str("1", "").unwrap();
+    /// let mut pauli = PauliStack::try_from_str("", "1").unwrap();
     /// pauli.push::<PauliTuple>(Pauli::new_z());
     /// assert_eq!(
     ///     pauli,
     ///     PauliStack::<Vec<bool>> {
-    ///         left: vec![true, false],
-    ///         right: vec![false, true]
+    ///         z: vec![false, true],
+    ///         x: vec![true, false]
     ///     }
     /// );
     /// # }
     pub fn push<P: Pauli>(&mut self, pauli: P) {
-        let left = self.left.len();
-        let right = self.right.len();
-        match left.cmp(&right) {
-            Ordering::Less => self.left.resize(right, false),
+        let z_len = self.z.len();
+        let x_len = self.x.len();
+        match z_len.cmp(&x_len) {
+            Ordering::Less => self.z.resize(x_len, false),
             Ordering::Equal => {},
-            Ordering::Greater => self.right.resize(left, false),
+            Ordering::Greater => self.x.resize(z_len, false),
         }
-        self.left.push(pauli.get_x());
-        self.right.push(pauli.get_z());
+        self.z.push(pauli.get_z());
+        self.x.push(pauli.get_x());
     }
 
     /// Pop the last element from the stack and return it. If one part of the stack,
-    /// i.e., `left` or `right` is shorter than the other, it `false/0` is substituted
-    /// for the missing value. Returns [None] if both parts of the stacks are empty.
-    /// is empty.
+    /// i.e., `z` or `x` is shorter than the other, it `false/0` is substituted for the
+    /// missing value. Returns [None] if both parts of the stacks are empty. is empty.
     ///
     /// # Examples
     /// ```
     /// # #[cfg_attr(coverage_nightly, coverage(off))]
     /// # fn main() {
     /// # use pauli_tracker::pauli::{Pauli, PauliTuple, PauliStack};
-    /// let mut pauli = PauliStack::<Vec<bool>>::try_from_str("01", "1").unwrap();
+    /// let mut pauli = PauliStack::<Vec<bool>>::try_from_str("1", "01").unwrap();
     /// assert_eq!(pauli.pop(), Some(PauliTuple::X));
     /// assert_eq!(pauli.pop(), Some(PauliTuple::Z));
     /// assert_eq!(pauli.pop::<PauliTuple>(), None);
     /// # }
     pub fn pop<P: Pauli>(&mut self) -> Option<P> {
-        match self.left.len().cmp(&self.right.len()) {
+        match self.z.len().cmp(&self.x.len()) {
             Ordering::Less => Some(P::new_product(
                 false,
-                match self.right.pop() {
+                match self.x.pop() {
                     Some(v) => v,
-                    // since right.len > left.len >= 0
+                    // since x.len > z.len >= 0
                     None => unreachable!(),
                 },
             )),
-            Ordering::Equal => Some(P::new_product(self.left.pop()?, self.right.pop()?)),
+            Ordering::Equal => Some(P::new_product(self.z.pop()?, self.x.pop()?)),
             Ordering::Greater => Some(P::new_product(
-                match self.left.pop() {
+                match self.z.pop() {
                     Some(v) => v,
-                    // since left.len > right.len >= 0
+                    // since z.len > x.len >= 0
                     None => unreachable!(),
                 },
                 false,
@@ -161,25 +158,25 @@ impl<T: BooleanVector> PauliStack<T> {
 
     /// Get the Pauli at index `idx` from the stack.
     ///
-    /// If one part of the stack, i.e., `left` or `right`, doesn't have the
-    /// corresponding element, but the other does, the missing element is substituted
-    /// with `false/0`. If both parts of the stack are too short, [None] is returned.
+    /// If one part of the stack, i.e., `x` or `z`, doesn't has the corresponding element,
+    /// but the other does, the missing element is substituted with `false/0`. If both
+    /// parts of the stack are too short, [None] is returned.
     pub fn get_with_default<P: Pauli>(&self, idx: usize) -> Option<P> {
-        if idx < self.left.len() {
+        if idx < self.z.len() {
             Some(P::new_product(
-                match self.left.get(idx) {
+                match self.z.get(idx) {
                     Some(v) => v,
-                    // since idx < self.left.len()
+                    // since 0 <= idx < self.z.len()
                     None => unreachable!(),
                 },
-                self.right.get(idx).unwrap_or(false),
+                self.x.get(idx).unwrap_or(false),
             ))
-        } else if idx < self.right.len() {
+        } else if idx < self.x.len() {
             Some(P::new_product(
-                self.left.get(idx).unwrap_or(false),
-                match self.right.get(idx) {
+                self.z.get(idx).unwrap_or(false),
+                match self.x.get(idx) {
                     Some(v) => v,
-                    // since idx < self.right.len()
+                    // since 0 <= idx < self.x.len()
                     None => unreachable!(),
                 },
             ))
@@ -191,41 +188,41 @@ impl<T: BooleanVector> PauliStack<T> {
     /// Get the Pauli at index `idx` from the stack, assuming that both stack parts have
     /// an element at that index.
     pub fn get<P: Pauli>(&self, idx: usize) -> Option<P> {
-        P::new_product(self.left.get(idx)?, self.right.get(idx)?).into()
+        P::new_product(self.z.get(idx)?, self.x.get(idx)?).into()
     }
 
-    /// Perform a bitwise XOR between the left and right stacks of `self` and `other`,
+    /// Perform a bitwise XOR between the z and x stacks of `self` and `other`,
     /// respectively, updating `self` in place.
     pub fn xor_inplace(&mut self, other: &Self) {
-        self.left.xor_inplace(&other.left);
-        self.right.xor_inplace(&other.right);
+        self.z.xor_inplace(&other.z);
+        self.x.xor_inplace(&other.x);
     }
 
     // we can define the action of local gates
 
     /// Conjugate the Paulistack with the S gate ignoring phases.
     pub fn s(&mut self) {
-        self.right.xor_inplace(&self.left);
+        self.z.xor_inplace(&self.x);
     }
     /// Conjugate the PauliStack with the Hadamard gate ignoring phases.
     pub fn h(&mut self) {
-        mem::swap(&mut self.left, &mut self.right);
+        mem::swap(&mut self.z, &mut self.x);
     }
     /// Conjugate the Paulistack with the SH gate ignoring phases.
     pub fn sh(&mut self) {
-        // this is just sh ... is there a simpler way?
-        mem::swap(&mut self.left, &mut self.right);
-        self.right.xor_inplace(&self.left);
+        // is there a simpler way?
+        self.h();
+        self.s();
     }
     /// Conjugate the Paulistack with the HS gate ignoring phases.
     pub fn hs(&mut self) {
-        // this is just hs ... is there a simpler way?
-        self.right.xor_inplace(&self.left);
-        mem::swap(&mut self.left, &mut self.right);
+        // is there a simpler way?
+        self.s();
+        self.h();
     }
     /// Conjugate the Paulistack with the SHS gate ignoring phases.
     pub fn shs(&mut self) {
-        self.left.xor_inplace(&self.right);
+        self.x.xor_inplace(&self.z);
     }
 
     /// Multiply the Paulis, i.e., summing them up mod 2 in the tableau representation,
@@ -257,7 +254,7 @@ impl<T: BooleanVector> PauliStack<T> {
     /// # }
     /// ```
     pub fn sum_up(&self, filter: &[bool]) -> PauliTuple {
-        PauliTuple::new_product(self.left.sum_up(filter), self.right.sum_up(filter))
+        PauliTuple::new_product(self.z.sum_up(filter), self.x.sum_up(filter))
     }
 }
 

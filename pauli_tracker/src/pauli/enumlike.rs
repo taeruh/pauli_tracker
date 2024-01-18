@@ -54,7 +54,7 @@ macro_rules! const_pauli {
 impl Pauli for PauliEnum {
     const_pauli!(I, X, Y, Z,);
 
-    fn new_product(x: bool, z: bool) -> Self {
+    fn new_product(z: bool, x: bool) -> Self {
         match (x, z) {
             (false, false) => Self::I,
             (false, true) => Self::Z,
@@ -123,7 +123,6 @@ impl Pauli for PauliEnum {
             Self::Y => *self = Self::Z,
         }
     }
-
 
     fn xpx(&mut self, other: &Self) {
         match (*self, *other) {

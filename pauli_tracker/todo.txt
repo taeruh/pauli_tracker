@@ -2,9 +2,6 @@
 
 ---------- release new major
 
-- maybe change x<->10,z<->01 to x<->01,z<->10 (weyl) (and with that left<->right and all
-  related stuff)
-
 - replace xor_inplace with BitXorAssign, and similar
 - universal bit ops, e.g., add "or" and "not"
 

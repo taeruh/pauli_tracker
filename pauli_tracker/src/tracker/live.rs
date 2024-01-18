@@ -229,12 +229,11 @@ mod tests {
                 let mut tracker = Live::<P>::init(2);
                 tracker.track_pauli_string(utils::single_init(input));
                 (action)(&mut tracker, 0);
+                let computed = P::into(*tracker.storage.get(0).unwrap()).storage();
                 assert_eq!(
-                    P::into(*tracker.storage.get(0).unwrap()).storage(),
-                    check,
-                    "{}, {}",
-                    result.0,
-                    input
+                    computed, check,
+                    "gate: {}, input: {}, expected: {}, computed: {}",
+                    result.0, input, check, computed
                 );
             }
         }
@@ -262,9 +261,13 @@ mod tests {
             for (input, check) in (0u8..).zip(result.1) {
                 let mut tracker = Live::init(2);
                 tracker.track_pauli_string(utils::double_init(input));
-                (action)(&mut tracker, 0, 1);
-                let output = utils::double_output(tracker.storage);
-                assert_eq!(output, check, "{}, {}", result.0, input);
+                (action)(&mut tracker, 1, 0);
+                let computed = utils::double_output(tracker.storage);
+                assert_eq!(
+                    computed, check,
+                    "gate: {}, input: {}, expected: {:?}, computed: {:?}",
+                    result.0, input, check, computed
+                );
             }
         }
 
