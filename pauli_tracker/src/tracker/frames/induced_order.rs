@@ -1,5 +1,5 @@
 /*!
-The main content of this module is the [get_ordering] function that can be
+The main content of this module is the [get_order] function that can be
 used to define a time ordering induced by the tracked frames.
 */
 
