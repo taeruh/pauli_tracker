@@ -6,8 +6,8 @@ use pyo3::{
 
 use crate::{
     impl_helper::{
-        self,
         doc,
+        serialization,
     },
     Module,
 };
@@ -44,7 +44,7 @@ impl PartialOrderGraph {
     }
 }
 
-impl_helper::serialization::serde!(PartialOrderGraph);
+serialization::serde!(PartialOrderGraph);
 
 // Tracker and Init must be in scope for the macro to work.
 macro_rules! impl_frames {
