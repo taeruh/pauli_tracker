@@ -180,21 +180,21 @@ pub fn pauli_stack(input: TokenStream) -> TokenStream {
         mut additional,
     } = parse_macro_input!(input as GenWithAdditional);
 
-    let left = pre.name("left");
-    let right = pre.name("right");
+    let x = pre.name("z");
+    let z = pre.name("x");
     let inner_type = additional.pop().unwrap();
 
     quote! {
         #[no_mangle]
-        pub extern "C" fn #left(x: &mut #typ) -> *mut #inner_type
+        pub extern "C" fn #z(x: &mut #typ) -> *mut #inner_type
         {
-            &mut x.left as *mut #inner_type
+            &mut x.x as *mut #inner_type
         }
 
         #[no_mangle]
-        pub extern "C" fn #right(x: &mut #typ) -> *mut #inner_type
+        pub extern "C" fn #x(x: &mut #typ) -> *mut #inner_type
         {
-            &mut x.right as *mut #inner_type
+            &mut x.z as *mut #inner_type
         }
     }
     .into()

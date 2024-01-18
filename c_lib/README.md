@@ -2,6 +2,9 @@
 
 C bindings partially exporting the API of the [pauli_tracker crate].
 
+*While everything should build, the bindings here are lacking behind the Rust crate. The
+current focus is on the Rust crate and the Python wrapper.*
+
 ## Compiling the library
 
 The header file is `pauli_tracker.h`. On Linux, run `make library` (do the equivalent of

@@ -164,8 +164,8 @@ where
     let frames_num = frames.frames_num();
     let mut storage = frames.into_storage();
     for (_, stack) in storage.iter_pairs_mut() {
-        stack.left.remove(row);
-        stack.right.remove(row);
+        stack.z.remove(row);
+        stack.x.remove(row);
     }
     Frames::new_unchecked(storage, frames_num - 1)
 }

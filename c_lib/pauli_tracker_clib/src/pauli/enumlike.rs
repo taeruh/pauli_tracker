@@ -110,14 +110,6 @@ impl Pauli for PauliEnum {
         }
     }
 
-    fn sx(&mut self) {
-        match *self {
-            Self::I => {}
-            Self::X => *self = Self::X,
-            Self::Z => *self = Self::Y,
-            Self::Y => *self = Self::Z,
-        }
-    }
 
     fn xpx(&mut self, other: &Self) {
         match (*self, *other) {

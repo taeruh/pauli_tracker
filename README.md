@@ -40,10 +40,9 @@ generic and hopefully flexible library which allows you to choose different core
 structures fitted to the problem you want to solve.
 
 However, we also have [Python package] that wraps the basic functionality for easy use
-from Python, and a [C wrapper] exporting partially exporting the API in form of a
-compiled C library. Note that both wrappers might randomly miss some important
-functionality because we just forgot to wrap it. In that case, please open an issue or a
-pull request if you need it.
+from Python. Note that this wrapper might randomly miss some important functionality
+because we just forgot to wrap it. In that case, please open an issue or a pull request if
+you need it.
 
 ## Examples
 
@@ -77,7 +76,6 @@ See [LICENSE-APACHE](LICENSE-APACHE) and [LICENSE-MIT](LICENSE-MIT).
 [Conjugation rules]: https://github.com/taeruh/pauli_tracker/blob/main/docs/conjugation_rules.pdf
 [contributing guidelines]: https://github.com/taeruh/pauli_tracker/blob/main/CONTRIBUTING.md
 [crate documentation]: https://docs.rs/pauli_tracker/#examples
-[C wrapper]: https://github.com/taeruh/pauli_tracker/blob/main/c_lib
 [pauli_tracker crate]: https://github.com/taeruh/pauli_tracker/blob/main/pauli_tracker
 [Python documentation]: https://taeruh.github.io/pauli_tracker/
 [Python package]: https://github.com/taeruh/pauli_tracker/tree/main/python_lib#readme
