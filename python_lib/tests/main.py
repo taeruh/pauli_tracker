@@ -1,52 +1,33 @@
 #!/usr/bin/env python
 
 
-from pauli_tracker.live.map import Live
+from pauli_tracker import frames
 from pauli_tracker.frames.map import Frames
-
-
-def foo(a: int = 1) -> int:
-    return 2 * a
+from pauli_tracker.pauli import PauliStack
 
 
 if __name__ == "__main__":
-    a = foo()
-    print(a)
+    tracker = Frames(1)
 
-    tracker = Live()
-    print(tracker.into_py_dict_recursive())
-    tracker = Live(3)
+    length = 1
     tracker.track_y(0)
-    tracker.track_y(1)
-    tracker.track_x(0)
-    print(tracker.into_py_dict_recursive())
-    a = tracker.get(0)
-    print(a.tableau_encoding())
-    a = tracker.get(1)
-    print(a.tableau_encoding())
+    for i in range(64):
+        length += 1
+        tracker.track_x(0)
+    for i in range(64):
+        length += 1
+        tracker.track_z(0)
+    for i in range(64):
+        length += 1
+        tracker.track_y(0)
 
-    # print(tracker.serialize.__doc__)
-    # print(tracker.deserialize.__doc__)
+    stack = tracker.into_py_dict_recursive()[0]
+    bool_stack = (
+        frames.bitvector_to_boolvector(stack[0], length),
+        frames.bitvector_to_boolvector(stack[1], length),
+    )
+    print(bool_stack)
+    print(stack)
+    print(length, (len(bool_stack[0]), len(bool_stack[1])))
 
-    tracker.serialize("output/foo.json", "bincode")
-
-    tracker = Frames(3)
-    tracker.track_y(1)
-    tracker.track_y(2)
-    a = tracker.get(0)
-    print(tracker.into_py_dict_recursive())  # bitvectors!
-    print(a.sum_up([True] * 3).into_py_tuple())
-    tracker.serialize("output/bar.json", "bincode")
-    new_tracker = Frames.deserialize("output/bar.json", "bincode")
-    # print(new_tracker.into_py_array_recursive())
-
-    dep_graph = tracker.get_ordering([0, 1])
-    # dep_graph.serialize("output/bar.json")
-    dep_graph = dep_graph.into_py_graph()
-    print(dep_graph)
-    print(tracker.get_py_ordering([0, 1]))
-
-    tracker = Frames.deserialize("output/hey.json")
-    dep_graph = tracker.get_ordering([3, 4, 5, 6, 7, 8, 2, 10, 11, 12, 1, 14])
-    print(dep_graph.into_py_graph())
-    dep_graph.serialize("output/graph.json")
+    a = PauliStack()

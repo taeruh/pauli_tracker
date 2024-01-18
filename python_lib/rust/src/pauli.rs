@@ -1,4 +1,3 @@
-use bitvec::vec::BitVec;
 use lib::pauli::{
     self,
     Pauli,
@@ -11,6 +10,7 @@ use pyo3::{
 
 use crate::{
     impl_helper::doc,
+    BitVec,
     Module,
 };
 
@@ -84,21 +84,32 @@ impl PauliTuple {
 }
 
 /// `PauliStack
-/// <https://docs.rs/pauli_tracker/latest/pauli_tracker/pauli/struct.PauliStack.html>`_
+/// <https://docs.rs/pauli_tracker/latest/pauli_tracker/pauli/struct.PauliStack.html>`_\<`BitVec
+/// <https://docs.rs/bitvec/latest/bitvec/vec/struct.BitVec.html>`_\>.
+///
+/// The Pauli Z and X stacks are bitvectors where each chunk consists of 64 bits. In the
+/// chunk the bits are ordered from least to most significant. You can use
+/// :func:`~pauli_tracker.bitvector_to_boolvector` to convert the bitvector to a list of
+/// booleans.
 #[pyo3::pyclass(subclass)]
 pub struct PauliStack(pub pauli::PauliStack<BitVec>);
 
 #[pyo3::pymethods]
 impl PauliStack {
+    /// **Not defined**
+    fn __init__(&self) {}
+
     #[doc = doc::transform!()]
     ///
     /// Returns:
-    ///     tuple[list[int], list[int]]:
+    ///     tuple[list[int], list[int]]: The Z (left tuple element) and X (right tuple
+    ///     element) components
     #[allow(clippy::wrong_self_convention)]
-    fn into_py_tuple(&self) -> (Vec<usize>, Vec<usize>) {
+    fn into_py_tuple(&self) -> (Vec<u64>, Vec<u64>) {
         (self.0.z.clone().into_vec(), self.0.x.clone().into_vec())
     }
 
+    /// This is `sum_up <file:///home/jannis/s/a/phd/pauli_tracker/pauli_tracker/target/doc/pauli_tracker/pauli/stack/struct.PauliStack.html#method.sum_up>`_
     fn sum_up(&self, filter: Vec<bool>) -> PauliTuple {
         PauliTuple(self.0.sum_up(&filter))
     }

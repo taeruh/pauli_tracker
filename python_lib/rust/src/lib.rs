@@ -42,6 +42,10 @@ mod frames;
 mod live;
 mod pauli;
 
+// ensuring that we always use 64 bits per chunk (promised by the API docs and used
+// internally, e.g., in the bitvector_to_boolvector function in __init__.py)
+type BitVec = bitvec::vec::BitVec<u64, bitvec::order::LocalBits>;
+
 #[pyo3::pymodule]
 fn _lib(py: Python, module: &PyModule) -> PyResult<()> {
     let module = Module {

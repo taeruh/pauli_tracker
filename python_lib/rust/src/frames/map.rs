@@ -3,7 +3,6 @@ use std::{
     hash::BuildHasherDefault,
 };
 
-use bitvec::vec::BitVec;
 use lib::{
     collection,
     collection::Init,
@@ -22,6 +21,7 @@ use crate::{
         links,
     },
     pauli::PauliStack,
+    BitVec,
     Module,
 };
 
@@ -59,12 +59,18 @@ impl Frames {
             .collect()
     }
 
+    // /// Create a new qubit in the tracker, returning the old Pauli stack if the
+    // /// qubit was already initialized.
+    // fn new_qubit(&mut self, bit: usize) -> Option<crate::pauli::PauliStack> {
+    //     self.0.new_qubit(bit).map(crate::pauli::PauliStack)
+    // }
+
     #[doc = doc::transform!()]
     ///
-    /// Returns:
+    /// Returns: cf. :obj:`~pauli_tracker.pauli.PauliStack`
     ///     dict[int, tuple[list[int], list[int]]]:
     #[allow(clippy::wrong_self_convention)]
-    fn into_py_dict_recursive(&self) -> HashMap<usize, (Vec<usize>, Vec<usize>)> {
+    fn into_py_dict_recursive(&self) -> HashMap<usize, (Vec<u64>, Vec<u64>)> {
         self.0
             .clone()
             .into_storage()

@@ -4,13 +4,14 @@ use bitvec::{
         BitSlice,
         BitValIter,
     },
+    store::BitStore,
     vec::BitVec,
 };
 
 use super::BooleanVector;
 
-impl BooleanVector for BitVec {
-    type IterVals<'l> = BitValIter<'l, usize, Lsb0>
+impl<T: BitStore> BooleanVector for BitVec<T, Lsb0> {
+    type IterVals<'l> = BitValIter<'l, T, Lsb0>
     where
         Self: 'l;
 
@@ -19,7 +20,7 @@ impl BooleanVector for BitVec {
     }
 
     fn zeros(len: usize) -> Self {
-        bitvec::bitvec![0; len]
+        Self::repeat(false, len)
     }
 
     fn set(&mut self, idx: usize, flag: bool) {

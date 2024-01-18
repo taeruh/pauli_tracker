@@ -1,4 +1,3 @@
-use bitvec::vec::BitVec;
 use lib::{
     collection::{
         Init,
@@ -18,6 +17,7 @@ use crate::{
         links,
     },
     pauli::PauliStack,
+    BitVec,
     Module,
 };
 
@@ -50,10 +50,10 @@ impl Frames {
 
     #[doc = doc::transform!()]
     ///
-    /// Returns:
+    /// Returns: cf. :obj:`~pauli_tracker.pauli.PauliStack`
     ///     list[tuple[list[int], list[int]]]:
     #[allow(clippy::wrong_self_convention)]
-    fn into_py_array_recursive(&self) -> Vec<(Vec<usize>, Vec<usize>)> {
+    fn into_py_array_recursive(&self) -> Vec<(Vec<u64>, Vec<u64>)> {
         self.0
             .clone()
             .into_storage()
