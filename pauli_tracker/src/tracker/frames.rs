@@ -47,7 +47,7 @@ use crate::{
     },
 };
 
-pub mod induced_ordering;
+pub mod induced_order;
 
 /// A container of multiple Pauli frames that implements [Tracker].
 ///

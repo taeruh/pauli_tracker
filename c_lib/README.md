@@ -2,7 +2,7 @@
 
 C bindings partially exporting the API of the [pauli_tracker crate].
 
-*While everything should build, the bindings here are lacking behind the Rust crate. The
+*While everything should compile, the bindings here are lacking behind the Rust crate. The
 current focus is on the Rust crate and the Python wrapper.*
 
 ## Compiling the library

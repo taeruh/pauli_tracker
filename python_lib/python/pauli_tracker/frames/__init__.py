@@ -5,4 +5,4 @@ The `Frames
 This tracker when building up a circuit. It trackes all Pauli frames in a big matrix.
 """
 
-from pauli_tracker._lib.frames import PartialOrderingGraph
+from pauli_tracker._lib.frames import PartialOrderGraph

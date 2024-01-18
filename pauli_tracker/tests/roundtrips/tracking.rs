@@ -27,9 +27,9 @@ use pauli_tracker::{
     },
     tracker::{
         frames::{
-            induced_ordering::{
+            induced_order::{
                 self,
-                PartialOrderingGraph,
+                PartialOrderGraph,
             },
             Frames,
         },
@@ -98,7 +98,7 @@ fn roundtrip(init: usize, ops: Vec<Operation>) {
     circuit.tracker.measure_and_store_all(&mut circuit.storage);
 
     if !measurements.0.is_empty() {
-        let graph = induced_ordering::get_ordering(
+        let graph = induced_order::get_order(
             <Storage as Iterable>::iter_pairs(&circuit.storage),
             &measurements.0,
         );
@@ -135,7 +135,7 @@ fn roundtrip(init: usize, ops: Vec<Operation>) {
 
 // {{ helpers to perform the checks
 fn check_graph(
-    graph: &PartialOrderingGraph,
+    graph: &PartialOrderGraph,
     storage: &Storage,
     measurements: &[usize],
 ) -> Result<(), String> {

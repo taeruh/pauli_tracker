@@ -10,14 +10,14 @@ use crate::{
 
 /// A layered graph, describing the partial (time) ordering of the qubits.
 ///
-/// Each layer l_i = PartialOrderingGraph\[i\] consist of a vector of tuples, where the
+/// Each layer l_i = PartialOrderGraph\[i\] consist of a vector of tuples, where the
 /// first tuple element is the node qubit and the second tuple element contains the
 /// qubits which are lower ordered than the node qubit (the dependencies of the node
 /// qubit). However, transitivity is skipped, e.g., if we have 0 > 1 > 2, then we list
 /// only 1 as dependency of 0, since the information 0 > 2 is already covered in 0 > 1 and
 /// 1 > 2. The layering gives some global information: A node in layer l_i has at least
 /// one dependency in layer l_{i-1}.
-pub type PartialOrderingGraph = Vec<Vec<(usize, Vec<usize>)>>;
+pub type PartialOrderGraph = Vec<Vec<(usize, Vec<usize>)>>;
 
 /// Sort the `frames_storage`'s qubits according to the induced dependencies by the
 /// frames (row through the PauliStacks).
@@ -43,7 +43,7 @@ pub type PartialOrderingGraph = Vec<Vec<(usize, Vec<usize>)>>;
 /// use pauli_tracker::{
 ///     collection::BufferedVector,
 ///     pauli::PauliStack,
-///     tracker::frames::induced_ordering,
+///     tracker::frames::induced_order,
 /// };
 /// let storage = BufferedVector::from(vec![
 ///     PauliStack::<Vec<bool>>::try_from_str("", "").unwrap(),
@@ -53,7 +53,7 @@ pub type PartialOrderingGraph = Vec<Vec<(usize, Vec<usize>)>>;
 /// ]);
 /// let map = vec![0, 3];
 /// assert_eq!(
-///     induced_ordering::get_ordering(&storage, &map),
+///     induced_order::get_order(&storage, &map),
 ///     vec![
 ///         vec![(0, vec![])],
 ///         vec![(3, vec![0]), (1, vec![0])],
@@ -62,7 +62,7 @@ pub type PartialOrderingGraph = Vec<Vec<(usize, Vec<usize>)>>;
 /// );
 /// # }
 /// ```
-pub fn get_ordering<'l, I, B>(frames_storage: I, map: &[usize]) -> PartialOrderingGraph
+pub fn get_order<'l, I, B>(frames_storage: I, map: &[usize]) -> PartialOrderGraph
 where
     I: IntoIterator<Item = (usize, &'l PauliStack<B>)>,
     B: BooleanVector + 'l,
@@ -154,14 +154,14 @@ where
 /// ```
 /// # #[cfg_attr(coverage_nightly, coverage(off))]
 /// # fn main() {
-/// # use pauli_tracker::tracker::frames::induced_ordering::sort_layers_by_bits;
+/// # use pauli_tracker::tracker::frames::induced_order::sort_layers_by_bits;
 /// let mut graph = vec![vec![(0, vec![])], vec![(3, vec![0]), (1, vec![0])]];
 /// sort_layers_by_bits(&mut graph);
 ///
 /// assert_eq!(graph, vec![vec![(0, vec![])], vec![(1, vec![0]), (3, vec![0])],]);
 /// # }
 /// ```
-pub fn sort_layers_by_bits(graph: &mut PartialOrderingGraph) {
+pub fn sort_layers_by_bits(graph: &mut PartialOrderGraph) {
     for layer in graph {
         layer.sort_by_key(|(bit, _)| *bit)
     }

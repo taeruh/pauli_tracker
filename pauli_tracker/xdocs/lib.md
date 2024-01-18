@@ -145,7 +145,7 @@ assert_eq!(tracker.as_ref().0, conditional_summed_frames, "{measurements:?}");
 ```
 
 ### The time ordering (of measurements)
-This example introduces the [induced_ordering] module that can be used to
+This example introduces the [induced_order] module that can be used to
 analyse measurement dependencies.
 ```rust
 # #[cfg_attr(coverage_nightly, coverage(off))]
@@ -154,7 +154,7 @@ analyse measurement dependencies.
 use pauli_tracker::{
     collection::{BufferedVector, Iterable, Init},
     pauli::{self, Pauli},
-    tracker::{Tracker, frames::{self, induced_ordering}},
+    tracker::{Tracker, frames::{self, induced_order}},
 };
 type BoolVec = Vec<bool>;
 type PauliStack = pauli::PauliStack<BoolVec>;
@@ -202,7 +202,7 @@ let map = [
 
 // we are interested in how many steps of parallel measurement we need to measure qubits
 // "0" to "4"; this can be figured out with the time ordering graph:
-let graph = induced_ordering::get_ordering(
+let graph = induced_order::get_order(
     Iterable::iter_pairs(tracker.as_storage()), &map);
 
 // in this case the graph is already sorted according to the node numbers, but that is
@@ -247,7 +247,7 @@ use pauli_tracker::{
     circuit::{CliffordCircuit, DummyCircuit, TrackedCircuit},
     collection::{Map, BufferedVector, Iterable, Full, Init},
     pauli::{self, Pauli},
-    tracker::{Tracker, frames::{self, induced_ordering}},
+    tracker::{Tracker, frames::{self, induced_order}},
 };
 
 type BoolVec = bit_vec::BitVec;
@@ -349,7 +349,7 @@ let storage = BufferedVector::from(
 );
 // now the graph:
 assert_eq!(
-    induced_ordering::get_ordering(Iterable::iter_pairs(&storage), &map),
+    induced_order::get_order(Iterable::iter_pairs(&storage), &map),
     vec![
         vec![(0, vec![]), (1, vec![]), (2, vec![])],
         vec![(5, vec![2]), (4, vec![1, 2])],
@@ -383,7 +383,7 @@ with [Tracker::move_z_to_z]:
 #     pauli::{self, Pauli},
 #     circuit::{CliffordCircuit, DummyCircuit, TrackedCircuit},
 #     collection::{Map, BufferedVector, Iterable, Full, Init},
-#     tracker::{Tracker, frames::{Frames, induced_ordering}},
+#     tracker::{Tracker, frames::{Frames, induced_order}},
 # };
 # type BoolVec = bit_vec::BitVec;
 # type PauliStack = pauli::PauliStack<BoolVec>;
@@ -464,7 +464,7 @@ assert_eq!(
 // ...
 
 assert_eq!(
-    induced_ordering::get_ordering(&storage, &map),
+    induced_order::get_order(&storage, &map),
     vec![
         vec![
             (0, vec![]), (1, vec![]), (2, vec![]),
@@ -486,7 +486,7 @@ assert_eq!(
 [bit_vec::BitVec]: https://docs.rs/bit-vec/latest/bit_vec/struct.BitVec.html
 [bit-vec]: https://docs.rs/bit-vec/latest/bit_vec/index.html
 [BooleanVector]: boolean_vector::BooleanVector
-[induced_ordering]: tracker::frames::induced_ordering
+[induced_order]: tracker::frames::induced_order
 [Frames]: tracker::frames::Frames
 [paper]: https://arxiv.org/abs/2209.07345v2
 [rand]: https://crates.io/crates/rand
