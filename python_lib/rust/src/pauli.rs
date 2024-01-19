@@ -9,7 +9,7 @@ use pyo3::{
 };
 
 use crate::{
-    impl_helper::doc,
+    impl_helper::{doc, serialization},
     BitVec,
     Module,
 };
@@ -110,7 +110,7 @@ impl PauliStack {
         (self.0.z.clone().into_vec(), self.0.x.clone().into_vec())
     }
 
-    fn xor_inplace(&mut self, other: &PauliStack) {
+    pub fn xor_inplace(&mut self, other: &PauliStack) {
         self.0.xor_inplace(&other.0);
     }
 
@@ -122,6 +122,8 @@ impl PauliStack {
         PauliTuple(self.0.sum_up(&filter))
     }
 }
+
+serialization::serde!(PauliStack);
 
 pub fn add_module(py: Python<'_>, parent_module: &Module) -> PyResult<()> {
     let module = Module::new(py, "pauli", parent_module.path.clone())?;

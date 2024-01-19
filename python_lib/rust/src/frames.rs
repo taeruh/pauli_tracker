@@ -71,6 +71,17 @@ impl StackedTransposedReverted {
     ///     StackedTransposedReverted:
     fn __init__(&self, _stack: Vec<PauliStack>) {}
 
+    // Use get_and_add_to_stack if you directly want to add it to another stack to avoild
+    // cloning.
+    fn get(&self, index: usize) -> Option<PauliStack> {
+        self.0.get(index).cloned().map(PauliStack)
+    }
+
+    /// Add the Pauli stack at the given index to the given stack.
+    fn get_and_add_to_stack(&self, index: usize, stack: &mut PauliStack) {
+        stack.0.xor_inplace(self.0.get(index).unwrap());
+    }
+
     fn pop(&mut self) -> Option<PauliStack> {
         self.0.pop().map(PauliStack)
     }

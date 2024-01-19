@@ -13,10 +13,10 @@ if __name__ == "__main__":
     transposed = tracker.stacked_transpose_reverted(2)
     print(transposed.into_py_matrix())
 
-    frame = transposed.pop()
+    frame = transposed.get(0)
     print(frame.into_py_tuple())
     print(frame.get(1).into_py_tuple())
-    frame.xor_inplace(transposed.pop())
     print(frame.into_py_tuple())
-    print(transposed.pop())
+    transposed.get_and_add_to_stack(0, frame)
+    print(frame.into_py_tuple())
 
