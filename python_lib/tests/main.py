@@ -1,33 +1,22 @@
 #!/usr/bin/env python
 
 
-from pauli_tracker import frames
 from pauli_tracker.frames.map import Frames
 from pauli_tracker.pauli import PauliStack
 
 
 if __name__ == "__main__":
-    tracker = Frames(1)
+    tracker = Frames(2)
+    tracker.track_x(0)
+    tracker.track_y(1)
 
-    length = 1
-    tracker.track_y(0)
-    for i in range(64):
-        length += 1
-        tracker.track_x(0)
-    for i in range(64):
-        length += 1
-        tracker.track_z(0)
-    for i in range(64):
-        length += 1
-        tracker.track_y(0)
+    transposed = tracker.stacked_transpose_reverted(2)
+    print(transposed.into_py_matrix())
 
-    stack = tracker.into_py_dict_recursive()[0]
-    bool_stack = (
-        frames.bitvector_to_boolvector(stack[0], length),
-        frames.bitvector_to_boolvector(stack[1], length),
-    )
-    print(bool_stack)
-    print(stack)
-    print(length, (len(bool_stack[0]), len(bool_stack[1])))
+    frame = transposed.pop()
+    print(frame.into_py_tuple())
+    print(frame.get(1).into_py_tuple())
+    frame.xor_inplace(transposed.pop())
+    print(frame.into_py_tuple())
+    print(transposed.pop())
 
-    a = PauliStack()

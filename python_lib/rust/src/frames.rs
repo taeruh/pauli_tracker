@@ -1,4 +1,7 @@
-use lib::tracker::frames::induced_order;
+use lib::{
+    pauli,
+    tracker::frames::induced_order,
+};
 use pyo3::{
     PyResult,
     Python,
@@ -9,6 +12,8 @@ use crate::{
         doc,
         serialization,
     },
+    pauli::PauliStack,
+    BitVec,
     Module,
 };
 
@@ -45,6 +50,46 @@ impl PartialOrderGraph {
 }
 
 serialization::serde!(PartialOrderGraph);
+
+#[pyo3::pyclass(subclass)]
+#[derive(Clone)]
+struct StackedTransposedReverted(Vec<pauli::PauliStack<BitVec>>);
+
+#[pyo3::pymethods]
+impl StackedTransposedReverted {
+    #[new]
+    fn __new__(stacks: Vec<PauliStack>) -> Self {
+        Self(stacks.into_iter().map(|s| s.0).collect())
+    }
+
+    /// Create a new StackedTransposedReverted.
+    ///
+    /// Args:
+    ///     stacks (list[PauliStack]): The stacks to wrap.
+    ///
+    /// Returns:
+    ///     StackedTransposedReverted:
+    fn __init__(&self, _stack: Vec<PauliStack>) {}
+
+    fn pop(&mut self) -> Option<PauliStack> {
+        self.0.pop().map(PauliStack)
+    }
+
+    #[doc = doc::transform!()]
+    ///
+    /// Returns:
+    ///     list[tuple[list[int], list[int]]]
+    #[allow(clippy::wrong_self_convention)]
+    fn into_py_matrix(&self) -> Vec<(Vec<u64>, Vec<u64>)> {
+        self.0
+            .clone()
+            .into_iter()
+            .map(|s| PauliStack(s).into_py_tuple())
+            .collect()
+    }
+}
+
+serialization::serde!(StackedTransposedReverted);
 
 // Tracker and Init must be in scope for the macro to work.
 macro_rules! impl_frames {
@@ -91,6 +136,15 @@ macro_rules! impl_frames {
                         Err(pyo3::exceptions::PyValueError::new_err(format!("{b}")))
                     },
                 }
+            }
+
+            fn stacked_transpose_reverted(
+                &self,
+                num_qubits: usize,
+            ) -> crate::frames::StackedTransposedReverted {
+                crate::frames::StackedTransposedReverted(
+                    self.0.clone().stacked_transpose_reverted(num_qubits),
+                )
             }
 
             /// Get the Pauli stack of a qubit in the tracker, returning None if the

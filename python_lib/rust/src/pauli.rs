@@ -83,6 +83,7 @@ impl PauliTuple {
     }
 }
 
+#[pyo3::pyclass(subclass)]
 /// `PauliStack
 /// <https://docs.rs/pauli_tracker/latest/pauli_tracker/pauli/struct.PauliStack.html>`_\<`BitVec
 /// <https://docs.rs/bitvec/latest/bitvec/vec/struct.BitVec.html>`_\>.
@@ -91,7 +92,7 @@ impl PauliTuple {
 /// chunk the bits are ordered from least to most significant. You can use
 /// :func:`~pauli_tracker.bitvector_to_boolvector` to convert the bitvector to a list of
 /// booleans.
-#[pyo3::pyclass(subclass)]
+#[derive(Clone)]
 pub struct PauliStack(pub pauli::PauliStack<BitVec>);
 
 #[pyo3::pymethods]
@@ -105,11 +106,18 @@ impl PauliStack {
     ///     tuple[list[int], list[int]]: The Z (left tuple element) and X (right tuple
     ///     element) components
     #[allow(clippy::wrong_self_convention)]
-    fn into_py_tuple(&self) -> (Vec<u64>, Vec<u64>) {
+    pub fn into_py_tuple(&self) -> (Vec<u64>, Vec<u64>) {
         (self.0.z.clone().into_vec(), self.0.x.clone().into_vec())
     }
 
-    /// This is `sum_up <file:///home/jannis/s/a/phd/pauli_tracker/pauli_tracker/target/doc/pauli_tracker/pauli/stack/struct.PauliStack.html#method.sum_up>`_
+    fn xor_inplace(&mut self, other: &PauliStack) {
+        self.0.xor_inplace(&other.0);
+    }
+
+    fn get(&self, idx: usize) -> Option<PauliTuple> {
+        Some(PauliTuple(self.0.get(idx)?))
+    }
+
     fn sum_up(&self, filter: Vec<bool>) -> PauliTuple {
         PauliTuple(self.0.sum_up(&filter))
     }

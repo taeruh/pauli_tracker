@@ -18,6 +18,7 @@ possible.
 
 ## [Unreleased]
 ### Added
+- Add `Frames::stacked_transpose_reverted`.
 ### Changed
 - **Breaking Change**: Rename "left/right" to "x/z".
 - **Breaking Change**: Swapped entries int `PauliTuple`.
