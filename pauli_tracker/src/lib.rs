@@ -15,7 +15,8 @@
 #![cfg_attr(coverage_nightly, doc(test(attr(feature(coverage_attribute)))))]
 //
 
-// some guidelines (should do a better contributing file ...):
+// some guidelines:
+// TODO: make a better contributing file
 //
 // If possible all structs and enums should derive
 // #[derive(Debug, Clone, Copy, Default, PartialEq, Eq, PartialOrd, Ord, Hash)]
