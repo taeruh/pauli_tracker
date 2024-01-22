@@ -1,28 +1,13 @@
-use std::{
-    collections::HashMap,
-    hash::BuildHasherDefault,
-};
+use std::{collections::HashMap, hash::BuildHasherDefault};
 
-use lib::{
-    collection,
-    collection::Init,
-    pauli,
-    tracker::Tracker,
-};
-use pyo3::{
-    PyResult,
-    Python,
-};
+use lib::{collection, collection::Init, pauli, tracker::Tracker};
+use pyo3::{PyResult, Python};
 use rustc_hash::FxHasher;
 
 use crate::{
-    impl_helper::{
-        doc,
-        links,
-    },
+    impl_helper::{doc, links},
     pauli::PauliStack,
-    BitVec,
-    Module,
+    BitVec, Module,
 };
 
 type Map<T> = collection::Map<T, BuildHasherDefault<FxHasher>>;

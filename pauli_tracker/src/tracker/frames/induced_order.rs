@@ -3,10 +3,7 @@ The main content of this module is the [get_order] function that can be
 used to define a time ordering induced by the tracked frames.
 */
 
-use crate::{
-    boolean_vector::BooleanVector,
-    pauli::PauliStack,
-};
+use crate::{boolean_vector::BooleanVector, pauli::PauliStack};
 
 /// A layered graph, describing the partial (time) ordering of the qubits.
 ///
@@ -41,9 +38,7 @@ pub type PartialOrderGraph = Vec<Vec<(usize, Vec<usize>)>>;
 /// # #[cfg_attr(coverage_nightly, coverage(off))]
 /// # fn main() {
 /// use pauli_tracker::{
-///     collection::BufferedVector,
-///     pauli::PauliStack,
-///     tracker::frames::induced_order,
+///     collection::BufferedVector, pauli::PauliStack, tracker::frames::induced_order,
 /// };
 /// let storage = BufferedVector::from(vec![
 ///     PauliStack::<Vec<bool>>::try_from_str("", "").unwrap(),
@@ -112,11 +107,13 @@ where
                     let redundent_deps: Vec<usize> = resolved
                         .iter()
                         .enumerate()
-                        .filter_map(
-                            |(i, dep)| {
-                                if deps.contains(dep) { Some(i) } else { None }
-                            },
-                        )
+                        .filter_map(|(i, dep)| {
+                            if deps.contains(dep) {
+                                Some(i)
+                            } else {
+                                None
+                            }
+                        })
                         .collect();
                     // want to remove the redundent deps; the swap_remove works, because
                     // redundent_deps is sorted with increasing order

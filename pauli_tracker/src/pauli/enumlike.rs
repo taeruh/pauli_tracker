@@ -1,19 +1,9 @@
-use std::fmt::{
-    self,
-    Debug,
-    Display,
-};
+use std::fmt::{self, Debug, Display};
 
 #[cfg(feature = "serde")]
-use serde::{
-    Deserialize,
-    Serialize,
-};
+use serde::{Deserialize, Serialize};
 
-use super::{
-    tableau_encoding,
-    Pauli,
-};
+use super::{tableau_encoding, Pauli};
 
 /// Pauli described as enum.
 ///

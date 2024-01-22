@@ -19,10 +19,7 @@ adopt measurements correctly.
 
 use thiserror::Error;
 
-use crate::{
-    clifford_helper,
-    pauli::Pauli,
-};
+use crate::{clifford_helper, pauli::Pauli};
 
 /// A vector describing an encoded Pauli string.
 ///
@@ -47,12 +44,7 @@ macro_rules! single_doc_standard {
 }
 macro_rules! single_doc_equivalent {
     ($gate:literal, $equiv:literal) => {
-        concat!(
-            single_doc_standard!($gate),
-            " Equivalent to the ",
-            $equiv,
-            " gate."
-        )
+        concat!(single_doc_standard!($gate), " Equivalent to the ", $equiv, " gate.")
     };
 }
 
@@ -348,8 +340,15 @@ mod tests {
             for (action, result_generator) in actions.into_iter().zip(SINGLE_GENERATORS) {
                 let mut results = [0; 4];
                 for (i, r) in results.iter_mut().enumerate() {
-                    *r = (if (i & 1) > 0 { result_generator.1[0] } else { 0 })
-                        ^ (if (i & 2) > 0 { result_generator.1[1] } else { 0 })
+                    *r = (if (i & 1) > 0 {
+                        result_generator.1[0]
+                    } else {
+                        0
+                    }) ^ (if (i & 2) > 0 {
+                        result_generator.1[1]
+                    } else {
+                        0
+                    })
                 }
                 (runner)(action, (result_generator.0, results))
             }
@@ -365,10 +364,26 @@ mod tests {
                 let mut results = [(0, 0); 16];
                 for (i, r) in (0..).zip(results.iter_mut()) {
                     // cf. the masks below in double_init
-                    let a = if (i & 1) > 0 { result_generator.1[0] } else { (0, 0) };
-                    let b = if (i & 2) > 0 { result_generator.1[2] } else { (0, 0) };
-                    let c = if (i & 4) > 0 { result_generator.1[1] } else { (0, 0) };
-                    let d = if (i & 8) > 0 { result_generator.1[3] } else { (0, 0) };
+                    let a = if (i & 1) > 0 {
+                        result_generator.1[0]
+                    } else {
+                        (0, 0)
+                    };
+                    let b = if (i & 2) > 0 {
+                        result_generator.1[2]
+                    } else {
+                        (0, 0)
+                    };
+                    let c = if (i & 4) > 0 {
+                        result_generator.1[1]
+                    } else {
+                        (0, 0)
+                    };
+                    let d = if (i & 8) > 0 {
+                        result_generator.1[3]
+                    } else {
+                        (0, 0)
+                    };
                     *r = (a.0 ^ b.0 ^ c.0 ^ d.0, a.1 ^ b.1 ^ c.1 ^ d.1)
                 }
                 (runner)(action, (result_generator.0, results))
@@ -414,21 +429,11 @@ mod tests {
 
         use super::{
             super::*,
-            utils::{
-                DoubleAction,
-                DoubleResults,
-                N_DOUBLES,
-            },
+            utils::{DoubleAction, DoubleResults, N_DOUBLES},
         };
         use crate::{
-            collection::{
-                Base,
-                Map,
-            },
-            pauli::{
-                Pauli,
-                PauliDense,
-            },
+            collection::{Base, Map},
+            pauli::{Pauli, PauliDense},
         };
 
         #[derive(Debug)]
@@ -496,10 +501,7 @@ mod tests {
 
         use super::*;
         use crate::tracker::tests::utils::{
-            self,
-            SingleAction,
-            SingleResults,
-            N_SINGLES,
+            self, SingleAction, SingleResults, N_SINGLES,
         };
 
         type ActionS = SingleAction<DefaultTester>;

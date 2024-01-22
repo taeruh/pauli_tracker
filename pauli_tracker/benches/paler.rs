@@ -1,32 +1,14 @@
 // trying to do something which is done in Paler et al's paper
 
-use criterion::{
-    black_box,
-    criterion_group,
-    criterion_main,
-    Criterion,
-};
+use criterion::{black_box, criterion_group, criterion_main, Criterion};
 use pauli_tracker::{
     self,
-    collection::{
-        self,
-        Init,
-    },
-    pauli::{
-        self,
-        Pauli,
-    },
-    tracker::{
-        live,
-        Tracker,
-    },
+    collection::{self, Init},
+    pauli::{self, Pauli},
+    tracker::{live, Tracker},
 };
 use rand::{
-    distributions::Uniform,
-    prelude::Distribution,
-    seq::index,
-    RngCore,
-    SeedableRng,
+    distributions::Uniform, prelude::Distribution, seq::index, RngCore, SeedableRng,
 };
 use rand_pcg::Pcg64;
 

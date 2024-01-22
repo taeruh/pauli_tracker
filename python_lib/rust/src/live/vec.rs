@@ -1,24 +1,12 @@
 use lib::{
-    collection::{
-        Init,
-        NaiveVector,
-    },
-    pauli::{
-        self,
-        Pauli,
-    },
+    collection::{Init, NaiveVector},
+    pauli::{self, Pauli},
     tracker::Tracker,
 };
-use pyo3::{
-    PyResult,
-    Python,
-};
+use pyo3::{PyResult, Python};
 
 use crate::{
-    impl_helper::{
-        doc,
-        links,
-    },
+    impl_helper::{doc, links},
     pauli::PauliDense,
     Module,
 };

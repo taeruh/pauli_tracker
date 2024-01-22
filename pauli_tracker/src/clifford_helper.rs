@@ -42,13 +42,7 @@ macro_rules! trait_gates {
             self.h(bit);
             self.s(bit);
         }
-        coset!(
-            shs,
-            "SHS",
-            (sx, "sqrt(X)"),
-            (sxdg, "sqrt(X)^dagger"),
-            (hyz, "H_yz"),
-        );
+        coset!(shs, "SHS", (sx, "sqrt(X)"), (sxdg, "sqrt(X)^dagger"), (hyz, "H_yz"),);
 
         #[doc = double_doc!("Control X (Control Not)", control, target)]
         fn cx(&mut self, control: usize, target: usize) {

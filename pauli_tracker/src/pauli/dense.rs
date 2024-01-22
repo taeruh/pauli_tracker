@@ -1,19 +1,9 @@
-use std::fmt::{
-    self,
-    Debug,
-    Display,
-};
+use std::fmt::{self, Debug, Display};
 
 #[cfg(feature = "serde")]
-use serde::{
-    Deserialize,
-    Serialize,
-};
+use serde::{Deserialize, Serialize};
 
-use super::{
-    tableau_encoding,
-    Pauli,
-};
+use super::{tableau_encoding, Pauli};
 
 /// Pauli encoding into two bits. It is basically an "u2", in terms of a single Pauli
 /// operator (without phases).
@@ -213,7 +203,11 @@ pub struct InvalidU8(pub u8);
 impl TryFrom<u8> for PauliDense {
     type Error = InvalidU8;
     fn try_from(value: u8) -> Result<Self, Self::Error> {
-        if value > 3 { Err(InvalidU8(value)) } else { Ok(Self { storage: value }) }
+        if value > 3 {
+            Err(InvalidU8(value))
+        } else {
+            Ok(Self { storage: value })
+        }
     }
 }
 

@@ -1,24 +1,14 @@
 use lib::{
-    collection::{
-        Init,
-        NaiveVector,
-    },
+    collection::{Init, NaiveVector},
     pauli,
     tracker::Tracker,
 };
-use pyo3::{
-    PyResult,
-    Python,
-};
+use pyo3::{PyResult, Python};
 
 use crate::{
-    impl_helper::{
-        doc,
-        links,
-    },
+    impl_helper::{doc, links},
     pauli::PauliStack,
-    BitVec,
-    Module,
+    BitVec, Module,
 };
 
 type Storage = NaiveVector<pauli::PauliStack<BitVec>>;

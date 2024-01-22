@@ -1,7 +1,4 @@
-use std::{
-    iter::Copied,
-    slice::Iter,
-};
+use std::{iter::Copied, slice::Iter};
 
 use super::BooleanVector;
 

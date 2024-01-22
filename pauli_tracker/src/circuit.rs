@@ -13,19 +13,11 @@ use std::mem;
 use crate::{
     boolean_vector::BooleanVector,
     clifford_helper,
-    collection::{
-        Base,
-        Full,
-    },
+    collection::{Base, Full},
     pauli::PauliStack,
     tracker::{
-        frames::{
-            Frames,
-            MoveError,
-            OverwriteStack,
-        },
-        PauliString,
-        Tracker,
+        frames::{Frames, MoveError, OverwriteStack},
+        PauliString, Tracker,
     },
 };
 
@@ -36,12 +28,7 @@ macro_rules! single_doc_standard {
 }
 macro_rules! single_doc_equivalent {
     ($gate:literal, $equiv:literal) => {
-        concat!(
-            single_doc_standard!($gate),
-            " Equivalent to the ",
-            $equiv,
-            " gate."
-        )
+        concat!(single_doc_standard!($gate), " Equivalent to the ", $equiv, " gate.")
     };
 }
 
@@ -88,10 +75,7 @@ pub trait CliffordCircuit {
 }
 
 mod dummies;
-pub use dummies::{
-    DummyCircuit,
-    RandomMeasurementCircuit,
-};
+pub use dummies::{DummyCircuit, RandomMeasurementCircuit};
 
 /// A Wrapper around a Clifford circuit (simulator) and a Pauli tracker.
 ///
@@ -301,27 +285,12 @@ mod tests {
     use super::*;
     use crate::{
         boolean_vector::bitvec_simd::SimdBitVec,
-        circuit::{
-            DummyCircuit,
-            RandomMeasurementCircuit,
-        },
-        collection::{
-            BufferedVector,
-            Init,
-            Map,
-            MappedVector,
-        },
-        pauli::{
-            PauliDense,
-            PauliStack,
-        },
+        circuit::{DummyCircuit, RandomMeasurementCircuit},
+        collection::{BufferedVector, Init, Map, MappedVector},
+        pauli::{PauliDense, PauliStack},
         tracker::{
-            frames::{
-                induced_order,
-                Frames,
-            },
-            live,
-            MissingBit,
+            frames::{induced_order, Frames},
+            live, MissingBit,
         },
     };
 

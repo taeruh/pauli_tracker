@@ -1,10 +1,6 @@
 use std::ops::Deref;
 
-use pyo3::{
-    types::PyModule,
-    PyResult,
-    Python,
-};
+use pyo3::{types::PyModule, PyResult, Python};
 
 struct Module<'m> {
     pymodule: &'m PyModule,

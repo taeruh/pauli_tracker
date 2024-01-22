@@ -1,7 +1,4 @@
-use pyo3::{
-    PyResult,
-    Python,
-};
+use pyo3::{PyResult, Python};
 
 use crate::Module;
 

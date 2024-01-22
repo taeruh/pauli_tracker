@@ -1,51 +1,26 @@
 #![cfg(feature = "circuit")]
 
-use std::{
-    fmt::Debug,
-    hash::BuildHasherDefault,
-};
+use std::{fmt::Debug, hash::BuildHasherDefault};
 
 use hashbrown::HashMap;
 use pauli_tracker::{
     boolean_vector::BooleanVector,
-    circuit::{
-        CliffordCircuit,
-        DummyCircuit,
-        RandomMeasurementCircuit,
-        TrackedCircuit,
-    },
-    collection::{
-        BufferedVector,
-        Init,
-        Iterable,
-        Map,
-    },
-    pauli::{
-        Pauli,
-        PauliStack,
-        PauliTuple,
-    },
+    circuit::{CliffordCircuit, DummyCircuit, RandomMeasurementCircuit, TrackedCircuit},
+    collection::{BufferedVector, Init, Iterable, Map},
+    pauli::{Pauli, PauliStack, PauliTuple},
     tracker::{
         frames::{
-            induced_order::{
-                self,
-                PartialOrderGraph,
-            },
+            induced_order::{self, PartialOrderGraph},
             Frames,
         },
-        live,
-        Tracker,
+        live, Tracker,
     },
 };
 use proptest::{
     arbitrary::any,
-    prop_oneof,
-    proptest,
+    prop_oneof, proptest,
     strategy::Strategy,
-    test_runner::{
-        Config,
-        FileFailurePersistence,
-    },
+    test_runner::{Config, FileFailurePersistence},
 };
 use rustc_hash::FxHasher;
 

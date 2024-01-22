@@ -1,9 +1,6 @@
 use bitvec::{
     order::Lsb0,
-    slice::{
-        BitSlice,
-        BitValIter,
-    },
+    slice::{BitSlice, BitValIter},
     store::BitStore,
     vec::BitVec,
 };

@@ -1,23 +1,11 @@
-use std::{
-    hash::BuildHasher,
-    iter,
-};
+use std::{hash::BuildHasher, iter};
 
 use hashbrown::{
-    hash_map::{
-        self,
-        DefaultHashBuilder,
-    },
+    hash_map::{self, DefaultHashBuilder},
     HashMap,
 };
 
-use super::{
-    Base,
-    Full,
-    Init,
-    Iterable,
-    IterableBase,
-};
+use super::{Base, Full, Init, Iterable, IterableBase};
 
 /// A [HashMap](https://docs.rs/hashbrown/latest/hashbrown/struct.HashMap.html#) with
 /// [usize] keys.

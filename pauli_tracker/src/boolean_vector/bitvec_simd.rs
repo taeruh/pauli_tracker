@@ -6,10 +6,7 @@ Compare the documentation of [bitvec_simd](https://docs.rs/bitvec_simd/latest/bi
 
 use bitvec_simd::BitVec;
 #[cfg(feature = "serde")]
-use serde::{
-    Deserialize,
-    Serialize,
-};
+use serde::{Deserialize, Serialize};
 
 use super::BooleanVector;
 

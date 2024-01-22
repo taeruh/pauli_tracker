@@ -2,22 +2,13 @@
   This module provides the [PauliStack] type, which stores multiple encoded Paulis.
 */
 
-use std::{
-    cmp::Ordering,
-    mem,
-};
+use std::{cmp::Ordering, mem};
 
 #[cfg(feature = "serde")]
-use serde::{
-    Deserialize,
-    Serialize,
-};
+use serde::{Deserialize, Serialize};
 use thiserror::Error;
 
-use super::{
-    Pauli,
-    PauliTuple,
-};
+use super::{Pauli, PauliTuple};
 use crate::boolean_vector::BooleanVector;
 
 /// Multiple encoded Paulis compressed into two [BooleanVector]s.

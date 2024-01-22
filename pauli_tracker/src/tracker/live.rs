@@ -15,23 +15,11 @@ Paulis via `track_x/y/z` methods.
 use std::mem;
 
 #[cfg(feature = "serde")]
-use serde::{
-    Deserialize,
-    Serialize,
-};
+use serde::{Deserialize, Serialize};
 
-use super::{
-    unwrap_get_mut,
-    unwrap_get_two_mut,
-    MissingBit,
-    PauliString,
-    Tracker,
-};
+use super::{unwrap_get_mut, unwrap_get_two_mut, MissingBit, PauliString, Tracker};
 use crate::{
-    collection::{
-        Base,
-        Init,
-    },
+    collection::{Base, Init},
     pauli::Pauli,
 };
 
@@ -198,15 +186,8 @@ mod tests {
 
     use super::*;
     use crate::{
-        collection::{
-            BufferedVector,
-            Map,
-        },
-        pauli::{
-            PauliDense,
-            PauliEnum,
-            PauliTuple,
-        },
+        collection::{BufferedVector, Map},
+        pauli::{PauliDense, PauliEnum, PauliTuple},
     };
 
     trait Pw: Pauli + Copy + Clone + Default + Into<PauliDense> + From<PauliDense> {}
@@ -215,10 +196,7 @@ mod tests {
     mod single_actions {
         use super::*;
         use crate::tracker::tests::utils::{
-            self,
-            SingleAction,
-            SingleResults,
-            N_SINGLES,
+            self, SingleAction, SingleResults, N_SINGLES,
         };
 
         type Action<P> = SingleAction<Live<P>>;
@@ -248,10 +226,7 @@ mod tests {
     mod double_actions {
         use super::*;
         use crate::tracker::tests::utils::{
-            self,
-            DoubleAction,
-            DoubleResults,
-            N_DOUBLES,
+            self, DoubleAction, DoubleResults, N_DOUBLES,
         };
 
         type Action<P> = DoubleAction<Live<P>>;

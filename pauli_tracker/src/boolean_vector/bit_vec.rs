@@ -1,7 +1,4 @@
-use bit_vec::{
-    BitVec,
-    Iter,
-};
+use bit_vec::{BitVec, Iter};
 
 use super::BooleanVector;
 

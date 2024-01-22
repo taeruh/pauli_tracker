@@ -1,16 +1,10 @@
 use std::{
-    fmt::{
-        self,
-        Display,
-    },
+    fmt::{self, Display},
     mem,
 };
 
 #[cfg(feature = "serde")]
-use serde::{
-    Deserialize,
-    Serialize,
-};
+use serde::{Deserialize, Serialize};
 
 use super::Pauli;
 

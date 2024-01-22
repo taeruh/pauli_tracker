@@ -1,35 +1,17 @@
 use std::{
     hash::BuildHasher,
-    iter::{
-        Map,
-        Zip,
-    },
+    iter::{Map, Zip},
     mem,
-    ops::{
-        Index,
-        IndexMut,
-    },
+    ops::{Index, IndexMut},
     slice,
 };
 
-use hashbrown::{
-    hash_map::DefaultHashBuilder,
-    HashMap,
-};
+use hashbrown::{hash_map::DefaultHashBuilder, HashMap};
 use itertools::Itertools;
 #[cfg(feature = "serde")]
-use serde::{
-    Deserialize,
-    Serialize,
-};
+use serde::{Deserialize, Serialize};
 
-use super::{
-    Base,
-    Full,
-    Init,
-    Iterable,
-    IterableBase,
-};
+use super::{Base, Full, Init, Iterable, IterableBase};
 use crate::slice_extension::GetTwoMutSlice;
 
 /// A mixture of a [Vec] and a [HashMap].
@@ -45,7 +27,10 @@ use crate::slice_extension::GetTwoMutSlice;
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[cfg_attr(feature = "serde", serde(from = "_MappedVector<T>"))]
 #[cfg_attr(feature = "serde", serde(into = "_MappedVector<T>"))]
-#[cfg_attr(feature = "serde", serde(bound(serialize = "T: Clone + Serialize, S: Clone")))]
+#[cfg_attr(
+    feature = "serde",
+    serde(bound(serialize = "T: Clone + Serialize, S: Clone"))
+)]
 #[cfg_attr(
     feature = "serde",
     serde(bound(deserialize = "T: for<'a> Deserialize<'a>, S: Default + BuildHasher"))

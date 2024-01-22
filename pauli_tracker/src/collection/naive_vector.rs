@@ -1,21 +1,9 @@
-use std::{
-    iter::Enumerate,
-    slice,
-};
+use std::{iter::Enumerate, slice};
 
 #[cfg(feature = "serde")]
-use serde::{
-    Deserialize,
-    Serialize,
-};
+use serde::{Deserialize, Serialize};
 
-use super::{
-    Base,
-    Full,
-    Init,
-    Iterable,
-    IterableBase,
-};
+use super::{Base, Full, Init, Iterable, IterableBase};
 use crate::slice_extension::GetTwoMutSlice;
 
 /// A newtype wrapper around [Vec], implementing the [collection](super) traits,

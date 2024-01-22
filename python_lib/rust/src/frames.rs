@@ -1,20 +1,10 @@
-use lib::{
-    pauli,
-    tracker::frames::induced_order,
-};
-use pyo3::{
-    PyResult,
-    Python,
-};
+use lib::{pauli, tracker::frames::induced_order};
+use pyo3::{PyResult, Python};
 
 use crate::{
-    impl_helper::{
-        doc,
-        serialization,
-    },
+    impl_helper::{doc, serialization},
     pauli::PauliStack,
-    BitVec,
-    Module,
+    BitVec, Module,
 };
 
 #[pyo3::pyclass(subclass)]

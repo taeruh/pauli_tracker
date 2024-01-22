@@ -21,30 +21,14 @@ during the actual execution of a circuit, the [Live] tracker is more useful.
 use std::mem;
 
 #[cfg(feature = "serde")]
-use serde::{
-    Deserialize,
-    Serialize,
-};
+use serde::{Deserialize, Serialize};
 use thiserror::Error;
 
-use super::{
-    MissingBit,
-    PauliString,
-    Tracker,
-};
+use super::{MissingBit, PauliString, Tracker};
 use crate::{
     boolean_vector::BooleanVector,
-    collection::{
-        Base,
-        Full,
-        Init,
-        IterableBase,
-    },
-    pauli::{
-        Pauli,
-        PauliStack,
-        PauliTuple,
-    },
+    collection::{Base, Full, Init, IterableBase},
+    pauli::{Pauli, PauliStack, PauliTuple},
 };
 
 pub mod induced_order;
@@ -438,22 +422,13 @@ mod tests {
     // in [super::circuit] to test the tracker and the circuit at once
 
     mod action_definition_check {
-        use super::{
-            super::*,
-            test,
-            *,
-        };
+        use super::{super::*, test, *};
         use crate::{
             collection::BufferedVector,
             pauli::PauliDense,
             tracker::tests::utils::{
-                self,
-                DoubleAction,
-                DoubleResults,
-                SingleAction,
-                SingleResults,
-                N_DOUBLES,
-                N_SINGLES,
+                self, DoubleAction, DoubleResults, SingleAction, SingleResults,
+                N_DOUBLES, N_SINGLES,
             },
         };
 
