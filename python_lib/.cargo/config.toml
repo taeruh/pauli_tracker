@@ -1,2 +1,6 @@
 [build]
 target-dir = "target"
+
+[profile.release]
+lto = true
+codegen-units = 1
