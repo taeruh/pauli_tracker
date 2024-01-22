@@ -1,5 +1,3 @@
-use std::ops::Deref;
-
 use pyo3::{types::PyModule, PyResult, Python};
 
 struct Module<'m> {
@@ -22,13 +20,6 @@ impl<'m> Module<'m> {
             .getattr("modules")?
             .set_item(submodule.path, submodule.pymodule)?;
         Ok(())
-    }
-}
-
-impl Deref for Module<'_> {
-    type Target = PyModule;
-    fn deref(&self) -> &Self::Target {
-        self.pymodule
     }
 }
 
