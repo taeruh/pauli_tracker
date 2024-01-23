@@ -88,11 +88,11 @@ assert_eq!(frames, expected);
 // can tranpose the matrix, which is beneficial for certain applications, e.g., when
 // iteratively adding up the frames.
 assert_eq!(
-    tracker.transpose_reverted::<PauliTuple>(3) // we need to pass in the number of qubits
+    tracker.transpose::<PauliTuple>(3) // we need to pass in the number of qubits
         .into_iter().map(|frame| PauliStack::from_iter(frame)).collect::<Vec<_>>(),
     vec![ //             qubit  X 012  Z 012  (tableau representation)
-        PauliStack::try_from_str("011", "001").unwrap(), // frame (1)
         PauliStack::try_from_str("111", "010").unwrap(), // frame (0)
+        PauliStack::try_from_str("011", "001").unwrap(), // frame (1)
     ]
 );
 // Note that the frames order is reverted, so that one can get the frames in order when
@@ -132,7 +132,7 @@ println!("{tracker:?}");
 
 // we can check whether the output of the live tracker aligns with the frames
 // tracker (in a real application one would probably do this by iteratively adding up
-// the frames with the help of Frames::transposed_reverted)
+// the frames with the help of Frames::transposed)
 let conditional_summed_frames: Vec<_> = frames
     .into_iter()
     .map(|(_, pauli_stack)| pauli_stack.sum_up(&measurements))

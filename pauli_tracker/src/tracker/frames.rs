@@ -279,7 +279,7 @@ where
     /// Pop the last tracked Pauli frame.
     ///
     /// If you do this to get all frames, you might want to use
-    /// [transpose_reverted](Frames::transpose_reverted).
+    /// [transpose](Frames::transpose).
     pub fn pop_frame<P: Pauli>(&mut self) -> Option<PauliString<P>> {
         if self.storage.is_empty() || self.frames_num == 0 {
             return None;
@@ -291,6 +291,23 @@ where
             }
         }
         self.frames_num -= 1;
+        Some(ret)
+    }
+
+    /// Get the frame at `idx` as a [PauliString].
+    ///
+    /// If you do this to get all frames, you might want to use
+    /// [transpose](Self::transpose).
+    pub fn get_frame<P: Pauli>(&self, idx: usize) -> Option<PauliString<P>> {
+        if self.storage.is_empty() || idx >= self.frames_num {
+            return None;
+        }
+        let mut ret = Vec::new();
+        for (i, p) in self.storage.iter_pairs() {
+            if let Some(pauli) = p.get(idx) {
+                ret.push((i, pauli))
+            }
+        }
         Some(ret)
     }
 
@@ -307,12 +324,11 @@ where
         }
     }
 
-    /// Transpose the frames, with reverted order of the frames and sorted qubits. The
-    /// result is a non-sparse matrix of Paulis.
+    /// Transpose the frames with sorted qubits. The result is a non-sparse matrix of
+    /// Paulis.
     ///
-    /// Depending on the use case,
-    /// [stacked_transpose_reverted](Self::stacked_transpose_reverted) can be more
-    /// efficient in use.
+    /// Depending on the use case, [stacked_transpose](Self::stacked_transpose) can be
+    /// more efficient.
     ///
     /// # Panics
     /// Panics if `num_qubits` is smaller the highest qubit index that has been tracked.
@@ -330,10 +346,10 @@ where
     ///         PauliStack::try_from_str("10", "01").unwrap(), // 0
     ///         PauliStack::try_from_str("11", "10").unwrap(), // 1
     ///         PauliStack::try_from_str("11", "01").unwrap(), // 2
-    ///     ].into(), 2).transpose_reverted::<PauliTuple>(3),
+    ///     ].into(), 2).transpose::<PauliTuple>(3),
     ///     vec![ // qubit (Z, X)   0       1       2      frame
-    ///                     vec![(0, 1), (1, 0), (1, 1)], // 2
     ///                     vec![(1, 0), (1, 1), (1, 0)], // 1
+    ///                     vec![(0, 1), (1, 0), (1, 1)], // 2
     ///     ].into_iter().map(|frame| frame.into_iter().map(|(z, x)|
     ///         PauliTuple(z==1, x==1)).collect::<Vec<PauliTuple>>()).collect::<Vec<_>>()
     /// );
@@ -341,23 +357,19 @@ where
     // for efficiency, one should flatten the matrix internally, but the matrix is not
     // really used in matrix operations (usually, I think), so to have a return type with
     // a more flexibel API, we don't do that
-    pub fn transpose_reverted<P: Pauli + Clone>(
-        mut self,
-        num_qubits: usize,
-    ) -> Vec<Vec<P>> {
-        let mut ret = Vec::with_capacity(self.frames_num);
+    pub fn transpose<P: Pauli + Clone>(mut self, num_qubits: usize) -> Vec<Vec<P>> {
+        let mut ret = vec![Vec::new(); self.frames_num];
         while let Some(frame) = self.pop_frame::<P>() {
             let mut paulis = vec![P::I; num_qubits];
             for (i, p) in frame {
                 paulis[i] = p;
             }
-            ret.push(paulis);
+            ret[self.frames_num] = paulis;
         }
         ret
     }
 
-    /// Similar to [transpose_reverted](Self::transpose_reverted), but use [PauliStack]
-    /// for the frames.
+    /// Similar to [transpose](Self::transpose), but use [PauliStack] for the frames.
     ///
     /// # Panics
     /// Panics if `num_qubits` is smaller the highest qubit index that has been tracked.
@@ -374,22 +386,22 @@ where
     ///         PauliStack::try_from_str("10", "01").unwrap(),
     ///         PauliStack::try_from_str("11", "10").unwrap(),
     ///         PauliStack::try_from_str("11", "01").unwrap(),
-    ///     ].into(), 2).stacked_transpose_reverted(3),
+    ///     ].into(), 2).stacked_transpose(3),
     ///     vec![
-    ///         PauliStack::try_from_str("011", "101").unwrap(),
     ///         PauliStack::try_from_str("111", "010").unwrap(),
+    ///         PauliStack::try_from_str("011", "101").unwrap(),
     ///     ]
     /// );
     /// # }
-    pub fn stacked_transpose_reverted(mut self, num_qubits: usize) -> Vec<PauliStack<B>> {
-        let mut ret = Vec::with_capacity(self.frames_num);
+    pub fn stacked_transpose(mut self, num_qubits: usize) -> Vec<PauliStack<B>> {
+        let mut ret = vec![PauliStack::new(); self.frames_num];
         while let Some(frame) = self.pop_frame::<PauliTuple>() {
             let mut stack = PauliStack::<B>::zeros(num_qubits);
             for (i, p) in frame {
                 stack.z.set(i, p.0);
                 stack.x.set(i, p.1);
             }
-            ret.push(stack);
+            ret[self.frames_num] = stack;
         }
         ret
     }

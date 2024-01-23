@@ -18,8 +18,11 @@ possible.
 
 ## [Unreleased]
 ### Added
-- Add `Frames::stacked_transpose_reverted`.
+- Add `Frames::stacked_transpose`.
+- Add `Frames::get_frame`.
 ### Changed
+- **Breaking Change**: Remove `Frames::transpose_reverted` and add
+  `Frames::stacked_transpose` instead.
 - **Breaking Change**: Rename "left/right" to "x/z".
 - **Breaking Change**: Swapped entries int `PauliTuple`.
 - **Breaking Change**: Swapped args in `Pauli::new_product` and
