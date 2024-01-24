@@ -64,8 +64,8 @@ impl StackedTransposed {
     ///
     /// Returns:
     ///     StackedTransposed
-    #[pyo3(text_signature = "(self, stack)")]
-    fn __init__(&self, _stack: Vec<PauliStack>) {}
+    #[pyo3(text_signature = "(self, stacks)")]
+    fn __init__(&self, _stacks: Vec<PauliStack>) {}
 
     /// Get the Pauli stack at the given index.
     ///
