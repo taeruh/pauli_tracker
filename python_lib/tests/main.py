@@ -10,7 +10,7 @@ if __name__ == "__main__":
     tracker.track_x(0)
     tracker.track_y(1)
 
-    transposed = tracker.stacked_transpose_reverted(2)
+    transposed = tracker.stacked_transpose(2)
     print(transposed.into_py_matrix())
 
     frame = transposed.get(0)
