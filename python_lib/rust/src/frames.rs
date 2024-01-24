@@ -42,32 +42,50 @@ impl PartialOrderGraph {
 serialization::serde!(PartialOrderGraph);
 
 #[pyo3::pyclass(subclass)]
+/// The frames of a `Frames`-tracker with swapped major and minor axis.
+///
+/// This is usually returned from the according `stacked_transpose` method of a
+/// `Frames` object. The frames are now on the major axis and the qubits on the minor
+/// axis.
 #[derive(Clone)]
-struct StackedTransposedReverted(Vec<pauli::PauliStack<BitVec>>);
+struct StackedTransposed(Vec<pauli::PauliStack<BitVec>>);
 
 #[pyo3::pymethods]
-impl StackedTransposedReverted {
+impl StackedTransposed {
     #[new]
     fn __new__(stacks: Vec<PauliStack>) -> Self {
         Self(stacks.into_iter().map(|s| s.0).collect())
     }
 
-    /// Create a new StackedTransposedReverted.
+    /// Create a new StackedTransposed
     ///
     /// Args:
     ///     stacks (list[PauliStack]): The stacks to wrap.
     ///
     /// Returns:
-    ///     StackedTransposedReverted:
+    ///     StackedTransposed
+    #[pyo3(text_signature = "(self, stack)")]
     fn __init__(&self, _stack: Vec<PauliStack>) {}
 
-    // Use get_and_add_to_stack if you directly want to add it to another stack to avoild
-    // cloning.
+    /// Get the Pauli stack at the given index.
+    ///
+    /// Use :meth:`get_and_add_to_stack` if you directly want to add it to another stack
+    /// to avoid cloning.
+    ///
+    /// Args:
+    ///     index (int): The index of the stack to get.
+    ///
+    /// Returns:
+    ///     PauliStack:
     fn get(&self, index: usize) -> Option<PauliStack> {
         self.0.get(index).cloned().map(PauliStack)
     }
 
-    /// Add the Pauli stack at the given index to the given stack.
+    /// Get the Pauli stack at the given index and add it to the given stack.
+    ///
+    /// Args:
+    ///     index (int): The index of the stack to get.
+    ///     stack (PauliStack): The stack to add the gotten stack to.
     fn get_and_add_to_stack(&self, index: usize, stack: &mut PauliStack) {
         stack.0.xor_inplace(self.0.get(index).unwrap());
     }
@@ -90,7 +108,7 @@ impl StackedTransposedReverted {
     }
 }
 
-serialization::serde!(StackedTransposedReverted);
+serialization::serde!(StackedTransposed);
 
 // Tracker and Init must be in scope for the macro to work.
 macro_rules! impl_frames {
@@ -139,12 +157,21 @@ macro_rules! impl_frames {
                 }
             }
 
-            fn stacked_transpose_reverted(
+            /// Get the frames, but with swapped major and minor axis and sorted bits.
+            ///
+            /// The frames are now on the major axis and the qubits on the minor axis.
+            ///
+            /// Args:
+            ///     highest_qubit (int): The highest qubit index that has been tracked.
+            ///
+            /// Returns:
+            ///     StackedTransposed:
+            fn stacked_transpose(
                 &self,
-                num_qubits: usize,
-            ) -> crate::frames::StackedTransposedReverted {
-                crate::frames::StackedTransposedReverted(
-                    self.0.clone().stacked_transpose_reverted(num_qubits),
+                highest_qubit: usize,
+            ) -> crate::frames::StackedTransposed {
+                crate::frames::StackedTransposed(
+                    self.0.clone().stacked_transpose(highest_qubit),
                 )
             }
 
@@ -204,6 +231,7 @@ pub fn add_module(py: Python<'_>, parent_module: &Module) -> PyResult<()> {
     map::add_module(py, &module)?;
     vec::add_module(py, &module)?;
     module.pymodule.add_class::<PartialOrderGraph>()?;
+    module.pymodule.add_class::<StackedTransposed>()?;
     parent_module.add_submodule(py, module)?;
     Ok(())
 }

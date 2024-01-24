@@ -210,7 +210,7 @@ dependencies = [
 [[package]]
 name = "pauli_tracker"
 version = "0.4.0-alpha.2"
-source = "git+https://github.com/taeruh/pauli_tracker#e62d35fdb30d188584b9ab28dc8b18de563dcfbb"
+source = "git+https://github.com/taeruh/pauli_tracker#fd8ec6191e451f218339de708be03e78c08a48e6"
 dependencies = [
  "bit-vec",
  "bitvec",
