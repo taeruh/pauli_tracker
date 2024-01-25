@@ -68,14 +68,14 @@ pub trait Pauli {
     ///
     /// # Examples
     /// ```
-    /// # #[cfg_attr(coverage_nightly, coverage(off))]
-    /// # fn main() {
+    /// # fn main() { #![cfg_attr(coverage_nightly, coverage(off))]
     /// # use pauli_tracker::pauli::{Pauli, PauliDense};
     /// assert_eq!(PauliDense::new_product(false, false), PauliDense::new_i());
     /// assert_eq!(PauliDense::new_product(false, true), PauliDense::new_x());
     /// assert_eq!(PauliDense::new_product(true, false), PauliDense::new_z());
     /// assert_eq!(PauliDense::new_product(true, true), PauliDense::new_y());
     /// # }
+    /// ```
     fn new_product(z: bool, x: bool) -> Self;
 
     /// Add the `other` Pauli to `self` in place.
@@ -108,50 +108,50 @@ pub trait Pauli {
     ///
     /// # Examples
     /// ```
-    /// # #[cfg_attr(coverage_nightly, coverage(off))]
-    /// # fn main() {
+    /// # fn main() { #![cfg_attr(coverage_nightly, coverage(off))]
     /// # use pauli_tracker::pauli::{Pauli, PauliDense};
     /// let pauli = PauliDense::new_y();
     /// assert_eq!(pauli.get_x(), true);
     /// # }
+    /// ```
     fn get_x(&self) -> bool;
 
     /// Get the Pauli's Z component.
     ///
     /// # Examples
     /// ```
-    /// # #[cfg_attr(coverage_nightly, coverage(off))]
-    /// # fn main() {
+    /// # fn main() { #![cfg_attr(coverage_nightly, coverage(off))]
     /// # use pauli_tracker::pauli::{Pauli, PauliDense};
     /// let pauli = PauliDense::new_y();
     /// assert_eq!(pauli.get_z(), true);
     /// # }
+    /// ```
     fn get_z(&self) -> bool;
 
     /// Set whether the Pauli products contains X.
     ///
     /// # Examples
     /// ```
-    /// # #[cfg_attr(coverage_nightly, coverage(off))]
-    /// # fn main() {
+    /// # fn main() { #![cfg_attr(coverage_nightly, coverage(off))]
     /// # use pauli_tracker::pauli::{Pauli, PauliDense};
     /// let mut pauli = PauliDense::new_y();
     /// pauli.set_x(false);
     /// assert_eq!(pauli, Pauli::new_z());
     /// # }
+    /// ```
     fn set_x(&mut self, x: bool);
 
     /// Set whether the Pauli products contains Z.
     ///
     /// # Examples
     /// ```
-    /// # #[cfg_attr(coverage_nightly, coverage(off))]
-    /// # fn main() {
+    /// # fn main() { #![cfg_attr(coverage_nightly, coverage(off))]
     /// # use pauli_tracker::pauli::{Pauli, PauliDense};
     /// let mut pauli = PauliDense::new_y();
     /// pauli.set_z(false);
     /// assert_eq!(pauli, Pauli::new_x());
     /// # }
+    /// ```
     fn set_z(&mut self, z: bool);
 
     /// Translate into the tableau encoding

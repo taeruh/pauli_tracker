@@ -7,11 +7,9 @@
 // semantically wrong; but useful for init stuff, cf. comments below
 // imagine #![warn(missing_default_implementations)]
 //
-// (nightly) features, only for development
+// (nightly) features; only for development
 #![cfg_attr(docsrs, feature(doc_cfg))]
 #![cfg_attr(coverage_nightly, feature(coverage_attribute))]
-// cf .https://doc.rust-lang.org/rustdoc/write-documentation/documentation-tests.html (I
-// thought doc-test should capture the normal #! attributes?)
 #![cfg_attr(coverage_nightly, doc(test(attr(feature(coverage_attribute)))))]
 //
 

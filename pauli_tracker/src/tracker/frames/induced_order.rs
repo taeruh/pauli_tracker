@@ -35,8 +35,7 @@ pub type PartialOrderGraph = Vec<Vec<(usize, Vec<usize>)>>;
 ///
 /// # Examples
 /// ```
-/// # #[cfg_attr(coverage_nightly, coverage(off))]
-/// # fn main() {
+/// # fn main() { #![cfg_attr(coverage_nightly, coverage(off))]
 /// use pauli_tracker::{
 ///     collection::BufferedVector, pauli::PauliStack, tracker::frames::induced_order,
 /// };
@@ -149,8 +148,7 @@ where
 ///
 /// # Examples
 /// ```
-/// # #[cfg_attr(coverage_nightly, coverage(off))]
-/// # fn main() {
+/// # fn main() { #![cfg_attr(coverage_nightly, coverage(off))]
 /// # use pauli_tracker::tracker::frames::induced_order::sort_layers_by_bits;
 /// let mut graph = vec![vec![(0, vec![])], vec![(3, vec![0]), (1, vec![0])]];
 /// sort_layers_by_bits(&mut graph);

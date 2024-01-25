@@ -48,8 +48,7 @@ impl<T: BooleanVector> PauliStack<T> {
     ///
     /// # Examples
     /// ```
-    /// # #[cfg_attr(coverage_nightly, coverage(off))]
-    /// # fn main() {
+    /// # fn main() { #![cfg_attr(coverage_nightly, coverage(off))]
     /// # use pauli_tracker::pauli::PauliStack;
     /// assert_eq!(
     ///     PauliStack::<Vec<bool>>::try_from_str("01", "10"),
@@ -86,8 +85,7 @@ impl<T: BooleanVector> PauliStack<T> {
     ///
     /// # Examples
     /// ```
-    /// # #[cfg_attr(coverage_nightly, coverage(off))]
-    /// # fn main() {
+    /// # fn main() { #![cfg_attr(coverage_nightly, coverage(off))]
     /// # use pauli_tracker::pauli::{Pauli, PauliTuple, PauliStack};
     /// let mut pauli = PauliStack::try_from_str("", "1").unwrap();
     /// pauli.push::<PauliTuple>(Pauli::new_z());
@@ -99,6 +97,7 @@ impl<T: BooleanVector> PauliStack<T> {
     ///     }
     /// );
     /// # }
+    /// ```
     pub fn push<P: Pauli>(&mut self, pauli: P) {
         let z_len = self.z.len();
         let x_len = self.x.len();
@@ -117,14 +116,14 @@ impl<T: BooleanVector> PauliStack<T> {
     ///
     /// # Examples
     /// ```
-    /// # #[cfg_attr(coverage_nightly, coverage(off))]
-    /// # fn main() {
+    /// # fn main() { #![cfg_attr(coverage_nightly, coverage(off))]
     /// # use pauli_tracker::pauli::{Pauli, PauliTuple, PauliStack};
     /// let mut pauli = PauliStack::<Vec<bool>>::try_from_str("1", "01").unwrap();
     /// assert_eq!(pauli.pop(), Some(PauliTuple::X));
     /// assert_eq!(pauli.pop(), Some(PauliTuple::Z));
     /// assert_eq!(pauli.pop::<PauliTuple>(), None);
     /// # }
+    /// ```
     pub fn pop<P: Pauli>(&mut self) -> Option<P> {
         match self.z.len().cmp(&self.x.len()) {
             Ordering::Less => Some(P::new_product(
@@ -226,8 +225,7 @@ impl<T: BooleanVector> PauliStack<T> {
     ///
     /// # Examples
     /// ```
-    /// # #[cfg_attr(coverage_nightly, coverage(off))]
-    /// # fn main() {
+    /// # fn main() { #![cfg_attr(coverage_nightly, coverage(off))]
     /// # use pauli_tracker::{
     /// #    pauli::{PauliTuple, Pauli, PauliStack}, boolean_vector::BooleanVector};
     /// let paulis = [

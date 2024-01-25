@@ -335,8 +335,7 @@ where
     ///
     /// # Examples
     /// ```
-    /// # #[cfg_attr(coverage_nightly, coverage(off))]
-    /// # fn main() {
+    /// # fn main() { #![cfg_attr(coverage_nightly, coverage(off))]
     /// # use pauli_tracker::{collection::NaiveVector, pauli::{self, PauliTuple},
     /// #     tracker::frames::Frames};
     /// type PauliStack = pauli::PauliStack<Vec<bool>>;
@@ -354,6 +353,7 @@ where
     ///         PauliTuple(z==1, x==1)).collect::<Vec<PauliTuple>>()).collect::<Vec<_>>()
     /// );
     /// # }
+    /// ```
     // for efficiency, one should flatten the matrix internally, but the matrix is not
     // really used in matrix operations (usually, I think), so to have a return type with
     // a more flexibel API, we don't do that
@@ -376,8 +376,7 @@ where
     ///
     /// # Examples
     /// ```
-    /// # #[cfg_attr(coverage_nightly, coverage(off))]
-    /// # fn main() {
+    /// # fn main() { #![cfg_attr(coverage_nightly, coverage(off))]
     /// # use pauli_tracker::{collection::NaiveVector, pauli::{self, PauliTuple},
     /// #     tracker::frames::Frames};
     /// type PauliStack = pauli::PauliStack<Vec<bool>>;

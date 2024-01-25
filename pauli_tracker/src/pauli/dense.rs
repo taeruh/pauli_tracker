@@ -37,11 +37,11 @@ impl PauliDense {
     ///
     /// # Examples
     /// ```
-    /// # #[cfg_attr(coverage_nightly, coverage(off))]
-    /// # fn main() {
+    /// # fn main() { #![cfg_attr(coverage_nightly, coverage(off))]
     /// # use pauli_tracker::pauli::{Pauli, PauliDense};
     /// assert_eq!(PauliDense::new_x().storage(), 2);
     /// # }
+    /// ```
     pub fn storage(&self) -> u8 {
         self.storage
     }
@@ -62,13 +62,13 @@ impl PauliDense {
     ///
     /// # Examples
     /// ```
-    /// # #[cfg_attr(coverage_nightly, coverage(off))]
-    /// # fn main() {
+    /// # fn main() { #![cfg_attr(coverage_nightly, coverage(off))]
     /// # use pauli_tracker::pauli::{Pauli, PauliDense};
     /// let mut pauli = PauliDense::I;
     /// pauli.set_storage(1);
     /// assert_eq!(pauli, Pauli::Z);
     /// # }
+    /// ```
     pub fn set_storage(&mut self, storage: u8) {
         assert!(storage <= 3);
         self.storage = storage;
@@ -79,8 +79,7 @@ impl PauliDense {
     ///
     /// # Examples
     /// ```
-    /// # #[cfg_attr(coverage_nightly, coverage(off))]
-    /// # fn main() {
+    /// # fn main() { #![cfg_attr(coverage_nightly, coverage(off))]
     /// # use pauli_tracker::pauli::{Pauli, PauliDense};
     /// assert_eq!(2, PauliDense::new_x().xmask());
     /// assert_eq!(0, PauliDense::new_z().xmask());
@@ -93,8 +92,7 @@ impl PauliDense {
     ///
     /// # Examples
     /// ```
-    /// # #[cfg_attr(coverage_nightly, coverage(off))]
-    /// # fn main() {
+    /// # fn main() { #![cfg_attr(coverage_nightly, coverage(off))]
     /// # use pauli_tracker::pauli::{Pauli, PauliDense};
     /// assert_eq!(0, PauliDense::new_x().zmask());
     /// assert_eq!(1, PauliDense::new_z().zmask());

@@ -50,8 +50,7 @@ pub trait BooleanVector:
     ///
     /// # Examples
     ///```
-    /// # #[cfg_attr(coverage_nightly, coverage(off))]
-    /// # fn main() {
+    /// # fn main() { #![cfg_attr(coverage_nightly, coverage(off))]
     /// use pauli_tracker::boolean_vector::BooleanVector;
     /// assert_eq!(Vec::<bool>::zeros(3), vec![false, false, false])
     /// # }
@@ -65,13 +64,13 @@ pub trait BooleanVector:
     ///
     /// # Examples
     ///```
-    /// # #[cfg_attr(coverage_nightly, coverage(off))]
-    /// # fn main() {
+    /// # fn main() { #![cfg_attr(coverage_nightly, coverage(off))]
     /// use pauli_tracker::boolean_vector::BooleanVector;
     /// let mut vec = vec![true, false];
     /// vec.set(1, true);
     /// assert_eq!(vec, vec![true, true]);
     /// # }
+    /// ```
     fn set(&mut self, idx: usize, flag: bool);
 
     inplace!((xor_inplace, "XOR"), (or_inplace, "OR"),);
@@ -81,8 +80,7 @@ pub trait BooleanVector:
     ///
     /// # Examples
     ///```
-    /// # #[cfg_attr(coverage_nightly, coverage(off))]
-    /// # fn main() {
+    /// # fn main() { #![cfg_attr(coverage_nightly, coverage(off))]
     /// use pauli_tracker::boolean_vector::BooleanVector;
     /// let mut vec = vec![true, false];
     /// vec.resize(3, true);
@@ -90,6 +88,7 @@ pub trait BooleanVector:
     /// vec.resize(1, true);
     /// assert_eq!(vec, vec![true]);
     /// # }
+    /// ```
     fn resize(&mut self, len: usize, flag: bool);
 
     /// Push a new element onto the vector.
@@ -117,8 +116,7 @@ pub trait BooleanVector:
     ///
     /// # Examples
     ///```
-    /// # #[cfg_attr(coverage_nightly, coverage(off))]
-    /// # fn main() {
+    /// # fn main() { #![cfg_attr(coverage_nightly, coverage(off))]
     /// use pauli_tracker::boolean_vector::BooleanVector;
     /// let vec = vec![true, false];
     /// let mut iter = vec.iter_vals();
@@ -126,6 +124,7 @@ pub trait BooleanVector:
     /// assert_eq!(iter.next(), Some(false));
     /// assert_eq!(iter.next(), None);
     /// # }
+    /// ```
     fn iter_vals(&self) -> Self::IterVals<'_>;
 
     /// Sum up the elements modulo 2 with a `filter`. We represent `true <-> 1`, `false
@@ -138,8 +137,7 @@ pub trait BooleanVector:
     ///
     /// # Examples
     /// ```
-    /// # #[cfg_attr(coverage_nightly, coverage(off))]
-    /// # fn main() {
+    /// # fn main() { #![cfg_attr(coverage_nightly, coverage(off))]
     /// # use pauli_tracker::boolean_vector::BooleanVector;
     /// let bools = vec![true, false, true, false, true, false];
     /// let filter = [true, true, true, false, false, false];
