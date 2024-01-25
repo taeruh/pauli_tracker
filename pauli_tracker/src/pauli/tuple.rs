@@ -30,6 +30,12 @@ impl Display for PauliTuple {
     }
 }
 
+impl From<(bool, bool)> for PauliTuple {
+    fn from(tuple: (bool, bool)) -> Self {
+        Self(tuple.0, tuple.1)
+    }
+}
+
 impl Pauli for PauliTuple {
     const I: Self = Self(false, false);
     const Z: Self = Self(true, false);

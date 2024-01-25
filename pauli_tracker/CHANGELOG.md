@@ -20,6 +20,7 @@ possible.
 ### Added
 - Add `Frames::stacked_transpose`.
 - Add `Frames::get_frame`.
+- Add `From<(bool, bool)> for PauliTuple`.
 ### Changed
 - **Breaking Change**: Remove `Frames::transpose_reverted` and add
   `Frames::stacked_transpose` instead.

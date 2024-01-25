@@ -41,8 +41,8 @@ impl<T: BooleanVector> PauliStack<T> {
         Self { z: T::new(), x: T::new() }
     }
 
-    /// Create a [PauliStack] from two strings. `z` (`x`) corresponds to
-    /// [PauliStack]s `z` (`x`) field.
+    /// Create a [PauliStack] from two binary strings. '0' is interpreted as false and '1'
+    /// is interpreted as true.
     ///
     /// Errors if the strings do not consist only of '0' and '1' characters.
     ///

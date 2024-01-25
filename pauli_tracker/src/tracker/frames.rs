@@ -339,19 +339,29 @@ where
     /// # use pauli_tracker::{collection::NaiveVector, pauli::{self, PauliTuple},
     /// #     tracker::frames::Frames};
     /// type PauliStack = pauli::PauliStack<Vec<bool>>;
-    /// assert_eq!(
-    ///     Frames::<NaiveVector<_>>::new_unchecked(vec![
-    ///         //               frame  Z 12  X 12              qubit
+    ///
+    /// let frames = Frames::<NaiveVector<_>>::new_unchecked(
+    ///     vec![
+    ///         //               frame  Z 12  X 12             qubit
     ///         PauliStack::try_from_str("10", "01").unwrap(), // 0
     ///         PauliStack::try_from_str("11", "10").unwrap(), // 1
     ///         PauliStack::try_from_str("11", "01").unwrap(), // 2
-    ///     ].into(), 2).transpose::<PauliTuple>(3),
-    ///     vec![ // qubit (Z, X)   0       1       2      frame
-    ///                     vec![(1, 0), (1, 1), (1, 0)], // 1
-    ///                     vec![(0, 1), (1, 0), (1, 1)], // 2
-    ///     ].into_iter().map(|frame| frame.into_iter().map(|(z, x)|
-    ///         PauliTuple(z==1, x==1)).collect::<Vec<PauliTuple>>()).collect::<Vec<_>>()
+    ///     ]
+    ///     .into(),
+    ///     2,
     /// );
+    ///
+    /// let transposed = vec![
+    ///     // bit  0       1       2        frame
+    ///     vec![(1, 0), (1, 1), (1, 0)], // 1
+    ///     vec![(0, 1), (1, 0), (1, 1)], // 2
+    /// ]
+    /// .into_iter()
+    /// .map(|frame| frame.into_iter().map(|(z, x)| (z == 1, x == 1)))
+    /// .map(|frame| frame.map(PauliTuple::from).collect::<Vec<PauliTuple>>())
+    /// .collect::<Vec<_>>();
+    ///
+    /// assert_eq!(frames.transpose::<PauliTuple>(3), transposed);
     /// # }
     /// ```
     // for efficiency, one should flatten the matrix internally, but the matrix is not
