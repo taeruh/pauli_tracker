@@ -367,14 +367,17 @@ where
     // for efficiency, one should flatten the matrix internally, but the matrix is not
     // really used in matrix operations (usually, I think), so to have a return type with
     // a more flexibel API, we don't do that
-    pub fn transpose<P: Pauli + Clone>(mut self, num_qubits: usize) -> Vec<Vec<P>> {
-        let mut ret = vec![Vec::new(); self.frames_num];
-        while let Some(frame) = self.pop_frame::<P>() {
+    pub fn transpose<P: Pauli + Clone>(&self, num_qubits: usize) -> Vec<Vec<P>> {
+        let mut ret = Vec::with_capacity(self.frames_num);
+        for i in 0..self.frames_num {
+            let frame = self
+                .get_frame::<P>(i)
+                .expect("frames_num bigger than actual number of frames");
             let mut paulis = vec![P::I; num_qubits];
             for (i, p) in frame {
                 paulis[i] = p;
             }
-            ret[self.frames_num] = paulis;
+            ret.push(paulis);
         }
         ret
     }
@@ -402,15 +405,18 @@ where
     ///     ]
     /// );
     /// # }
-    pub fn stacked_transpose(mut self, num_qubits: usize) -> Vec<PauliStack<B>> {
-        let mut ret = vec![PauliStack::new(); self.frames_num];
-        while let Some(frame) = self.pop_frame::<PauliTuple>() {
+    pub fn stacked_transpose(&self, num_qubits: usize) -> Vec<PauliStack<B>> {
+        let mut ret = Vec::with_capacity(self.frames_num);
+        for i in 0..self.frames_num {
+            let frame = self
+                .get_frame::<PauliTuple>(i)
+                .expect("frames_num bigger than actual number of frames");
             let mut stack = PauliStack::<B>::zeros(num_qubits);
             for (i, p) in frame {
                 stack.z.set(i, p.0);
                 stack.x.set(i, p.1);
             }
-            ret[self.frames_num] = stack;
+            ret.push(stack);
         }
         ret
     }
