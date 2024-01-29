@@ -1,3 +1,9 @@
 [formatting]
 columnt_width = 90
 inline_table_expand = false
+
+# I think this is done by default, but let's do it anyways
+[[rule]]
+include = ["**/Cargo.toml"]
+[rule.schema]
+path = "https://json.schemastore.org/cargo.json"

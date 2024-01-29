@@ -14,8 +14,10 @@ corresponds to Rust's `Live`_\\<`Map`_\\<_>> type.
    https://docs.rs/pauli_tracker/latest/pauli_tracker/collection/type.Map.html
 """
 
+from typing import List
 
-def bitvector_to_boolvector(bitvec: list[int], length: int) -> list[bool]:
+
+def bitvector_to_boolvector(bitvec: List[int], length: int) -> List[bool]:
     """Convert a bitvector to a boolvector.
 
     The bitvector is a list of 64 bit chunks, and in each chunk the bits are ordered from
