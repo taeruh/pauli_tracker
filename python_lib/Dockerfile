@@ -10,7 +10,8 @@ workdir /app
 
 cmd [ \
   "bash", "-c", \
-  "/opt/python/cp311-cp311/bin/maturin build \
+  "(cd rust && cargo update); \
+  /opt/python/cp311-cp311/bin/maturin build \
     # I don't get it: --features abi3 does not work (really strange error about a missing
     # static library; changing the feature name or not enabling the pyo3 feature with it
     # changes nothing), however, --all-features works fine -> okay for now, since there's
