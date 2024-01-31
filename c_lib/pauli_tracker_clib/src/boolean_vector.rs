@@ -13,7 +13,7 @@ pub type Vec_b = Vec<bool>;
 #[cfg(cbindgen)]
 pub struct BitVec;
 #[cfg(not(cbindgen))]
-pub type BitVec = vec::BitVec<u64, bitvec::order::LocalBits>;
+pub type BitVec = vec::BitVec<u64, bitvec::order::Lsb0>;
 
 macro_rules! boilerplate {
     ($(($typ:ty, $pre:tt),)*) => {$(
