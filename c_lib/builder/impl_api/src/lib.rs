@@ -2,13 +2,8 @@ use proc_macro::TokenStream;
 use proc_macro2::Span;
 use quote::quote;
 use syn::{
-    parse::{
-        Parse,
-        ParseStream,
-    },
-    parse_macro_input,
-    Ident,
-    Token,
+    parse::{Parse, ParseStream},
+    parse_macro_input, Ident, Token,
 };
 
 fn concat<L: AsRef<str>, R: AsRef<str>>(left: L, right: R, span: Span) -> Ident {
@@ -66,8 +61,8 @@ impl Parse for GenWithAdditional {
 }
 
 const MUST_FREE: &str = " The returned instance has to be freed manually with the \
-                         according `*_free` function or indirecly with another \
-                         function that consumes and frees it.";
+                         according `*_free` function or indirecly with another function \
+                         that consumes and frees it.";
 const FREES: &str = " Frees the input instance.";
 
 #[proc_macro]
@@ -498,7 +493,7 @@ pub fn frames(input: TokenStream) -> TokenStream {
         mut additional,
     } = parse_macro_input!(input as GenWithAdditional);
 
-    let transpose_reverted = pre.name("transpose_reverted");
+    let transpose = pre.name("transpose");
     let frames_num = pre.name("frames_num");
     let into_storage = pre.name("into_storage");
     let as_storage = pre.name("as_storage");
@@ -512,12 +507,12 @@ pub fn frames(input: TokenStream) -> TokenStream {
         #[doc = #FREES]
         #[doc = #MUST_FREE]
         #[no_mangle]
-        pub unsafe extern "C" fn #transpose_reverted(
+        pub unsafe extern "C" fn #transpose(
             frames: *mut #typ,
             num_frames: usize,
         ) -> *mut Vec<Vec<#pauli>> {
             let frames = unsafe { Box::from_raw(frames) };
-            std::mem::ManuallyDrop::new(Box::new(frames.transpose_reverted(num_frames)))
+            std::mem::ManuallyDrop::new(Box::new(frames.transpose(num_frames)))
                 .as_mut() as *mut Vec<Vec<#pauli>>
         }
 

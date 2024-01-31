@@ -13,7 +13,7 @@ pub type Vec_b = Vec<bool>;
 #[cfg(cbindgen)]
 pub struct BitVec;
 #[cfg(not(cbindgen))]
-pub type BitVec = vec::BitVec;
+pub type BitVec = vec::BitVec<u64, bitvec::order::LocalBits>;
 
 macro_rules! boilerplate {
     ($(($typ:ty, $pre:tt),)*) => {$(
@@ -25,14 +25,14 @@ macro_rules! boilerplate {
 boilerplate!((Vec_b, vec_b_), (BitVec, bitvec_),);
 
 pub type RawVec_b = RawVec<bool>;
-pub type RawVec_us = RawVec<usize>;
+pub type RawVec_u64 = RawVec<u64>;
 
 impl_api::raw_vec!(Vec_b, vec_b_, RawVec_b);
 
 /// Note that the `len`gth is not the number of bits, but the number of storage chunks.
 #[no_mangle]
-pub extern "C" fn bitvec_get_raw(x: &mut BitVec) -> RawVec_us {
-    RawVec_us {
+pub extern "C" fn bitvec_get_raw(x: &mut BitVec) -> RawVec_u64 {
+    RawVec_u64 {
         data: x.as_mut_bitptr().pointer(),
         len: x.len(),
     }
