@@ -1,5 +1,7 @@
 #![allow(non_camel_case_types)]
 
+use std::collections::HashMap;
+
 use pauli_tracker::{
     boolean_vector::BooleanVector,
     collection::{Init, IterableBase},
@@ -28,7 +30,20 @@ pub type Vec_psbv = Vec<PauliStack_bv>;
 
 #[no_mangle]
 pub extern "C" fn show_frames(frames: &Frames_hmpsbvfx) {
-    println!("{:?}", frames);
+    println!(
+        "{:?}",
+        frames
+            .as_storage()
+            .into_iter()
+            .map(|(k, v)| (
+                k,
+                PauliStack {
+                    z: v.z.as_raw_slice(),
+                    x: v.x.as_raw_slice(),
+                }
+            ))
+            .collect::<HashMap<_, _>>()
+    );
 }
 
 macro_rules! boilerplate {
