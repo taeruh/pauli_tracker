@@ -113,6 +113,8 @@ pub fn basic(input: TokenStream) -> TokenStream {
     let free = pre.name("free");
     let serialize = pre.name("serialize");
     let deserialize = pre.name("deserialize");
+    let serialize_bin = pre.name("serialize_bin");
+    let deserialize_bin = pre.name("deserialize_bin");
 
     quote! {
         #[doc = #MUST_FREE]
@@ -149,6 +151,31 @@ pub fn basic(input: TokenStream) -> TokenStream {
             }.to_str().expect("invalid file name");
             let contents = std::fs::read_to_string(file).expect("cannot read file");
             let x: #typ = serde_json::from_str(&contents).expect("deserialize error");
+            std::mem::ManuallyDrop::new(Box::new(x)).as_mut() as *mut #typ
+        }
+
+        /// Serialize into binary code.
+        #[no_mangle]
+        pub unsafe extern "C"
+        fn #serialize_bin(x: &#typ, file: *const std::ffi::c_char) {
+            let file = unsafe {
+                std::ffi::CStr::from_ptr(file as *const i8)
+            }.to_str().expect("invalid file name");
+            let output = bincode::serialize(x).expect("serialize error");
+            std::fs::write(file, std::str::from_utf8(&output).unwrap()).unwrap();
+        }
+
+        /// Deserialize from binary codeh.
+        ///
+        #[doc = #MUST_FREE]
+        #[no_mangle]
+        pub extern "C"
+        fn #deserialize_bin(file: *const std::ffi::c_char) -> *mut #typ {
+            let file = unsafe {
+                std::ffi::CStr::from_ptr(file as *const i8)
+            }.to_str().expect("invalid file name");
+            let contents = std::fs::read_to_string(file).expect("cannot read file");
+            let x: #typ = bincode::deserialize(contents.as_bytes()).expect("deserialize error");
             std::mem::ManuallyDrop::new(Box::new(x)).as_mut() as *mut #typ
         }
     }

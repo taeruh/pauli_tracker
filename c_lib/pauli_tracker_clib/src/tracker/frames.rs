@@ -26,6 +26,7 @@ pub type Frames_mvpsbvfx = Frames<MappedVector_psbvfx>;
 pub type Vec_psvb = Vec<PauliStack_vb>;
 pub type Vec_psbv = Vec<PauliStack_bv>;
 
+#[no_mangle]
 pub extern "C" fn show_frames(frames: &Frames_hmpsbvfx) {
     println!("{:?}", frames);
 }
