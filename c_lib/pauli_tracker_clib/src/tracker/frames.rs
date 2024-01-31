@@ -2,37 +2,18 @@
 
 use pauli_tracker::{
     boolean_vector::BooleanVector,
-    collection::{
-        Init,
-        IterableBase,
-    },
+    collection::{Init, IterableBase},
     pauli::PauliStack,
-    tracker::{
-        frames::Frames,
-        Tracker,
-    },
+    tracker::{frames::Frames, Tracker},
 };
 
 use crate::{
-    boolean_vector::{
-        BitVec,
-        Vec_b,
-    },
+    boolean_vector::{BitVec, Vec_b},
     collection::{
-        BufferedVector_psbv,
-        BufferedVector_psvb,
-        Map_psbvfx,
-        Map_psvbfx,
-        MappedVector_psbvfx,
-        MappedVector_psvbfx,
-        RawVec_psbv,
-        RawVec_psvb,
+        BufferedVector_psbv, BufferedVector_psvb, Map_psbvfx, Map_psvbfx,
+        MappedVector_psbvfx, MappedVector_psvbfx, RawVec_psbv, RawVec_psvb,
     },
-    pauli::{
-        PauliStack_bv,
-        PauliStack_vb,
-        PauliTuple,
-    },
+    pauli::{PauliStack_bv, PauliStack_vb, PauliTuple},
 };
 
 pub type Frames_hmpsvbfx = Frames<Map_psvbfx>;
@@ -44,6 +25,10 @@ pub type Frames_mvpsbvfx = Frames<MappedVector_psbvfx>;
 
 pub type Vec_psvb = Vec<PauliStack_vb>;
 pub type Vec_psbv = Vec<PauliStack_bv>;
+
+pub extern "C" fn show_frames(frames: &Frames_hmpsbvfx) {
+    println!("{:?}", frames);
+}
 
 macro_rules! boilerplate {
     ($(($typ:ty, $pre:tt, $pauli:ty, $stack:ty, $storage:ty),)*) => {$(
@@ -79,20 +64,8 @@ macro_rules! boilerplate_vecs {
 // actually, one should also include the storage abbreviation in the name, but since we
 // always use Map_* as storage, I'm omitting it here (for now)
 boilerplate!(
-    (
-        Frames_hmpsvbfx,
-        frames_hmpsvbfx_,
-        PauliTuple,
-        PauliStack_vb,
-        Map_psvbfx
-    ),
-    (
-        Frames_hmpsbvfx,
-        frames_hmpsbvfx_,
-        PauliTuple,
-        PauliStack_bv,
-        Map_psbvfx
-    ),
+    (Frames_hmpsvbfx, frames_hmpsvbfx_, PauliTuple, PauliStack_vb, Map_psvbfx),
+    (Frames_hmpsbvfx, frames_hmpsbvfx_, PauliTuple, PauliStack_bv, Map_psbvfx),
     (
         Frames_bvpsvb,
         frames_bvpsvb_,
@@ -134,10 +107,7 @@ boilerplate_measure_bv!(
     (Frames_mvpsbvfx, frames_mvpsbv_),
 );
 
-boilerplate_vecs!(
-    (Vec_psvb, vec_psvb_, RawVec_psvb),
-    (Vec_psbv, vec_psbv_, RawVec_psbv),
-);
+boilerplate_vecs!((Vec_psvb, vec_psvb_, RawVec_psvb), (Vec_psbv, vec_psbv_, RawVec_psbv),);
 
 pub trait Remove {
     fn remove(&mut self, row: usize);
