@@ -27,7 +27,7 @@ impl<T> GetTwoMutSlice for [T] {
 
     /// # Safety
     ///
-    /// The indices `one` and `two` have two different and in bounds.
+    /// The indices `one` and `two` have to be different and in bounds.
     unsafe fn get_two_unchecked_mut(
         &mut self,
         one: usize,
