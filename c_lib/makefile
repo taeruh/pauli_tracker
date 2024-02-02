@@ -35,14 +35,14 @@ $(lib_path).so: FORCE
 	# 	cargo +stable build --release)
 
 
-$(output)/$(header): $(header_path) |  $(output)/
+$(output)/$(header): $(header_path) | $(output)/
 	cp $(header_path) $(output)/
 
 $(header_path): FORCE
 	(cd generate_bindings && cargo run --release)
 
 
-%/:
+$(output)/:
 	@mkdir -p $@
 
 clean:
