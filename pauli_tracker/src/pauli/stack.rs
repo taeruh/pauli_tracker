@@ -22,10 +22,11 @@ use crate::boolean_vector::BooleanVector;
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct PauliStack<T /* : BooleanVector */> {
     /// The Z Pauli mask, i.e., the bits flagging whether there's a Z Pauli.
-    #[serde(alias = "right")] // backwards compatibility (at least when deserializing)
+    // backwards compatibility (at least when deserializing)
+    #[cfg_attr(feature = "serde", serde(alias = "right"))]
     pub z: T,
     /// The X Pauli mask, i.e., the bits flagging whether there's a X Pauli.
-    #[serde(alias = "left")] // backwards comp....
+    #[cfg_attr(feature = "serde", serde(alias = "left"))] // backwards comp....
     pub x: T,
 }
 
