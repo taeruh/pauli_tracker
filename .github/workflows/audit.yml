@@ -2,10 +2,10 @@ name: audit
 on:
   schedule:
     - cron: '0 6 * * 2'
-  push:
-    paths:
-      - '**/Cargo.toml'
-      - '**/Cargo.lock'
+defaults:
+  run:
+    working-directory: ./pauli_tracker
+
 jobs:
   security_audit:
     runs-on: ubuntu-latest
