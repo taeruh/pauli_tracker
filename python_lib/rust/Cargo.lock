@@ -6,10 +6,12 @@ version = 3
 name = "_lib"
 version = "0.1.0"
 dependencies = [
+ "bincode",
  "bitvec",
  "pauli_tracker",
  "pyo3",
  "rustc-hash",
+ "serde_json",
  "utils",
 ]
 
@@ -155,9 +157,9 @@ checksum = "b1a46d1a171d865aa5f83f92695765caa047a9b4cbae2cbf37dbd613a793fd4c"
 
 [[package]]
 name = "libc"
-version = "0.2.152"
+version = "0.2.153"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "13e3bf6590cbc649f4d1a3eefc9d5d6eb746f5200ffb04e5e142700b8faa56e7"
+checksum = "9c198f91728a82281a64e1f4f9eeb25d82cb32a5de251c6bd1b5154d63a8e7bd"
 
 [[package]]
 name = "lock_api"
@@ -210,7 +212,7 @@ dependencies = [
 [[package]]
 name = "pauli_tracker"
 version = "0.4.0-alpha.2"
-source = "git+https://github.com/taeruh/pauli_tracker#c36c0f26d7f0e1df44380e9672f6e6ea4b7c03b5"
+source = "git+https://github.com/taeruh/pauli_tracker#1cac41e1c151068faf2c175b816007c3c9f237ab"
 dependencies = [
  "bit-vec",
  "bitvec",
