@@ -16,7 +16,7 @@ description = "A library to track Pauli gates through a Clifford circuit."
 keywords = ["quantum", "clifford", "pauli", "mbqc"]
 categories = ["simulation"]
 
-readme = "./README.md"
+readme = "README.md"
 
 exclude = ["Cargo_nightly.toml", "todo.txt", "xtask"]
 

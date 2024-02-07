@@ -46,7 +46,7 @@ commands is in the `dist` directory.
 
 ## Versioning
 
-The Python package follows SemVer, however, the underlying Rust crate is unstable.
+The Python package follows [SemVer], however, the underlying Rust crate is unstable.
 
 [crate's documentation]: https://docs.rs/pauli_tracker/latest/pauli_tracker/
 [contributing]: https://github.com/taeruh/pauli_tracker/blob/main/CONTRIBUTING.md
@@ -57,5 +57,6 @@ The Python package follows SemVer, however, the underlying Rust crate is unstabl
 [Python example]: https://taeruh.github.io/pauli_tracker/#example-usage
 [Python package's documentation]: https://taeruh.github.io/pauli_tracker/
 [Rust examples]: https://docs.rs/pauli_tracker/latest/pauli_tracker/#examples
+[SemVer]: https://semver.org/
 [To the docs]: https://taeruh.github.io/pauli_tracker/
 [#1444]: https://github.com/PyO3/pyo3/issues/1444

@@ -1,12 +1,10 @@
 # Changelog
 
-All notable changes to this project will be documented in this file, as best as
-possible.
+All notable changes to this project will be documented in this file, as best as possible.
 
 The format is based on [Keep a Changelog].
 
-We try to follow the [SemVer] rules, specifically [Cargo guidelines], as best as
-possible.
+We (try to) follow the [SemVer] rules, specifically [Cargo guidelines].
 
 ## [Future major bump]
 ### Added

@@ -6,8 +6,7 @@
 [![Dependency status](https://deps.rs/repo/github/taeruh/pauli_tracker/status.svg)](https://deps.rs/repo/github/taeruh/pauli_tracker)
 (Rust crate)
 
-A library to track Pauli frames, i.e., Pauli operators, through a Clifford circuit with
-measurements.
+A library to track Pauli gates through a Clifford circuit.
 
 ## What is Pauli tracking
 
@@ -69,7 +68,7 @@ linking to this repo; a paper is in progress).
 
 ## License
 
-Pauli Tracker is distributed under the terms of both the MIT license and the
+The Pauli Tracker project is distributed under the terms of both the MIT license and the
 Apache License (Version 2.0).
 
 See [LICENSE-APACHE](LICENSE-APACHE) and [LICENSE-MIT](LICENSE-MIT).
