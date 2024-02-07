@@ -1,5 +1,5 @@
 [package]
-name = "_lib"
+name = "pauli_tracker_pyo3"
 version = "0.1.0"
 authors = ["Jannis Ruh <ruh.j81@gmail.com>"]
 
@@ -8,30 +8,22 @@ rust-version = "1.65.0" # needed for pauli_vector (1.56 for pyo3)
 
 license = "MIT OR Apache-2.0"
 
-repository = "https://github.com/taeruh/pauli_tracker"
-
-description = "PyO3 wrapper for the pauli_tracker crate."
-keywords = ["quantum", "clifford", "pauli", "mbqc"]
-categories = ["simulation"]
-
-readme = "../README.md"
-
-exclude = ["makefile", "tests", "xtask"]
-
 [lib]
-name = "_lib"
-crate-type = ["cdylib"]
+name = "pauli_tracker_pyo3"
+crate-type = ["lib"]
 
 [dependencies]
-utils = { path = "../utils" }
-pyo3 = { version = "0.20.0", features = ["multiple-pymethods"] }
 # lib = { package = "pauli_tracker", version = "0.3.2", features = ["serde", "bitvec"] }
-lib = { package = "pauli_tracker", version = "0.4.0-alpha.2", features = ["serde", "bitvec"], git = "https://github.com/taeruh/pauli_tracker" }
-# lib = { package = "pauli_tracker", version = "0.4.0-alpha.2", features = ["serde", "bitvec"], path = "../../pauli_tracker" }
+lib = { package = "pauli_tracker", version = "0.4.0-alpha.2", features = [
+  "serde",
+  "bitvec",
+], git = "https://github.com/taeruh/pauli_tracker" }
+pyo3 = { version = "0.20.0", default-features = false, features = [
+  "macros",
+  "multiple-pymethods",
+] }
 rustc-hash = "1.1.0"
 bitvec = "1.0.1"
 serde_json = "1.0.113"
 bincode = "1.3.3"
-
-[features]
-enable_foo = ["pyo3/abi3-py38"]
+serde = "1.0.196"

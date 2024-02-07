@@ -23,7 +23,7 @@ Repository = "https://github.com/taeruh/pauli_tracker"
 [tool.maturin]
 features = ["pyo3/extension-module"]
 module-name = "pauli_tracker._lib"
-manifest-path = "rust/Cargo.toml"
+manifest-path = "rust/_lib/Cargo.toml"
 python-source = "python"
 
 # following options are set in the dockerfile and github actions for maturin build

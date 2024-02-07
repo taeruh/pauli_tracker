@@ -5,11 +5,7 @@ use lib::{
 };
 use pyo3::{PyResult, Python};
 
-use crate::{
-    impl_helper::{doc, links},
-    pauli::PauliStack,
-    BitVec, Module,
-};
+use crate::{impl_helper::links, pauli::PauliStack, BitVec, Module};
 
 type Storage = NaiveVector<pauli::PauliStack<BitVec>>;
 impl_frames!(
@@ -29,7 +25,7 @@ impl_frames!(
 
 #[pyo3::pymethods]
 impl Frames {
-    #[doc = doc::transform!()]
+    #[doc = crate::transform!()]
     ///
     /// Returns:
     ///     list[PauliStack]:
@@ -38,7 +34,7 @@ impl Frames {
         self.0.clone().into_storage().0.into_iter().map(PauliStack).collect()
     }
 
-    #[doc = doc::transform!()]
+    #[doc = crate::transform!()]
     ///
     /// Returns: cf. :obj:`~pauli_tracker.pauli.PauliStack`
     ///     list[tuple[list[int], list[int]]]:

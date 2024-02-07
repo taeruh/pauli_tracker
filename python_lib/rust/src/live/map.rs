@@ -29,7 +29,7 @@ impl_live!(
 
 #[pyo3::pymethods]
 impl Live {
-    #[doc = crate::impl_helper::doc::transform!()]
+    #[doc = crate::transform!()]
     ///
     /// Returns:
     ///     dict[int, PauliDense]:
@@ -43,7 +43,7 @@ impl Live {
             .collect()
     }
 
-    #[doc = crate::impl_helper::doc::transform!()]
+    #[doc = crate::transform!()]
     ///
     /// Returns:
     ///     dict[int, int]:

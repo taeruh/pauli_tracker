@@ -1,13 +1,13 @@
 use bitvec::order::Lsb0;
 use pyo3::{types::PyModule, PyResult, Python};
 
-struct Module<'m> {
-    pymodule: &'m PyModule,
-    path: String,
+pub struct Module<'m> {
+    pub pymodule: &'m PyModule,
+    pub path: String,
 }
 
 impl<'m> Module<'m> {
-    fn new(py: Python<'m>, name: &str, mut path: String) -> PyResult<Self> {
+    pub fn new(py: Python<'m>, name: &str, mut path: String) -> PyResult<Self> {
         path.push_str(format!(".{}", name).as_str());
         Ok(Self {
             pymodule: PyModule::new(py, name)?,
@@ -15,7 +15,7 @@ impl<'m> Module<'m> {
         })
     }
 
-    fn add_submodule(&self, py: Python<'_>, submodule: Self) -> PyResult<()> {
+    pub fn add_submodule(&self, py: Python<'_>, submodule: Self) -> PyResult<()> {
         self.pymodule.add_submodule(submodule.pymodule)?;
         py.import("sys")?
             .getattr("modules")?
@@ -24,9 +24,9 @@ impl<'m> Module<'m> {
     }
 }
 
-mod impl_helper;
+pub mod impl_helper;
 
-mod frames;
+pub mod frames;
 mod live;
 mod pauli;
 
@@ -34,8 +34,7 @@ mod pauli;
 // internally, e.g., in the bitvector_to_boolvector function in __init__.py)
 type BitVec = bitvec::vec::BitVec<u64, Lsb0>;
 
-#[pyo3::pymodule]
-fn _lib(py: Python, module: &PyModule) -> PyResult<()> {
+pub fn create_module(py: Python, module: &PyModule) -> PyResult<()> {
     let module = Module {
         pymodule: module,
         path: "pauli_tracker._lib".to_string(),

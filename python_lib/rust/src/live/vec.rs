@@ -5,11 +5,7 @@ use lib::{
 };
 use pyo3::{PyResult, Python};
 
-use crate::{
-    impl_helper::{doc, links},
-    pauli::PauliDense,
-    Module,
-};
+use crate::{impl_helper::links, pauli::PauliDense, Module};
 
 type LiveStorage = NaiveVector<pauli::PauliDense>;
 impl_live!(
@@ -27,7 +23,7 @@ impl_live!(
 
 #[pyo3::pymethods]
 impl Live {
-    #[doc = doc::transform!()]
+    #[doc = crate::transform!()]
     ///
     /// Returns:
     ///     list[PauliDense]:
@@ -36,7 +32,7 @@ impl Live {
         self.0.clone().into_storage().0.into_iter().map(PauliDense).collect()
     }
 
-    #[doc = doc::transform!()]
+    #[doc = crate::transform!()]
     ///
     /// Returns:
     ///     list[int]:

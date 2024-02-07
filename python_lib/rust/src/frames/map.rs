@@ -4,11 +4,7 @@ use lib::{collection, collection::Init, pauli, tracker::Tracker};
 use pyo3::{PyResult, Python};
 use rustc_hash::FxHasher;
 
-use crate::{
-    impl_helper::{doc, links},
-    pauli::PauliStack,
-    BitVec, Module,
-};
+use crate::{impl_helper::links, pauli::PauliStack, BitVec, Module};
 
 type Map<T> = collection::Map<T, BuildHasherDefault<FxHasher>>;
 
@@ -30,7 +26,7 @@ impl_frames!(
 
 #[pyo3::pymethods]
 impl Frames {
-    #[doc = doc::transform!()]
+    #[doc = crate::transform!()]
     ///
     /// Returns:
     ///     dict[int, PauliStack]:
@@ -50,7 +46,7 @@ impl Frames {
     //     self.0.new_qubit(bit).map(crate::pauli::PauliStack)
     // }
 
-    #[doc = doc::transform!()]
+    #[doc = crate::transform!()]
     ///
     /// Returns: cf. :obj:`~pauli_tracker.pauli.PauliStack`
     ///     dict[int, tuple[list[int], list[int]]]:

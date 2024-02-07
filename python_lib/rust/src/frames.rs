@@ -1,17 +1,13 @@
 use lib::{pauli, tracker::frames::induced_order};
 use pyo3::{PyResult, Python};
 
-use crate::{
-    impl_helper::{doc, serialization},
-    pauli::PauliStack,
-    BitVec, Module,
-};
+use crate::{impl_helper::serialization, pauli::PauliStack, BitVec, Module};
 
 #[pyo3::pyclass(subclass)]
 /// This is just `PartialOrderGraph
 /// <https://docs.rs/pauli_tracker/latest/pauli_tracker/tracker/frames/induced_order/type.PartialOrderGraph.html>`_.
 /// Use :meth:`into_py_graph` to turn it into a Python type.
-struct PartialOrderGraph(pub induced_order::PartialOrderGraph);
+pub struct PartialOrderGraph(pub induced_order::PartialOrderGraph);
 
 #[pyo3::pymethods]
 impl PartialOrderGraph {
@@ -29,13 +25,18 @@ impl PartialOrderGraph {
     ///     PartialOrderGraph:
     fn __init__(&self, _graph: induced_order::PartialOrderGraph) {}
 
-    #[doc = doc::transform!()]
+    #[doc = crate::transform!()]
     ///
     /// Returns:
     ///     list[list[tuple[int, list[int]]]]:
     #[allow(clippy::wrong_self_convention)]
     fn into_py_graph(&self) -> induced_order::PartialOrderGraph {
         self.0.clone()
+    }
+
+    #[doc = crate::take_transform!()]
+    fn take_into_py_graph(&mut self) -> induced_order::PartialOrderGraph {
+        std::mem::take(&mut self.0)
     }
 }
 
@@ -94,7 +95,7 @@ impl StackedTransposed {
         self.0.pop().map(PauliStack)
     }
 
-    #[doc = doc::transform!()]
+    #[doc = crate::transform!()]
     ///
     /// Returns:
     ///     list[tuple[list[int], list[int]]]

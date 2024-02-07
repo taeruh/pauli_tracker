@@ -1,10 +1,7 @@
 use lib::pauli::{self, Pauli};
 use pyo3::{exceptions::PyValueError, PyResult, Python};
 
-use crate::{
-    impl_helper::{doc, serialization},
-    BitVec, Module,
-};
+use crate::{impl_helper::serialization, BitVec, Module};
 
 /// `PauliDense
 /// <https://docs.rs/pauli_tracker/latest/pauli_tracker/pauli/struct.PauliDense.html>`_
@@ -65,7 +62,7 @@ impl PauliTuple {
         self.0.tableau_encoding()
     }
 
-    #[doc = doc::transform!()]
+    #[doc = crate::transform!()]
     ///
     /// Returns:
     ///     tuple[bool, bool]:
@@ -92,7 +89,7 @@ impl PauliStack {
     /// **Not defined**
     fn __init__(&self) {}
 
-    #[doc = doc::transform!()]
+    #[doc = crate::transform!()]
     ///
     /// Returns:
     ///     tuple[list[int], list[int]]: The Z (left tuple element) and X (right tuple
