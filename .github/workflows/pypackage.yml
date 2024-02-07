@@ -80,7 +80,7 @@ jobs:
       - name: Build sdists
         run: |
           python -m pip install maturin
-          maturin build sdist
+          maturin sdist
       - uses: actions/upload-artifact@v4
         with:
           name: pauli_tracker-source-dist
