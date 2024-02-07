@@ -8,6 +8,7 @@ _build
 _autosummary
 !docs/_autosummary
 pauli_tracker/Cargo.lock
+python_lib/rust/Cargo.lock
 c_lib/builder/*/Cargo.lock
 
 # personal development config and caches

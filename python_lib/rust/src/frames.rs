@@ -4,7 +4,7 @@ use pyo3::{PyResult, Python};
 use crate::{impl_helper::serialization, pauli::PauliStack, BitVec, Module};
 
 #[pyo3::pyclass(subclass)]
-/// This is just `PartialOrderGraph
+/// Compare `PartialOrderGraph
 /// <https://docs.rs/pauli_tracker/latest/pauli_tracker/tracker/frames/induced_order/type.PartialOrderGraph.html>`_.
 /// Use :meth:`into_py_graph` to turn it into a Python type.
 pub struct PartialOrderGraph(pub induced_order::PartialOrderGraph);
@@ -23,6 +23,7 @@ impl PartialOrderGraph {
     ///
     /// Returns:
     ///     PartialOrderGraph:
+    #[pyo3(text_signature = "(self, graph)")]
     fn __init__(&self, _graph: induced_order::PartialOrderGraph) {}
 
     #[doc = crate::transform!()]
@@ -35,6 +36,9 @@ impl PartialOrderGraph {
     }
 
     #[doc = crate::take_transform!()]
+    ///
+    /// Returns:
+    ///     list[list[tuple[int, list[int]]]]:
     fn take_into_py_graph(&mut self) -> induced_order::PartialOrderGraph {
         std::mem::take(&mut self.0)
     }
