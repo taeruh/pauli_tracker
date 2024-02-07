@@ -1,9 +1,9 @@
-# uploading the packages as artifacts here is only a temporary solution until I upload
-# them in a package to pypi or add them as assets attached release tags
+# at the moment, I keep the building process separated from the publishing, because the
+# package is unstable and fast-changing, and I want to be able to quickly manually build
+# it without pubilshing
 
 name: pypackage
-on:
-  workflow_dispatch:
+on: [workflow_dispatch, workflow_call]
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref || github.run_id }}
   cancel-in-progress: true
@@ -39,7 +39,7 @@ jobs:
             --release
       - uses: actions/upload-artifact@v4
         with:
-          name: manylinux_2_28_x86_64-3.${{ matrix.version }}-wheel
+          name: pauli_tracker-manylinux_2_28_x86_64-3.${{ matrix.version }}-wheel
           path: python_lib/target/wheels/*
 
   linux-abi-wheel:
@@ -63,8 +63,29 @@ jobs:
             --all-features
       - uses: actions/upload-artifact@v4
         with:
-          name: manylinux_2_28_x86_64-3.8_abi3-wheel
+          name: pauli_tracker-manylinux_2_28_x86_64-3.8_abi3-wheel
           path: python_lib/target/wheels/*
+
+  sdist:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: true
+      - name: Install stable rust
+        uses: dtolnay/rust-toolchain@stable
+      - uses: actions/setup-python@v5
+        with:
+          python-version: 3.11
+      - name: Build sdists
+        run: |
+          python -m pip install maturin
+          maturin build sdist
+      - uses: actions/upload-artifact@v4
+        with:
+          name: pauli_tracker-source-dist
+          path: python_lib/target/wheels/*
+
 
   osx-and-windows-wheels:
     runs-on: ${{ matrix.os }}
@@ -87,7 +108,7 @@ jobs:
           maturin build --release
       - uses: actions/upload-artifact@v4
         with:
-          name: ${{ matrix.os }}-3.${{ matrix.version }}-wheel
+          name: pauli_tracker-${{ matrix.os }}-3.${{ matrix.version }}-wheel
           path: python_lib/target/wheels/*
 
   docs:

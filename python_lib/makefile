@@ -3,7 +3,7 @@ MAKEFLAGS += --no-builtin-variables
 SHELL := /usr/bin/dash
 
 rust_source := $(shell find rust/src -type f -name "*") \
-							 rust/Cargo.toml rust/Cargo.lock
+							 rust/Cargo.toml rust/_lib/Cargo.toml
 python_source := $(shell find python/pauli_tracker -type f -name "*.py" -o -name "*.pyi")
 source := $(rust_source) $(python_source)
 
