@@ -1,3 +1,5 @@
+use std::mem;
+
 use lib::{pauli, tracker::frames::induced_order};
 use pyo3::{PyResult, Python};
 
@@ -40,7 +42,7 @@ impl PartialOrderGraph {
     /// Returns:
     ///     list[list[tuple[int, list[int]]]]:
     fn take_into_py_graph(&mut self) -> induced_order::PartialOrderGraph {
-        std::mem::take(&mut self.0)
+        mem::take(&mut self.0)
     }
 }
 
@@ -105,12 +107,20 @@ impl StackedTransposed {
     ///     list[tuple[list[int], list[int]]]
     #[allow(clippy::wrong_self_convention)]
     fn into_py_matrix(&self) -> Vec<(Vec<u64>, Vec<u64>)> {
-        self.0
-            .clone()
-            .into_iter()
-            .map(|s| PauliStack(s).into_py_tuple())
-            .collect()
+        into_py_matrix(self.0.clone())
     }
+
+    #[doc = crate::take_transform!()]
+    ///
+    /// Returns:
+    ///     list[tuple[list[int], list[int]]]
+    fn take_into_py_matrix(&mut self) -> Vec<(Vec<u64>, Vec<u64>)> {
+        into_py_matrix(mem::take(&mut self.0))
+    }
+}
+
+fn into_py_matrix(stacks: Vec<pauli::PauliStack<BitVec>>) -> Vec<(Vec<u64>, Vec<u64>)> {
+    stacks.into_iter().map(|s| PauliStack(s).into_py_tuple()).collect()
 }
 
 serialization::serde!(StackedTransposed);
@@ -166,6 +176,8 @@ macro_rules! impl_frames {
             ///
             /// The frames are now on the major axis and the qubits on the minor axis.
             ///
+            /// Consider using :func:`take_stacked_transpose` to avoid cloning.
+            ///
             /// Args:
             ///     highest_qubit (int): The highest qubit index that has been tracked.
             ///
@@ -177,6 +189,17 @@ macro_rules! impl_frames {
             ) -> crate::frames::StackedTransposed {
                 crate::frames::StackedTransposed(
                     self.0.clone().stacked_transpose(highest_qubit),
+                )
+            }
+
+            /// Like :func:`stacked_transpose`, but take out the internal data (replacing
+            /// it with its default value).
+            fn take_stacked_transpose(
+                &mut self,
+                highest_qubit: usize,
+            ) -> crate::frames::StackedTransposed {
+                crate::frames::StackedTransposed(
+                    mem::take(&mut self.0).stacked_transpose(highest_qubit),
                 )
             }
 

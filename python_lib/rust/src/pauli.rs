@@ -1,3 +1,5 @@
+use std::mem;
+
 use lib::pauli::{self, Pauli};
 use pyo3::{exceptions::PyValueError, PyResult, Python};
 
@@ -62,7 +64,7 @@ impl PauliTuple {
         self.0.tableau_encoding()
     }
 
-    #[doc = crate::transform!()]
+    /// Get the according Python tuple.
     ///
     /// Returns:
     ///     tuple[bool, bool]:
@@ -96,7 +98,16 @@ impl PauliStack {
     ///     element) components
     #[allow(clippy::wrong_self_convention)]
     pub fn into_py_tuple(&self) -> (Vec<u64>, Vec<u64>) {
-        (self.0.z.clone().into_vec(), self.0.x.clone().into_vec())
+        stack_into_py_tuple(self.0.clone())
+    }
+
+    #[doc = crate::take_transform!()]
+    ///
+    /// Returns:
+    ///     tuple[list[int], list[int]]: The Z (left tuple element) and X (right tuple
+    ///     element) components
+    fn take_into_py_tuple(&mut self) -> (Vec<u64>, Vec<u64>) {
+        stack_into_py_tuple(mem::take(&mut self.0))
     }
 
     #[staticmethod]
@@ -115,6 +126,10 @@ impl PauliStack {
     fn sum_up(&self, filter: Vec<bool>) -> PauliTuple {
         PauliTuple(self.0.sum_up(&filter))
     }
+}
+
+fn stack_into_py_tuple(stack: pauli::PauliStack<BitVec>) -> (Vec<u64>, Vec<u64>) {
+    (stack.z.into_vec(), stack.x.into_vec())
 }
 
 serialization::serde!(PauliStack);

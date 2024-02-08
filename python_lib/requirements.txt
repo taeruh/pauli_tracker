@@ -19,7 +19,6 @@ mdurl==0.1.2
 more-itertools==10.1.0
 nh3==0.2.15
 packaging==23.2
-pauli_tracker @ file:///tmp/.tmpJTHCb8/pauli_tracker-0.1.0-cp38-abi3-linux_x86_64.whl#sha256=87d1a5c7e7ae0a5faa402ebe8b9dfcc8a3acd93ac93723ad649ff5c6e826734f
 pkginfo==1.9.6
 pycparser==2.21
 Pygments==2.17.2
