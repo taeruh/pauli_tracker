@@ -1,0 +1,7 @@
+clang
+-Wall
+-Wextra
+-pedantic
+%cpp %hpp -std=c++20
+%h -std=c17
+-I./

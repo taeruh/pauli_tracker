@@ -1,0 +1,14 @@
+[package]
+name = "minimal_lib"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+crate-type = ["staticlib"]
+
+[dependencies]
+
+[dependencies.pauli_tracker]
+version = "0.4.0-alpha.2"
+git = "https://github.com/taeruh/pauli_tracker" # comment when using real release
+# features = ["serde", "bitvec"]

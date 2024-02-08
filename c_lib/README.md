@@ -2,8 +2,14 @@
 
 C bindings partially exporting the API of the [pauli_tracker crate].
 
-*While everything should compile, the bindings here are lacking behind the Rust crate. The
-current focus is on the Rust crate and the Python wrapper.*
+I would recommend to *not* use this library directly, but instead build your own C wrapper
+for the specific functionality that you need. The `diy_example` provides a minimal example
+to start. When doing this, it is still worth reading through the following sections,
+because they can also be applied to your own library. The reason why I building you own
+wrapper is because of the following: Firstly, this wrapper here is not well tested and not
+that actively maintained. Secondly, while the provided API covers a lot of types and is
+not really deep, and you may need to deal a lot with pointers when using it; it is just
+more effective if you write your own wrapper with exactly the functionality that you need.
 
 ## Compiling the library
 
@@ -40,6 +46,9 @@ Enabling cross language LTO might be a little bit tricky (cf. [lto]); we don't d
 default, compare the commented lines in the makefiles for the release builds).
 
 ## Building your own library
+
+In the `diy_example` directory is a minimal example of how to build a compiled C library
+with Rust for some Pauli tracker functionality.
 
 The core Rust library [pauli_tracker crate] is highly generic; this feature is however
 lost when creating a C API. Instead we have to implement more or less the same
