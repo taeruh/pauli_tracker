@@ -1,0 +1,6 @@
+* Todo
+  - ( ) update codecov action to v4 (need to set up token)
+
+* Building
+  - cibuildwheel and maturin-action might be useful if we want to build for more platforms
+    than we are already doing

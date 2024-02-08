@@ -1,5 +1,6 @@
 output
 target
+Cargo.lock
 dist
 .venv
 __pycache__
@@ -7,9 +8,6 @@ python_lib/python/**/*.so
 _build
 _autosummary
 !docs/_autosummary
-pauli_tracker/Cargo.lock
-python_lib/rust/Cargo.lock
-c_lib/builder/*/Cargo.lock
 
 # personal development config and caches
 .tmux-session
