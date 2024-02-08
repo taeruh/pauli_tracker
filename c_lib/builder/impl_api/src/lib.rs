@@ -268,12 +268,19 @@ pub fn base(input: TokenStream) -> TokenStream {
     let tb = additional.pop().unwrap();
 
     let get = pre.name("get");
+    let get_mut = pre.name("get_mut");
     let len = pre.name("len");
     let is_empty = pre.name("is_empty");
 
     quote! {
         #[no_mangle]
-        pub extern "C" fn #get(x: &mut #typ, key: usize)
+        pub extern "C" fn #get(x: &#typ, key: usize)
+            -> &#tb {
+            <#typ as Base>::get(x, key).expect("missing key")
+        }
+
+        #[no_mangle]
+        pub extern "C" fn #get_mut(x: &mut #typ, key: usize)
             -> &mut #tb {
             <#typ as Base>::get_mut(x, key).expect("missing key")
         }
@@ -514,40 +521,18 @@ pub fn tracker(input: TokenStream) -> TokenStream {
 }
 
 #[proc_macro]
-pub fn frames(input: TokenStream) -> TokenStream {
+pub fn storage_wrapper(input: TokenStream) -> TokenStream {
     let GenWithAdditional {
         gen: Gen { typ, pre },
         mut additional,
     } = parse_macro_input!(input as GenWithAdditional);
 
-    let transpose = pre.name("transpose");
-    let frames_num = pre.name("frames_num");
     let into_storage = pre.name("into_storage");
     let as_storage = pre.name("as_storage");
-    let new_unchecked = pre.name("new_unchecked");
-    let remove_row = pre.name("remove_row");
 
     let storage = additional.pop().unwrap();
-    let pauli = additional.pop().unwrap();
 
     quote! {
-        #[doc = #FREES]
-        #[doc = #MUST_FREE]
-        #[no_mangle]
-        pub unsafe extern "C" fn #transpose(
-            frames: *mut #typ,
-            num_frames: usize,
-        ) -> *mut Vec<Vec<#pauli>> {
-            let frames = unsafe { Box::from_raw(frames) };
-            std::mem::ManuallyDrop::new(Box::new(frames.transpose(num_frames)))
-                .as_mut() as *mut Vec<Vec<#pauli>>
-        }
-
-        #[no_mangle]
-        pub extern "C" fn #frames_num(frames: &mut #typ) -> usize {
-            frames.frames_num()
-        }
-
         #[doc = #FREES]
         #[doc = #MUST_FREE]
         #[no_mangle]
@@ -561,6 +546,44 @@ pub fn frames(input: TokenStream) -> TokenStream {
         pub extern "C" fn #as_storage(frames: &mut #typ) -> *const #storage {
             frames.as_storage()
         }
+    }
+    .into()
+}
+
+#[proc_macro]
+pub fn frames(input: TokenStream) -> TokenStream {
+    let GenWithAdditional {
+        gen: Gen { typ, pre },
+        mut additional,
+    } = parse_macro_input!(input as GenWithAdditional);
+
+    let stacked_transpose = pre.name("stacked_transpose");
+    let frames_num = pre.name("frames_num");
+    let new_unchecked = pre.name("new_unchecked");
+
+    let transposed_stack = additional.pop().unwrap();
+    let storage = additional.pop().unwrap();
+    // let pauli = additional.pop().unwrap();
+
+    quote! {
+        #[doc = #FREES]
+        #[doc = #MUST_FREE]
+        #[no_mangle]
+        pub unsafe extern "C" fn #stacked_transpose(
+            frames: *mut #typ,
+            num_frames: usize,
+        ) -> *mut #transposed_stack {
+            let frames = unsafe { Box::from_raw(frames) };
+            let transposed = frames.stacked_transpose(num_frames);
+            std::mem::ManuallyDrop::new(
+                Box::new(pauli_tracker::collection::BufferedVector(transposed))
+            ).as_mut() as *mut #transposed_stack
+        }
+
+        #[no_mangle]
+        pub extern "C" fn #frames_num(frames: &mut #typ) -> usize {
+            frames.frames_num()
+        }
 
         #[doc = #FREES]
         #[doc = #MUST_FREE]
@@ -573,18 +596,6 @@ pub fn frames(input: TokenStream) -> TokenStream {
             std::mem::ManuallyDrop::new(
                 Box::new(#typ::new_unchecked(*storage, num_frames))
             ).as_mut() as *mut #typ
-        }
-
-        #[doc = #FREES]
-        #[doc = #MUST_FREE]
-        #[no_mangle]
-        pub unsafe extern "C" fn #remove_row(
-            frames: *mut #typ,
-            row: usize,
-        ) -> *mut #typ {
-            let frames = unsafe { Box::from_raw(frames) };
-            let frames = remove_row(*frames, row);
-            std::mem::ManuallyDrop::new(Box::new(frames)).as_mut() as *mut #typ
         }
     }
     .into()

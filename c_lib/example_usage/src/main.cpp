@@ -20,9 +20,10 @@ int main(void) {
   live_bvpt_cx(tuple_live, 0, 1);
 
   frames_hmpsvbfx_measure_and_store_hmfx(frames, 1, storage);
-  printf("%d\n", live_hmpefx_measure(live, 1));
-  PauliTuple tuple_result = live_bvpt_measure(tuple_live, 1);
-  printf("(%d, %d)\n", tuple_result._0, tuple_result._1);
+  printf("%d\n", *map_pefx_get(live_hmpefx_as_storage(live), 1));
+  const PauliTuple *tuple_result =
+      buffered_vector_pt_get(live_bvpt_as_storage(tuple_live), 1);
+  printf("(%d, %d)\n", tuple_result->_0, tuple_result->_1);
 
   frames_hmpsvbfx_track_y(frames, 2);
   live_hmpefx_track_y(live, 2);
@@ -37,30 +38,30 @@ int main(void) {
   live_hmpefx_serialize(live, "output/live.json");
   live_bvpt_serialize(tuple_live, "output/tuple_live.json");
 
+  // below we will transpose it which requires that all stacks have the same
+  // length (required by *_new_unchecked)
+  PauliStack_vb *stack = map_psvbfx_get_mut(storage, 1);
+  vec_b_resize(pauli_stack_vb_x(stack), num_frames, false);
+  vec_b_resize(pauli_stack_vb_z(stack), num_frames, false);
+
   size_t num_bits = map_psvbfx_len(storage);
 
-  // below we will transpose it which requires that all stacks have the same length
-  // (required by *_new_unchecked)
-  PauliStack_vb *stack = map_psvbfx_get(storage, 1);
-  vec_b_resize(pauli_stack_vb_left(stack), num_frames, false);
-  vec_b_resize(pauli_stack_vb_right(stack), num_frames, false);
-
-  // frees storage, but need to free frames_rebuilt
+  // frees storage, but we'll need to free frames_rebuilt
   Frames_hmpsvbfx *frames_rebuilt =
       frames_hmpsvbfx_new_unchecked(storage, num_frames);
-  // frees frames_rebuilt, but need to free transposed_reverted
-  Vec_psvb *transposed_reverted =
-      frames_hmpsvbfx_transpose_reverted(frames_rebuilt, num_bits);
-  vec_psvb_serialize(transposed_reverted, "output/frames_transposed.json");
+  // frees frames_rebuilt, but we'll need to free transposed
+  BufferedVector_psvb *transposed =
+      frames_hmpsvbfx_stacked_transpose(frames_rebuilt, num_bits);
+  buffered_vector_psvb_serialize(transposed, "output/frames_transposed.json");
 
-  vec_psvb_free(transposed_reverted);
+  buffered_vector_psvb_free(transposed);
   frames_hmpsvbfx_free(frames);
   live_bvpt_free(tuple_live);
   live_hmpefx_free(live);
 
-  // Vec_b *v = vec_b_new();
-  // printf("%d\n", vec_b_is_empty(v));
-  // vec_b_free(v);
+  Vec_b *v = vec_b_new();
+  printf("%d\n", vec_b_is_empty(v));
+  vec_b_free(v);
 
   return 0;
 }
