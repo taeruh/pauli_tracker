@@ -1,6 +1,6 @@
 # Python wrapper around pauli_tracker
 
-This Python package is a wrapper around the [pauli_tracker crate] exporting the basic
+This Python package is a wrapper around the [pauli_tracker crate] exporting its basic
 functionality.
 
 If some essential functionality is missing, because we just forgot to implement it, please
