@@ -16,6 +16,14 @@ We (try to) follow the [SemVer] rules, specifically [Cargo guidelines].
 
 ## [Unreleased]
 ### Added
+### Changed
+### Deprecated
+### Removed
+### Fixed
+### Security
+
+## [0.4.0] - 2024-02-12
+### Added
 - Add `Frames::stacked_transpose`.
 - Add `Frames::get_frame`.
 - Add `From<(bool, bool)> for PauliTuple`.
@@ -189,7 +197,8 @@ them, but hopefully the most important ones.
 
 ## [0.1.0] - 2023-06-01
 
-[Unreleased]: https://github.com/taeruh/pauli_tracker/compare/v0.3.2...HEAD
+[Unreleased]: https://github.com/taeruh/pauli_tracker/compare/v0.4.0...HEAD
+[0.4.0]: https://github.com/taeruh/pauli_tracker/compare/v0.3.2...v0.4.0
 [0.3.2]: https://github.com/taeruh/pauli_tracker/compare/v0.3.1...v0.3.2
 [0.3.1]: https://github.com/taeruh/pauli_tracker/compare/v0.3.0...v0.3.1
 [0.3.0]: https://github.com/taeruh/pauli_tracker/compare/v0.2.2...v0.3.0
