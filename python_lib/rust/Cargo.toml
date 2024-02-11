@@ -13,11 +13,11 @@ name = "pauli_tracker_pyo3"
 crate-type = ["lib"]
 
 [dependencies]
-# lib = { package = "pauli_tracker", version = "0.3.2", features = ["serde", "bitvec"] }
-lib = { package = "pauli_tracker", version = "0.4.0-alpha.2", features = [
-  "serde",
-  "bitvec",
-], git = "https://github.com/taeruh/pauli_tracker" }
+lib = { package = "pauli_tracker", version = "0.4.0", features = ["serde", "bitvec"] }
+# lib = { package = "pauli_tracker", version = "0.4.1-alpha.1", features = [
+#   "serde",
+#   "bitvec",
+# ], git = "https://github.com/taeruh/pauli_tracker" }
 pyo3 = { version = "0.20.2", default-features = false, features = [
   "macros",
   "multiple-pymethods",

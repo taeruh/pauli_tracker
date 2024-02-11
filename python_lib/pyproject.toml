@@ -4,7 +4,7 @@ build-backend = "maturin"
 
 [project]
 name = "pauli_tracker"
-version = "0.1.2"
+version = "0.1.0"
 authors = [{name="Jannis Ruh", email="ruh.j81@gmail.com"}]
 
 description = "A library to track Pauli gates through a Clifford circuit."
