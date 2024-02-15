@@ -5,7 +5,7 @@ used to define a time ordering induced by the tracked frames.
 
 use crate::{boolean_vector::BooleanVector, pauli::PauliStack};
 
-/// A layered graph, describing the partial (time) ordering of the qubits.
+/// A layered graph, describing the *strict* partial (time) ordering of the qubits.
 ///
 /// Each layer l_i = PartialOrderGraph\[i\] consist of a vector of tuples, where the
 /// first tuple element is the node qubit and the second tuple element contains the
