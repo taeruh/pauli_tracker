@@ -3,7 +3,7 @@
 [![Crates.io](https://img.shields.io/crates/v/pauli_tracker.svg)](https://crates.io/crates/pauli_tracker)
 [![Documentation](https://docs.rs/pauli_tracker/badge.svg)](https://docs.rs/pauli_tracker/)
 [![Codecov](https://codecov.io/github/taeruh/pauli_tracker/coverage.svg?branch=main)](https://codecov.io/gh/taeruh/pauli_tracker)
-[![Dependency status](https://deps.rs/repo/github/taeruh/pauli_tracker/status.svg)](https://deps.rs/repo/github/taeruh/pauli_tracker)
+[![Dependency status](https://deps.rs/repo/github/taeruh/pauli_tracker/status.svg?path=pauli_tracker)](https://deps.rs/repo/github/taeruh/pauli_tracker?path=pauli_tracker)
 (Rust crate)\
 [![PyPI.org](https://img.shields.io/pypi/v/pauli-tracker.svg)](https://pypi.org/project/pauli-tracker/)
 [docs](https://taeruh.github.io/pauli_tracker/)
