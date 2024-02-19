@@ -20,8 +20,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-        with:
-          submodules: true
       - name: Install stable
         uses: dtolnay/rust-toolchain@stable
       - name: Install nightly for -Zdirect-minimal-versions
@@ -40,8 +38,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-        with:
-          submodules: true
       - name: Install beta
         uses: dtolnay/rust-toolchain@beta
       - name: cargo test
@@ -58,8 +54,6 @@ jobs:
         os: [macos-latest, windows-latest]
     steps:
       - uses: actions/checkout@v4
-        with:
-          submodules: true
       - name: Install stable
         uses: dtolnay/rust-toolchain@stable
       - name: Install nightly for -Zdirect-minimal-versions
@@ -78,19 +72,17 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-        with:
-          submodules: true
-      - name: Install nightly
-        uses: dtolnay/rust-toolchain@nightly
-        with:
-          components: llvm-tools-preview
+      - name: Set up nightly
+        run: rustup update nightly; rustup default nightly
       - name: Install cargo-llvm-cov
         uses: taiki-e/install-action@cargo-llvm-cov
-      - name: cargo llvm-cov
+      - name: Generate coverage
         run: cargo llvm-cov --all-features --doctests --lcov --output-path lcov.info
       - name: Upload to codecov.io
-        uses: codecov/codecov-action@v3
+        uses: codecov/codecov-action@v4
         with:
+          files: lcov.info
+          token: ${{ secrets.CODECOV_TOKEN }}
           fail_ci_if_error: true
 
   proptests:
@@ -99,8 +91,6 @@ jobs:
     needs: standard
     steps:
       - uses: actions/checkout@v4
-        with:
-          submodules: true
       - name: Install stable
         uses: dtolnay/rust-toolchain@stable
       - name: Install nightly for -Zdirect-minimal-versions

@@ -20,8 +20,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-        with:
-          submodules: true
       - name: Install stable
         uses: dtolnay/rust-toolchain@stable
       - name: Install cargo-hack
@@ -36,8 +34,6 @@ jobs:
       msrv: 1.65.0
     steps:
       - uses: actions/checkout@v4
-        with:
-          submodules: true
       - name: Install stable rust-$msrv
         uses: dtolnay/rust-toolchain@master
         with:
@@ -60,8 +56,6 @@ jobs:
         toolchain: [stable, beta]
     steps:
       - uses: actions/checkout@v4
-        with:
-          submodules: true
       - name: Install ${{ matrix.toolchain }}
         uses: dtolnay/rust-toolchain@master
         with:
@@ -77,8 +71,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-        with:
-          submodules: true
       - name: Install nightly
         uses: dtolnay/rust-toolchain@nightly
       - name: cargo doc
@@ -91,8 +83,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-        with:
-          submodules: true
       - name: Install nightly
         uses: dtolnay/rust-toolchain@nightly
         with:
@@ -105,8 +95,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-        with:
-          submodules: true
       - name: install stable
         uses: dtolnay/rust-toolchain@stable
       - name: install semver-checks
@@ -121,8 +109,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-        with:
-          submodules: true
       - name: install nightly
         uses: dtolnay/rust-toolchain@nightly
       - name: replace the manifest with the nightly manifest
