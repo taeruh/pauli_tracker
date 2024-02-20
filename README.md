@@ -9,7 +9,7 @@
 [docs](https://taeruh.github.io/pauli_tracker/)
 (Python package)
 
-A library to track Pauli gates through a Clifford circuit.
+A library to track Pauli gates through Clifford circuits.
 
 ## What is Pauli tracking
 

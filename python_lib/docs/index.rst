@@ -1,6 +1,8 @@
 Welcome to pauli_tracker's documentation!
 =========================================
 
+A library to track Pauli gates through Clifford circuits.
+
 **This library is a Python wrapper around the** `pauli_tracker crate`_ **(Rust
 library).**
 
