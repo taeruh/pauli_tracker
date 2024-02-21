@@ -155,6 +155,20 @@ macro_rules! movements {
     )*};
 }
 
+macro_rules! remove {
+    ($((
+        $name:ident,
+        $correction:literal
+    ),)*) => {$(
+        /// On the tracker, "remove" the
+        #[doc=$correction]
+        /// Pauli stack from the qu`bit`.
+        pub fn $name(&mut self, bit: usize) {
+            self.tracker.$name(bit)
+        }
+    )*};
+}
+
 macro_rules! double_gate {
     ($name:ident, $gate:literal) => {
         double_gate!($name, $gate, bit_a, bit_b);
@@ -189,6 +203,7 @@ where
         (move_z_to_x, "Z", "X"),
         (move_z_to_z, "Z", "Z"),
     );
+    remove!((remove_z, "Z"), (remove_x, "X"),);
 }
 
 impl<C, T, S> TrackedCircuit<C, T, S>
@@ -286,8 +301,8 @@ mod tests {
     use crate::{
         boolean_vector::bitvec_simd::SimdBitVec,
         circuit::{DummyCircuit, RandomMeasurementCircuit},
-        collection::{BufferedVector, Init, Map, MappedVector},
-        pauli::{PauliDense, PauliStack},
+        collection::{BufferedVector, Init, Map, MappedVector, NaiveVector},
+        pauli::{PauliDense, PauliEnum, PauliStack},
         tracker::{
             frames::{induced_order, Frames},
             live, MissingBit,
@@ -348,6 +363,86 @@ mod tests {
         let (outcome, r) = circ.measure_and_store_all();
         assert_eq!(outcome.len(), 2);
         r.unwrap()
+    }
+
+    #[test]
+    fn move_and_remove() {
+        let mut circ = TrackedCircuit {
+            circuit: DummyCircuit {},
+            tracker: Frames::<Map<PauliStack<Vec<bool>>>>::init(3),
+            storage: (),
+        };
+        let mut live = TrackedCircuit {
+            circuit: DummyCircuit {},
+            tracker: live::Live::<NaiveVector<PauliEnum>>::init(3),
+            storage: (),
+        };
+
+        circ.track_z(0);
+        live.track_z(0);
+        circ.track_z(1);
+        live.track_z(1);
+        circ.track_x(1);
+        live.track_x(1);
+        circ.track_x(2);
+        live.track_x(2);
+        assert_eq!(
+            vec![
+                (0, PauliStack::try_from_str("1000", "0000").unwrap()),
+                (1, PauliStack::try_from_str("0100", "0010").unwrap()),
+                (2, PauliStack::try_from_str("0000", "0001").unwrap())
+            ],
+            circ.tracker.as_storage().clone().into_sorted_by_key()
+        );
+        assert_eq!(
+            live.tracker.as_storage().0,
+            [PauliEnum::Z, PauliEnum::Y, PauliEnum::X]
+        );
+
+        circ.move_z_to_x(0, 1);
+        live.move_z_to_x(0, 1);
+        assert_eq!(
+            vec![
+                (0, PauliStack::try_from_str("", "0000").unwrap()),
+                (1, PauliStack::try_from_str("0100", "1010").unwrap()),
+                (2, PauliStack::try_from_str("0000", "0001").unwrap())
+            ],
+            circ.tracker.as_storage().clone().into_sorted_by_key()
+        );
+        assert_eq!(
+            live.tracker.as_storage().0,
+            [PauliEnum::I, PauliEnum::Z, PauliEnum::X]
+        );
+
+        circ.remove_x(2);
+        live.remove_x(2);
+        assert_eq!(
+            vec![
+                (0, PauliStack::try_from_str("", "0000").unwrap()),
+                (1, PauliStack::try_from_str("0100", "1010").unwrap()),
+                (2, PauliStack::try_from_str("0000", "").unwrap())
+            ],
+            circ.tracker.as_storage().clone().into_sorted_by_key()
+        );
+        assert_eq!(
+            live.tracker.as_storage().0,
+            [PauliEnum::I, PauliEnum::Z, PauliEnum::I]
+        );
+
+        circ.move_x_to_z(1, 2);
+        live.move_x_to_z(1, 2);
+        assert_eq!(
+            vec![
+                (0, PauliStack::try_from_str("", "0000").unwrap()),
+                (1, PauliStack::try_from_str("0100", "").unwrap()),
+                (2, PauliStack::try_from_str("1010", "").unwrap())
+            ],
+            circ.tracker.as_storage().clone().into_sorted_by_key()
+        );
+        assert_eq!(
+            live.tracker.as_storage().0,
+            [PauliEnum::I, PauliEnum::Z, PauliEnum::I]
+        );
     }
 
     #[test]

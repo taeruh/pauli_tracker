@@ -106,6 +106,14 @@ macro_rules! movements {
     )*};
 }
 
+macro_rules! remove {
+    ($(($name:ident, $set:ident),)*) => {$(
+        fn $name(&mut self, bit: usize) {
+            unwrap_get_mut!(self.storage, bit, stringify!($name)).$set(false);
+        }
+    )*};
+}
+
 /// Note that the inner storage type is basically a vector. Therefore, the it may
 /// contain buffer qubits, even though they were not explicitly initialized.
 impl<S, P> Tracker for Live<S>
@@ -122,6 +130,8 @@ where
         (move_z_to_x, xpz, set_z),
         (move_z_to_z, zpz, set_z),
     );
+
+    remove!((remove_z, set_z), (remove_x, set_x),);
 
     fn new_qubit(&mut self, bit: usize) -> Option<Self::Stack> {
         self.storage.insert(bit, P::I)

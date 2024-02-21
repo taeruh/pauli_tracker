@@ -81,6 +81,24 @@ macro_rules! movements {
     )*}
 }
 
+macro_rules! remove {
+    ($((
+        $name:ident,
+        $correction:literal
+    ),)*) => {$(
+        /// "Remove" the
+        #[doc=$correction]
+        /// Pauli stack from the qu`bit`.
+        #[allow(unused_variables)]
+        fn $name(&mut self, bit: usize) {
+            panic!(
+                "the default implementation exists only to not make a breaking change
+                in this trait"
+            );
+        }
+    )*}
+}
+
 macro_rules! track_pauli {
     ($(($name:ident, $gate:ident),)*) => {$(
         /// Track a new frame consisting of the Pauli
@@ -174,6 +192,8 @@ pub trait Tracker {
         (move_z_to_z, "Z", "Z"),
     );
 
+    remove!((remove_x, "X"), (remove_z, "Z"),);
+
     /// Remove the Pauli stack on qu`bit`, if it is present.
     fn measure(&mut self, bit: usize) -> Result<Self::Stack, MissingBit>;
 }
@@ -241,7 +261,7 @@ mod tests {
         // the encoding is according to crate::pauli::tableau_encoding, i.e., 0=I, 2=X,
         // 3=Y, 1=Z
 
-        pub const N_SINGLES: usize = 18;
+        pub const N_SINGLES: usize = 20;
         #[rustfmt::skip]
         const SINGLE_GENERATORS: [(&str, [u8; 2]); N_SINGLES] =
             // (name, result: [conjugate Z, conjugate X])
@@ -264,6 +284,10 @@ mod tests {
                 ("SX",   [3, 2]),
                 ("SXDG", [3, 2]),
                 ("H_yz", [3, 2]),
+                // these here are not conjugations with unitary operators, however it
+                // still works, because the operation is a homomorphism
+                ("remove_z", [0, 2]),
+                ("remove_x", [1, 0]),
             ];
 
         macro_rules! single_actions {
@@ -287,6 +311,8 @@ mod tests {
                     <$tracker>::sx,
                     <$tracker>::sxdg,
                     <$tracker>::hyz,
+                    <$tracker>::remove_z,
+                    <$tracker>::remove_x,
                 ]
             };
         }
@@ -305,8 +331,7 @@ mod tests {
             ("swap",        [(0, 1), (1, 0), (0, 2), (2, 0)]),
             ("iswap",       [(0, 1), (1, 0), (1, 3), (3, 1)]),
             ("iswapdg",     [(0, 1), (1, 0), (1, 3), (3, 1)]),
-            // these here are not conjugations with unitary operators, however it still
-            // works, because the move operation is a homomorphism
+            // cf comment above for remove_*
             ("move_x_to_x", [(1, 0), (0, 1), (2, 0), (2, 0)]),
             ("move_x_to_z", [(1, 0), (0, 1), (2, 0), (1, 0)]),
             ("move_z_to_x", [(1, 0), (2, 0), (2, 0), (0, 2)]),
@@ -493,6 +518,12 @@ mod tests {
             fn move_z_to_z(&mut self, _: usize, _: usize) {
                 self.skip_it = true
             }
+            fn remove_x(&mut self, _: usize) {
+                self.skip_it = true
+            }
+            fn remove_z(&mut self, _: usize) {
+                self.skip_it = true
+            }
 
             fn measure(&mut self, _: usize) -> Result<Self::Stack, MissingBit> {
                 todo!()
@@ -513,6 +544,10 @@ mod tests {
                 let mut tracker = DefaultTester::init(2);
                 tracker.track_pauli_string(utils::single_init(input));
                 (action)(&mut tracker, 0);
+                if tracker.skip_it {
+                    tracker.skip_it = false;
+                    return;
+                }
                 let computed = tracker.paulis.get(&0).unwrap().storage();
                 assert_eq!(
                     computed, check,

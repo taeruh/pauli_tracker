@@ -334,14 +334,15 @@ to x" and "z to z". They are all homomorphisms, which is why it makes sense to u
 like Clifford operations when tracking Paulis. This operations are often useful in an
 MBQC related context where they can be used to move dependencies (cf.
 \hr{https://docs.rs/pauli_tracker/latest/pauli_tracker/}[how the T
-telportation is optimized in the ``Streamed tracking'' section here])
+telportation is optimized in the ``Streamed tracking'' section here]). There are also
+"remove" operations
 \begin{definition}
-In the following we define the action of the ``move'' operations.
-\begin{table}[H]\label{t"move_operations}
+In the following we define the actions of the ``move'' operations.
+\begin{table}[H]
 \center
 \caption[Move operations of Pauli operators]{Move operations of Pauli operators. The
 operations are linear defined on the basis $\bc{Z_s, X_s, Z_d, X_d}$ (under the $\otau$
-isomorph) for some \en[s, d].}
+isomorphism) for some \en[s, d].}
 \begin{tabular}{lr}
   \toprule
   name & operation\\
@@ -357,6 +358,26 @@ isomorph) for some \en[s, d].}
   \midrule
   $\mathrm{move\_x\_to\_x}_{sd}$ & $\begin{array}{ccc}
     Z_s&\mapsto&Z_s\\X_s&\mapsto&X_d\\Z_d&\mapsto&Z_d\\X_d&\mapsto&X_d\end{array}$\\
+  \bottomrule
+\end{tabular}
+\end{table}
+\end{definition}
+\begin{definition}
+In the following we define the actions of the ``remove'' operations.
+\begin{table}[H]
+\center
+\caption[Remove operations for Pauli operators]{Remove operations for Pauli operators. The
+operations are linear defined on the basis $\bc{Z, X}$ (under the $\otau$ isomorphism,
+where $I$ is $0$).}
+\begin{tabular}{lr}
+  \toprule
+  name & operation\\
+  \midrule
+  $\mathrm{remove\_z}$ & $\begin{array}{ccc}
+    Z&\mapsto&I\\X&\mapsto&X\end{array}$\\
+  \midrule
+  $\mathrm{remove\_x}$ & $\begin{array}{ccc}
+    Z&\mapsto&Z\\X&\mapsto&I\end{array}$\\
   \bottomrule
 \end{tabular}
 \end{table}

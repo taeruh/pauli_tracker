@@ -167,6 +167,25 @@ macro_rules! movements {
     )*}
 }
 
+macro_rules! remove {
+    ($((
+        $name:ident,
+        $correction:ident,
+        $correction_doc:literal
+    ),)*) => {$(
+        /// "Remove" the
+        #[doc=$correction_doc]
+        /// Pauli stack from the qu`bit`. "Removing" means literally removing the stack
+        /// from the qu`bit`'s memory. Because of that, this operation should only
+        /// be used directly before the qu`bit` is measured; otherwise it breaks the logic
+        /// of other methods and might cause panics.
+        fn $name(&mut self, bit: usize) {
+            unwrap_get_mut!(self.storage, bit, stringify!($name))
+                .$correction.resize(0, false)
+        }
+    )*}
+}
+
 /// Note that the methods that add or remove memory hold the invariants of (S)torage's
 /// [Base] implementation.
 impl<S, B> Tracker for Frames<S>
@@ -265,6 +284,8 @@ where
         (move_x_to_z, x, z, "X", "Z"),
         (move_x_to_x, x, x, "X", "X"),
     );
+
+    remove!((remove_z, z, "Z"), (remove_x, x, "X"),);
 
     fn measure(&mut self, bit: usize) -> Result<PauliStack<B>, MissingBit> {
         self.storage.remove(bit).ok_or(MissingBit(bit))

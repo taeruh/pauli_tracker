@@ -9,6 +9,8 @@ We (try to) follow the [SemVer] rules, specifically [Cargo guidelines].
 ## [Future major bump]
 ### Added
 ### Changed
+**Breaking Change**: Remove the default implementations for the `Tracker::remove_*`
+methods.
 ### Deprecated
 ### Removed
 ### Fixed
@@ -16,6 +18,8 @@ We (try to) follow the [SemVer] rules, specifically [Cargo guidelines].
 
 ## [Unreleased]
 ### Added
+- Add the `Tracker::remove_*` methods (with a panicking default implementation to not
+break the trait).
 ### Changed
 ### Deprecated
 ### Removed
