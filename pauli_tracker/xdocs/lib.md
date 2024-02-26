@@ -25,8 +25,78 @@ general brief introduction to Pauli tracking is given in the repository's
 
 ### A first idea
 
-This examples gives a first introduction to the tracking mechanism. The example
-requires the [rand] crate.
+This examples gives a first introduction to the tracking mechanism.
+```rust
+# #[cfg_attr(coverage_nightly, coverage(off))]
+# // "circuit" instead of "rand" because we do not export the "rand" feature, since we
+# // use it as dep:rand
+# #[cfg(feature = "circuit")] // we need it to activate the "rand" dep
+# fn main() {
+# #[rustfmt::skip]
+use pauli_tracker::{
+    tracker::{
+      Tracker, // the "core" trait which implements the tracking logic
+      live::Live // the tracking implementor we use in this example
+    },
+    collection::{
+      Map, // the inner storage type of our tracker
+      Init // supporting trait
+    },
+    pauli::{
+      Pauli, // basic trait for Paulis
+      PauliEnum // the Pauli representation we use
+    },
+};
+
+type Track = Live<Map<PauliEnum>>; // our tracker
+
+let mut tracker = Track::init(3); // initialize the tracker with three qubits
+
+// the tracker consists of a single "frame" with three Paulis, initialized with the
+// identity
+assert_eq!(
+  tracker.as_storage(),
+  &Map::from_iter([(0, PauliEnum::I), (1, PauliEnum::I), (2, PauliEnum::I)])
+);
+
+// let's track some Paulis
+tracker.track_x(0);
+tracker.track_z(1);
+
+assert_eq!(
+  tracker.as_storage(),
+  &Map::from_iter([(0, PauliEnum::X), (1, PauliEnum::Z), (2, PauliEnum::I)])
+);
+
+// traverse/commute them through some Clifford gates
+tracker.cx(2, 1);
+tracker.cx(0, 1);
+tracker.s(0);
+
+assert_eq!(
+  tracker.as_storage(),
+  &Map::from_iter([(0, PauliEnum::X), (1, PauliEnum::Y), (2, PauliEnum::Z)])
+);
+
+// we can also dynamically add qubits (the flexibility depends on the storage type)
+tracker.new_qubit(3);
+tracker.new_qubit(5); // this works with a HashMap, but wouldn't work with a simple Vec
+
+assert_eq!(
+  tracker.as_storage(),
+  &Map::from_iter([
+    (0, PauliEnum::X), (1, PauliEnum::Y), (2, PauliEnum::Z),
+    (3, PauliEnum::I), (5, PauliEnum::I)
+  ])
+);
+
+# }
+# #[cfg_attr(coverage_nightly, coverage(off))]
+# #[cfg(not(feature = "circuit"))]
+# fn main() {}
+```
+The next example is more specific to MBQC; we track Pauli corrections induced by (pseudo)
+measurements. It requires the [rand] crate.
 ```rust
 # #[cfg_attr(coverage_nightly, coverage(off))]
 # // "circuit" instead of "rand" because we do not export the "rand" feature, since we
