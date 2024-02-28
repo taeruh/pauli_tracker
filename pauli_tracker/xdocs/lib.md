@@ -325,7 +325,7 @@ type PauliStack = pauli::PauliStack<BoolVec>;
 type Storage = Map<PauliStack>;
 type Frames = frames::Frames<Storage>;
 
-// a wrapper around (pseude) circuit (simulator), a tracker and an additional storage
+// a wrapper around (pseudo) circuit (simulator), a tracker and an additional storage
 // for the tracker; the wrapper doesn't do much except of providing methods wrapping
 // associated Tracker methods and CliffordCircuit methods into one method, and
 // connecting the tracker with the additional storage on measurements
