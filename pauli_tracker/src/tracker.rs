@@ -5,12 +5,12 @@ This module defines the [Tracker] trait and provides the [Frames] and
 The [Tracker] trait provides the core functionality of tracking Pauli gates through a
 Clifford circuit.
 
-[Frames] is a tracker that is useful for analyzing the time ordering of measurements, for
+[Live] can be used to track Pauli gates when all gates are known, e.g., during execution
+of a quantum circuit or when no non-deterministic gates are involved
+
+[Frames] is a tracker that is useful for analyzing the time ordering of measurements; for
 example, in MBQC, or in general when gates are injected or teleported and have
 non-deterministic side effects.
-
-[Live] can be used to track Pauli gates during the actual execution of a circuit to
-adopt measurements correctly.
 
 [Frames]: frames::Frames
 [Live]: live::Live
