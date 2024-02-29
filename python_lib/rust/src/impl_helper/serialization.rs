@@ -37,8 +37,34 @@ pub fn deserialize_error<T: fmt::Display>(error: T) -> pyo3::PyErr {
 }
 
 #[macro_export]
+macro_rules! inner_type {
+    (newtype, $self:expr) => {
+        $self.0
+    };
+    (plain, $self:expr) => {
+        $self
+    };
+}
+#[macro_export]
+macro_rules! map_type {
+    (newtype, $to_wrap:expr) => {
+        Result::map($to_wrap, Self)
+    };
+    (plain, $to_wrap:expr) => {
+        $to_wrap
+    };
+}
+
+// most of the times, we are dealing with a newtype, but sometimes it is a plain type
+// (don't remove this functionality here (if it is not needed here), because
+// mbqc_scheduling relies on it (at the moment))
+
+#[macro_export]
 macro_rules! serde {
     ($type:ty) => {
+        $crate::serde!($type, newtype);
+    };
+    ($type:ty, $opaque:tt) => {
         #[pyo3::pymethods]
         impl $type {
             /// Serialize the internal data structure into a file.
@@ -54,7 +80,7 @@ macro_rules! serde {
             ) -> pyo3::PyResult<()> {
                 $crate::impl_helper::serialization::serialize_to_file(
                     file_path,
-                    &self.0,
+                    &$crate::inner_type!($opaque, self),
                     serialization_format,
                 )
                 .map_err($crate::impl_helper::serialization::serialize_error)
@@ -71,11 +97,13 @@ macro_rules! serde {
                 file_path: &str,
                 serialization_format: &str,
             ) -> pyo3::PyResult<Self> {
-                $crate::impl_helper::serialization::deserialize_from_file(
-                    file_path,
-                    serialization_format,
+                $crate::map_type!(
+                    $opaque,
+                    $crate::impl_helper::serialization::deserialize_from_file(
+                        file_path,
+                        serialization_format,
+                    )
                 )
-                .map(Self)
                 .map_err($crate::impl_helper::serialization::deserialize_error)
             }
 
@@ -89,7 +117,7 @@ macro_rules! serde {
                 serialization_format: &str,
             ) -> pyo3::PyResult<String> {
                 $crate::impl_helper::serialization::serialize_to_string(
-                    &self.0,
+                    &$crate::inner_type!($opaque, self),
                     serialization_format,
                 )
                 .map_err($crate::impl_helper::serialization::serialize_error)
@@ -106,11 +134,13 @@ macro_rules! serde {
                 string: &str,
                 serialization_format: &str,
             ) -> pyo3::PyResult<Self> {
-                $crate::impl_helper::serialization::deserialize_from_string(
-                    string,
-                    serialization_format,
+                $crate::map_type!(
+                    $opaque,
+                    $crate::impl_helper::serialization::deserialize_from_string(
+                        string,
+                        serialization_format,
+                    )
                 )
-                .map(Self)
                 .map_err($crate::impl_helper::serialization::deserialize_error)
             }
         }
