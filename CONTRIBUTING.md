@@ -57,8 +57,8 @@ implementing it is usually just some simple boilerplate code).
 5. In `tracker::tests::utils` add the method to the `single_actions`/`double_actions`
    macro and the expected results, based on the proof in (1.), to the
    `SINGLE_GENERATORS`/`DOUBLE_GENERATORS` (updating `N_SINGLES`/`N_DOUBLES`).
-6. In the `circuit` module: Add the gate to the `CliffordCircuit` trait, to the
-   `impl_gates` macro and to the `single_gate!`/`double_gate!` macro call.
+6. In the `circuit` module: Add the gate to the `CliffordCircuit` trait and to the
+   `single_gate!`/`double_gate!` macro call.
 7. In `tests/roundtrips/tracking.rs` add the gate to the `Operation` enum and to
    `prop_oneof` call in `operation` similar to the other gates (the number before "=>"
    is the probability (before normalization of the probabilities). In the

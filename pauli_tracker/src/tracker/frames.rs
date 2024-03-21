@@ -234,6 +234,7 @@ where
     }
 
     single!(s, h, sh, hs, shs,);
+
     fn cz(&mut self, bit_a: usize, bit_b: usize) {
         let (a, b) = unwrap_get_two_mut!(self.storage, bit_a, bit_b, "cz");
         a.z.xor_inplace(&b.x);
@@ -264,6 +265,20 @@ where
     fn swap(&mut self, bit_a: usize, bit_b: usize) {
         let (a, b) = unwrap_get_two_mut!(self.storage, bit_a, bit_b, "swap");
         mem::swap(a, b)
+    }
+
+    fn zcx(&mut self, control: usize, target: usize) {
+        let (c, t) = unwrap_get_two_mut!(self.storage, control, target, "cx");
+        t.x.xor_inplace(&c.z);
+        c.x.xor_inplace(&t.z);
+    }
+
+    fn zcy(&mut self, control: usize, target: usize) {
+        let (c, t) = unwrap_get_two_mut!(self.storage, control, target, "cx");
+        c.x.xor_inplace(&t.z);
+        c.x.xor_inplace(&t.x);
+        t.z.xor_inplace(&c.z);
+        t.x.xor_inplace(&c.z);
     }
 
     fn iswap(&mut self, bit_a: usize, bit_b: usize) {

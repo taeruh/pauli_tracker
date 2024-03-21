@@ -240,10 +240,13 @@ where
         (hyz, "H_yz"),
     );
 
-    double_gate!(cx, "Control X (Control Not)", control, target);
     double_gate!(cz, "Control Z");
-    double_gate!(cy, "Control Y");
+    double_gate!(cx, "Control X (Control Not)", control, target);
+    double_gate!(cy, "Control Y", control, target);
     double_gate!(swap, "SWAP");
+    double_gate!(zcz, "Z-Control Z", control, target);
+    double_gate!(zcx, "Z-Control X");
+    double_gate!(zcy, "Z-Control Y", control, target);
     double_gate!(iswap, "iSWAP");
     double_gate!(iswapdg, "iSWAP^dagger");
 }

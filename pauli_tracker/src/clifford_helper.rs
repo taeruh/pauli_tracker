@@ -65,6 +65,30 @@ macro_rules! trait_gates {
             self.cx(bit_a, bit_b);
         }
 
+        #[doc = double_doc!("Z-Control Z", control, target)]
+        // note that this is just cx(target, control)
+        fn zcz(&mut self, control: usize, target: usize) {
+            self.h(control);
+            self.cz(control, target);
+            self.h(control);
+        }
+
+        #[doc = double_doc!("Z-Control X")]
+        fn zcx(&mut self, bit_a: usize, bit_b: usize) {
+            self.h(bit_a);
+            self.h(bit_b);
+            self.cz(bit_a, bit_b);
+            self.h(bit_a);
+            self.h(bit_b);
+        }
+
+        #[doc = double_doc!("Z-Control X", control, target)]
+        fn zcy(&mut self, control: usize, target: usize) {
+            self.h(control);
+            self.cy(control, target);
+            self.h(control);
+        }
+
         #[doc = double_doc!("iSwap")]
         fn iswap(&mut self, bit_a: usize, bit_b: usize) {
             self.s(bit_b);

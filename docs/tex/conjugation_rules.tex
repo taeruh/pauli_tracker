@@ -75,6 +75,9 @@ For all $A \in \GL_n(R)$, the mapping
 \end{equation}
 is an automorphism of the $\M_n(R)$.
 \end{definition_proposition}
+\begin{notation}
+It is multiplication before conjugation, i.e., $AB * CD = (AB) * (CD)$.
+\end{notation}
 \begin{definition}
 We define $\U\w(\C^n)$, \en, to be the multiplicative group of unitary
 operators on $\C^n$, and write $\U\w(n) = \U\w(\C^n)$.
@@ -260,7 +263,8 @@ element: cf. \cref{t"single_qubit_isomorphism}. We defined in
 represent the operators in matrix form: For the repr. matrix the sorted basis is
 $\w(\er{0}_2\er{0}_1, \er{0}_2\er{1}_1, \er{1}_2\er{0}_1, \er{1}_2\er{1}_1)$ and for the
 symplectic matrix it is $\w(Z_1, Z_2, X_1, X_2)$, under the according isomorphism,
-respectively.}
+respectively. The $\mathrm{ZC}...$ operators denote $Z$ controlled operators (i.e., a
+Hadamard conjugation on the control bit with respect to the $\mathrm{C}...$ operator).}
 \begin{tabular}{lccr}
   \toprule
   repr. & $\ouic_2/\ouip_2$ & $\Sp_{4}\w(\F_2)$ & phase\\
@@ -276,6 +280,12 @@ respectively.}
   \midrule
   $\matp{1&0&0&0\\0&0&1&0\\0&1&0&0\\0&0&0&1}$ & $\Swap$ &
   $\matp{0&1&0&0\\1&0&0&0\\0&0&0&1\\0&0&1&0}$ & $\matp{1&1&1&1}$\\
+  \midrule
+  $\frac{1}{2}\matp{1&1&1&-1\\1&1&-1&1\\1&-1&1&1\\-1&1&1&1}$ & $\zcx$ &
+  $\matp{1&0&0&0\\0&1&0&0\\0&1&1&0\\1&0&0&1}$ & $\matp{1&1&1&1}$\\
+  \midrule
+  $\frac{1}{2}\matp{1&-i&1&i\\i&1&-i&1\\1&i&1&-i\\-i&1&i&1}$ & $\zcy_{21}$ &
+  $\matp{1&1&0&0\\0&1&0&0\\0&1&1&0\\1&0&1&1}$ & $\matp{1&-i&1&1}$\\
   \midrule
   $\matp{1&0&0&0\\0&0&i&0\\0&i&0&0\\0&0&0&1}$ & $\iSwap$ &
   $\matp{0&1&1&1\\1&0&1&1\\0&0&0&1\\0&0&1&0}$ & $\matp{1&1&-i&-i}$\\
@@ -310,6 +320,13 @@ calculate the according conjugations with the representatives (we also use
   &= \cx_{ab} * (\cx_{ba} * Z_a) = \cx_{ab} * Z_a Z_b = Z_b\\
   \Swap_{ab}X_b &= \ldots = X_a\\
   %
+  \zcx_{ab}*Z_b &= H_a\cx_{ab} * Z_b = H_a * Z_bZ_a = Z_bX_a\\
+  %
+  \zcy_{ct}*Z_t &= H_c\cy_{ct} * Z_t = H_c * Z_tZ_c = Z_tX_c\\
+  \zcy_{ct}*Z_c &= H_c\cy_{ct} * X_c = -i H_c * Z_tX_tX_c = -iZ_tX_tZ_c\\
+  \zcy_{ct}*X_t &= H_c\cy_{ct} * X_t = H_c * X_tZ_c = X_tX_c\\
+  \zcy_{ct}*X_c &= H_c\cy_{ct} * Z_c = H_c * Z_c = X_c\\
+  %
   \iSwap_{ab} * Z_a &= H_b \cx_{ba} \cx_{ab} H_a S_a S_b * Z_a\\
   &= H_b \cx_{ba} \cx_{ab} * X_a = H_b \cx_{ba} * X_a X_b = H_b * X_b = Z_b\\
   \iSwap_{ab} * X_a &= H_b \cx_{ba} \cx_{ab} H_a S_a S_b * X_a = -iH_b \cx_{ba} \cx_{ab}
@@ -319,9 +336,12 @@ calculate the according conjugations with the representatives (we also use
 \end{proof}
 \begin{remark}
 In the following we list some other typical Clifford gates which only differ by Pauli
-operators:
+operators (including identities):
 \begin{align}
-  \w(\iSwap)\ur = \iSwap Z_1Z_2 = \matp{1&0&0&0\\0&0&-i&0\\0&-i&0&0\\0&0&0&1}\;.
+  \zcz{ct} &= H_c * \cz{ct} = \cx_{tc}\\
+  \zcx{ct} &= H_c * \cx{ct}\\
+  \zcx{cy} &= H_c * \cy{ct}\\
+  \w(\iSwap)\ur &= \iSwap Z_1Z_2 = \matp{1&0&0&0\\0&0&-i&0\\0&-i&0&0\\0&0&0&1}\;.
 \end{align}
 \end{remark}
 

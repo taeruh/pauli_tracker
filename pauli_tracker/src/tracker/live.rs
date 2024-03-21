@@ -177,6 +177,20 @@ where
         mem::swap(a, b)
     }
 
+    fn zcx(&mut self, control: usize, target: usize) {
+        let (c, t) = unwrap_get_two_mut!(self.storage, control, target, "cx");
+        t.xpz(c);
+        c.xpz(t);
+    }
+
+    fn zcy(&mut self, control: usize, target: usize) {
+        let (c, t) = unwrap_get_two_mut!(self.storage, control, target, "cx");
+        c.xpz(t);
+        c.xpx(t);
+        t.zpz(c);
+        t.xpz(c);
+    }
+
     fn iswap(&mut self, bit_a: usize, bit_b: usize) {
         let (a, b) = unwrap_get_two_mut!(self.storage, bit_a, bit_b, "swap");
         mem::swap(a, b);

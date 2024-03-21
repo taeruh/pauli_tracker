@@ -20,6 +20,7 @@ methods.
 ### Added
 - Add the `Tracker::remove_*` methods (with a panicking default implementation to not
 break the trait).
+- Add the `Tracker::zc*` methods.
 ### Changed
 ### Deprecated
 ### Removed

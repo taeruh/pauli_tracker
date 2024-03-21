@@ -318,7 +318,7 @@ mod tests {
         }
         pub(crate) use single_actions;
 
-        pub const N_DOUBLES: usize = 10;
+        pub const N_DOUBLES: usize = 13;
         #[rustfmt::skip]
         const DOUBLE_GENERATORS: [(&str, [(u8, u8); 4]); N_DOUBLES] = [
             //+ (name, result: [conjugate Z1, conjugate Z2, conjugate X1, conjugate X2])
@@ -329,6 +329,9 @@ mod tests {
             ("cx",          [(1, 1), (0, 1), (2, 0), (2, 2)]),
             ("cy",          [(1, 1), (0, 1), (2, 1), (3, 2)]),
             ("swap",        [(0, 1), (1, 0), (0, 2), (2, 0)]),
+            ("zcz",         [(1, 0), (1, 1), (2, 2), (0, 2)]),
+            ("zcx",         [(1, 2), (2, 1), (2, 0), (0, 2)]),
+            ("zcy",         [(1, 2), (3, 1), (2, 2), (0, 2)]),
             ("iswap",       [(0, 1), (1, 0), (1, 3), (3, 1)]),
             ("iswapdg",     [(0, 1), (1, 0), (1, 3), (3, 1)]),
             // cf comment above for remove_*
@@ -345,6 +348,9 @@ mod tests {
                     <$tracker>::cx,
                     <$tracker>::cy,
                     <$tracker>::swap,
+                    <$tracker>::zcz,
+                    <$tracker>::zcx,
+                    <$tracker>::zcy,
                     <$tracker>::iswap,
                     <$tracker>::iswapdg,
                     <$tracker>::move_x_to_x,

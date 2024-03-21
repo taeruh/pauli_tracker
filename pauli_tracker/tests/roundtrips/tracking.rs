@@ -263,6 +263,18 @@ impl Instructor {
                     Some((a, b)) => circuit.swap(a, b),
                     None => continue,
                 },
+                Operation::Zcz(a, b) => match self.double_mem_idx(a, b) {
+                    Some((a, b)) => circuit.zcz(a, b),
+                    None => continue,
+                },
+                Operation::Zcx(a, b) => match self.double_mem_idx(a, b) {
+                    Some((a, b)) => circuit.zcx(a, b),
+                    None => continue,
+                },
+                Operation::Zcy(a, b) => match self.double_mem_idx(a, b) {
+                    Some((a, b)) => circuit.zcy(a, b),
+                    None => continue,
+                },
                 Operation::ISwap(a, b) => match self.double_mem_idx(a, b) {
                     Some((a, b)) => circuit.iswap(a, b),
                     None => continue,
@@ -485,6 +497,9 @@ pub enum Operation {
     Cx(usize, usize),
     Cy(usize, usize),
     Swap(usize, usize),
+    Zcz(usize, usize),
+    Zcx(usize, usize),
+    Zcy(usize, usize),
     ISwap(usize, usize),
     ISwapdg(usize, usize),
     TeleportedX(usize, usize),
@@ -521,6 +536,9 @@ fn operation() -> impl Strategy<Value = Operation> {
         7 => (any::<usize>(), any::<usize>()).prop_map(|(a, b)| Operation::Cy(a, b)),
         30 => (any::<usize>(), any::<usize>()).prop_map(|(a, b)| Operation::Cz(a, b)),
         40 => (any::<usize>(), any::<usize>()).prop_map(|(a, b)| Operation::Swap(a, b)),
+        2 => (any::<usize>(), any::<usize>()).prop_map(|(a, b)| Operation::Zcx(a, b)),
+        2 => (any::<usize>(), any::<usize>()).prop_map(|(a, b)| Operation::Zcy(a, b)),
+        2 => (any::<usize>(), any::<usize>()).prop_map(|(a, b)| Operation::Zcz(a, b)),
         5 => (any::<usize>(), any::<usize>()).prop_map(|(a, b)| Operation::ISwap(a, b)),
         5 => (any::<usize>(), any::<usize>()).prop_map(|(a, b)| Operation::ISwapdg(a, b)),
         15 => (any::<usize>(), any::<usize>())

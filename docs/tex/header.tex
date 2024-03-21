@@ -97,6 +97,7 @@
 \theoremstyle{standard}
 \newtheorem{definition}{Definition}[subsection]
 \newtheorem{remark}[definition]{Remark}
+\newtheorem{notation}[definition]{Notation}
 \theoremstyle{statement}
 \newtheorem{definition_proposition}[definition]{Definition and Proposition}
 \newtheorem{lemma}[definition]{Lemma}
@@ -123,6 +124,8 @@
   \ignorespaces%
 }{\popQED\endtrivlist\@endpefalse}
 \AfterEndEnvironment{definition}{\@doendpe}
+\AfterEndEnvironment{notation}{\@doendpe}
+\AfterEndEnvironment{remark}{\@doendpe}
 \AfterEndEnvironment{lemma}{\@doendpe}
 \AfterEndEnvironment{proposition}{\@doendpe}
 \AfterEndEnvironment{proposition_definition}{\@doendpe}
@@ -135,6 +138,7 @@
 \crefname{appendix}{App.}{Apps.}%
 \crefname{definition}{Def.}{Defs.}%
 \crefname{remark}{Rem.}{Rems.}%
+\crefname{notation}{Not.}{Nots.}%
 \crefname{definition_proposition}{Def.}{Defs.}%
 \crefname{lemma}{Lem.}{Lems.}%
 \crefname{proposition}{Prop.}{Props.}%
@@ -347,6 +351,9 @@ $\IfValueTF{#2}{#2}{n} \in \mathbb{N}\IfBooleanTF{#1}{_0}{}$\xspace%
 \NewDocumentCommand\cz{o}{\mathrm{CZ}\IfValueTF{#1}{_{#1}}{}}
 \NewDocumentCommand\cx{o}{\mathrm{CX}\IfValueTF{#1}{_{#1}}{}}
 \NewDocumentCommand\cy{o}{\mathrm{CY}\IfValueTF{#1}{_{#1}}{}}
+\NewDocumentCommand\zcz{o}{\mathrm{ZCZ}\IfValueTF{#1}{_{#1}}{}}
+\NewDocumentCommand\zcx{o}{\mathrm{ZCX}\IfValueTF{#1}{_{#1}}{}}
+\NewDocumentCommand\zcy{o}{\mathrm{ZCY}\IfValueTF{#1}{_{#1}}{}}
 \NewDocumentCommand\Swap{o}{\mathrm{SWAP}\IfValueTF{#1}{_{#1}}{}}
 \NewDocumentCommand\iSwap{o}{\mathrm{iSWAP}\IfValueTF{#1}{_{#1}}{}}
 % Pauli and Clifford group

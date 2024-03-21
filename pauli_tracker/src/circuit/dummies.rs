@@ -15,7 +15,7 @@ macro_rules! impl_dummy_gates {
         single_dummy!(
             id, x, y, z, s, sdg, sz, szdg, hxy, h, sy, sydg, sh, hs, shs, sx, sxdg, hyz,
         );
-        double_dummy!(cz, cx, cy, swap, iswap, iswapdg,);
+        double_dummy!(cz, cx, cy, swap, zcz, zcx, zcy, iswap, iswapdg,);
     };
 }
 
