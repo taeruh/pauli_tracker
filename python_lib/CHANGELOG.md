@@ -16,6 +16,8 @@ We (try to) follow the [SemVer] rules.
 
 ## [Unreleased]
 ### Added
+- Add the `Tracker::remove_*` methods.
+- Add the `Tracker::zc*` methods.
 ### Changed
 ### Deprecated
 ### Removed
