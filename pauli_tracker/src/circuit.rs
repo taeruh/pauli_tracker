@@ -303,13 +303,9 @@ mod tests {
     use super::*;
     use crate::{
         boolean_vector::bitvec_simd::SimdBitVec,
-        circuit::{DummyCircuit, RandomMeasurementCircuit},
         collection::{BufferedVector, Init, Map, MappedVector, NaiveVector},
-        pauli::{PauliDense, PauliEnum, PauliStack},
-        tracker::{
-            frames::{induced_order, Frames},
-            live, MissingBit,
-        },
+        pauli::{PauliDense, PauliEnum},
+        tracker::{frames::induced_order, live, MissingBit},
     };
 
     type PauliBitVec = PauliStack<BitVec>;

@@ -17,7 +17,7 @@ use std::mem;
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 
-use super::{unwrap_get_mut, unwrap_get_two_mut, MissingBit, PauliString, Tracker};
+use super::{MissingBit, PauliString, Tracker};
 use crate::{
     collection::{Base, Init},
     pauli::Pauli,

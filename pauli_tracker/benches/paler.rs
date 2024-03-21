@@ -2,7 +2,6 @@
 
 use criterion::{black_box, criterion_group, criterion_main, Criterion};
 use pauli_tracker::{
-    self,
     collection::{self, Init},
     pauli::{self, Pauli},
     tracker::{live, Tracker},

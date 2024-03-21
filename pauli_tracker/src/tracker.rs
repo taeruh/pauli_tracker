@@ -206,7 +206,6 @@ macro_rules! unwrap_get_mut {
             .unwrap_or_else(|| panic!("{}: qubit {} does not exist", $gate, $bit))
     };
 }
-use unwrap_get_mut;
 
 // that's not stable yet (https://github.com/rust-lang/rust/issues/83527), so we have
 // to do it manually or try it with a functional macro
@@ -231,7 +230,6 @@ macro_rules! unwrap_get_two_mut {
         })
     };
 }
-use unwrap_get_two_mut;
 // }}
 
 pub mod frames;
@@ -464,7 +462,7 @@ mod tests {
         };
         use crate::{
             collection::{Base, Map},
-            pauli::{Pauli, PauliDense},
+            pauli::PauliDense,
         };
 
         #[derive(Debug)]
@@ -537,9 +535,7 @@ mod tests {
         }
 
         use super::*;
-        use crate::tracker::tests::utils::{
-            self, SingleAction, SingleResults, N_SINGLES,
-        };
+        use crate::tracker::tests::utils::{SingleAction, SingleResults, N_SINGLES};
 
         type ActionS = SingleAction<DefaultTester>;
         type ActionD = DoubleAction<DefaultTester>;
