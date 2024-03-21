@@ -23,7 +23,9 @@ macro_rules! inplace {
         /// between `self` and `rhs` elementwise, updating self.
         ///
         /// # Panics
-        /// Panics if self.len() \neq rhs.len().
+        /// Might panic if self.len() \neq rhs.len(). In general, if it does not panic, it
+        /// probably applies the operation only on the elements of `self` maybe with some
+        /// padding values for `rhs`, depending on the implementation.
         fn $name(&mut self, rhs: &Self);
     )*}
 }
