@@ -22,7 +22,7 @@ We (try to) follow the [SemVer] rules.
 ### Fixed
 ### Security
 
-## [0.1.0] - 2023-06-01
+## [0.1.0] - 2024-02-12
 
 [Unreleased]: https://github.com/taeruh/pauli_tracker/compare/pv0.1.0...HEAD
 
