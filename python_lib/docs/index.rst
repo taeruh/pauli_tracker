@@ -55,9 +55,8 @@ Example usage
    print(tracker.into_py_dict_recursive())
 
 For more examples of how the Pauli tracking works, please take a look at the `Rust example
-code`_ (although not everything is exposed in this wrapper (yet)), which contains more
-extensive examples (including examples with the :obj:`~pauli_tracker.frames.map.Frames`
-tracker).
+code`_ , which contains more extensive examples (although not everything is exposed in
+this wrapper (yet)).
 
 Caution
 -------
