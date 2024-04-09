@@ -3,6 +3,7 @@
 
 from pauli_tracker.frames.map import Frames
 from pauli_tracker.pauli import PauliStack
+import pauli_tracker
 
 
 if __name__ == "__main__":
@@ -22,4 +23,9 @@ if __name__ == "__main__":
     frames = Frames.deserialize_from_string(serialized)
     frames.serialize("output/hey.bin", serialization_format="bincode")
     frames = Frames.deserialize("output/hey.bin", serialization_format="bincode")
-    print(frames.into_py_dict_recursive())
+    stacks = frames.into_py_dict()
+    py_stacks = frames.take_into_py_dict_recursive()
+    for key in stacks.keys():
+        assert stacks[key].take_into_py_bool_tuple() == tuple(
+            map(lambda x: pauli_tracker.bitvector_to_boolvector(x, 3), py_stacks[key])
+        )

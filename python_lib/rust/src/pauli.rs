@@ -80,9 +80,7 @@ impl PauliTuple {
 /// <https://docs.rs/bitvec/latest/bitvec/vec/struct.BitVec.html>`_\>.
 ///
 /// The Pauli Z and X stacks are bitvectors where each chunk consists of 64 bits. In the
-/// chunk the bits are ordered from least to most significant. You can use
-/// :func:`~pauli_tracker.bitvector_to_boolvector` to convert the bitvector to a list of
-/// booleans.
+/// chunk the bits are ordered from least to most significant.
 #[derive(Clone)]
 pub struct PauliStack(pub pauli::PauliStack<BitVec>);
 
@@ -92,6 +90,8 @@ impl PauliStack {
     fn __init__(&self) {}
 
     #[doc = crate::transform!()]
+    /// You can use :func:`~pauli_tracker.bitvector_to_boolvector` to convert the
+    /// bitvector to a list of booleans, or directly use :func:`into_py_bool_tuple`.
     ///
     /// Returns:
     ///     tuple[list[int], list[int]]: The Z (left tuple element) and X (right tuple
@@ -102,12 +102,37 @@ impl PauliStack {
     }
 
     #[doc = crate::take_transform!()]
+    /// You can use :func:`~pauli_tracker.bitvector_to_boolvector` to convert the
+    /// bitvector to a list of booleans, or directly use :func:`take_into_py_bool_tuple`.
     ///
     /// Returns:
     ///     tuple[list[int], list[int]]: The Z (left tuple element) and X (right tuple
     ///     element) components
     fn take_into_py_tuple(&mut self) -> (Vec<u64>, Vec<u64>) {
         stack_into_py_tuple(mem::take(&mut self.0))
+    }
+
+    /// Transform the internal Rust data structure into the according Python tuple of
+    /// lists of booleans.  If you do this mutiple times consider using the according
+    /// `take_` method to avoid an additional clone, however, be aware that the internal
+    /// data is replaced with its default value.
+    ///
+    /// Returns:
+    ///     tuple[list[bool], list[bool]]: The Z (left tuple element) and X (right tuple
+    ///     element) components
+    #[allow(clippy::wrong_self_convention)]
+    pub fn into_py_bool_tuple(&self) -> (Vec<bool>, Vec<bool>) {
+        stack_into_py_bool_tuple(self.0.clone())
+    }
+
+    /// Transform the internal Rust data structure into the according Python tuple of
+    /// list of booleans, replacing the internal data with its default value.
+    ///
+    /// Returns:
+    ///     tuple[list[bool], list[bool]]: The Z (left tuple element) and X (right tuple
+    ///     element) components
+    fn take_into_py_bool_tuple(&mut self) -> (Vec<bool>, Vec<bool>) {
+        stack_into_py_bool_tuple(mem::take(&mut self.0))
     }
 
     #[staticmethod]
@@ -130,6 +155,10 @@ impl PauliStack {
 
 fn stack_into_py_tuple(stack: pauli::PauliStack<BitVec>) -> (Vec<u64>, Vec<u64>) {
     (stack.z.into_vec(), stack.x.into_vec())
+}
+
+fn stack_into_py_bool_tuple(stack: pauli::PauliStack<BitVec>) -> (Vec<bool>, Vec<bool>) {
+    (stack.z.into_iter().collect(), stack.x.into_iter().collect())
 }
 
 serialization::serde!(PauliStack);

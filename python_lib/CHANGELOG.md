@@ -18,6 +18,7 @@ We (try to) follow the [SemVer] rules.
 ### Added
 - Add the `Tracker::remove_*` methods.
 - Add the `Tracker::zc*` methods.
+- Add `PauliStack`s `(take_)into_py_bool_tuple` methods.
 ### Changed
 ### Deprecated
 ### Removed
