@@ -81,6 +81,13 @@ use cases, one might to customize the output in certain cases.*
   makes problems is the resolution of types.
 - Default generic parameters are problematic, just specify them.
 
+## Some notes about linking
+
+If you are linking the library as static archive with some older linker version, you might
+need to manually link to some native libraries, e.g., `-lgcc_s -lutil -lrt -lpthread
+-lm -ldl -lc`. You can check which libraries are needed with `cargo rustc -- --print
+native-static-libs`. This is probably not necessary for newer linker versions.
+
 ## Cross language LTO
 
 Building the library, and using it, with cross language LTO enabled is a little bit

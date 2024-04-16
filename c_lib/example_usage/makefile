@@ -49,6 +49,9 @@ CFLAGS := $(err) $(std) $(HEADER_PATH)
 LDLIBS := $(pauli_tracker_static)
 # dynamic is usually a bad idea when it is not installed on the system
 # LDLIBS := $(pauli_tracker_dynamic)
+# you might need to add the following libraries to the LDLIBS
+# -lgcc_s -lutil -lrt -lpthread -lm -ldl -lc
+
 LDFLAGS := $(LD_LIBRARY_PATH)
 
 
