@@ -167,8 +167,8 @@ pub trait Tracker {
     /// compatible with [Self::Stack].
     type Pauli: Pauli;
 
-    /// Insert a new qu`bit` into the tracker. If the qu`bit`, the old value is
-    /// overwritten and returned.
+    /// Insert a new qu`bit` into the tracker. If the qu`bit` is already present, the old
+    /// value is overwritten and returned.
     fn new_qubit(&mut self, bit: usize) -> Option<Self::Stack>;
 
     /// Track a new frame consisting of the Pauli gate `pauli` at qu`bit`.
