@@ -12,6 +12,9 @@
 #![cfg_attr(coverage_nightly, feature(coverage_attribute))]
 #![cfg_attr(coverage_nightly, doc(test(attr(feature(coverage_attribute)))))]
 //
+// putting the proposed code into a build.rs are passing --check-cfg(coverage_nightly) to
+// RUSTCFLAGS does not fix the warning we would get here ...
+#![allow(unexpected_cfgs)]
 
 // some guidelines:
 // TODO: make a better contributing file

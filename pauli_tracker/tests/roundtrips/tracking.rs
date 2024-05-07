@@ -507,6 +507,7 @@ pub enum Operation {
     TeleportedZ(usize, usize),
     Rz(usize),
     Measure(usize),
+    #[allow(dead_code)] // for now
     NewQubit(usize),
 }
 

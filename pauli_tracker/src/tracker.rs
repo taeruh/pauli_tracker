@@ -92,8 +92,8 @@ macro_rules! remove {
         #[allow(unused_variables)]
         fn $name(&mut self, bit: usize) {
             panic!(
-                "the default implementation exists only to not make a breaking change
-                in this trait"
+                "the default implementation exists only to not make a major breaking
+                change in this trait"
             );
         }
     )*}
