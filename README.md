@@ -66,8 +66,26 @@ the [contributing guidelines].
 
 ## How to cite
 
-When you use the Pauli Tracker for your research please cite it (currently just by
-linking to this repo; a paper is in progress).
+When you use this library in research, please cite [this paper](https://arxiv.org/abs/2405.03970):
+```bibtex
+@misc{ruh2024quantum,
+  title={Quantum Circuit Optimisation and {MBQC} Scheduling with a {Pauli} Tracking Library}, 
+  author={Jannis Ruh and Simon Devitt},
+  year={2024},
+  eprint={2405.03970},
+  archivePrefix={arXiv},
+  primaryClass={quant-ph}
+}
+```
+and/or this project:
+```bibtex
+@misc{pauli_tracker_software,
+  author = {{Pauli-Tracker contributors}},
+  title = {Pauli tracker: A library to track {Pauli} gates through {Clifford} circuits},
+  note = {avalaible at \url{https://github.com/taeruh/pauli_tracker}},
+  year = {2024},
+}
+```
 
 ## License
 
