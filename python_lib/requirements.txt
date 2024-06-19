@@ -9,7 +9,6 @@ Jinja2==3.1.4
 MarkupSafe==2.1.5
 maturin==1.4.0
 packaging==23.2
-pauli_tracker @ file:///tmp/.tmpQkJErG/pauli_tracker-0.1.1-cp312-cp312-linux_x86_64.whl#sha256=2c777302a4901ba80a34e4cb990345787499a37d00f23ffb8d7d67655a606ad6
 Pygments==2.17.2
 requests==2.32.2
 setuptools==69.5.1
@@ -24,4 +23,4 @@ sphinxcontrib-jquery==4.1
 sphinxcontrib-jsmath==1.0.1
 sphinxcontrib-qthelp==1.0.7
 sphinxcontrib-serializinghtml==1.1.10
-urllib3==2.2.0
+urllib3==2.2.2
