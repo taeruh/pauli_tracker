@@ -101,7 +101,7 @@ pub struct TrackedCircuit<Circuit, Tracker, Storage> {
 // split impl into multiple blocks with the minimum required bounds, so that it is
 // simpler to write generic functions later on
 
-// cf create_single comment in frames -> macro to generate macro when it is stable
+// cf create_single comment in tracker.rs -> macro to generate macro when it is stable
 
 macro_rules! track_paulis {
     ($(($name:ident, $gate:literal),)*) => {$(
