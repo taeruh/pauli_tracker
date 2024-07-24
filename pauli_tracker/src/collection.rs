@@ -8,11 +8,11 @@ for our use cases.
 
 /// A very basic interface for a collection of elements.
 ///
-/// It is defined to be the minimal[^note] interface that we need for the
+/// It is the the minimal interface that we need for the
 /// [Live](crate::tracker::live::Live) tracker.
 ///
-/// [^note]: The [get](Base::get), [len](Base::len) and [is_empty](Base::is_empty)
-/// methods are actually not needed, but they just make sense here.
+// [^note]: The [get](Base::get), [len](Base::len) and [is_empty](Base::is_empty)
+// methods are actually not needed, but they just make sense here.
 pub trait Base {
     /// The type of the elements in the collection
     ///
