@@ -1,4 +1,6 @@
-# [build]
+[build]
+target-dir = "target"
+
 # rustflags = [
 # "-C", "target-cpu=native",
 # ]

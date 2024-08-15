@@ -10,7 +10,6 @@ for our use cases.
 ///
 /// It is the the minimal interface that we need for the
 /// [Live](crate::tracker::live::Live) tracker.
-///
 // [^note]: The [get](Base::get), [len](Base::len) and [is_empty](Base::is_empty)
 // methods are actually not needed, but they just make sense here.
 pub trait Base {

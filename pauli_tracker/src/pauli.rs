@@ -9,8 +9,8 @@ We provide three different representations of single Pauli operators:
 - [PauliTuple]: Just a tuple of two booleans
 - [PauliDense]: The Pauli encoded into a single byte
 - [PauliEnum]: The Pauli described as an enum. This very similar to [PauliDense];
-internally, [PauliDense] uses binary operations like '&', '^', etc. and [PauliEnum] uses
-a bunch of match statements.
+  internally, [PauliDense] uses binary operations like '&', '^', etc. and [PauliEnum] uses
+  a bunch of match statements.
 
 It probably depends very much on the situation which representation is best. We haven't
 performed any good benchmarks (a simple (naive) benchmark shows that it is maybe best
