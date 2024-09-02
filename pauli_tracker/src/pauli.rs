@@ -171,7 +171,7 @@ pub use tuple::PauliTuple;
 
 impl From<PauliEnum> for PauliDense {
     fn from(pauli: PauliEnum) -> Self {
-        // panic!();
+        // safety: discriminant follows the tableau encoding, so it is < 4
         unsafe { Self::from_unchecked(pauli.discriminant()) }
     }
 }
@@ -250,5 +250,24 @@ mod tests {
         check::<PauliDense>();
         check::<PauliEnum>();
         check::<PauliTuple>();
+    }
+
+    #[test]
+    fn conversions() {
+        fn check<A, B>()
+        where
+            A: Pauli + From<B> + PartialEq + fmt::Debug,
+            B: Pauli + From<A> + PartialEq + fmt::Debug + Copy,
+        {
+            for (a, b) in
+                [A::I, A::Z, A::X, A::Y].into_iter().zip([B::I, B::Z, B::X, B::Y])
+            {
+                assert_eq!(A::from(b), a);
+                assert_eq!(B::from(a), b);
+            }
+        }
+        check::<PauliDense, PauliEnum>();
+        check::<PauliDense, PauliTuple>();
+        check::<PauliEnum, PauliDense>();
     }
 }
