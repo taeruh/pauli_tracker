@@ -81,6 +81,10 @@ pub trait Pauli {
     /// Add the `other` Pauli to `self` in place.
     fn add(&mut self, other: Self);
 
+    /// Conjugate the Pauli with the I (identity gate). This does nothing!
+    #[inline(always)]
+    fn id(&mut self) {}
+
     /// Conjugate the Pauli with the S gate ignoring phases.
     fn s(&mut self);
     /// Conjugate the Pauli with the H gate ignoring phases.
@@ -159,11 +163,9 @@ pub trait Pauli {
 }
 
 mod dense;
-pub use crate::pauli::dense::PauliDense;
-
+pub use dense::PauliDense;
 mod enumlike;
 pub use enumlike::PauliEnum;
-
 mod tuple;
 pub use tuple::PauliTuple;
 
@@ -215,4 +217,38 @@ pub mod tableau_encoding {
     pub const Y: u8 = 3;
     /// Code for the Pauli Z gate.
     pub const Z: u8 = 1;
+}
+
+#[cfg(test)]
+mod tests {
+    use std::fmt;
+
+    use super::*;
+
+    #[test]
+    fn cliffords() {
+        fn check<T: Pauli + fmt::Debug + PartialEq>() {
+            #[rustfmt::skip]
+            let mapping = [
+                //   fn                       fn(I) fn(Z) fn(X) fn(Y)
+                (&T::id  as &dyn Fn(&mut T), [T::I, T::Z, T::X, T::Y]),
+                (&T::s   as &dyn Fn(&mut T), [T::I, T::Z, T::Y, T::X]),
+                (&T::h   as &dyn Fn(&mut T), [T::I, T::X, T::Z, T::Y]),
+                (&T::sh  as &dyn Fn(&mut T), [T::I, T::Y, T::Z, T::X]),
+                (&T::hs  as &dyn Fn(&mut T), [T::I, T::X, T::Y, T::Z]),
+                (&T::shs as &dyn Fn(&mut T), [T::I, T::Y, T::X, T::Z]),
+            ];
+            for (fun, outputs) in mapping {
+                for (expected, mut input) in
+                    outputs.into_iter().zip([T::I, T::Z, T::X, T::Y])
+                {
+                    fun(&mut input);
+                    assert_eq!(input, expected)
+                }
+            }
+        }
+        check::<PauliDense>();
+        check::<PauliEnum>();
+        check::<PauliTuple>();
+    }
 }
