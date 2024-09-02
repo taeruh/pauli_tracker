@@ -230,22 +230,51 @@ pub mod tableau_encoding {
 mod tests {
     use std::fmt;
 
+    use coverage_helper::test;
+
+    #[derive(Debug, Clone, Copy, PartialEq)]
+    pub struct PauliForceDefault(PauliEnum);
+    #[rustfmt::skip]
+    impl Pauli for PauliForceDefault {
+        const I: Self = Self(PauliEnum::I);
+        const X: Self = Self(PauliEnum::X);
+        const Y: Self = Self(PauliEnum::Y);
+        const Z: Self = Self(PauliEnum::Z);
+        fn new_product(z: bool, x: bool) -> Self { Self(PauliEnum::new_product(z, x)) }
+        fn multiply(&mut self, other: Self) { self.0.multiply(other.0) }
+        fn add(&mut self, other: Self) { self.multiply(other) }
+        fn s(&mut self) { self.0.s() }
+        fn h(&mut self) { self.0.h() }
+        fn xpx(&mut self, other: &Self) { self.0.xpx(&other.0) }
+        fn xpz(&mut self, other: &Self) { self.0.xpz(&other.0) }
+        fn zpx(&mut self, other: &Self) { self.0.zpx(&other.0) }
+        fn zpz(&mut self, other: &Self) { self.0.zpz(&other.0) }
+        fn get_x(&self) -> bool { self.0.get_x() }
+        fn get_z(&self) -> bool { self.0.get_z() }
+        fn set_x(&mut self, x: bool) { self.0.set_x(x) }
+        fn set_z(&mut self, z: bool) { self.0.set_z(z) }
+        fn tableau_encoding(&self) -> u8 { self.0.tableau_encoding() }
+    }
+
     use super::*;
     trait PauliAssert: Pauli + fmt::Debug + PartialEq + Copy {}
     impl PauliAssert for PauliDense {}
     impl PauliAssert for PauliEnum {}
     impl PauliAssert for PauliTuple {}
+    impl PauliAssert for PauliForceDefault {}
 
     macro_rules! check {
         () => {
             check::<PauliDense>();
             check::<PauliEnum>();
             check::<PauliTuple>();
+            check::<PauliForceDefault>();
         };
         (combinations) => {
             check::<PauliDense, PauliEnum>();
             check::<PauliDense, PauliTuple>();
             check::<PauliEnum, PauliDense>();
+            check::<PauliEnum, PauliTuple>();
         };
     }
 
