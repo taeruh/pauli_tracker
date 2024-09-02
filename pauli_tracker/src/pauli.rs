@@ -226,6 +226,26 @@ mod tests {
     use super::*;
 
     #[test]
+    fn consistency() {
+        fn check<T: Pauli + fmt::Debug + PartialEq>() {
+            let mapping = [
+                (T::I, &T::new_i as &dyn Fn() -> T, (false, false), tableau_encoding::I),
+                (T::Z, &T::new_z as &dyn Fn() -> T, (true, false), tableau_encoding::Z),
+                (T::X, &T::new_x as &dyn Fn() -> T, (false, true), tableau_encoding::X),
+                (T::Y, &T::new_y as &dyn Fn() -> T, (true, true), tableau_encoding::Y),
+            ];
+            for (t_const, fun, (prod_z, prod_x), tableau_const) in mapping {
+                assert_eq!(t_const, fun());
+                assert_eq!(t_const, T::new_product(prod_z, prod_x));
+                assert_eq!(t_const.tableau_encoding(), tableau_const);
+            }
+        }
+        check::<PauliDense>();
+        check::<PauliEnum>();
+        check::<PauliTuple>();
+    }
+
+    #[test]
     fn cliffords() {
         fn check<T: Pauli + fmt::Debug + PartialEq>() {
             #[rustfmt::skip]
