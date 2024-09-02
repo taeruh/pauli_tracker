@@ -253,6 +253,56 @@ mod tests {
     }
 
     #[test]
+    fn conversions() {
+        fn check<A, B>()
+        where
+            A: Pauli + From<B> + PartialEq + fmt::Debug,
+            B: Pauli + From<A> + PartialEq + fmt::Debug + Copy,
+        {
+            for (a, b) in
+                [A::I, A::Z, A::X, A::Y].into_iter().zip([B::I, B::Z, B::X, B::Y])
+            {
+                assert_eq!(A::from(b), a);
+                assert_eq!(B::from(a), b);
+            }
+        }
+        check::<PauliDense, PauliEnum>();
+        check::<PauliDense, PauliTuple>();
+        check::<PauliEnum, PauliDense>();
+    }
+
+    #[test]
+    fn multiplication() {
+        fn check<T: Pauli + PartialEq + fmt::Debug>() {
+            let mapping = [
+                (T::I, T::I, T::I),
+                (T::I, T::Z, T::Z),
+                (T::I, T::X, T::X),
+                (T::I, T::Y, T::Y),
+                (T::Z, T::I, T::Z),
+                (T::Z, T::Z, T::I),
+                (T::Z, T::X, T::Y),
+                (T::Z, T::Y, T::X),
+                (T::X, T::I, T::X),
+                (T::X, T::Z, T::Y),
+                (T::X, T::X, T::I),
+                (T::X, T::Y, T::Z),
+                (T::Y, T::I, T::Y),
+                (T::Y, T::Z, T::X),
+                (T::Y, T::X, T::Z),
+                (T::Y, T::Y, T::I),
+            ];
+            for (mut this, other, expected) in mapping {
+                this.multiply(other);
+                assert_eq!(this, expected);
+            }
+        }
+        check::<PauliDense>();
+        check::<PauliEnum>();
+        check::<PauliTuple>();
+    }
+
+    #[test]
     fn cliffords() {
         fn check<T: Pauli + fmt::Debug + PartialEq>() {
             #[rustfmt::skip]
@@ -277,25 +327,6 @@ mod tests {
         check::<PauliDense>();
         check::<PauliEnum>();
         check::<PauliTuple>();
-    }
-
-    #[test]
-    fn conversions() {
-        fn check<A, B>()
-        where
-            A: Pauli + From<B> + PartialEq + fmt::Debug,
-            B: Pauli + From<A> + PartialEq + fmt::Debug + Copy,
-        {
-            for (a, b) in
-                [A::I, A::Z, A::X, A::Y].into_iter().zip([B::I, B::Z, B::X, B::Y])
-            {
-                assert_eq!(A::from(b), a);
-                assert_eq!(B::from(a), b);
-            }
-        }
-        check::<PauliDense, PauliEnum>();
-        check::<PauliDense, PauliTuple>();
-        check::<PauliEnum, PauliDense>();
     }
 
     #[test]
