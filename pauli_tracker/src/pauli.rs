@@ -231,10 +231,27 @@ mod tests {
     use std::fmt;
 
     use super::*;
+    trait PauliAssert: Pauli + fmt::Debug + PartialEq + Copy {}
+    impl PauliAssert for PauliDense {}
+    impl PauliAssert for PauliEnum {}
+    impl PauliAssert for PauliTuple {}
+
+    macro_rules! check {
+        () => {
+            check::<PauliDense>();
+            check::<PauliEnum>();
+            check::<PauliTuple>();
+        };
+        (combinations) => {
+            check::<PauliDense, PauliEnum>();
+            check::<PauliDense, PauliTuple>();
+            check::<PauliEnum, PauliDense>();
+        };
+    }
 
     #[test]
     fn consistency() {
-        fn check<T: Pauli + fmt::Debug + PartialEq>() {
+        fn check<T: PauliAssert>() {
             let mapping = [
                 (T::I, &T::new_i as &dyn Fn() -> T, (false, false), tableau_encoding::I),
                 (T::Z, &T::new_z as &dyn Fn() -> T, (true, false), tableau_encoding::Z),
@@ -247,17 +264,15 @@ mod tests {
                 assert_eq!(t_const.tableau_encoding(), tableau_const);
             }
         }
-        check::<PauliDense>();
-        check::<PauliEnum>();
-        check::<PauliTuple>();
+        check!();
     }
 
     #[test]
     fn conversions() {
         fn check<A, B>()
         where
-            A: Pauli + From<B> + PartialEq + fmt::Debug,
-            B: Pauli + From<A> + PartialEq + fmt::Debug + Copy,
+            A: PauliAssert + From<B>,
+            B: PauliAssert + From<A>,
         {
             for (a, b) in
                 [A::I, A::Z, A::X, A::Y].into_iter().zip([B::I, B::Z, B::X, B::Y])
@@ -266,14 +281,12 @@ mod tests {
                 assert_eq!(B::from(a), b);
             }
         }
-        check::<PauliDense, PauliEnum>();
-        check::<PauliDense, PauliTuple>();
-        check::<PauliEnum, PauliDense>();
+        check!(combinations);
     }
 
     #[test]
     fn multiplication() {
-        fn check<T: Pauli + PartialEq + fmt::Debug>() {
+        fn check<T: PauliAssert>() {
             let mapping = [
                 (T::I, T::I, T::I),
                 (T::I, T::Z, T::Z),
@@ -297,14 +310,12 @@ mod tests {
                 assert_eq!(this, expected);
             }
         }
-        check::<PauliDense>();
-        check::<PauliEnum>();
-        check::<PauliTuple>();
+        check!();
     }
 
     #[test]
     fn cliffords() {
-        fn check<T: Pauli + fmt::Debug + PartialEq>() {
+        fn check<T: PauliAssert>() {
             #[rustfmt::skip]
             let mapping = [
                 //   fn                       fn(I) fn(Z) fn(X) fn(Y)
@@ -324,14 +335,12 @@ mod tests {
                 }
             }
         }
-        check::<PauliDense>();
-        check::<PauliEnum>();
-        check::<PauliTuple>();
+        check!();
     }
 
     #[test]
     fn get() {
-        fn check<T: Pauli + fmt::Debug + PartialEq>() {
+        fn check<T: PauliAssert>() {
             #[rustfmt::skip]
             let f = [
                 // in, get_z, get_x 
@@ -345,14 +354,12 @@ mod tests {
                 assert_eq!(input.get_x(), get_x);
             }
         }
-        check::<PauliDense>();
-        check::<PauliEnum>();
-        check::<PauliTuple>();
+        check!();
     }
 
     #[test]
     fn set() {
-        fn check<T: Pauli + fmt::Debug + PartialEq + Clone>() {
+        fn check<T: PauliAssert>() {
             let mapping = [
                 // set (false, true) output for input [I, Z, X, Y]
                 (
@@ -368,7 +375,7 @@ mod tests {
                 for ((expected_false, expected_true), mut input) in
                     outputs.into_iter().zip([T::I, T::Z, T::X, T::Y])
                 {
-                    let mut clone = input.clone();
+                    let mut clone = input;
                     fun(&mut clone, false);
                     assert_eq!(clone, expected_false);
                     fun(&mut input, true);
@@ -376,8 +383,45 @@ mod tests {
                 }
             }
         }
-        check::<PauliDense>();
-        check::<PauliEnum>();
-        check::<PauliTuple>();
+        check!();
+    }
+
+    #[test]
+    fn partial_add() {
+        fn check<T: PauliAssert>() {
+            let funs = [
+                &T::zpz as &dyn Fn(&mut T, &T),
+                &T::zpx as &dyn Fn(&mut T, &T),
+                &T::xpz as &dyn Fn(&mut T, &T),
+                &T::xpx as &dyn Fn(&mut T, &T),
+            ];
+            let mapping = [
+                //            zpz    zpx   xpz   xpx
+                (T::I, T::I, [T::I, T::I, T::I, T::I]),
+                (T::I, T::Z, [T::Z, T::I, T::X, T::I]),
+                (T::I, T::X, [T::I, T::Z, T::I, T::X]),
+                (T::I, T::Y, [T::Z, T::Z, T::X, T::X]),
+                (T::Z, T::I, [T::Z, T::Z, T::Z, T::Z]),
+                (T::Z, T::Z, [T::I, T::Z, T::Y, T::Z]),
+                (T::Z, T::X, [T::Z, T::I, T::Z, T::Y]),
+                (T::Z, T::Y, [T::I, T::I, T::Y, T::Y]),
+                (T::X, T::I, [T::X, T::X, T::X, T::X]),
+                (T::X, T::Z, [T::Y, T::X, T::I, T::X]),
+                (T::X, T::X, [T::X, T::Y, T::X, T::I]),
+                (T::X, T::Y, [T::Y, T::Y, T::I, T::I]),
+                (T::Y, T::I, [T::Y, T::Y, T::Y, T::Y]),
+                (T::Y, T::Z, [T::X, T::Y, T::Z, T::Y]),
+                (T::Y, T::X, [T::Y, T::X, T::Y, T::Z]),
+                (T::Y, T::Y, [T::X, T::X, T::Z, T::Z]),
+            ];
+            for (this, other, outputs) in mapping {
+                for (fun, expected) in funs.iter().zip(outputs) {
+                    let mut this = this;
+                    fun(&mut this, &other);
+                    assert_eq!(this, expected,);
+                }
+            }
+        }
+        check!();
     }
 }
