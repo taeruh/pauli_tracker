@@ -270,4 +270,56 @@ mod tests {
         check::<PauliDense, PauliTuple>();
         check::<PauliEnum, PauliDense>();
     }
+
+    #[test]
+    fn get() {
+        fn check<T: Pauli + fmt::Debug + PartialEq>() {
+            #[rustfmt::skip]
+            let f = [
+                // in, get_z, get_x 
+                (T::I, false, false),
+                (T::Z, true,  false),
+                (T::X, false, true),
+                (T::Y, true,  true),
+            ];
+            for (input, get_z, get_x) in f {
+                assert_eq!(input.get_z(), get_z);
+                assert_eq!(input.get_x(), get_x);
+            }
+        }
+        check::<PauliDense>();
+        check::<PauliEnum>();
+        check::<PauliTuple>();
+    }
+
+    #[test]
+    fn set() {
+        fn check<T: Pauli + fmt::Debug + PartialEq + Clone>() {
+            let mapping = [
+                // set (false, true) output for input [I, Z, X, Y]
+                (
+                    &T::set_z as &dyn Fn(&mut T, bool),
+                    ([(T::I, T::Z), (T::I, T::Z), (T::X, T::Y), (T::X, T::Y)]),
+                ),
+                (
+                    &T::set_x as &dyn Fn(&mut T, bool),
+                    ([(T::I, T::X), (T::Z, T::Y), (T::I, T::X), (T::Z, T::Y)]),
+                ),
+            ];
+            for (fun, outputs) in mapping.into_iter() {
+                for ((expected_false, expected_true), mut input) in
+                    outputs.into_iter().zip([T::I, T::Z, T::X, T::Y])
+                {
+                    let mut clone = input.clone();
+                    fun(&mut clone, false);
+                    assert_eq!(clone, expected_false);
+                    fun(&mut input, true);
+                    assert_eq!(input, expected_true);
+                }
+            }
+        }
+        check::<PauliDense>();
+        check::<PauliEnum>();
+        check::<PauliTuple>();
+    }
 }

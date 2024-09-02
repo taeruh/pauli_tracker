@@ -249,23 +249,16 @@ mod tests {
     use super::*;
 
     #[test]
-    fn set() {
-        type Action = fn(&mut PauliDense, bool);
-        const ACTIONS: [(Action, &str, [/* false, false */ [u8; 4]; 2]); 2] = [
-            (PauliDense::set_x, "set_x", [[0, 1, 0, 1], [2, 3, 2, 3]]),
-            (PauliDense::set_z, "set_z", [[0, 0, 2, 2], [1, 1, 3, 3]]),
-        ];
-        let mut pauli = PauliDense::new_i();
-        for action in ACTIONS {
-            for (flag, checks) in [false, true].into_iter().zip(action.2) {
-                for (input, check) in (0u8..).zip(checks) {
-                    pauli.set_storage(input);
-                    (action.0)(&mut pauli, flag);
-                    assert_eq!(pauli.storage, check, "{}, {}, {}", action.1, input, flag);
-                }
-            }
+    fn set_storage() {
+        let mut pauli = PauliDense::I;
+        for (storage, expected) in [
+            (0, PauliDense::I),
+            (1, PauliDense::Z),
+            (2, PauliDense::X),
+            (3, PauliDense::Y),
+        ] {
+            pauli.set_storage(storage);
+            assert_eq!(pauli, expected);
         }
     }
-
-    // gate conjugation is tested in live
 }
