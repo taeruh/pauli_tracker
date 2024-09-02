@@ -24,6 +24,7 @@ methods.
 - Deprecate the `Pauli::add` method in favour of `Pauli::multiply`.
 ### Removed
 ### Fixed
+- Fix the documentation of `Pauli::(xpz|zpx)` (was flipped).
 ### Security
 
 ## [0.4.1] - 2024-05-07

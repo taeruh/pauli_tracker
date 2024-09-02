@@ -45,9 +45,9 @@ macro_rules! new_pauli {
 macro_rules! plus {
     ($(($name:ident, $left:ident, $right:ident),)*) => {$(
         /// Add `other`'s
-        #[doc = stringify!($left)]
-        /// component onto `self`'s
         #[doc = stringify!($right)]
+        /// component onto `self`'s
+        #[doc = stringify!($left)]
         /// component in place.
         fn $name(&mut self, other: &Self);
     )*};
