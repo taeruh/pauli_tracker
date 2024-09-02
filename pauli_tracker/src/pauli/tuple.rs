@@ -46,9 +46,13 @@ impl Pauli for PauliTuple {
         Self(z, x)
     }
 
-    fn add(&mut self, other: Self) {
+    fn multiply(&mut self, other: Self) {
         self.0 ^= other.0;
         self.1 ^= other.1;
+    }
+
+    fn add(&mut self, other: Self) {
+        self.multiply(other);
     }
 
     fn s(&mut self) {

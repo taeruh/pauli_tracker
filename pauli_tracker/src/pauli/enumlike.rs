@@ -53,7 +53,7 @@ impl Pauli for PauliEnum {
         }
     }
 
-    fn add(&mut self, other: Self) {
+    fn multiply(&mut self, other: Self) {
         match (*self, other) {
             (Self::I, _) => *self = other,
             (_, Self::I) => {},
@@ -67,6 +67,10 @@ impl Pauli for PauliEnum {
             (Self::Z, Self::Y) => *self = Self::X,
             (Self::Z, Self::Z) => *self = Self::I,
         }
+    }
+
+    fn add(&mut self, other: Self) {
+        self.multiply(other);
     }
 
     fn s(&mut self) {

@@ -13,6 +13,7 @@ We (try to) follow the [SemVer] rules, specifically [Cargo guidelines].
 methods.
 ### Deprecated
 ### Removed
+- **Breaking Change**: Remove `Pauli::add` in favour of `Pauli::multiply`.
 ### Fixed
 ### Security
 
@@ -20,6 +21,7 @@ methods.
 ### Added
 ### Changed
 ### Deprecated
+- Deprecate the `Pauli::add` method in favour of `Pauli::multiply`.
 ### Removed
 ### Fixed
 ### Security

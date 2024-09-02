@@ -493,7 +493,7 @@ mod tests {
             fn track_pauli_string(&mut self, string: PauliString<Self::Pauli>) {
                 for (bit, pauli) in string {
                     if let Some(p) = self.paulis.get_mut(&bit) {
-                        p.add(pauli)
+                        p.multiply(pauli)
                     }
                 }
             }

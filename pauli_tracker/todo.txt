@@ -28,3 +28,4 @@
 ---------- release new major
 
 - remove deprecated stuff
+- remove the default implementations for the `Tracker::remove_*` methods

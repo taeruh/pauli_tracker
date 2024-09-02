@@ -128,8 +128,12 @@ impl Pauli for PauliDense {
         Self { storage: z.z() ^ x.x() }
     }
 
-    fn add(&mut self, other: Self) {
+    fn multiply(&mut self, other: Self) {
         self.xor(other);
+    }
+
+    fn add(&mut self, other: Self) {
+        self.multiply(other);
     }
 
     fn s(&mut self) {

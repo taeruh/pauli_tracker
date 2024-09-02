@@ -78,7 +78,14 @@ pub trait Pauli {
     /// ```
     fn new_product(z: bool, x: bool) -> Self;
 
+    /// Multiply `self` with `other` in place (i.e., adding on the tableau
+    /// representation).
+    fn multiply(&mut self, other: Self);
+
     /// Add the `other` Pauli to `self` in place.
+    #[deprecated(since = "0.4.2", note = "use `multiply` instead")]
+    // cannot add default implementation, because that would require a Self: Sized bound
+    // which might be a breaking change (maybe?)
     fn add(&mut self, other: Self);
 
     /// Conjugate the Pauli with the I (identity gate). This does nothing!

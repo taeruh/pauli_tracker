@@ -139,13 +139,13 @@ where
 
     fn track_pauli(&mut self, bit: usize, pauli: Self::Pauli) {
         if let Some(p) = self.storage.get_mut(bit) {
-            p.add(pauli)
+            p.multiply(pauli)
         }
     }
     fn track_pauli_string(&mut self, string: PauliString<Self::Pauli>) {
         for (bit, pauli) in string {
             if let Some(p) = self.storage.get_mut(bit) {
-                p.add(pauli)
+                p.multiply(pauli)
             }
         }
     }
