@@ -25,6 +25,7 @@ methods.
 ### Removed
 ### Fixed
 - Fix the documentation of `Pauli::(xpz|zpx)` (was flipped).
+- Fix `From<PauliTuple> for PauliEnum`
 ### Security
 
 ## [0.4.1] - 2024-05-07

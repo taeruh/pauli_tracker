@@ -195,7 +195,7 @@ impl From<PauliDense> for PauliEnum {
 }
 impl From<PauliTuple> for PauliEnum {
     fn from(pauli: PauliTuple) -> Self {
-        Self::new_product(pauli.get_x(), pauli.get_z())
+        Self::new_product(pauli.get_z(), pauli.get_x())
     }
 }
 
