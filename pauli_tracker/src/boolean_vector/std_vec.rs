@@ -3,7 +3,8 @@ use std::{iter::Copied, slice::Iter};
 use super::BooleanVector;
 
 impl BooleanVector for Vec<bool> {
-    type IterVals<'l> = Copied<Iter<'l, bool>>
+    type IterVals<'l>
+        = Copied<Iter<'l, bool>>
     where
         Self: 'l;
 

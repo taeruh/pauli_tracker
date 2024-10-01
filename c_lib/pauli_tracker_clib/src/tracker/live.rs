@@ -2,7 +2,7 @@
 
 use pauli_tracker::{
     collection::Init,
-    tracker::{live, Tracker},
+    tracker::{Tracker, live},
 };
 
 use crate::{

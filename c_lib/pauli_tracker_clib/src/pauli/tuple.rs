@@ -1,10 +1,7 @@
 use std::mem;
 
 use pauli_tracker::pauli::Pauli;
-use serde::{
-    Deserialize,
-    Serialize,
-};
+use serde::{Deserialize, Serialize};
 
 /// A Pauli represented by two booleans values. The first one is the X part and the
 /// second one is the Z part.

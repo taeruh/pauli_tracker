@@ -6,7 +6,7 @@ use std::{
     slice,
 };
 
-use hashbrown::{hash_map::DefaultHashBuilder, HashMap};
+use hashbrown::{HashMap, hash_map::DefaultHashBuilder};
 use itertools::Itertools;
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
@@ -251,8 +251,16 @@ where
     T: Clone,
 {
     type TI = T;
-    type Iter<'l> = <&'l Self as IntoIterator>::IntoIter where T: 'l, S: 'l;
-    type IterMut<'l> = <&'l mut Self as IntoIterator>::IntoIter where T: 'l, S: 'l;
+    type Iter<'l>
+        = <&'l Self as IntoIterator>::IntoIter
+    where
+        T: 'l,
+        S: 'l;
+    type IterMut<'l>
+        = <&'l mut Self as IntoIterator>::IntoIter
+    where
+        T: 'l,
+        S: 'l;
 
     fn iter_pairs(&self) -> Self::Iter<'_> {
         self.into_iter()

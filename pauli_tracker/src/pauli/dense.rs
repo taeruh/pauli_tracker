@@ -3,7 +3,7 @@ use std::fmt::{self, Debug, Display};
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 
-use super::{tableau_encoding, Pauli};
+use super::{Pauli, tableau_encoding};
 
 /// Pauli encoding into two bits. It is basically an "u2", in terms of a single Pauli
 /// operator (without phases).

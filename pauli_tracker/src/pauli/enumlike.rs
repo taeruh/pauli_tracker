@@ -3,7 +3,7 @@ use std::fmt::{self, Debug, Display};
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 
-use super::{tableau_encoding, Pauli};
+use super::{Pauli, tableau_encoding};
 
 /// Pauli described as enum.
 ///

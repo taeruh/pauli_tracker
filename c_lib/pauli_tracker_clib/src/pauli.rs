@@ -1,9 +1,6 @@
 #![allow(non_camel_case_types)]
 
-use pauli_tracker::pauli::{
-    Pauli,
-    PauliStack,
-};
+use pauli_tracker::pauli::{Pauli, PauliStack};
 
 mod enumlike;
 mod tuple;
@@ -11,10 +8,7 @@ mod tuple;
 pub use enumlike::PauliEnum;
 pub use tuple::PauliTuple;
 
-use crate::boolean_vector::{
-    BitVec,
-    Vec_b,
-};
+use crate::boolean_vector::{BitVec, Vec_b};
 
 impl_api::pauli!(PauliEnum, pauli_enum_);
 impl_api::pauli!(PauliTuple, pauli_tuple_);

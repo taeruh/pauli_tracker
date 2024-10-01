@@ -220,7 +220,7 @@ mod tests {
     mod single_actions {
         use super::*;
         use crate::tracker::tests::utils::{
-            self, SingleAction, SingleResults, N_SINGLES,
+            self, N_SINGLES, SingleAction, SingleResults,
         };
 
         type Action<P> = SingleAction<Live<P>>;
@@ -312,15 +312,12 @@ mod tests {
         assert_eq!(tracker.as_ref().0, vec![PauliTuple::Y, PauliTuple::I]);
         assert_eq!(tracker.get(0), Some(&PauliTuple::Y));
         assert_eq!(tracker.new_qubit(3), None);
-        assert_eq!(
-            *tracker.as_ref().0,
-            vec![
-                PauliTuple::new_y(),
-                PauliTuple::new_i(),
-                PauliTuple::new_i(),
-                PauliTuple::new_i()
-            ]
-        );
+        assert_eq!(*tracker.as_ref().0, vec![
+            PauliTuple::new_y(),
+            PauliTuple::new_i(),
+            PauliTuple::new_i(),
+            PauliTuple::new_i()
+        ]);
         let mut tracker = super::Live::new(Map::<PauliEnum>::from_iter(
             tracker.into_storage().into_iter().map(|(k, v)| (k, v.into())),
         ));

@@ -2,8 +2,9 @@ use proc_macro::TokenStream;
 use proc_macro2::Span;
 use quote::quote;
 use syn::{
+    Ident, Token,
     parse::{Parse, ParseStream},
-    parse_macro_input, Ident, Token,
+    parse_macro_input,
 };
 
 fn concat<L: AsRef<str>, R: AsRef<str>>(left: L, right: R, span: Span) -> Ident {

@@ -9,11 +9,12 @@ use pauli_tracker::{
     collection::{BufferedVector, Init, Iterable, Map},
     pauli::{Pauli, PauliStack, PauliTuple},
     tracker::{
+        Tracker,
         frames::{
-            induced_order::{self, PartialOrderGraph},
             Frames,
+            induced_order::{self, PartialOrderGraph},
         },
-        live, Tracker,
+        live,
     },
 };
 use proptest::{

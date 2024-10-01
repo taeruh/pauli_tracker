@@ -490,8 +490,8 @@ mod tests {
             collection::BufferedVector,
             pauli::PauliDense,
             tracker::tests::utils::{
-                self, DoubleAction, DoubleResults, SingleAction, SingleResults,
-                N_DOUBLES, N_SINGLES,
+                self, DoubleAction, DoubleResults, N_DOUBLES, N_SINGLES, SingleAction,
+                SingleResults,
             },
         };
 

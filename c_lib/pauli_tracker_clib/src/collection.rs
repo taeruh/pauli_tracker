@@ -2,23 +2,12 @@
 
 use std::hash::BuildHasherDefault;
 
-use pauli_tracker::collection::{
-    Base,
-    BufferedVector,
-    Init,
-    Map,
-    MappedVector,
-};
+use pauli_tracker::collection::{Base, BufferedVector, Init, Map, MappedVector};
 use rustc_hash::FxHasher;
 
 use crate::{
-    pauli::{
-        PauliEnum,
-        PauliStack_bv,
-        PauliStack_vb,
-        PauliTuple,
-    },
     RawVec,
+    pauli::{PauliEnum, PauliStack_bv, PauliStack_vb, PauliTuple},
 };
 
 pub type Map_psvbfx = Map<PauliStack_vb, BuildHasherDefault<FxHasher>>;
@@ -26,10 +15,8 @@ pub type Map_psbvfx = Map<PauliStack_bv, BuildHasherDefault<FxHasher>>;
 pub type Map_pefx = Map<PauliEnum, BuildHasherDefault<FxHasher>>;
 pub type Map_ptfx = Map<PauliTuple, BuildHasherDefault<FxHasher>>;
 
-pub type MappedVector_psvbfx =
-    MappedVector<PauliStack_vb, BuildHasherDefault<FxHasher>>;
-pub type MappedVector_psbvfx =
-    MappedVector<PauliStack_bv, BuildHasherDefault<FxHasher>>;
+pub type MappedVector_psvbfx = MappedVector<PauliStack_vb, BuildHasherDefault<FxHasher>>;
+pub type MappedVector_psbvfx = MappedVector<PauliStack_bv, BuildHasherDefault<FxHasher>>;
 pub type MappedVector_pefx = MappedVector<PauliEnum, BuildHasherDefault<FxHasher>>;
 pub type MappedVector_ptfx = MappedVector<PauliTuple, BuildHasherDefault<FxHasher>>;
 

@@ -8,7 +8,8 @@ use bitvec::{
 use super::BooleanVector;
 
 impl<T: BitStore> BooleanVector for BitVec<T, Lsb0> {
-    type IterVals<'l> = BitValIter<'l, T, Lsb0>
+    type IterVals<'l>
+        = BitValIter<'l, T, Lsb0>
     where
         Self: 'l;
 

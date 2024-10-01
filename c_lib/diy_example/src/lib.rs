@@ -1,7 +1,7 @@
 use pauli_tracker::{
     collection::{Init, Map},
     pauli::{Pauli, PauliDense},
-    tracker::{live, Tracker},
+    tracker::{Tracker, live},
 };
 
 // define the specific types that you need

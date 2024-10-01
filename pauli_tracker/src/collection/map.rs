@@ -1,8 +1,8 @@
 use std::{hash::BuildHasher, iter};
 
 use hashbrown::{
-    hash_map::{self, DefaultHashBuilder},
     HashMap,
+    hash_map::{self, DefaultHashBuilder},
 };
 
 use super::{Base, Full, Init, Iterable, IterableBase};
@@ -53,15 +53,21 @@ where
     S: BuildHasher + Default,
 {
     type TI = T;
-    type Iter<'l> = iter::Map<
-        hash_map::Iter<'l, usize, T>,
-        fn((&'l usize, &'l T)) -> (usize, &'l T),
-    > where T: 'l, S: 'l;
+    type Iter<'l>
+        =
+        iter::Map<hash_map::Iter<'l, usize, T>, fn((&'l usize, &'l T)) -> (usize, &'l T)>
+    where
+        T: 'l,
+        S: 'l;
 
-    type IterMut<'l> = iter::Map<
+    type IterMut<'l>
+        = iter::Map<
         hash_map::IterMut<'l, usize, T>,
         fn((&'l usize, &'l mut T)) -> (usize, &'l mut T),
-    > where T: 'l, S: 'l;
+    >
+    where
+        T: 'l,
+        S: 'l;
 
     fn iter_pairs(&self) -> Self::Iter<'_> {
         self.iter().map(|(&i, p)| (i, p))

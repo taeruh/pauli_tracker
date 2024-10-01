@@ -46,14 +46,11 @@ pub type PartialOrderGraph = Vec<Vec<(usize, Vec<usize>)>>;
 ///     PauliStack::<Vec<bool>>::try_from_str("1", "0").unwrap(),
 /// ]);
 /// let map = vec![0, 3];
-/// assert_eq!(
-///     induced_order::get_order(&storage, &map),
-///     vec![
-///         vec![(0, vec![])],
-///         vec![(3, vec![0]), (1, vec![0])],
-///         vec![(2, vec![3])], // note that the redundent dependency on 0 is removed
-///     ]
-/// );
+/// assert_eq!(induced_order::get_order(&storage, &map), vec![
+///     vec![(0, vec![])],
+///     vec![(3, vec![0]), (1, vec![0])],
+///     vec![(2, vec![3])], // note that the redundent dependency on 0 is removed
+/// ]);
 /// # }
 /// ```
 pub fn get_order<'l, I, B>(frames_storage: I, map: &[usize]) -> PartialOrderGraph

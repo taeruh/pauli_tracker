@@ -5,7 +5,7 @@ use std::collections::HashMap;
 use pauli_tracker::{
     collection::Init,
     pauli::PauliStack,
-    tracker::{frames::Frames, Tracker},
+    tracker::{Tracker, frames::Frames},
 };
 
 use crate::{
@@ -31,13 +31,10 @@ pub extern "C" fn show_frames(frames: &Frames_hmpsbvfx) {
         frames
             .as_storage()
             .into_iter()
-            .map(|(k, v)| (
-                k,
-                PauliStack {
-                    z: v.z.as_raw_slice(),
-                    x: v.x.as_raw_slice(),
-                }
-            ))
+            .map(|(k, v)| (k, PauliStack {
+                z: v.z.as_raw_slice(),
+                x: v.x.as_raw_slice(),
+            }))
             .collect::<HashMap<_, _>>()
     );
 }

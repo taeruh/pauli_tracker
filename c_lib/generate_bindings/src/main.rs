@@ -1,7 +1,4 @@
-use gen_bind::{
-    Generator,
-    GeneratorConfig,
-};
+use gen_bind::{Generator, GeneratorConfig};
 
 fn main() {
     // cf. comments in pauli_tracker_lib/src/boolean_vector.rs

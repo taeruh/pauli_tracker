@@ -20,21 +20,12 @@ git@github.com:QSI-BAQS/pauli_tracker_extern/blob/main/c_bindings/xtask/src/main
 */
 
 use std::{
-    self,
-    fs,
+    self, fs,
     marker::PhantomData,
-    path::{
-        Path,
-        PathBuf,
-    },
+    path::{Path, PathBuf},
 };
 
-use cbindgen::{
-    Builder,
-    Config,
-    Language,
-    ParseConfig,
-};
+use cbindgen::{Builder, Config, Language, ParseConfig};
 
 /// A simplified wrapper around [cbindgen]'s [Builder].
 #[derive(Debug, Clone)]
@@ -99,10 +90,7 @@ impl Generator<Uninitialized> {
     }
 
     /// Combine [new](Self::new) and [config](Self::config).
-    pub fn with_config<T: Into<String>>(
-        crate_name: T,
-        config: GeneratorConfig,
-    ) -> Self {
+    pub fn with_config<T: Into<String>>(crate_name: T, config: GeneratorConfig) -> Self {
         Self {
             crate_name: crate_name.into(),
             config,

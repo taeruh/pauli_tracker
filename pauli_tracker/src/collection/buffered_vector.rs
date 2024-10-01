@@ -145,8 +145,14 @@ where
     T: Default + Clone,
 {
     type TI = T;
-    type Iter<'l> = <&'l Self as IntoIterator>::IntoIter where T: 'l;
-    type IterMut<'l> = <&'l mut Self as IntoIterator>::IntoIter where T: 'l;
+    type Iter<'l>
+        = <&'l Self as IntoIterator>::IntoIter
+    where
+        T: 'l;
+    type IterMut<'l>
+        = <&'l mut Self as IntoIterator>::IntoIter
+    where
+        T: 'l;
 
     fn iter_pairs(&self) -> Self::Iter<'_> {
         self.into_iter()

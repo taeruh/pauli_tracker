@@ -16,8 +16,8 @@ use crate::{
     collection::{Base, Full},
     pauli::PauliStack,
     tracker::{
-        frames::{Frames, MoveError, OverwriteStack},
         PauliString, Tracker,
+        frames::{Frames, MoveError, OverwriteStack},
     },
 };
 
@@ -305,7 +305,7 @@ mod tests {
         boolean_vector::bitvec_simd::SimdBitVec,
         collection::{BufferedVector, Init, Map, MappedVector, NaiveVector},
         pauli::{PauliDense, PauliEnum},
-        tracker::{frames::induced_order, live, MissingBit},
+        tracker::{MissingBit, frames::induced_order, live},
     };
 
     type PauliBitVec = PauliStack<BitVec>;
@@ -329,13 +329,10 @@ mod tests {
         circ.tracker.new_qubit(2);
         match circ.measure_and_store(2).1.unwrap_err() {
             MoveError::OverwriteStack(e) => {
-                assert_eq!(
-                    e,
-                    OverwriteStack {
-                        bit: 2,
-                        stack: PauliBitVec::try_from_str("1", "0").unwrap()
-                    }
-                );
+                assert_eq!(e, OverwriteStack {
+                    bit: 2,
+                    stack: PauliBitVec::try_from_str("1", "0").unwrap()
+                });
             },
             MoveError::MissingBit(_) => panic!("wrong error"),
         }
@@ -393,10 +390,11 @@ mod tests {
             ],
             circ.tracker.as_storage().clone().into_sorted_by_key()
         );
-        assert_eq!(
-            live.tracker.as_storage().0,
-            [PauliEnum::Z, PauliEnum::Y, PauliEnum::X]
-        );
+        assert_eq!(live.tracker.as_storage().0, [
+            PauliEnum::Z,
+            PauliEnum::Y,
+            PauliEnum::X
+        ]);
 
         circ.move_z_to_x(0, 1);
         live.move_z_to_x(0, 1);
@@ -408,10 +406,11 @@ mod tests {
             ],
             circ.tracker.as_storage().clone().into_sorted_by_key()
         );
-        assert_eq!(
-            live.tracker.as_storage().0,
-            [PauliEnum::I, PauliEnum::Z, PauliEnum::X]
-        );
+        assert_eq!(live.tracker.as_storage().0, [
+            PauliEnum::I,
+            PauliEnum::Z,
+            PauliEnum::X
+        ]);
 
         circ.remove_x(2);
         live.remove_x(2);
@@ -423,10 +422,11 @@ mod tests {
             ],
             circ.tracker.as_storage().clone().into_sorted_by_key()
         );
-        assert_eq!(
-            live.tracker.as_storage().0,
-            [PauliEnum::I, PauliEnum::Z, PauliEnum::I]
-        );
+        assert_eq!(live.tracker.as_storage().0, [
+            PauliEnum::I,
+            PauliEnum::Z,
+            PauliEnum::I
+        ]);
 
         circ.move_x_to_z(1, 2);
         live.move_x_to_z(1, 2);
@@ -438,10 +438,11 @@ mod tests {
             ],
             circ.tracker.as_storage().clone().into_sorted_by_key()
         );
-        assert_eq!(
-            live.tracker.as_storage().0,
-            [PauliEnum::I, PauliEnum::Z, PauliEnum::I]
-        );
+        assert_eq!(live.tracker.as_storage().0, [
+            PauliEnum::I,
+            PauliEnum::Z,
+            PauliEnum::I
+        ]);
     }
 
     #[test]

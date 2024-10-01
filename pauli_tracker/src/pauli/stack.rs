@@ -92,13 +92,10 @@ impl<T: BooleanVector> PauliStack<T> {
     /// # use pauli_tracker::pauli::{Pauli, PauliTuple, PauliStack};
     /// let mut pauli = PauliStack::try_from_str("", "1").unwrap();
     /// pauli.push::<PauliTuple>(Pauli::new_z());
-    /// assert_eq!(
-    ///     pauli,
-    ///     PauliStack::<Vec<bool>> {
-    ///         z: vec![false, true],
-    ///         x: vec![true, false]
-    ///     }
-    /// );
+    /// assert_eq!(pauli, PauliStack::<Vec<bool>> {
+    ///     z: vec![false, true],
+    ///     x: vec![true, false]
+    /// });
     /// # }
     /// ```
     pub fn push<P: Pauli>(&mut self, pauli: P) {
@@ -129,14 +126,11 @@ impl<T: BooleanVector> PauliStack<T> {
     /// ```
     pub fn pop<P: Pauli>(&mut self) -> Option<P> {
         match self.z.len().cmp(&self.x.len()) {
-            Ordering::Less => Some(P::new_product(
-                false,
-                match self.x.pop() {
-                    Some(v) => v,
-                    // since x.len > z.len >= 0
-                    None => unreachable!(),
-                },
-            )),
+            Ordering::Less => Some(P::new_product(false, match self.x.pop() {
+                Some(v) => v,
+                // since x.len > z.len >= 0
+                None => unreachable!(),
+            })),
             Ordering::Equal => Some(P::new_product(self.z.pop()?, self.x.pop()?)),
             Ordering::Greater => Some(P::new_product(
                 match self.z.pop() {

@@ -55,7 +55,8 @@ impl BooleanVector for BitVec {
         self.get(idx)
     }
 
-    type IterVals<'l> = Iter<'l>
+    type IterVals<'l>
+        = Iter<'l>
     where
         Self: 'l;
 

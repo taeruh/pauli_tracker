@@ -535,7 +535,7 @@ mod tests {
         }
 
         use super::*;
-        use crate::tracker::tests::utils::{SingleAction, SingleResults, N_SINGLES};
+        use crate::tracker::tests::utils::{N_SINGLES, SingleAction, SingleResults};
 
         type ActionS = SingleAction<DefaultTester>;
         type ActionD = DoubleAction<DefaultTester>;
