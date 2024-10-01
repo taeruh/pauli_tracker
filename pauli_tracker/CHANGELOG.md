@@ -25,6 +25,15 @@ methods.
 ### Fixed
 ### Security
 
+## [0.4.3] - 2024-10-02
+### Added
+### Changed
+### Deprecated
+### Removed
+### Fixed
+- Fix: `Pauli::multiply` has now a default implementation.
+### Security
+
 ## [0.4.2] - 2024-09-03
 ### Added
 ### Changed
@@ -222,6 +231,7 @@ them, but hopefully the most important ones.
 ## [0.1.0] - 2023-06-01
 
 [Unreleased]: https://github.com/taeruh/pauli_tracker/compare/v0.4.2...HEAD
+[0.4.3]: https://github.com/taeruh/pauli_tracker/compare/v0.4.2...v0.4.3
 [0.4.2]: https://github.com/taeruh/pauli_tracker/compare/v0.4.1...v0.4.2
 [0.4.1]: https://github.com/taeruh/pauli_tracker/compare/v0.4.0...v0.4.1
 [0.4.0]: https://github.com/taeruh/pauli_tracker/compare/v0.3.2...v0.4.0
