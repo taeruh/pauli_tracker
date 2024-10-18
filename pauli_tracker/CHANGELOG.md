@@ -25,6 +25,15 @@ methods.
 ### Fixed
 ### Security
 
+## [0.4.4] - 2024-10-18
+### Added
+### Changed
+### Deprecated
+### Removed
+### Fixed
+- Fix: `induced_order::get_order`.
+### Security
+
 ## [0.4.3] - 2024-10-02
 ### Added
 ### Changed
@@ -230,7 +239,8 @@ them, but hopefully the most important ones.
 
 ## [0.1.0] - 2023-06-01
 
-[Unreleased]: https://github.com/taeruh/pauli_tracker/compare/v0.4.2...HEAD
+[Unreleased]: https://github.com/taeruh/pauli_tracker/compare/v0.4.4...HEAD
+[0.4.4]: https://github.com/taeruh/pauli_tracker/compare/v0.4.3...v0.4.4
 [0.4.3]: https://github.com/taeruh/pauli_tracker/compare/v0.4.2...v0.4.3
 [0.4.2]: https://github.com/taeruh/pauli_tracker/compare/v0.4.1...v0.4.2
 [0.4.1]: https://github.com/taeruh/pauli_tracker/compare/v0.4.0...v0.4.1
