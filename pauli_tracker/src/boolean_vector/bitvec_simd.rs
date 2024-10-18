@@ -53,7 +53,7 @@ pub struct IterFromRef<'l> {
     vec: &'l SimdBitVec,
     current: usize,
 }
-impl<'l> Iterator for IterFromRef<'l> {
+impl Iterator for IterFromRef<'_> {
     type Item = bool;
     fn next(&mut self) -> Option<Self::Item> {
         self.current += 1;
