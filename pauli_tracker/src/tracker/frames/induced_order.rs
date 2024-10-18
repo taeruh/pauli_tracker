@@ -3,6 +3,8 @@ The main content of this module is the [get_order] function that can be
 used to define a time ordering induced by the tracked frames.
 */
 
+use hashbrown::HashSet;
+
 use crate::{boolean_vector::BooleanVector, pauli::PauliStack};
 
 /// A layered graph, describing the *strict* partial (time) ordering of the qubits.
@@ -66,8 +68,6 @@ where
     // the first loop filters the dependencies and searches for qubits with no
     // dependencies
     for (bit, stack) in frames_storage {
-        let mut deps: Vec<usize> = Vec::new();
-
         let max = stack.z.len().max(stack.x.len());
         let mut z = stack.z.clone();
         z.resize(max, false);
@@ -75,11 +75,14 @@ where
         x.resize(max, false);
         z.or_inplace(&x);
 
+        let mut deps: HashSet<usize> = HashSet::new();
         for (dep, flag) in z.iter_vals().enumerate() {
             if flag {
-                deps.push(map[dep]);
+                deps.insert(map[dep]);
             }
         }
+        let deps = Vec::from_iter(deps.into_iter());
+
         if deps.is_empty() {
             graph[0].push((bit, deps));
         } else {
@@ -156,5 +159,23 @@ where
 pub fn sort_layers_by_bits(graph: &mut PartialOrderGraph) {
     for layer in graph {
         layer.sort_by_key(|(bit, _)| *bit)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::{
+        collection::{Init, Iterable, Map},
+        tracker::{Tracker, frames::Frames},
+    };
+
+    #[test]
+    fn double_dependency() {
+        let mut tracker = Frames::<Map<PauliStack<Vec<bool>>>>::init(2);
+        let map = [0, 0];
+        tracker.track_x(1);
+        tracker.track_x(1);
+        let _graph = get_order(tracker.as_storage().iter_pairs(), &map);
     }
 }
