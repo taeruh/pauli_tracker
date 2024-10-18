@@ -13,7 +13,7 @@ name = "pauli_tracker_pyo3"
 crate-type = ["lib"]
 
 [dependencies]
-lib = { package = "pauli_tracker", version = "0.4.1", features = ["serde", "bitvec"] }
+lib = { package = "pauli_tracker", version = "0.4.4", features = ["serde", "bitvec"] }
 # lib = { package = "pauli_tracker", version = "0.4.1-alpha.1", features = [
 #   "serde",
 #   "bitvec",
