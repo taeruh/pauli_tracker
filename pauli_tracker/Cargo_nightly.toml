@@ -13,7 +13,7 @@ cargo-features = ["public-dependency"]
 
 [package]
 name = "pauli_tracker"
-version = "0.4.4-alpha.0"
+version = "0.4.5-alpha.1"
 authors = ["Jannis Ruh <ruh.j81@gmail.com>"]
 
 edition = "2021"
