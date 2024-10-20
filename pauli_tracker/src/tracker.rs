@@ -226,7 +226,10 @@ macro_rules! unwrap_get_mut {
 macro_rules! unwrap_get_two_mut {
     ($inner:expr, $bit_a:expr, $bit_b:expr, $gate:expr) => {
         $inner.get_two_mut($bit_a, $bit_b).unwrap_or_else(|| {
-            panic!("{}: qubit {} and/or {} do not exist", $gate, $bit_a, $bit_b)
+            panic!(
+                "{}: qubit {} and/or {} do not exist; or they are the same",
+                $gate, $bit_a, $bit_b
+            )
         })
     };
 }
