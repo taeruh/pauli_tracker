@@ -39,6 +39,8 @@ impl<T> GetTwoMutSlice for [T] {
         Some((a, b))
     }
 
+    /// # Panics
+    /// Panics if `one` and `two` are the same or out of bounds.
     fn get_two_mut(
         &mut self,
         one: usize,
@@ -48,7 +50,7 @@ impl<T> GetTwoMutSlice for [T] {
         // unsafe code our own here, but I feel like the unsafe code expresses better
         // what we are actually doing and it's invariants are pretty straightforward
         let len = self.len();
-        if one == two || one > len || two > len {
+        if one == two || one >= len || two >= len {
             return None;
         }
         // Safety: the above conditational ensures that the requirements are fulfilled
