@@ -1,3 +1,9 @@
+- somehow make the manylinux_2_28_aarch64 container work (cf. comments
+  .github/workflows/pypackage.yml); not the most important thing, because people on linux
+  with aarch64 know how to install it from source
+
+------------
+
 - inline some stuff
 
 - an insert stack method for Frames which adopts its length to frames_num, or vice versa
