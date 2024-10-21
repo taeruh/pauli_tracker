@@ -25,6 +25,16 @@ methods.
 ### Fixed
 ### Security
 
+## [0.4.5] - 2024-10-21
+### Added
+### Changed
+### Deprecated
+### Removed
+### Fixed
+- Improve the error message on when two qubit gates are called with the same qubit.
+- Fix a panic check in `get_two_mut`.
+### Security
+
 ## [0.4.4] - 2024-10-18
 ### Added
 ### Changed
@@ -239,7 +249,8 @@ them, but hopefully the most important ones.
 
 ## [0.1.0] - 2023-06-01
 
-[Unreleased]: https://github.com/taeruh/pauli_tracker/compare/v0.4.4...HEAD
+[Unreleased]: https://github.com/taeruh/pauli_tracker/compare/v0.4.5...HEAD
+[0.4.5]: https://github.com/taeruh/pauli_tracker/compare/v0.4.4...v0.4.5
 [0.4.4]: https://github.com/taeruh/pauli_tracker/compare/v0.4.3...v0.4.4
 [0.4.3]: https://github.com/taeruh/pauli_tracker/compare/v0.4.2...v0.4.3
 [0.4.2]: https://github.com/taeruh/pauli_tracker/compare/v0.4.1...v0.4.2
