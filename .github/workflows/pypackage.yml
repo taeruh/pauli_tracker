@@ -108,17 +108,17 @@ jobs:
       - name: Install stable rust
         uses: dtolnay/rust-toolchain@stable
         with:
-          targets: ${{ matrix.target }}
+          targets: ${{ matrix.os.target }}
       - uses: actions/setup-python@v5
         with:
           python-version: 3.${{ matrix.version }}
       - name: Build wheels
         run: |
           python -m pip install maturin
-          maturin build --release --target ${{ matrix.target }}
+          maturin build --release --target ${{ matrix.os.target }}
       - uses: actions/upload-artifact@v4
         with:
-          name: pauli_tracker-${{ matrix.os }}-${{ matrix.target }}-3.${{ matrix.version }}-wheel
+          name: pauli_tracker-${{ matrix.os.os }}-${{ matrix.os.target }}-3.${{ matrix.version }}-wheel
           path: python_lib/target/wheels/*
 
   docs:
