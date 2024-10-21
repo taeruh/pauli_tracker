@@ -93,7 +93,7 @@ jobs:
           path: python_lib/target/wheels/*
 
   osx-and-windows-wheels:
-    runs-on: ${{ matrix.os }}
+    runs-on: ${{ matrix.os.os }}
     strategy:
       matrix:
         version: [8, 9, 10, 11, 12]
