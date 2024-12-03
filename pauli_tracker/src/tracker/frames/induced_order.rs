@@ -12,10 +12,11 @@ use crate::{boolean_vector::BooleanVector, pauli::PauliStack};
 /// Each layer l_i = PartialOrderGraph\[i\] consist of a vector of tuples, where the
 /// first tuple element is the node qubit and the second tuple element contains the
 /// qubits which are lower ordered than the node qubit (the dependencies of the node
-/// qubit). However, transitivity is skipped, e.g., if we have 0 > 1 > 2, then we list
-/// only 1 as dependency of 0, since the information 0 > 2 is already covered in 0 > 1 and
-/// 1 > 2. The layering gives some global information: A node in layer l_i has at least
-/// one dependency in layer l_{i-1}.
+/// qubit). However, 1. order transitivity is skipped, e.g., if we have 0 > 1 > 2, *with
+/// no nodes in between*, then we list only 1 as dependency of 0, since the information
+/// 0 > 2 is already covered in 0 > 1 and 1 > 2 (potentially more transitive relations
+/// more step, but not necessarily). . The layering gives some global information: A
+/// node in layer l_i has at least one dependency in layer l_{i-1}.
 pub type PartialOrderGraph = Vec<Vec<(usize, Vec<usize>)>>;
 
 /// Sort the `frames_storage`'s qubits according to the induced dependencies by the
