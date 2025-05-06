@@ -1,9 +1,9 @@
 use std::mem;
 
 use lib::{pauli, tracker::frames::induced_order};
-use pyo3::{PyResult, Python};
+use pyo3::{PyResult, Python, types::PyModuleMethods};
 
-use crate::{impl_helper::serialization, pauli::PauliStack, BitVec, Module};
+use crate::{BitVec, Module, impl_helper::serialization, pauli::PauliStack};
 
 #[pyo3::pyclass(subclass)]
 /// Compare `PartialOrderGraph

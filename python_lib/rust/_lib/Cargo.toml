@@ -21,7 +21,7 @@ name = "_lib"
 crate-type = ["cdylib"]
 
 [dependencies]
-pyo3 = { version = "0.20.2", features = ["multiple-pymethods"] }
+pyo3 = { version = "0.24.2", features = ["multiple-pymethods"] }
 pauli_tracker_pyo3 = { path = "../" }
 
 [features]

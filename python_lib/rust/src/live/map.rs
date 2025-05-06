@@ -3,12 +3,12 @@ use std::{collections::HashMap, hash::BuildHasherDefault, mem};
 use lib::{
     collection::{self, Init},
     pauli::{self, Pauli},
-    tracker::{live, Tracker},
+    tracker::{Tracker, live},
 };
-use pyo3::{PyResult, Python};
+use pyo3::{PyResult, Python, types::PyModuleMethods};
 use rustc_hash::FxHasher;
 
-use crate::{impl_helper::links, pauli::PauliDense, Module};
+use crate::{Module, impl_helper::links, pauli::PauliDense};
 
 type Map<T> = collection::Map<T, BuildHasherDefault<FxHasher>>;
 

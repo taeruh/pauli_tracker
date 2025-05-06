@@ -3,11 +3,11 @@ use std::mem;
 use lib::{
     collection::{Init, NaiveVector},
     pauli::{self, Pauli},
-    tracker::{live, Tracker},
+    tracker::{Tracker, live},
 };
-use pyo3::{PyResult, Python};
+use pyo3::{PyResult, Python, types::PyModuleMethods};
 
-use crate::{impl_helper::links, pauli::PauliDense, Module};
+use crate::{Module, impl_helper::links, pauli::PauliDense};
 
 type Storage = NaiveVector<pauli::PauliDense>;
 impl_live!(

@@ -1,9 +1,9 @@
 use std::mem;
 
 use lib::pauli::{self, Pauli};
-use pyo3::{exceptions::PyValueError, PyResult, Python};
+use pyo3::{PyResult, Python, exceptions::PyValueError, types::PyModuleMethods};
 
-use crate::{impl_helper::serialization, BitVec, Module};
+use crate::{BitVec, Module, impl_helper::serialization};
 
 /// `PauliDense
 /// <https://docs.rs/pauli_tracker/latest/pauli_tracker/pauli/struct.PauliDense.html>`_

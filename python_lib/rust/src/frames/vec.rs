@@ -3,11 +3,11 @@ use std::mem;
 use lib::{
     collection::{Init, NaiveVector},
     pauli,
-    tracker::{frames, Tracker},
+    tracker::{Tracker, frames},
 };
-use pyo3::{PyResult, Python};
+use pyo3::{PyResult, Python, types::PyModuleMethods};
 
-use crate::{impl_helper::links, pauli::PauliStack, BitVec, Module};
+use crate::{BitVec, Module, impl_helper::links, pauli::PauliStack};
 
 type Storage = NaiveVector<pauli::PauliStack<BitVec>>;
 impl_frames!(
