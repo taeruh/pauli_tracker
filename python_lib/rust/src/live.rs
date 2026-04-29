@@ -8,6 +8,14 @@ macro_rules! impl_live {
         type LibLive = lib::tracker::live::Live<$storage>;
 
         #[doc = $gentype]
+        ///
+        /// **Constructor:**
+        ///
+        /// Args:
+        ///     len (int): The number of qubits to track
+        ///
+        /// Returns:
+        ///     Live:
         #[pyo3::pyclass(subclass)]
         pub struct Live(pub LibLive);
 
@@ -18,16 +26,6 @@ macro_rules! impl_live {
             fn __new__(len: usize) -> Self {
                 Self(LibLive::init(len))
             }
-
-            /// Create a new Live tracker.
-            ///
-            /// Args:
-            ///     len (int): The number of qubits to track
-            ///
-            /// Returns:
-            ///     Live:
-            #[pyo3(text_signature = "(self, len=0)")]
-            fn __init__(&self, _len: usize) {}
 
             /// Create a new qubit in the tracker, returning the old Pauli if the qubit
             /// was already initialized.

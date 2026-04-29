@@ -10,6 +10,7 @@ _autosummary
 !docs/_autosummary
 
 # personal development config and caches
+.python-version
 .tmux-session
 .task.mk
 Session.vim

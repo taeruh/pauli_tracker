@@ -7,6 +7,14 @@ use crate::{BitVec, Module, impl_helper::serialization};
 
 /// `PauliDense
 /// <https://docs.rs/pauli_tracker/latest/pauli_tracker/pauli/struct.PauliDense.html>`_
+///
+/// **Constructor:**
+///
+/// Args:
+///     storage (int): The tableau encoding
+///
+/// Returns:
+///     PauliDense:
 #[pyo3::pyclass(subclass)]
 pub struct PauliDense(pub pauli::PauliDense);
 
@@ -21,16 +29,6 @@ impl PauliDense {
         }
     }
 
-    /// Create a new PauliDense from a tableau encoding.
-    ///
-    /// Args:
-    ///     storage (int): The tableau encoding
-    ///
-    /// Returns:
-    ///     PauliDense:
-    #[pyo3(text_signature = "(self, storage=0)")]
-    fn __init__(&self, _storage: u8) {}
-
     fn tableau_encoding(&self) -> u8 {
         self.0.tableau_encoding()
     }
@@ -38,6 +36,14 @@ impl PauliDense {
 
 /// `PauliTuple
 /// <https://docs.rs/pauli_tracker/latest/pauli_tracker/pauli/struct.PauliTuple.html>`_
+/// **Constructor:**
+///
+/// Args:
+///     z (bool): The Z component
+///     x (bool): The X component
+///
+/// Returns:
+///     PauliTuple:
 #[pyo3::pyclass(subclass)]
 pub struct PauliTuple(pub pauli::PauliTuple);
 
@@ -48,17 +54,6 @@ impl PauliTuple {
     fn __new__(z: bool, x: bool) -> Self {
         PauliTuple(pauli::PauliTuple(z, x))
     }
-
-    /// Create a new PauliTuple from a tableau encoding.
-    ///
-    /// Args:
-    ///     z (bool): The Z component
-    ///     x (bool): The X component
-    ///
-    /// Returns:
-    ///     PauliTuple:
-    #[pyo3(text_signature = "(self, z=False, x=False)")]
-    fn __init__(&self, _x: bool, _z: bool) {}
 
     fn tableau_encoding(&self) -> u8 {
         self.0.tableau_encoding()
@@ -86,9 +81,6 @@ pub struct PauliStack(pub pauli::PauliStack<BitVec>);
 
 #[pyo3::pymethods]
 impl PauliStack {
-    /// **Not defined**
-    fn __init__(&self) {}
-
     #[doc = crate::transform!()]
     /// You can use :func:`~pauli_tracker.bitvector_to_boolvector` to convert the
     /// bitvector to a list of booleans, or directly use :func:`into_py_bool_tuple`.

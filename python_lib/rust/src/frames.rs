@@ -9,6 +9,14 @@ use crate::{BitVec, Module, impl_helper::serialization, pauli::PauliStack};
 /// Compare `PartialOrderGraph
 /// <https://docs.rs/pauli_tracker/latest/pauli_tracker/tracker/frames/induced_order/type.PartialOrderGraph.html>`_.
 /// Use :meth:`into_py_graph` to turn it into a Python type.
+///
+/// **Constructor:**
+///
+/// Args:
+///     graph (list[list[tuple[int, list[int]]]]): The graph to wrap.
+///
+/// Returns:
+///     PartialOrderGraph:
 pub struct PartialOrderGraph(pub induced_order::PartialOrderGraph);
 
 #[pyo3::pymethods]
@@ -17,16 +25,6 @@ impl PartialOrderGraph {
     fn __new__(graph: induced_order::PartialOrderGraph) -> Self {
         Self(graph)
     }
-
-    /// Create a new PartialOrderGraph.
-    ///
-    /// Args:
-    ///     graph (list[list[tuple[int, list[int]]]]): The graph to wrap.
-    ///
-    /// Returns:
-    ///     PartialOrderGraph:
-    #[pyo3(text_signature = "(self, graph)")]
-    fn __init__(&self, _graph: induced_order::PartialOrderGraph) {}
 
     #[doc = crate::transform!()]
     ///
@@ -54,6 +52,14 @@ serialization::serde!(PartialOrderGraph);
 /// This is usually returned from the according `stacked_transpose` method of a
 /// `Frames` object. The frames are now on the major axis and the qubits on the minor
 /// axis.
+///
+/// **Constructor:**
+///
+/// Args:
+///     stacks (list[PauliStack]): The stacks to wrap.
+///
+/// Returns:
+///     StackedTransposed
 #[derive(Clone)]
 struct StackedTransposed(Vec<pauli::PauliStack<BitVec>>);
 
@@ -63,16 +69,6 @@ impl StackedTransposed {
     fn __new__(stacks: Vec<PauliStack>) -> Self {
         Self(stacks.into_iter().map(|s| s.0).collect())
     }
-
-    /// Create a new StackedTransposed
-    ///
-    /// Args:
-    ///     stacks (list[PauliStack]): The stacks to wrap.
-    ///
-    /// Returns:
-    ///     StackedTransposed
-    #[pyo3(text_signature = "(self, stacks)")]
-    fn __init__(&self, _stacks: Vec<PauliStack>) {}
 
     /// Get the Pauli stack at the given index.
     ///
@@ -131,6 +127,14 @@ macro_rules! impl_frames {
         type LibFrames = lib::tracker::frames::Frames<$storage>;
 
         #[doc = $gentype]
+        ///
+        /// **Constructor:**
+        ///
+        /// Args:
+        ///     len (int): The number of qubits to track
+        ///
+        /// Returns:
+        ///     Frames:
         #[pyo3::pyclass(subclass)]
         pub struct Frames(pub LibFrames);
 
@@ -141,16 +145,6 @@ macro_rules! impl_frames {
             fn __new__(len: usize) -> Self {
                 Self(LibFrames::init(len))
             }
-
-            /// Create a new Frames tracker.
-            ///
-            /// Args:
-            ///     len (int): The number of qubits to track
-            ///
-            /// Returns:
-            ///     Frames:
-            #[pyo3(text_signature = "(self, len=0)")]
-            fn __init__(&self, _len: usize) {}
 
             /// Create a new qubit in the tracker, returning the old Pauli stack if the
             /// qubit was already initialized.
