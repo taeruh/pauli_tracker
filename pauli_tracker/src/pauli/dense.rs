@@ -248,11 +248,10 @@ impl ResolvePauli for bool {
 
 #[cfg(test)]
 mod tests {
-    use coverage_helper::test;
-
     use super::*;
 
     #[test]
+    #[cfg_attr(coverage_nightly, coverage(off))]
     fn set_storage() {
         let mut pauli = PauliDense::I;
         for (storage, expected) in [

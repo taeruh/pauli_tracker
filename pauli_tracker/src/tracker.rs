@@ -457,12 +457,7 @@ mod tests {
     }
 
     mod defaults {
-        use coverage_helper::test;
-
-        use super::{
-            super::*,
-            utils::{DoubleAction, DoubleResults, N_DOUBLES},
-        };
+        use super::utils::{DoubleAction, DoubleResults, N_DOUBLES};
         use crate::{
             collection::{Base, Map},
             pauli::PauliDense,
@@ -563,6 +558,7 @@ mod tests {
         }
 
         #[test]
+        #[cfg_attr(coverage_nightly, coverage(off))]
         fn single_actions() {
             let actions: [ActionS; N_SINGLES] = utils::single_actions!(DefaultTester);
             utils::single_check(single_runner, actions);
@@ -588,6 +584,7 @@ mod tests {
         }
 
         #[test]
+        #[cfg_attr(coverage_nightly, coverage(off))]
         fn double_actions() {
             let actions: [ActionD; N_DOUBLES] = utils::double_actions!(DefaultTester);
             utils::double_check(double_runner, actions);

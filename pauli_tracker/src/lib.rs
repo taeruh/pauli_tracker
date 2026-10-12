@@ -84,14 +84,13 @@ pub mod tracker;
 
 #[cfg(test)]
 mod tests {
-    use coverage_helper::test;
-
     use super::*;
 
     #[cfg_attr(coverage_nightly, coverage(off))]
     fn normal<T: Sized + Send + Sync + Unpin>() {}
 
     #[test]
+    #[cfg_attr(coverage_nightly, coverage(off))]
     fn marker() {
         // cf. "List of all items" in docs
         // Structs

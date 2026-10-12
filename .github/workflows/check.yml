@@ -37,7 +37,7 @@ jobs:
       - name: Install stable rust-$msrv
         uses: dtolnay/rust-toolchain@master
         with:
-          toolchain: $msrv
+          toolchain: ${{ env.msrv }}
       - name: Install nightly for -Zdirect-minimal-versions
         uses: dtolnay/rust-toolchain@nightly
       - name: Set default to stable

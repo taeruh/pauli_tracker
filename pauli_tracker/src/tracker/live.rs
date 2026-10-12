@@ -206,8 +206,6 @@ where
 
 #[cfg(test)]
 mod tests {
-    use coverage_helper::test;
-
     use super::*;
     use crate::{
         collection::{BufferedVector, Map},
@@ -280,15 +278,16 @@ mod tests {
     macro_rules! test_actions {
         ($(($pauli:ty, $module:ident),)*) => {$(
             mod $module {
-                use super::test;
                 #[rustfmt::skip]
                 use super::{double_actions, single_actions, Pw, $pauli};
                 impl Pw for $pauli {}
                 #[test]
+                #[cfg_attr(coverage_nightly, coverage(off))]
                 fn single_actions() {
                     single_actions::run::<$pauli>();
                 }
                 #[test]
+                #[cfg_attr(coverage_nightly, coverage(off))]
                 fn double_actions() {
                     double_actions::run::<$pauli>();
                 }
@@ -303,6 +302,7 @@ mod tests {
     );
 
     #[test]
+    #[cfg_attr(coverage_nightly, coverage(off))]
     fn new_qubit_and_measure() {
         let mut tracker = Live::<PauliTuple>::init(1);
         tracker.track_x(0);
@@ -312,12 +312,15 @@ mod tests {
         assert_eq!(tracker.as_ref().0, vec![PauliTuple::Y, PauliTuple::I]);
         assert_eq!(tracker.get(0), Some(&PauliTuple::Y));
         assert_eq!(tracker.new_qubit(3), None);
-        assert_eq!(*tracker.as_ref().0, vec![
-            PauliTuple::new_y(),
-            PauliTuple::new_i(),
-            PauliTuple::new_i(),
-            PauliTuple::new_i()
-        ]);
+        assert_eq!(
+            *tracker.as_ref().0,
+            vec![
+                PauliTuple::new_y(),
+                PauliTuple::new_i(),
+                PauliTuple::new_i(),
+                PauliTuple::new_i()
+            ]
+        );
         let mut tracker = super::Live::new(Map::<PauliEnum>::from_iter(
             tracker.into_storage().into_iter().map(|(k, v)| (k, v.into())),
         ));

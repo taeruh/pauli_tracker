@@ -170,11 +170,10 @@ mod bit_vec;
 
 #[cfg(test)]
 mod tests {
-    use coverage_helper::test;
-
     use super::*;
 
     #[test]
+    #[cfg_attr(coverage_nightly, coverage(off))]
     fn is_empty() {
         assert!(<Vec<bool> as BooleanVector>::is_empty(&vec![]));
         assert!(!<Vec<bool> as BooleanVector>::is_empty(&vec![true]));
