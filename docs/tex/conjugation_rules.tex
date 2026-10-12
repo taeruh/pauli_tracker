@@ -212,33 +212,34 @@ We calculate the according conjugations with the representatives:
   SHS*X &= iS*ZX = X
 \end{align}
 \end{proof}
-\begin{remark}
-In the following we list some typical Clifford gates and how they relate to the
-representative elements of $\ouic_1/\ouip_1$ ($H^{ab}$ denotes the hermitian change from
-the eigenbasis of $a$ to the eigenbasis of $b$, $a, b \in \bc{X, Y, Z}$):
-\begin{align}
-  S\ur &= SZ = \matp{1&0\\0&-i}\\
-  HSH &= \sqrt{i}SHS = \frac{1}{\sqrt{2}}\matp{\sqrt{i}&\sqrt{-i}\\\sqrt{-i}&\sqrt{i}}\\
-  \sqrt{X} &= HSH = \sqrt{i}SHS = \frac{1}{2}\matp{1+i&1-i\\1-i&1+i}\\
-  \sqrt{X}\ur &= HSZH = HSHX = \sqrt{i}SHSX = \frac{1}{2}\matp{1-i&1+i\\1+i&1-i}\\
-  \sqrt{Y} &= \sqrt{i}HZ = \frac{1}{2}\matp{1+i&-1-i\\1+i&1+i}\\
-  \sqrt{Y}\ur &= \sqrt{-i}ZH = \sqrt{-i}HX = \frac{1}{2}\matp{1-i&1-i\\-1+i&1-i}\\
-  H^{xy} &= \ee^{-i\pi/4}SX = \frac{1}{\sqrt{2}}\matp{0&1-i\\1+i&0}\\
-  H^{yz} &= SHSZ = \frac{1}{\sqrt{2}}\matp{1&-i\\i&-1}\\
-\end{align}
-Sorted according to \cref{t"single_qubit_isomorphism} we have the following $24$
-single qubit Clifford operators:
-\begin{align}
-  \begin{array}{llll}
-    \1 = \1 & \1X = X & \1Y = Y & \1Z = Z\\
-    S = S & SX = \sqrt{i}H^{xy} & SY = . & SZ = S\ur\\
-    H = H & HX =\sqrt{i}\sqrt{Y}\ur & HY = . & HZ = \sqrt{-i}\sqrt{Y}\\
-    SH = . & SHX = . & SHY = . & SHZ = .\\
-    HS = . & HSX = . & HSY = . & HSZ = .\\
-    SHS = \sqrt{-i}\sqrt{X} & SHSX = \sqrt{-i}\sqrt{X}\ur & SHSY = . & SHSZ = H^{yz}
-  \end{array}
-\end{align}
-\end{remark}
+% the following contains some mistakes
+% \begin{remark}
+% In the following we list some typical Clifford gates and how they relate to the
+% representative elements of $\ouic_1/\ouip_1$ ($H^{ab}$ denotes the hermitian change from
+% the eigenbasis of $a$ to the eigenbasis of $b$, $a, b \in \bc{X, Y, Z}$):
+% \begin{align}
+%   S\ur &= SZ = \matp{1&0\\0&-i}\\
+%   HSH &= \sqrt{i}SHS = \frac{1}{\sqrt{2}}\matp{\sqrt{i}&\sqrt{-i}\\\sqrt{-i}&\sqrt{i}}\\
+%   \sqrt{X} &= HSH = \sqrt{i}SHS = \frac{1}{2}\matp{1+i&1-i\\1-i&1+i}\\
+%   \sqrt{X}\ur &= HSZH = HSHX = \sqrt{i}SHSX = \frac{1}{2}\matp{1-i&1+i\\1+i&1-i}\\
+%   \sqrt{Y} &= \sqrt{i}HZ = \frac{1}{2}\matp{1+i&-1-i\\1+i&1+i}\\
+%   \sqrt{Y}\ur &= \sqrt{-i}ZH = \sqrt{-i}HX = \frac{1}{2}\matp{1-i&1-i\\-1+i&1-i}\\
+%   H^{xy} &= \ee^{-i\pi/4}SX = \frac{1}{\sqrt{2}}\matp{0&1-i\\1+i&0}\\
+%   H^{yz} &= SHSZ = \frac{1}{\sqrt{2}}\matp{1&-i\\i&-1}\\
+% \end{align}
+% Sorted according to \cref{t"single_qubit_isomorphism} we have the following $24$
+% single qubit Clifford operators:
+% \begin{align}
+%   \begin{array}{llll}
+%     \1 = \1 & \1X = X & \1Y = Y & \1Z = Z\\
+%     S = S & SX = \sqrt{i}H^{xy} & SY = . & SZ = S\ur\\
+%     H = H & HX =\sqrt{i}\sqrt{Y}\ur & HY = . & HZ = \sqrt{-i}\sqrt{Y}\\
+%     SH = . & SHX = . & SHY = . & SHZ = .\\
+%     HS = . & HSX = . & HSY = . & HSZ = .\\
+%     SHS = \sqrt{-i}\sqrt{X} & SHSX = \sqrt{-i}\sqrt{X}\ur & SHSY = . & SHSZ = H^{yz}
+%   \end{array}
+% \end{align}
+% \end{remark}
 
 \subsection{Two qubit Cliffords}
 
