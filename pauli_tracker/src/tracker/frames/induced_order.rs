@@ -31,10 +31,10 @@ pub type PartialOrderGraph = Vec<Vec<(usize, Vec<usize>)>>;
 /// around for better efficiency.
 ///
 /// # Panics
-/// The input has to make "sense", i.e., the `map` must not be empty, there, shouldn't
-/// be dependency cycles, etc. The algorithm loops through the qubits, searching for
-/// qubits whose dependecies are already in the graph. If there are no such qubits, it
-/// panics.
+/// The input has to make "sense", i.e., the `map` must be valid for the length of the
+/// PauliStacks in the `frames_storage` iterator, there shouldn't be dependency cycles,
+/// etc. The algorithm loops through the qubits, searching for qubits whose dependecies
+/// are already in the graph. If there are no such qubits, it panics.
 ///
 /// # Examples
 /// ```
@@ -63,8 +63,6 @@ where
 {
     let mut graph: Vec<Vec<(usize, Vec<usize>)>> = vec![Vec::new()];
     let mut remaining: Vec<(usize, Vec<usize>, Vec<usize>)> = Vec::new();
-
-    assert!(!map.is_empty(), "map must not be empty");
 
     // the first loop filters the dependencies and searches for qubits with no
     // dependencies

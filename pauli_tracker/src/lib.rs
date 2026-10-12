@@ -48,7 +48,7 @@
 // use the (modified) #[test] attribute; in doc-tests we always need to specify the main
 // function explicitly and put the ...coverage(off)... attribute on it
 //
-// tests are always run with --all--features; however, doc-tests should be under
+// tests are always run with --all-features; however, doc-tests should be under
 // cfg-features conditions if they use them (and this should also be documented) and
 // should be tested with only those features enabled
 //
