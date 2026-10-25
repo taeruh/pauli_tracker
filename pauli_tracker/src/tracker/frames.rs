@@ -477,15 +477,13 @@ where
 
 #[cfg(test)]
 mod tests {
-    use coverage_helper::test;
-
     use super::*;
 
     // we only check the basic functionality here, more complicated circuits are tested
     // in [super::circuit] to test the tracker and the circuit at once
 
     mod action_definition_check {
-        use super::{super::*, test, *};
+        use super::*;
         use crate::{
             collection::BufferedVector,
             pauli::PauliDense,
@@ -504,6 +502,7 @@ mod tests {
         //     Frames<Vector<crate::boolean_vector::bitvec_simd::SimdBitVec>>;
 
         #[test]
+        #[cfg_attr(coverage_nightly, coverage(off))]
         fn single() {
             type Action = SingleAction<ThisTracker>;
 
@@ -539,6 +538,7 @@ mod tests {
         }
 
         #[test]
+        #[cfg_attr(coverage_nightly, coverage(off))]
         fn double() {
             type Action = DoubleAction<ThisTracker>;
 

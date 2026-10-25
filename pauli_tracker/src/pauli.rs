@@ -236,8 +236,6 @@ pub mod tableau_encoding {
 mod tests {
     use std::fmt;
 
-    use coverage_helper::test;
-
     #[derive(Debug, Clone, Copy, PartialEq)]
     pub struct PauliForceDefault(PauliEnum);
     #[rustfmt::skip]
@@ -285,6 +283,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg_attr(coverage_nightly, coverage(off))]
     fn consistency() {
         fn check<T: PauliAssert>() {
             let mapping = [
@@ -303,6 +302,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg_attr(coverage_nightly, coverage(off))]
     fn conversions() {
         fn check<A, B>()
         where
@@ -320,6 +320,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg_attr(coverage_nightly, coverage(off))]
     fn multiplication() {
         fn check<T: PauliAssert>() {
             let mapping = [
@@ -349,6 +350,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg_attr(coverage_nightly, coverage(off))]
     fn cliffords() {
         fn check<T: PauliAssert>() {
             #[rustfmt::skip]
@@ -374,6 +376,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg_attr(coverage_nightly, coverage(off))]
     fn get() {
         fn check<T: PauliAssert>() {
             #[rustfmt::skip]
@@ -393,6 +396,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg_attr(coverage_nightly, coverage(off))]
     fn set() {
         fn check<T: PauliAssert>() {
             let mapping = [
@@ -422,6 +426,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg_attr(coverage_nightly, coverage(off))]
     fn partial_add() {
         fn check<T: PauliAssert>() {
             let funs = [

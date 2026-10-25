@@ -23,6 +23,16 @@ methods.
 ### Deprecated
 ### Removed
 ### Fixed
+- Do not prematurely panic when getting the partial order graph.
+### Security
+
+## [0.4.6] - 2026-10-13
+### Added
+### Changed
+### Deprecated
+### Removed
+### Fixed
+- Do not prematurely panic when getting the partial order graph.
 ### Security
 
 ## [0.4.5] - 2024-10-21
@@ -249,7 +259,8 @@ them, but hopefully the most important ones.
 
 ## [0.1.0] - 2023-06-01
 
-[Unreleased]: https://github.com/taeruh/pauli_tracker/compare/v0.4.5...HEAD
+[Unreleased]: https://github.com/taeruh/pauli_tracker/compare/v0.4.6...HEAD
+[0.4.6]: https://github.com/taeruh/pauli_tracker/compare/v0.4.5...v0.4.6
 [0.4.5]: https://github.com/taeruh/pauli_tracker/compare/v0.4.4...v0.4.5
 [0.4.4]: https://github.com/taeruh/pauli_tracker/compare/v0.4.3...v0.4.4
 [0.4.3]: https://github.com/taeruh/pauli_tracker/compare/v0.4.2...v0.4.3
